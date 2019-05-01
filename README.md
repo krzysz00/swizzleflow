@@ -1,4 +1,4 @@
-# SwizzleFlow - synthesizing high-performance code from dataflow graphs
+# SwizzleFlow - synthesizing high-performance kernels from dataflow graph sketches
 
 We don't actually have any README content yet, but what this code will
 do is located in [the designdocument](https://www.overleaf.com/read/twvwgqfbxmyx).
