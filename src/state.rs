@@ -17,7 +17,7 @@ use ndarray::Dimension;
 
 use std::fmt;
 
-pub type Symbolic = u32;
+pub type Symbolic = u16;
 pub type ProgValue = Symbolic;
 
 // Ok, the general pruning rule is this:

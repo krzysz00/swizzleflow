@@ -16,14 +16,14 @@ mod state;
 mod swizzle_ops;
 
 use ndarray::{Array,Ix};
-use state::{ProgState};
-use swizzle_ops::{fan, rotate, OpAxis};
+use state::{ProgState,Symbolic};
+use swizzle_ops::{fan,rotate,OpAxis};
 
 fn trove(m: Ix, n: Ix) -> ProgState {
     let array = Array::from_shape_fn((m, n),
-                                     move |(i, j)| (i + j * m) as u32)
+                                     move |(i, j)| (i + j * m) as Symbolic)
         .into_dyn();
-    ProgState::new((m * n) as u32, array, "trove")
+    ProgState::new((m * n) as Symbolic, array, "trove")
 }
 
 fn fixed_solution_from_scala() -> ProgState {
