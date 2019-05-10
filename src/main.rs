@@ -18,6 +18,7 @@ mod swizzle_ops;
 use ndarray::{Array,Ix};
 use state::{ProgState,Symbolic};
 use swizzle_ops::{fan,rotate,OpAxis};
+use swizzle_ops::{simple_fans,simple_rotations};
 
 fn trove(m: Ix, n: Ix) -> ProgState {
     let array = Array::from_shape_fn((m, n),
@@ -42,4 +43,12 @@ fn main() {
     println!("{}", solution);
     println!("{:?}", spec);
     println!("Equality: {}", spec == solution);
+
+    println!("Basis sets tests");
+    println!("cf: {} cr: {} rf: {} rr: {}",
+             simple_fans(3, 16, OpAxis::Columns).len(),
+             simple_rotations(3, 16, OpAxis::Columns).len(),
+             simple_fans(3, 16, OpAxis::Rows).len(),
+             simple_rotations(3, 16, OpAxis::Rows).len());
+    println!("{:?}", simple_fans(3, 16, OpAxis::Columns).iter().map(|x| &x.name).collect::<Vec<_>>());
 }

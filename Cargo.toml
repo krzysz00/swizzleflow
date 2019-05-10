@@ -8,3 +8,5 @@ edition = "2018"
 blas-src = { version = "0.2", features = ["openblas"] }
 ndarray = { version = "0.12", features = ["blas"] }
 num-integer = "0.1.39"
+smallvec = "0.6.9"
+itertools = "0.8.0"

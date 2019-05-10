@@ -3,6 +3,11 @@ use crate::state::Gather;
 use ndarray::{Ix,Ixs};
 use num_integer::Integer;
 
+use std::collections::HashSet;
+use std::cmp;
+
+use itertools::iproduct;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum OpAxis { Rows, Columns }
 use OpAxis::*;
@@ -57,4 +62,30 @@ pub fn rotate(m: Ix, n: Ix, perm_within: OpAxis, stable_scale: Ixs, div: Ix, shi
                                    out.extend(&[get_from, j]);
                                }, name),
     }
+}
+
+pub fn identity(m: Ix, n: Ix) -> Gather {
+    Gather::new(2, &[m, n], |idxs, ops| ops.extend(idxs), "id")
+}
+
+pub fn simple_fans(m: Ix, n: Ix, perm_within: OpAxis) -> HashSet<Gather> {
+    let mut ret = HashSet::new();
+    ret.insert(identity(m, n));
+    let k_bound = cmp::max(m, n);
+    let c_bound = match perm_within { Rows => n, Columns => m };
+    ret.extend(iproduct!((0..k_bound), (0..c_bound)).map(|(k, c)| fan(m, n, perm_within, k, c)));
+    ret
+}
+
+pub fn simple_rotations(m: Ix, n: Ix, perm_within: OpAxis) -> HashSet<Gather> {
+    let mut ret = HashSet::new();
+    ret.insert(identity(m, n));
+    let k_bound = cmp::max(m, n) as isize;
+    let c_bound = match perm_within { Rows => n, Columns => m } as isize;
+    let d_bound = match perm_within { Rows => m, Columns => n};
+    ret.extend(iproduct!((-k_bound+1..k_bound),
+                         (2..=d_bound).filter(|i| d_bound % i == 0),
+                         (-c_bound+1..c_bound))
+               .map(|(k, d, c)| rotate(m, n, perm_within, k, d, c)));
+    ret
 }
