@@ -36,7 +36,10 @@ fn fixed_solution_from_scala() -> ProgState {
 }
 
 fn main() {
-    println!("{}", trove(3, 8));
-    println!("{}", fixed_solution_from_scala());
-    println!("{:?}", trove(3, 8));
+    let spec = trove(3, 8);
+    let solution = fixed_solution_from_scala();
+    println!("{}", spec);
+    println!("{}", solution);
+    println!("{:?}", spec);
+    println!("Equality: {}", spec == solution);
 }

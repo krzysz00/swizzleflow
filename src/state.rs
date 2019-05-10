@@ -16,6 +16,9 @@ use ndarray::{Array,ArrayD,Ix,Axis,IxDyn};
 use ndarray::Dimension;
 
 use std::fmt;
+use std::fmt::{Display,Formatter};
+use std::cmp::{PartialEq,Eq};
+use std::hash::{Hash,Hasher};
 
 pub type Symbolic = u16;
 pub type ProgValue = Symbolic;
@@ -26,13 +29,28 @@ pub type ProgValue = Symbolic;
 // There's a general path with value v, called c ->'(v) t, if, in the pruning matrix, for each l in Loc(v, t), there is a l' in Loc(v, c) such that l' -> l
 // A value can continue, if for each pair of values v1, v2, we have c ->'(v1) t and c ->'(v2) t
 // Program states
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug)]
 pub struct ProgState {
     state: ArrayD<ProgValue>,
     // Note: IxDyn is basically SmallVec, though that's not obvious anywhere
     inv_state: Vec<Vec<IxDyn>>,
     pub domain_max: Symbolic,
     pub name: String
+}
+
+impl PartialEq for ProgState {
+    fn eq(&self, other: &ProgState) -> bool {
+        self.domain_max == other.domain_max && self.state == other.state
+    }
+}
+
+impl Eq for ProgState {}
+
+impl Hash for ProgState {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.domain_max.hash(state);
+        self.state.hash(state);
+    }
 }
 
 impl ProgState {
@@ -64,6 +82,12 @@ impl ProgState {
     }
 }
 
+impl Display for ProgState {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{}:\n{}", self.name, self.state)
+    }
+}
+
 // Gather operator creation
 fn inc_slice(slice: &mut [Ix], bound: &[Ix]) -> bool {
     if slice.len() != bound.len() {
@@ -83,16 +107,24 @@ fn inc_slice(slice: &mut [Ix], bound: &[Ix]) -> bool {
     success
 }
 
-impl fmt::Display for ProgState {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}:\n{}", self.name, self.state)
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug)]
 pub struct Gather {
     pub data: ArrayD<Ix>,
     pub name: String,
+}
+
+impl PartialEq for Gather {
+    fn eq(&self, other: &Gather) -> bool {
+        self.data == other.data
+    }
+}
+
+impl Eq for Gather {}
+
+impl Hash for Gather {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.data.hash(state);
+    }
 }
 
 impl Gather {
