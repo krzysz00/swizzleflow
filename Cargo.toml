@@ -7,4 +7,4 @@ edition = "2018"
 [dependencies]
 blas-src = { version = "0.2", features = ["openblas"] }
 ndarray = { version = "0.12", features = ["blas"] }
-smallvec = "0.6.9"
+num-integer = "0.1.39"

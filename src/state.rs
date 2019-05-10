@@ -15,6 +15,8 @@
 use ndarray::{Array,ArrayD,Ix,Axis,IxDyn};
 use ndarray::Dimension;
 
+use std::fmt;
+
 pub type Symbolic = u32;
 pub type ProgValue = Symbolic;
 
@@ -26,7 +28,7 @@ pub type ProgValue = Symbolic;
 // Program states
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ProgState {
-    state: ArrayD<Symbolic>,
+    state: ArrayD<ProgValue>,
     // Note: IxDyn is basically SmallVec, though that's not obvious anywhere
     inv_state: Vec<Vec<IxDyn>>,
     pub domain_max: Symbolic,
@@ -34,7 +36,7 @@ pub struct ProgState {
 }
 
 impl ProgState {
-    fn making_inverse(domain_max: Symbolic, state: ArrayD<Symbolic>, name: String) -> Self {
+    fn making_inverse(domain_max: Symbolic, state: ArrayD<ProgValue>, name: String) -> Self {
         let mut inverse: Vec<Vec<IxDyn>> = (0..domain_max).map(|_| Vec::with_capacity(1)).collect();
         for (idx, elem) in state.indexed_iter() {
             inverse[*elem as usize].push(idx.clone())
@@ -42,11 +44,11 @@ impl ProgState {
         Self { domain_max: domain_max, state: state, name: name, inv_state: inverse }
     }
 
-    pub fn new(domain_max: Symbolic, state: ArrayD<Symbolic>, name: impl Into<String>) -> Self {
+    pub fn new(domain_max: Symbolic, state: ArrayD<ProgValue>, name: impl Into<String>) -> Self {
         Self::making_inverse(domain_max, state, name.into())
     }
 
-    pub fn linear(domain_max: Symbolic, shape: &[usize]) -> Self {
+    pub fn linear(domain_max: Symbolic, shape: &[Ix]) -> Self {
         let array = (0..domain_max).collect();
         Self::making_inverse(domain_max, Array::from_shape_vec(shape, array).unwrap(), "id".to_owned())
     }
@@ -68,7 +70,7 @@ fn inc_slice(slice: &mut [Ix], bound: &[Ix]) -> bool {
         panic!("Bound and slice must be the same length")
     }
     let mut success = false;
-    for (slice, bound) in slice.iter_mut().zip(bound.iter()) {
+    for (slice, bound) in slice.iter_mut().zip(bound.iter()).rev() {
         *slice += 1;
         if *slice == *bound {
             *slice = 0;
@@ -79,6 +81,12 @@ fn inc_slice(slice: &mut [Ix], bound: &[Ix]) -> bool {
         }
     }
     success
+}
+
+impl fmt::Display for ProgState {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}:\n{}", self.name, self.state)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -105,5 +113,11 @@ impl Gather {
         shape.push(source_dim);
         let array = Array::from_shape_vec(shape, array).unwrap();
         Self { data: array,  name: name.into() }
+    }
+}
+
+impl fmt::Display for Gather {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}:\n{}", self.name, self.data)
     }
 }
