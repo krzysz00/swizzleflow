@@ -10,3 +10,5 @@ ndarray = { version = "0.12", features = ["blas"] }
 num-integer = "0.1.39"
 smallvec = "0.6.9"
 itertools = "0.8.0"
+bit-vec = "0.5.1"
+byteorder = "1.3.1"

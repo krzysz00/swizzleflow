@@ -12,13 +12,17 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+mod misc;
 mod state;
 mod swizzle_ops;
+mod transition_matrix;
 
 use ndarray::{Array,Ix};
 use state::{ProgState,Symbolic};
 use swizzle_ops::{fan,rotate,OpAxis};
 use swizzle_ops::{simple_fans,simple_rotations};
+
+use transition_matrix::{DenseTransitionMatrix,build_mat};
 
 fn trove(m: Ix, n: Ix) -> ProgState {
     let array = Array::from_shape_fn((m, n),
@@ -51,4 +55,8 @@ fn main() {
              simple_fans(3, 16, OpAxis::Rows).len(),
              simple_rotations(3, 16, OpAxis::Rows).len());
     println!("{:?}", simple_fans(3, 16, OpAxis::Columns).iter().map(|x| &x.name).collect::<Vec<_>>());
+
+    let small_fans = simple_fans(3, 4, OpAxis::Rows);
+    let matrix: DenseTransitionMatrix = build_mat(&small_fans, &[3, 4], &[3, 4]);
+    println!("Matrix:\n{:?}", matrix);
 }

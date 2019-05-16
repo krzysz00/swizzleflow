@@ -1,3 +1,17 @@
+// Copyright (C) 2019 Krzysztof Drewniak et al.
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::state::Gather;
 
 use ndarray::{Ix,Ixs};
@@ -68,16 +82,16 @@ pub fn identity(m: Ix, n: Ix) -> Gather {
     Gather::new(2, &[m, n], |idxs, ops| ops.extend(idxs), "id")
 }
 
-pub fn simple_fans(m: Ix, n: Ix, perm_within: OpAxis) -> HashSet<Gather> {
+pub fn simple_fans(m: Ix, n: Ix, perm_within: OpAxis) -> Vec<Gather> {
     let mut ret = HashSet::new();
     ret.insert(identity(m, n));
     let k_bound = cmp::max(m, n);
     let c_bound = match perm_within { Rows => n, Columns => m };
     ret.extend(iproduct!((0..k_bound), (0..c_bound)).map(|(k, c)| fan(m, n, perm_within, k, c)));
-    ret
+    ret.into_iter().collect()
 }
 
-pub fn simple_rotations(m: Ix, n: Ix, perm_within: OpAxis) -> HashSet<Gather> {
+pub fn simple_rotations(m: Ix, n: Ix, perm_within: OpAxis) -> Vec<Gather> {
     let mut ret = HashSet::new();
     ret.insert(identity(m, n));
     let k_bound = cmp::max(m, n) as isize;
@@ -87,5 +101,5 @@ pub fn simple_rotations(m: Ix, n: Ix, perm_within: OpAxis) -> HashSet<Gather> {
                          (2..=d_bound).filter(|i| d_bound % i == 0),
                          (-c_bound+1..c_bound))
                .map(|(k, d, c)| rotate(m, n, perm_within, k, d, c)));
-    ret
+    ret.into_iter().collect()
 }
