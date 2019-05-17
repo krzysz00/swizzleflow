@@ -12,6 +12,8 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+pub mod swizzle;
+
 use crate::state::Gather;
 use crate::misc::ShapeVec;
 
@@ -20,14 +22,14 @@ use smallvec::SmallVec;
 use std::borrow::Cow;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct Operators {
+pub struct OpSet {
     pub name: Cow<'static, str>,
     pub ops: Vec<Gather>,
     pub in_shape: ShapeVec,
     pub out_shape: ShapeVec,
 }
 
-impl Operators {
+impl OpSet {
     pub fn new<T>(name: T, ops: Vec<Gather>, in_shape: ShapeVec, out_shape: ShapeVec) -> Self
     where T: Into<Cow<'static, str>> {
         Self { name: name.into(), ops, in_shape, out_shape }

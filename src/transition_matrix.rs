@@ -16,7 +16,7 @@ use ndarray::{Ix,Array2,Axis,Dimension};
 use std::io::{Write,Read};
 use std::io;
 
-use crate::operators::Operators;
+use crate::operators::OpSet;
 use crate::misc::{EPSILON,ShapeVec};
 
 use bit_vec::BitVec;
@@ -138,7 +138,7 @@ impl TransitionMatrix for DenseTransitionMatrix {
     }
 }
 
-pub fn build_mat<T: TransitionMatrix>(ops: &Operators) -> T {
+pub fn build_mat<T: TransitionMatrix>(ops: &OpSet) -> T {
     let out_slots: usize = ops.out_shape.iter().product();
     let in_slots: usize = ops.in_shape.iter().product();
     let len = (out_slots.pow(2)) * (in_slots.pow(2));
@@ -162,7 +162,7 @@ pub fn build_mat<T: TransitionMatrix>(ops: &Operators) -> T {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::swizzle_ops::{simple_fans,OpAxis};
+    use crate::operators::swizzle::{simple_fans,OpAxis};
 
     #[test]
     fn correct_length_trove_rows() {
@@ -174,7 +174,7 @@ mod tests {
     #[cfg(not(debug_assertions))]
     #[test]
     fn correct_length_big_matrix() {
-        use crate::swizzle_ops::simple_rotations;
+        use crate::operators::swizzle::simple_rotations;
         let big_matrix: DenseTransitionMatrix = build_mat(&simple_rotations(4, 32, OpAxis::Columns));
         assert_eq!(big_matrix.n_ones(), 246272);
     }

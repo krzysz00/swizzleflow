@@ -15,7 +15,6 @@
 mod misc;
 mod state;
 mod operators;
-mod swizzle_ops;
 mod transition_matrix;
 
 use ndarray::{Array,Ix};
@@ -39,7 +38,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::trove;
-    use crate::swizzle_ops::{fan,rotate,OpAxis};
+    use crate::operators::swizzle::{fan,rotate,OpAxis};
     use crate::state::ProgState;
 
     fn fixed_solution_from_scala_3x8() -> ProgState {
