@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::state::Gather;
+use crate::operators::Operators;
 
 use ndarray::{Ix,Ixs};
 use num_integer::Integer;
@@ -21,6 +22,7 @@ use std::collections::HashSet;
 use std::cmp;
 
 use itertools::iproduct;
+use smallvec::smallvec;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum OpAxis { Rows, Columns }
@@ -82,16 +84,17 @@ pub fn identity(m: Ix, n: Ix) -> Gather {
     Gather::new(2, &[m, n], |idxs, ops| ops.extend(idxs), "id")
 }
 
-pub fn simple_fans(m: Ix, n: Ix, perm_within: OpAxis) -> Vec<Gather> {
+pub fn simple_fans(m: Ix, n: Ix, perm_within: OpAxis) -> Operators {
     let mut ret = HashSet::new();
     ret.insert(identity(m, n));
     let k_bound = cmp::max(m, n);
     let c_bound = match perm_within { Rows => n, Columns => m };
     ret.extend(iproduct!((0..k_bound), (0..c_bound)).map(|(k, c)| fan(m, n, perm_within, k, c)));
-    ret.into_iter().collect()
+    let name = match perm_within { Rows => "sFr", Columns => "sFc"};
+    Operators::new(name, ret.into_iter().collect(), smallvec![m, n], smallvec![m, n])
 }
 
-pub fn simple_rotations(m: Ix, n: Ix, perm_within: OpAxis) -> Vec<Gather> {
+pub fn simple_rotations(m: Ix, n: Ix, perm_within: OpAxis) -> Operators {
     let mut ret = HashSet::new();
     ret.insert(identity(m, n));
     let k_bound = cmp::max(m, n) as isize;
@@ -101,5 +104,6 @@ pub fn simple_rotations(m: Ix, n: Ix, perm_within: OpAxis) -> Vec<Gather> {
                          (2..=d_bound).filter(|i| d_bound % i == 0),
                          (-c_bound+1..c_bound))
                .map(|(k, d, c)| rotate(m, n, perm_within, k, d, c)));
-    ret.into_iter().collect()
+    let name = match perm_within { Rows => "sRr", Columns => "sRc"};
+    Operators::new(name, ret.into_iter().collect(), smallvec![m, n], smallvec![m, n])
 }

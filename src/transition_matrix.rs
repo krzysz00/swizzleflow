@@ -16,7 +16,7 @@ use ndarray::{Ix,Array2,Axis,Dimension};
 use std::io::{Write,Read};
 use std::io;
 
-use crate::state::Gather;
+use crate::operators::Operators;
 use crate::misc::{EPSILON,ShapeVec};
 
 use bit_vec::BitVec;
@@ -132,12 +132,12 @@ impl TransitionMatrix for DenseTransitionMatrix {
     }
 }
 
-pub fn build_mat<T: TransitionMatrix>(ops: &[Gather], out_shape: &[Ix], in_shape: &[Ix]) -> T {
-    let out_slots: usize = out_shape.iter().product();
-    let in_slots: usize = in_shape.iter().product();
+pub fn build_mat<T: TransitionMatrix>(ops: &Operators) -> T {
+    let out_slots: usize = ops.out_shape.iter().product();
+    let in_slots: usize = ops.in_shape.iter().product();
     let len = (out_slots.pow(2)) * (in_slots.pow(2));
-    let mut ret = T::empty(len, out_shape, in_shape);
-    for op in ops {
+    let mut ret = T::empty(len, &ops.out_shape, &ops.in_shape);
+    for op in &ops.ops {
         let axis_num = op.data.ndim() - 1;
         let output_shape = &op.data.shape()[0..axis_num];
         for (input1, output1) in op.data.lanes(Axis(axis_num)).into_iter()

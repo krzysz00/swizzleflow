@@ -14,6 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 mod misc;
 mod state;
+mod operators;
 mod swizzle_ops;
 mod transition_matrix;
 
@@ -50,13 +51,13 @@ fn main() {
 
     println!("Basis sets tests");
     println!("cf: {} cr: {} rf: {} rr: {}",
-             simple_fans(3, 16, OpAxis::Columns).len(),
-             simple_rotations(3, 16, OpAxis::Columns).len(),
-             simple_fans(3, 16, OpAxis::Rows).len(),
-             simple_rotations(3, 16, OpAxis::Rows).len());
-    println!("{:?}", simple_fans(3, 16, OpAxis::Columns).iter().map(|x| &x.name).collect::<Vec<_>>());
+             simple_fans(3, 16, OpAxis::Columns).ops.len(),
+             simple_rotations(3, 16, OpAxis::Columns).ops.len(),
+             simple_fans(3, 16, OpAxis::Rows).ops.len(),
+             simple_rotations(3, 16, OpAxis::Rows).ops.len());
+    println!("{:?}", simple_fans(3, 16, OpAxis::Columns).ops.iter().map(|x| &x.name).collect::<Vec<_>>());
 
     let small_fans = simple_fans(3, 4, OpAxis::Rows);
-    let matrix: DenseTransitionMatrix = build_mat(&small_fans, &[3, 4], &[3, 4]);
+    let matrix: DenseTransitionMatrix = build_mat(&small_fans);
     println!("Matrix:\n{:?}", matrix);
 }
