@@ -17,14 +17,13 @@ use std::io::{Write,Read};
 use std::io;
 
 use crate::state::Gather;
-use crate::misc::EPSILON;
+use crate::misc::{EPSILON,ShapeVec};
 
-use smallvec::SmallVec;
 use bit_vec::BitVec;
 
 use byteorder::{LittleEndian,WriteBytesExt,ReadBytesExt};
 
-type ShapeVec = SmallVec<[usize; 3]>;
+
 // The strides need to start with 1
 pub trait TransitionMatrix: Sized {
     fn get(&self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix]) -> bool;

@@ -13,3 +13,4 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pub(crate) const EPSILON: f32 = 1e-5;
+pub type ShapeVec = smallvec::SmallVec<[usize; 3]>;
