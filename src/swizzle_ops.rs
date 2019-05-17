@@ -107,3 +107,16 @@ pub fn simple_rotations(m: Ix, n: Ix, perm_within: OpAxis) -> Operators {
     let name = match perm_within { Rows => "sRr", Columns => "sRc"};
     Operators::new(name, ret.into_iter().collect(), smallvec![m, n], smallvec![m, n])
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn scala_3x16_basis_sizes() {
+        assert_eq!(simple_fans(3, 16, OpAxis::Columns).ops.len(), 5);
+        assert_eq!(simple_rotations(3, 16, OpAxis::Columns).ops.len(), 36);
+        assert_eq!(simple_fans(3, 16, OpAxis::Rows).ops.len(), 255);
+        assert_eq!(simple_rotations(3, 16, OpAxis::Rows).ops.len(), 256);
+    }
+}

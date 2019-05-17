@@ -20,10 +20,6 @@ mod transition_matrix;
 
 use ndarray::{Array,Ix};
 use state::{ProgState,Symbolic};
-use swizzle_ops::{fan,rotate,OpAxis};
-use swizzle_ops::{simple_fans,simple_rotations};
-
-use transition_matrix::{DenseTransitionMatrix,build_mat};
 
 fn trove(m: Ix, n: Ix) -> ProgState {
     let array = Array::from_shape_fn((m, n),
@@ -32,32 +28,34 @@ fn trove(m: Ix, n: Ix) -> ProgState {
     ProgState::new((m * n) as Symbolic, array, "trove")
 }
 
-fn fixed_solution_from_scala() -> ProgState {
-    let initial = ProgState::linear(24, &[3, 8]);
-    let s1 = initial.gather_by(&fan(3, 8, OpAxis::Columns, 0, 2));
-    let s2 = s1.gather_by(&rotate(3, 8, OpAxis::Columns, -7, 8, 0));
-    let s3 = s2.gather_by(&fan(3, 8, OpAxis::Rows, 0, 3));
-    let s4 = s3.gather_by(&rotate(3, 8, OpAxis::Rows, -5, 3, 0));
-    s4
-}
-
 fn main() {
     let spec = trove(3, 8);
-    let solution = fixed_solution_from_scala();
     println!("{}", spec);
-    println!("{}", solution);
-    println!("{:?}", spec);
-    println!("Equality: {}", spec == solution);
 
     println!("Basis sets tests");
-    println!("cf: {} cr: {} rf: {} rr: {}",
-             simple_fans(3, 16, OpAxis::Columns).ops.len(),
-             simple_rotations(3, 16, OpAxis::Columns).ops.len(),
-             simple_fans(3, 16, OpAxis::Rows).ops.len(),
-             simple_rotations(3, 16, OpAxis::Rows).ops.len());
-    println!("{:?}", simple_fans(3, 16, OpAxis::Columns).ops.iter().map(|x| &x.name).collect::<Vec<_>>());
 
-    let small_fans = simple_fans(3, 4, OpAxis::Rows);
-    let matrix: DenseTransitionMatrix = build_mat(&small_fans);
-    println!("Matrix:\n{:?}", matrix);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::trove;
+    use crate::swizzle_ops::{fan,rotate,OpAxis};
+    use crate::state::ProgState;
+
+    fn fixed_solution_from_scala_3x8() -> ProgState {
+        let initial = ProgState::linear(24, &[3, 8]);
+        let s1 = initial.gather_by(&fan(3, 8, OpAxis::Columns, 0, 2));
+        let s2 = s1.gather_by(&rotate(3, 8, OpAxis::Columns, -7, 8, 0));
+        let s3 = s2.gather_by(&fan(3, 8, OpAxis::Rows, 0, 3));
+        let s4 = s3.gather_by(&rotate(3, 8, OpAxis::Rows, -5, 3, 0));
+        s4
+    }
+
+    #[test]
+    fn trove_solution_works() {
+        let spec = trove(3, 8);
+        let solution = fixed_solution_from_scala_3x8();
+        println!("spec {}\n solution {}", spec, solution);
+        assert_eq!(spec, solution);
+    }
 }

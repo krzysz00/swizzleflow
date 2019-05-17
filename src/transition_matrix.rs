@@ -34,6 +34,8 @@ pub trait TransitionMatrix: Sized {
     // The shape is [target1, target2, current1, current2]
     fn to_f32_mat(&self) -> Array2<f32>;
     fn from_f32_mat(mat: &Array2<f32>, out_shape: &[Ix], in_shape: &[Ix]) -> Self;
+
+    fn n_ones(&self) -> usize;
 }
 
 fn to_index(i1: &[Ix], i2: &[Ix], ishape: &[Ix], j1: &[Ix], j2: &[Ix], jshape: &[Ix]) -> Ix {
@@ -130,6 +132,10 @@ impl TransitionMatrix for DenseTransitionMatrix {
         let bits = mat.as_slice().unwrap().iter().map(|f| f.abs() < EPSILON).collect();
         Self::new(bits, ShapeVec::from_slice(out_shape), ShapeVec::from_slice(in_shape))
     }
+
+    fn n_ones(&self) -> usize {
+        self.data.iter().filter(|x| *x).count()
+    }
 }
 
 pub fn build_mat<T: TransitionMatrix>(ops: &Operators) -> T {
@@ -151,4 +157,25 @@ pub fn build_mat<T: TransitionMatrix>(ops: &Operators) -> T {
             }
     }
     ret
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::swizzle_ops::{simple_fans,OpAxis};
+
+    #[test]
+    fn correct_length_trove_rows() {
+        let small_fans = simple_fans(3, 4, OpAxis::Rows);
+        let matrix: DenseTransitionMatrix = build_mat(&small_fans);
+        assert_eq!(matrix.n_ones(), 488);
+    }
+
+    #[cfg(not(debug_assertions))]
+    #[test]
+    fn correct_length_big_matrix() {
+        use crate::swizzle_ops::simple_rotations;
+        let big_matrix: DenseTransitionMatrix = build_mat(&simple_rotations(4, 32, OpAxis::Columns));
+        assert_eq!(big_matrix.n_ones(), 246272);
+    }
 }
