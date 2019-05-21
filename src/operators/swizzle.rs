@@ -14,6 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::state::Gather;
 use super::OpSet;
+use crate::errors::*;
 
 use ndarray::{Ix,Ixs};
 use num_integer::Integer;
@@ -80,23 +81,37 @@ pub fn rotate(m: Ix, n: Ix, perm_within: OpAxis, stable_scale: Ixs, div: Ix, shi
     }
 }
 
-pub fn identity(m: Ix, n: Ix) -> Gather {
-    Gather::new(2, &[m, n], |idxs, ops| ops.extend(idxs), "id")
+pub fn identity(shape: &[Ix]) -> Gather {
+    Gather::new(shape.len(), shape, |idxs, ops| ops.extend(idxs), "id")
 }
 
-pub fn simple_fans(m: Ix, n: Ix, perm_within: OpAxis) -> OpSet {
+pub fn simple_fans(shape: &[Ix], perm_within: OpAxis) -> Result<OpSet> {
     let mut ret = HashSet::new();
-    ret.insert(identity(m, n));
+
+    if shape.len() != 2 {
+        return Err(ErrorKind::InvalidShapeDim(shape.to_owned(), 2).into());
+    }
+    let m = shape[0];
+    let n = shape[1];
+
+    ret.insert(identity(shape));
     let k_bound = cmp::max(m, n);
     let c_bound = match perm_within { Rows => n, Columns => m };
     ret.extend(iproduct!((0..k_bound), (0..c_bound)).map(|(k, c)| fan(m, n, perm_within, k, c)));
     let name = match perm_within { Rows => "sFr", Columns => "sFc"};
-    OpSet::new(name, ret.into_iter().collect(), smallvec![m, n], smallvec![m, n])
+    Ok(OpSet::new(name, ret.into_iter().collect(), smallvec![m, n], smallvec![m, n]))
 }
 
-pub fn simple_rotations(m: Ix, n: Ix, perm_within: OpAxis) -> OpSet {
+pub fn simple_rotations(shape: &[Ix], perm_within: OpAxis) -> Result<OpSet> {
     let mut ret = HashSet::new();
-    ret.insert(identity(m, n));
+
+    if shape.len() != 2 {
+        return Err(ErrorKind::InvalidShapeDim(shape.to_owned(), 2).into());
+    }
+    let m = shape[0];
+    let n = shape[1];
+
+    ret.insert(identity(shape));
     let k_bound = cmp::max(m, n) as isize;
     let c_bound = match perm_within { Rows => n, Columns => m } as isize;
     let d_bound = match perm_within { Rows => m, Columns => n};
@@ -105,7 +120,7 @@ pub fn simple_rotations(m: Ix, n: Ix, perm_within: OpAxis) -> OpSet {
                          (-c_bound+1..c_bound))
                .map(|(k, d, c)| rotate(m, n, perm_within, k, d, c)));
     let name = match perm_within { Rows => "sRr", Columns => "sRc"};
-    OpSet::new(name, ret.into_iter().collect(), smallvec![m, n], smallvec![m, n])
+    Ok(OpSet::new(name, ret.into_iter().collect(), smallvec![m, n], smallvec![m, n]))
 }
 
 #[cfg(test)]
@@ -114,9 +129,15 @@ mod tests {
 
     #[test]
     fn scala_3x16_basis_sizes() {
-        assert_eq!(simple_fans(3, 16, OpAxis::Columns).ops.len(), 5);
-        assert_eq!(simple_rotations(3, 16, OpAxis::Columns).ops.len(), 36);
-        assert_eq!(simple_fans(3, 16, OpAxis::Rows).ops.len(), 255);
-        assert_eq!(simple_rotations(3, 16, OpAxis::Rows).ops.len(), 256);
+        assert_eq!(simple_fans(&[3, 16], OpAxis::Columns).unwrap().ops.len(), 5);
+        assert_eq!(simple_rotations(&[3, 16], OpAxis::Columns).unwrap().ops.len(), 36);
+        assert_eq!(simple_fans(&[3, 16], OpAxis::Rows).unwrap().ops.len(), 255);
+        assert_eq!(simple_rotations(&[3, 16], OpAxis::Rows).unwrap().ops.len(), 256);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_shape_interface() {
+        simple_fans(&[3], OpAxis::Columns).unwrap();
     }
 }

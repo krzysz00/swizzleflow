@@ -273,7 +273,7 @@ mod tests {
 
     #[test]
     fn correct_length_trove_rows() {
-        let small_fans = simple_fans(3, 4, OpAxis::Rows);
+        let small_fans = simple_fans(&[3, 4], OpAxis::Rows).unwrap();
         let matrix: DenseTransitionMatrix = build_mat(&small_fans);
         assert_eq!(matrix.n_ones(), 488);
     }
@@ -282,7 +282,7 @@ mod tests {
     #[test]
     fn correct_length_big_matrix() {
         use crate::operators::swizzle::simple_rotations;
-        let big_matrix: DenseTransitionMatrix = build_mat(&simple_rotations(4, 32, OpAxis::Columns));
+        let big_matrix: DenseTransitionMatrix = build_mat(&simple_rotations(&[4, 32], OpAxis::Columns).unwrap());
         assert_eq!(big_matrix.n_ones(), 246272);
     }
 }

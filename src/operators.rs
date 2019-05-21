@@ -23,8 +23,6 @@ use smallvec::SmallVec;
 
 use std::borrow::Cow;
 
-use serde::{Serialize, Deserialize};
-
 use std::path::Path;
 use std::time::Instant;
 
@@ -55,6 +53,7 @@ impl OpSet {
 pub struct SynthesisLevel {
     pub ops: OpSet,
     pub matrix: Option<TransitionMatrix>,
+    // eventually redundant
     pub prune: bool,
 }
 

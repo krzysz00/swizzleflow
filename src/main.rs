@@ -14,8 +14,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 mod misc;
 mod state;
-mod operators;
 mod transition_matrix;
+mod operators;
+mod problem_desc;
 
 use ndarray::{Array,Ix};
 use state::{ProgState,Symbolic};
@@ -36,30 +37,35 @@ pub mod errors {
                 description("unknown matrix type")
                 display("unknown matrix type: {}", t)
             }
+            InvalidShapeDim(shape: Vec<usize>, dims: usize) {
+                description("invalid shape dimensions")
+                display("invalid shape {:?} - should be {} dimensional", shape, dims)
+            }
+            ShapeMismatch(shape1: Vec<usize>, shape2: Vec<usize>) {
+                description("shapes don't match")
+                display("{:?} should match up with {:?}", shape1, shape2)
+            }
+            UnknownBasisType(basis: String) {
+                description("unknown basis type")
+                display("unknown basis type: {}", basis)
+            }
+            UnknownProblem(problem: String) {
+                description("unknown problem")
+                display("unknown problem: {}", problem)
+            }
         }
     }
 }
 
 use errors::*;
 
-fn trove(m: Ix, n: Ix) -> ProgState {
-    let array = Array::from_shape_fn((m, n),
-                                     move |(i, j)| (i + j * m) as Symbolic)
-        .into_dyn();
-    ProgState::new((m * n) as Symbolic, array, "trove")
-}
-
 fn main() -> Result<()> {
-    let spec = trove(3, 8);
-    println!("{}", spec);
-
-    println!("Basis sets tests");
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
-    use super::trove;
+    use crate::problem_desc::trove;
     use crate::operators::swizzle::{fan,rotate,OpAxis};
     use crate::state::ProgState;
 
