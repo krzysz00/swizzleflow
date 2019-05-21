@@ -18,6 +18,11 @@ mod transition_matrix;
 mod operators;
 mod problem_desc;
 
+use clap::clap_app;
+use std::path::Path;
+use std::io::BufReader;
+use std::fs::File;
+
 pub mod errors {
     use error_chain::error_chain;
     error_chain! {
@@ -57,18 +62,40 @@ pub mod errors {
 
 use errors::*;
 
+const DEFAULT_MATRIX_DIR: &'static str = "matrices/";
+
+use crate::problem_desc::ProblemDesc;
 fn main() -> Result<()> {
-    use problem_desc::*;
-    let desc = ProblemDesc {
-            start_name: "linear".to_owned(),
-            end_name: "trove".to_owned(),
-            steps: vec![
-                SynthesisLevelDesc { basis: "sRr".to_owned(),
-                                     in_sizes: vec![3, 4], out_sizes: vec![3, 4],
-                                     prune: false},
-            ]
-        };
-    serde_json::to_writer_pretty(std::io::stdout().lock(), &desc)?;
+    let args =
+        clap_app!(swizzleflow =>
+                  (version: "0.1")
+                  (author: "Krzysztof Drewniak <krzysd@cs.washington.edu> et al.")
+                  (about: "Tool for synthesizing high-performance kernels from dataflow graph sketches")
+                  (@arg matrix_dir: -m --("matrix-dir") +takes_value value_name("MATRIX_DIR")
+                   default_value_os(DEFAULT_MATRIX_DIR.as_ref())
+                   "Directory to store matrices in")
+                  (@arg specs: ... value_name("SPEC") "Specification files (stdin if none specified)")
+        ).setting(clap::AppSettings::TrailingVarArg).get_matches();
+    let matrix_dir = Path::new(args.value_of_os("matrix_dir").unwrap()); // We have a default
+    let specs: Vec<ProblemDesc> = match args.values_of_os("specs") {
+        Some(iter) => {
+            let files: Result<Vec<_>> = iter.map(|s| File::open(s).map_err(|e| e.into())).collect();
+            let result: Result<Vec<_>> =
+                files?.iter().map(|f|
+                                 serde_json::from_reader(BufReader::new(f))
+                                 .map_err(|e| e.into())).collect();
+            result?
+        },
+        None => vec![serde_json::from_reader(BufReader::new(std::io::stdin().lock()))?]
+    };
+
+    let problems: Result<Vec<_>> = specs.iter().map(|s| s.to_problem()).collect();
+    let problems = problems?;
+    for (initial, target, mut levels) in problems {
+        println!("Initial {}", initial);
+        println!("Target {}", target);
+        crate::operators::add_matrices(matrix_dir, &mut levels)?;
+    }
     Ok(())
 }
 

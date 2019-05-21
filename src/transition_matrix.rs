@@ -104,7 +104,7 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
         let target_shape = read_length_tagged_idxs(io)?;
         let current_shape = read_length_tagged_idxs(io)?;
         let len = io.read_u64::<LittleEndian>()? as usize;
-        let io_len = (len + 7) % 8;
+        let io_len = (len + 7) / 8;
         let mut bytes = Vec::with_capacity(io_len);
         unsafe {
             // We need an unitialized pile of storage
