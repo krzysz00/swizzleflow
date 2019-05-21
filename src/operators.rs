@@ -15,11 +15,20 @@
 pub mod swizzle;
 
 use crate::state::Gather;
-use crate::misc::ShapeVec;
+use crate::misc::{ShapeVec,time_since,regularize_float_mat};
+use crate::transition_matrix::{TransitionMatrix, build_or_load_matrix, TransitionMatrixOps};
+use crate::errors::*;
 
 use smallvec::SmallVec;
 
 use std::borrow::Cow;
+
+use serde::{Serialize, Deserialize};
+
+use std::path::Path;
+use std::time::Instant;
+
+use ndarray::Array2;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct OpSet {
@@ -38,6 +47,86 @@ impl OpSet {
     pub fn to_name(&self) -> String {
         let in_strings: SmallVec<[String; 4]> = self.in_shape.iter().map(|v| v.to_string()).collect();
         let out_strings: SmallVec<[String; 4]> = self.out_shape.iter().map(|v| v.to_string()).collect();
-        format!("{}-{}-{}", in_strings.join(","), self.name, out_strings.join(","))
+        format!("{}-{}-{}", out_strings.join(","), self.name, in_strings.join(","))
     }
+}
+
+#[derive(Debug)]
+pub struct SynthesisLevel {
+    pub ops: OpSet,
+    pub matrix: Option<TransitionMatrix>,
+    pub prune: bool,
+}
+
+impl SynthesisLevel {
+    pub fn new(ops: OpSet, prune: bool) -> Self {
+        Self {ops , matrix: None, prune }
+    }
+}
+
+pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel]) -> Result<()> {
+    let first_prune = levels.iter().enumerate()
+        .filter_map(|(i, v)| if v.prune { Some(i) } else { None })
+        .next().unwrap_or(levels.len());
+    let mut our_path = directory.to_path_buf();
+    our_path.push("dummy");
+
+    let outmost_shape = levels[levels.len() - 1].ops.out_shape.clone();
+
+    let mut previous_matrix: Option<Array2<f32>> = None;
+
+    let mut names = String::new();
+    for (_idx, level) in levels.iter_mut().enumerate().rev().take_while(|(i, _)| i >= &first_prune) {
+        let name = level.ops.to_name();
+
+        if names.len() > 0{
+            names.push('_');
+        }
+        names.push_str(&name);
+
+        our_path.set_file_name(names.clone());
+
+        if our_path.exists() {
+            let start = Instant::now();
+            let mat = TransitionMatrix::load_matrix(our_path.as_path())?;
+            let load_time = time_since(start);
+            println!("load:{} [{}]", our_path.display(), load_time);
+            previous_matrix = Some(mat.to_f32_mat());
+            if level.prune {
+                level.matrix = Some(mat);
+            }
+        }
+        else {
+            let mut basis_path = directory.to_path_buf();
+            basis_path.push(name);
+            let basis_matrix = build_or_load_matrix(&level.ops, &basis_path)?.to_f32_mat();
+            match &mut previous_matrix {
+                Some(prev) => {
+                    let mut output = Array2::<f32>::zeros((prev.shape()[0], basis_matrix.shape()[1]));
+                    let start = Instant::now();
+                    ndarray::linalg::general_mat_mul(1.0, prev, &basis_matrix, 0.0, &mut output);
+                    let time = time_since(start);
+                    println!("mul:{} [{}]", names, time);
+                    regularize_float_mat(&mut output);
+                    std::mem::swap(&mut output, prev);
+                    std::mem::drop(output);
+
+                    let our_form = TransitionMatrix::from_f32_mat(prev, &outmost_shape, &level.ops.in_shape);
+                    our_form.store_matrix(&our_path)?;
+                    if level.prune {
+                        level.matrix = Some(our_form);
+                    }
+                }
+                None => {
+                    // Here, we've just generated the basis matrix
+                    println!("Using newly-build {}", our_path.display());
+                    if level.prune {
+                        level.matrix = Some(TransitionMatrix::from_f32_mat(&basis_matrix, &level.ops.out_shape, &level.ops.in_shape));
+                    }
+                    previous_matrix = Some(basis_matrix);
+                }
+            }
+        }
+    }
+    Ok(())
 }

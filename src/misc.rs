@@ -14,3 +14,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pub(crate) const EPSILON: f32 = 1e-5;
 pub type ShapeVec = smallvec::SmallVec<[usize; 3]>;
+
+pub fn time_since(start: std::time::Instant) -> f64 {
+    let dur = start.elapsed();
+    dur.as_secs() as f64 + (dur.subsec_nanos() as f64 / 1.0e9)
+}
+
+use ndarray::Array2;
+pub fn regularize_float_mat(arr: &mut Array2<f32>) {
+    arr.mapv_inplace(|v| if v.abs() < EPSILON { 0.0 } else { 1.0 })
+}

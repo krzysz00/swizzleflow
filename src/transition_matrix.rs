@@ -15,21 +15,23 @@
 use ndarray::{Ix,Array2,Axis,Dimension};
 use std::io::{Write,Read};
 use std::io;
+use std::path::Path;
+use std::fs::File;
+use std::time::Instant;
 
 use crate::operators::OpSet;
-use crate::misc::{EPSILON,ShapeVec};
+use crate::misc::{EPSILON,ShapeVec,time_since};
+use crate::errors::*;
 
 use bit_vec::BitVec;
 
 use byteorder::{LittleEndian,WriteBytesExt,ReadBytesExt};
 
-
-// The strides need to start with 1
-pub trait TransitionMatrix: Sized {
+pub trait TransitionMatrixOps: Sized + std::fmt::Debug {
     fn get(&self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix]) -> bool;
     fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool);
-    fn write<T: Write>(&self, io: &mut T) -> io::Result<()>;
-    fn read<T: Read>(io: &mut T) -> io::Result<Self>;
+    fn write<T: Write>(&self, io: &mut T) -> Result<()>;
+    fn read<T: Read>(io: &mut T) -> Result<Self>;
     fn empty(len: usize, out_shape: &[Ix], in_shape: &[Ix]) -> Self;
     // The shape is [target1, target2, current1, current2]
     fn to_f32_mat(&self) -> Array2<f32>;
@@ -66,7 +68,7 @@ fn read_length_tagged_idxs<T: Read>(io: &mut T) -> io::Result<ShapeVec> {
     Ok(buffer)
 }
 
-#[derive(Clone,Debug)]
+#[derive(Debug)]
 pub struct DenseTransitionMatrix {
     data: BitVec,
     target_shape: ShapeVec,
@@ -79,7 +81,7 @@ impl DenseTransitionMatrix {
     }
 }
 
-impl TransitionMatrix for DenseTransitionMatrix {
+impl TransitionMatrixOps for DenseTransitionMatrix {
     fn get(&self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix]) -> bool {
         self.data[to_index(target1, target2, &self.target_shape,
                            current1, current2, &self.current_shape)]
@@ -91,14 +93,14 @@ impl TransitionMatrix for DenseTransitionMatrix {
         self.data.set(index, value);
     }
 
-    fn write<T: Write>(&self, io: &mut T) -> io::Result<()> {
+    fn write<T: Write>(&self, io: &mut T) -> Result<()> {
         write_length_tagged_idxs(io, &self.target_shape)?;
         write_length_tagged_idxs(io, &self.current_shape)?;
         io.write_u64::<LittleEndian>(self.data.len() as u64)?;
-        io.write_all(&mut self.data.to_bytes())
+        io.write_all(&mut self.data.to_bytes()).map_err(|e| e.into())
     }
 
-    fn read<T: Read>(io: &mut T) -> io::Result<Self> {
+    fn read<T: Read>(io: &mut T) -> Result<Self> {
         let target_shape = read_length_tagged_idxs(io)?;
         let current_shape = read_length_tagged_idxs(io)?;
         let len = io.read_u64::<LittleEndian>()? as usize;
@@ -138,7 +140,7 @@ impl TransitionMatrix for DenseTransitionMatrix {
     }
 }
 
-pub fn build_mat<T: TransitionMatrix>(ops: &OpSet) -> T {
+pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet) -> T {
     let out_slots: usize = ops.out_shape.iter().product();
     let in_slots: usize = ops.in_shape.iter().product();
     let len = (out_slots.pow(2)) * (in_slots.pow(2));
@@ -157,6 +159,111 @@ pub fn build_mat<T: TransitionMatrix>(ops: &OpSet) -> T {
             }
     }
     ret
+}
+
+#[derive(Debug)]
+pub enum TransitionMatrix {
+    Dense(DenseTransitionMatrix),
+}
+
+const DENSE_MATRIX_TAG: u8 = 1;
+const FILE_MARKER: &[u8; 8] = b"SWIZFLOW";
+
+impl TransitionMatrixOps for TransitionMatrix {
+    fn get(&self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix]) -> bool {
+        match self {
+            TransitionMatrix::Dense(d) => d.get(current1, current2, target1, target2)
+        }
+    }
+
+    fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool) {
+        match self {
+            TransitionMatrix::Dense(d) => d.set(current1, current2, target1, target2, value)
+        }
+    }
+
+    fn write<T: Write>(&self, io: &mut T) -> Result<()> {
+        io.write_all(FILE_MARKER)?;
+        match self {
+            TransitionMatrix::Dense(d) => {
+                io.write_u8(DENSE_MATRIX_TAG)?;
+                Ok(d.write(io)?)
+            }
+        }
+    }
+
+    fn read<T: Read>(io: &mut T) -> Result<Self> {
+        let mut header: [u8; 8] = [0; 8];
+        io.read_exact(&mut header)?;
+        if &header != FILE_MARKER {
+            return Err(ErrorKind::NotAMatrix.into());
+        }
+        let tag = io.read_u8()?;
+        match tag {
+            DENSE_MATRIX_TAG => {
+                let mat = DenseTransitionMatrix::read(io)?;
+                Ok(TransitionMatrix::Dense(mat))
+            }
+            e => Err(ErrorKind::UnknownMatrixType(e).into())
+        }
+    }
+
+    fn empty(len: usize, out_shape: &[Ix], in_shape: &[Ix]) -> Self {
+        TransitionMatrix::Dense(DenseTransitionMatrix::empty(len, out_shape, in_shape))
+    }
+
+    fn to_f32_mat(&self) -> Array2<f32> {
+        match self {
+            TransitionMatrix::Dense(d) => d.to_f32_mat()
+        }
+    }
+
+    fn from_f32_mat(mat: &Array2<f32>, out_shape: &[Ix], in_shape: &[Ix]) -> Self {
+       TransitionMatrix::Dense(DenseTransitionMatrix::from_f32_mat(mat, out_shape, in_shape))
+    }
+
+    fn n_ones(&self) -> usize {
+        match self {
+            TransitionMatrix::Dense(d) => d.n_ones()
+        }
+    }
+}
+
+impl TransitionMatrix {
+    pub fn load_matrix(path: impl AsRef<Path>) -> Result<Self> {
+        let mut file = File::open(path.as_ref())?;
+        Self::read(&mut file)
+    }
+
+    pub fn store_matrix(&self, path: impl AsRef<Path>) -> Result<()> {
+        let mut file = File::create(path)?;
+        self.write(&mut file)
+    }
+}
+
+impl From<DenseTransitionMatrix> for TransitionMatrix {
+    fn from(d: DenseTransitionMatrix) -> Self {
+        TransitionMatrix::Dense(d)
+    }
+}
+
+pub fn build_or_load_matrix(ops: &OpSet, path: impl AsRef<Path>) -> Result<TransitionMatrix> {
+    let path = path.as_ref();
+    if path.exists() {
+        let start = Instant::now();
+        let ret = TransitionMatrix::load_matrix(path);
+        let dur = time_since(start);
+        println!("load:{} [{}]", path.display(), dur);
+        ret
+    }
+    else {
+        let start = Instant::now();
+        let matrix = TransitionMatrix::Dense(build_mat(ops));
+        matrix.store_matrix(path)?;
+        let dur = time_since(start);
+        println!("build:{} [{}]", path.display(), dur);
+        Ok(matrix)
+    }
 }
 
 #[cfg(test)]

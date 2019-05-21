@@ -20,6 +20,28 @@ mod transition_matrix;
 use ndarray::{Array,Ix};
 use state::{ProgState,Symbolic};
 
+pub mod errors {
+    use error_chain::error_chain;
+    error_chain! {
+        foreign_links {
+            Io(std::io::Error);
+        }
+
+        errors {
+            NotAMatrix {
+                description("not a matrix")
+                display("not a matrix")
+            }
+            UnknownMatrixType(t: u8) {
+                description("unknown matrix type")
+                display("unknown matrix type: {}", t)
+            }
+        }
+    }
+}
+
+use errors::*;
+
 fn trove(m: Ix, n: Ix) -> ProgState {
     let array = Array::from_shape_fn((m, n),
                                      move |(i, j)| (i + j * m) as Symbolic)
@@ -27,12 +49,12 @@ fn trove(m: Ix, n: Ix) -> ProgState {
     ProgState::new((m * n) as Symbolic, array, "trove")
 }
 
-fn main() {
+fn main() -> Result<()> {
     let spec = trove(3, 8);
     println!("{}", spec);
 
     println!("Basis sets tests");
-
+    Ok(())
 }
 
 #[cfg(test)]
