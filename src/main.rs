@@ -18,14 +18,12 @@ mod transition_matrix;
 mod operators;
 mod problem_desc;
 
-use ndarray::{Array,Ix};
-use state::{ProgState,Symbolic};
-
 pub mod errors {
     use error_chain::error_chain;
     error_chain! {
         foreign_links {
             Io(std::io::Error);
+            Json(serde_json::Error);
         }
 
         errors {
@@ -60,6 +58,17 @@ pub mod errors {
 use errors::*;
 
 fn main() -> Result<()> {
+    use problem_desc::*;
+    let desc = ProblemDesc {
+            start_name: "linear".to_owned(),
+            end_name: "trove".to_owned(),
+            steps: vec![
+                SynthesisLevelDesc { basis: "sRr".to_owned(),
+                                     in_sizes: vec![3, 4], out_sizes: vec![3, 4],
+                                     prune: false},
+            ]
+        };
+    serde_json::to_writer_pretty(std::io::stdout().lock(), &desc)?;
     Ok(())
 }
 
@@ -70,7 +79,7 @@ mod tests {
     use crate::state::ProgState;
 
     fn fixed_solution_from_scala_3x8() -> ProgState {
-        let initial = ProgState::linear(24, &[3, 8]);
+        let initial = ProgState::linear(&[3, 8]);
         let s1 = initial.gather_by(&fan(3, 8, OpAxis::Columns, 0, 2));
         let s2 = s1.gather_by(&rotate(3, 8, OpAxis::Columns, -7, 8, 0));
         let s3 = s2.gather_by(&fan(3, 8, OpAxis::Rows, 0, 3));

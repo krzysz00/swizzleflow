@@ -64,6 +64,14 @@ impl SynthesisLevel {
 }
 
 pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel]) -> Result<()> {
+    // Error checking
+    for subslice in levels.windows(2) {
+        if subslice[0].ops.out_shape != subslice[1].ops.in_shape {
+            return Err(ErrorKind::ShapeMismatch(subslice[0].ops.out_shape.to_vec(),
+                                                subslice[1].ops.in_shape.to_vec()).into())
+        }
+    }
+
     let first_prune = levels.iter().enumerate()
         .filter_map(|(i, v)| if v.prune { Some(i) } else { None })
         .next().unwrap_or(levels.len());

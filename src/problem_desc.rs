@@ -84,7 +84,27 @@ pub fn lookup_problem(problem: &str, shape: &[Ix]) -> Result<ProgState> {
                 other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
             }
         }
+        "id" | "linear" => Ok(ProgState::linear(shape)),
         other => Err(ErrorKind::UnknownProblem(other.to_owned()).into())
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct ProblemDesc {
+    pub start_name: String,
+    pub end_name: String,
+    pub steps: Vec<SynthesisLevelDesc>,
+}
+
+impl ProblemDesc {
+    pub fn to_problem(&self) -> Result<(ProgState, ProgState, Vec<SynthesisLevel>)> {
+        let levels: Result<Vec<SynthesisLevel>> = self.steps.iter().map(|x| x.to_synthesis_level()).collect();
+        let levels = levels?;
+        let start_shape = levels[0].ops.in_shape.as_slice();
+        let end_shape = levels[levels.len() - 1].ops.out_shape.as_slice();
+        let initial = lookup_problem(&self.start_name, start_shape)?;
+        let spec = lookup_problem(&self.end_name, end_shape)?;
+        Ok((initial, spec, levels))
     }
 }
 
@@ -101,5 +121,35 @@ mod tests {
         let trove_spec_arr = Array::from_shape_vec((3, 4), (&trove_spec).to_vec()).unwrap().into_dyn();
         let trove_spec_prog = ProgState::new(12, trove_spec_arr, "trove");
         assert_eq!(trove_spec_prog, trove(3, 4));
+    }
+
+    #[test]
+    pub fn can_construct() {
+        use crate::operators::swizzle;
+        use smallvec::smallvec;
+        use std::collections::HashSet;
+
+        let desc = ProblemDesc {
+            start_name: "linear".to_owned(),
+            end_name: "trove".to_owned(),
+            steps: vec![
+                SynthesisLevelDesc { basis: "sRr".to_owned(),
+                                     in_sizes: vec![3, 4], out_sizes: vec![3, 4],
+                                     prune: false},
+            ]
+        };
+        let (start, end, levels) = desc.to_problem().unwrap();
+        assert_eq!(start, crate::state::ProgState::linear(&[3, 4]));
+        assert_eq!(end, trove(3, 4));
+        assert_eq!(levels.len(), 1);
+        assert_eq!(levels[0].prune, false);
+        assert!(levels[0].matrix.is_none());
+        let ops = &levels[0].ops;
+        let trove_shape: ShapeVec = smallvec![3, 4];
+        assert_eq!(ops.in_shape, trove_shape);
+        assert_eq!(ops.out_shape, trove_shape);
+        assert_eq!(ops.ops.iter().collect::<HashSet<_>>(),
+                   swizzle::simple_rotations(&[3, 4], swizzle::OpAxis::Rows).unwrap().ops
+                   .iter().collect::<HashSet<_>>());
     }
 }

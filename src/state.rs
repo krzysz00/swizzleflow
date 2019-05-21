@@ -66,7 +66,9 @@ impl ProgState {
         Self::making_inverse(domain_max, state, name.into())
     }
 
-    pub fn linear(domain_max: Symbolic, shape: &[Ix]) -> Self {
+    pub fn linear(shape: &[Ix]) -> Self {
+        let domain_max: Ix = shape.iter().product();
+        let domain_max = domain_max as Symbolic;
         let array = (0..domain_max).collect();
         Self::making_inverse(domain_max, Array::from_shape_vec(shape, array).unwrap(), "id".to_owned())
     }
