@@ -22,6 +22,10 @@ use ndarray::Dimension;
 
 use std::time::Instant;
 
+use std::fmt;
+use std::fmt::{Display,Formatter};
+use std::sync::atomic::{AtomicUsize, Ordering};
+
 use itertools::iproduct;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -54,10 +58,60 @@ fn viable(current: &ProgState, target: &ProgState, matrix: &TransitionMatrix) ->
     true
 }
 
+#[derive(Debug, Default)]
+struct SearchLevelStats {
+    tested: AtomicUsize,
+    pruned: AtomicUsize,
+    succeeded: AtomicUsize,
+}
+
+impl SearchLevelStats {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn success(&self) {
+        self.succeeded.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn checking(&self) {
+        self.tested.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn pruned(&self) {
+        self.pruned.fetch_add(1, Ordering::Relaxed);
+    }
+}
+
+impl Clone for SearchLevelStats {
+    fn clone(&self) -> Self {
+        Self { tested: AtomicUsize::new(self.tested.load(Ordering::SeqCst)),
+               pruned: AtomicUsize::new(self.pruned.load(Ordering::SeqCst)),
+               succeeded: AtomicUsize::new(self.succeeded.load(Ordering::SeqCst)), }
+    }
+}
+impl Display for SearchLevelStats {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        // Let's force a memory fence here to be safe
+        let tested = self.tested.load(Ordering::SeqCst);
+        let found = self.succeeded.load(Ordering::Relaxed);
+        let pruned = self.pruned.load(Ordering::Relaxed);
+
+        let continued = tested - found - pruned;
+
+        write!(f, "tested({}), found({}), pruned({}), continued({})",
+               tested, found, pruned, continued)
+    }
+}
+
 fn search(current: ProgState, target: &ProgState,
           levels: &[SynthesisLevel], current_level: usize,
-          mode: Mode) -> bool {
+          stats: &[SearchLevelStats], mode: Mode) -> bool {
+    let tracker = &stats[current_level];
+    tracker.checking();
+
     if &current == target {
+        tracker.success();
         println!("soln:{}", &current.name);
         return true;
     }
@@ -67,6 +121,7 @@ fn search(current: ProgState, target: &ProgState,
 
     let level = &levels[current_level];
     if level.prune && !viable(&current, target, level.matrix.as_ref().unwrap()) {
+        tracker.pruned();
         return false;
     }
 
@@ -75,21 +130,29 @@ fn search(current: ProgState, target: &ProgState,
         Mode::All => {
             // Yep, this is meant not to be short-circuiting
             ops.iter().map(|o| search(current.gather_by(o), target,
-                                      levels, current_level + 1, mode))
+                                      levels, current_level + 1, stats, mode))
                 .fold(false, |acc, new| new || acc)
         }
         Mode::First => {
             ops.iter().any(|o| search(current.gather_by(o), target,
-                                      levels, current_level + 1, mode))
+                                      levels, current_level + 1, stats, mode))
         }
     }
 }
 
 pub fn synthesize(start: ProgState, target: &ProgState,
                   levels: &[SynthesisLevel], mode: Mode) -> bool {
+
+    let n_levels = levels.len();
+    let stats = vec![SearchLevelStats::new(); n_levels + 1];
+
     let start_time = Instant::now();
-    let ret = search(start, target, levels, 0, mode);
+    let ret = search(start, target, levels, 0, &stats, mode);
     let dur = time_since(start_time);
+
+    for (idx, stats) in (&stats).iter().enumerate() {
+        println!("stats:{} {}", idx, stats);
+    }
     println!("search:{} shape({:?}) {} mode({:?}) [{}]", target.name, target.state.shape(), ret, mode, dur);
     ret
 }

@@ -76,12 +76,44 @@ pub fn trove(m: Ix, n: Ix) -> ProgState {
     ProgState::new((m * n) as Symbolic, array, "trove")
 }
 
-pub fn lookup_problem(problem: &str, shape: &[Ix]) -> Result<ProgState> {
+fn convolve_start(width: Ix, k: Ix) -> ProgState {
+    let dm = width + k;
+    let array = Array::from_shape_fn((width, 2),
+                                     move |(i, j)| if i == 0 { i as Symbolic }
+                                     else if j < k { (i + width) as Symbolic }
+                                     else { dm as Symbolic }).into_dyn();
+    ProgState::new(dm as Symbolic, array, "conv_regs_loaded")
+}
+
+fn convolve_dealg(width: Ix, k: Ix) -> ProgState {
+    let array = Array::from_shape_fn((width, k),
+                                     move |(i, j)| ((i + j) % width) as Symbolic)
+        .into_dyn();
+    ProgState::new((width + k) as Symbolic, array, "conv_dealg")
+}
+
+pub fn lookup_problem(problem: &str, shape: &[Ix], info: Option<&[Ix]>) -> Result<ProgState> {
     match problem {
         "trove" => {
             match shape {
                 &[m, n] => Ok(trove(m, n)),
                 other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
+            }
+        }
+        "conv_dealg" => {
+            match shape {
+                &[width, k] => Ok(convolve_dealg(width, k)),
+                other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
+            }
+        }
+        "conv_regs_loaded" => {
+            match shape {
+                &[width, 2] => match info {
+                    Some(&[k]) => Ok(convolve_start(width, k)),
+                    _other => Err(ErrorKind::MissingInfo("conv_regs_loaded".to_owned(), 1).into())
+                }
+                &[width, other] => Err(ErrorKind::ShapeMismatch(vec![width, other], vec![width, 2]).into()),
+                other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into()),
             }
         }
         "id" | "linear" => Ok(ProgState::linear(shape)),
@@ -92,6 +124,7 @@ pub fn lookup_problem(problem: &str, shape: &[Ix]) -> Result<ProgState> {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ProblemDesc {
     pub start_name: String,
+    pub start_info: Option<Vec<u64>>,
     pub end_name: String,
     pub steps: Vec<SynthesisLevelDesc>,
 }
@@ -100,10 +133,18 @@ impl ProblemDesc {
     pub fn to_problem(&self) -> Result<(ProgState, ProgState, Vec<SynthesisLevel>)> {
         let levels: Result<Vec<SynthesisLevel>> = self.steps.iter().map(|x| x.to_synthesis_level()).collect();
         let levels = levels?;
+
+        let start_info: Option<Vec<usize>> = match self.start_info {
+            Some(ref v) => Some(v.iter().map(|x| *x as usize).collect()),
+            None => None,
+        };
         let start_shape = levels[0].ops.in_shape.as_slice();
+
         let end_shape = levels[levels.len() - 1].ops.out_shape.as_slice();
-        let initial = lookup_problem(&self.start_name, start_shape)?;
-        let spec = lookup_problem(&self.end_name, end_shape)?;
+
+        let start_info_ref: Option<&[Ix]> = match start_info { Some(ref v) => Some(v.as_ref()), None => None };
+        let initial = lookup_problem(&self.start_name, start_shape, start_info_ref)?;
+        let spec = lookup_problem(&self.end_name, end_shape, None)?;
         Ok((initial, spec, levels))
     }
 }
@@ -131,6 +172,7 @@ mod tests {
 
         let desc = ProblemDesc {
             start_name: "linear".to_owned(),
+            start_info: None,
             end_name: "trove".to_owned(),
             steps: vec![
                 SynthesisLevelDesc { basis: "sRr".to_owned(),

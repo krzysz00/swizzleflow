@@ -1,0 +1,46 @@
+load:matrices/3,8-sRc-3,8 [0.00012641]
+load:matrices/3,8-sRc-3,8_3,8-sFc-3,8 [0.000117475]
+load:matrices/3,8-sRc-3,8_3,8-sFc-3,8_3,8-sRr-3,8 [0.000117667]
+load:matrices/3,8-sRc-3,8_3,8-sFc-3,8_3,8-sRr-3,8_3,8-sFr-3,8 [0.000116375]
+load:matrices/3,8-sRc-3,8_3,8-sFc-3,8_3,8-sRr-3,8_3,8-sFr-3,8_3,8-sRc-3,8 [0.000107366]
+load:matrices/3,8-sRc-3,8_3,8-sFc-3,8_3,8-sRr-3,8_3,8-sFr-3,8_3,8-sRc-3,8_3,8-sFc-3,8 [0.000107734]
+soln:id;id;rot(-5,8,-2);fan(0,3);rot(-3,3,-2);fan(0,2);rot(-6,8,-2)
+soln:id;fan(0,2);rot(-7,8,0);fan(0,3);rot(-5,3,0)
+stats:0 tested(1), found(0), pruned(0), continued(1)
+stats:1 tested(5), found(0), pruned(0), continued(5)
+stats:2 tested(135), found(0), pruned(133), continued(2)
+stats:3 tested(126), found(0), pruned(124), continued(2)
+stats:4 tested(128), found(1), pruned(126), continued(1)
+stats:5 tested(5), found(0), pruned(4), continued(1)
+stats:6 tested(27), found(1), pruned(0), continued(26)
+search:trove shape([3, 8]) true mode(All) [0.00117559]
+load:matrices/3,32-sRc-3,32 [0.031932919]
+load:matrices/3,32-sRc-3,32_3,32-sFc-3,32 [0.030473349]
+load:matrices/3,32-sRc-3,32_3,32-sFc-3,32_3,32-sRr-3,32 [0.032991971]
+load:matrices/3,32-sRc-3,32_3,32-sFc-3,32_3,32-sRr-3,32_3,32-sFr-3,32 [0.03146315]
+load:matrices/3,32-sRc-3,32_3,32-sFc-3,32_3,32-sRr-3,32_3,32-sFr-3,32_3,32-sRc-3,32 [0.03181516]
+load:matrices/3,32-sRc-3,32_3,32-sFc-3,32_3,32-sRr-3,32_3,32-sFr-3,32_3,32-sRc-3,32_3,32-sFc-3,32 [0.029991537]
+soln:id;fan(0,2);rot(-31,32,0);fan(0,3);rot(-21,3,0)
+soln:id;id;rot(-29,32,-2);fan(0,3);rot(-11,3,-10);fan(0,2);rot(-30,32,-2)
+stats:0 tested(1), found(0), pruned(0), continued(1)
+stats:1 tested(5), found(0), pruned(0), continued(5)
+stats:2 tested(225), found(0), pruned(223), continued(2)
+stats:3 tested(2046), found(0), pruned(2044), continued(2)
+stats:4 tested(2048), found(1), pruned(2046), continued(1)
+stats:5 tested(5), found(0), pruned(4), continued(1)
+stats:6 tested(45), found(1), pruned(0), continued(44)
+search:trove shape([3, 32]) true mode(All) [0.061326227]
+load:matrices/4,32-sRc-4,32 [0.104232253]
+load:matrices/4,32-sRc-4,32_4,32-sFc-4,32 [0.093181459]
+load:matrices/4,32-sRc-4,32_4,32-sFc-4,32_4,32-sFr-4,32 [0.101879468]
+load:matrices/4,32-sRc-4,32_4,32-sFc-4,32_4,32-sFr-4,32_4,32-sRr-4,32 [0.094395438]
+load:matrices/4,32-sRc-4,32_4,32-sFc-4,32_4,32-sFr-4,32_4,32-sRr-4,32_4,32-sRc-4,32 [0.102949414]
+load:matrices/4,32-sRc-4,32_4,32-sFc-4,32_4,32-sFr-4,32_4,32-sRr-4,32_4,32-sRc-4,32_4,32-sFc-4,32 [0.093694461]
+stats:0 tested(1), found(0), pruned(0), continued(1)
+stats:1 tested(15), found(0), pruned(0), continued(15)
+stats:2 tested(1200), found(0), pruned(1200), continued(0)
+stats:3 tested(0), found(0), pruned(0), continued(0)
+stats:4 tested(0), found(0), pruned(0), continued(0)
+stats:5 tested(0), found(0), pruned(0), continued(0)
+stats:6 tested(0), found(0), pruned(0), continued(0)
+search:trove shape([4, 32]) false mode(All) [0.032467008]

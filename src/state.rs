@@ -34,6 +34,7 @@ pub struct ProgState {
     pub(crate) state: ArrayD<ProgValue>,
     // Note: IxDyn is basically SmallVec, though that's not obvious anywhere
     pub(crate) inv_state: Vec<Vec<IxDyn>>,
+    // The value domain_max is the "trash" value
     pub domain_max: Symbolic,
     pub name: String
 }
@@ -56,7 +57,7 @@ impl Hash for ProgState {
 impl ProgState {
     fn making_inverse(domain_max: Symbolic, state: ArrayD<ProgValue>, name: String) -> Self {
         let mut inverse: Vec<Vec<IxDyn>> = (0..domain_max).map(|_| Vec::with_capacity(1)).collect();
-        for (idx, elem) in state.indexed_iter() {
+        for (idx, elem) in state.indexed_iter().filter(|&(_, x)| *x < domain_max) {
             inverse[*elem as usize].push(idx.clone())
         }
         Self { domain_max: domain_max, state: state, name: name, inv_state: inverse }

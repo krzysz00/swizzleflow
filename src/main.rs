@@ -64,6 +64,10 @@ pub mod errors {
                 description("unknown problem")
                 display("unknown problem: {}", problem)
             }
+            MissingInfo(problem: String, expected_length: usize) {
+                description("missing info")
+                display("missing info for problem {}, expected {} items", problem, expected_length)
+            }
         }
     }
 }
