@@ -138,3 +138,9 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel]) -> Result<(
     }
     Ok(())
 }
+
+pub fn remove_matrices(levels: &mut [SynthesisLevel]) {
+    for level in levels {
+        std::mem::drop(level.matrix.take());
+    }
+}

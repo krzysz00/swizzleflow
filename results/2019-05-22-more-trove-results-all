@@ -1,0 +1,25 @@
+load:matrices/3,8-sRc-3,8 [0.000128456]
+load:matrices/3,8-sRc-3,8_3,8-sFc-3,8 [0.000118267]
+load:matrices/3,8-sRc-3,8_3,8-sFc-3,8_3,8-sRr-3,8 [0.000115847]
+load:matrices/3,8-sRc-3,8_3,8-sFc-3,8_3,8-sRr-3,8_3,8-sFr-3,8 [0.000114789]
+load:matrices/3,8-sRc-3,8_3,8-sFc-3,8_3,8-sRr-3,8_3,8-sFr-3,8_3,8-sRc-3,8 [0.000105445]
+load:matrices/3,8-sRc-3,8_3,8-sFc-3,8_3,8-sRr-3,8_3,8-sFr-3,8_3,8-sRc-3,8_3,8-sFc-3,8 [0.000105999]
+soln:id;fan(0,2);rot(-7,8,0);fan(0,3);rot(-5,3,0)
+soln:id;id;rot(-5,8,-2);fan(0,3);rot(-3,3,-2);fan(0,2);rot(-6,8,-2)
+search:trove shape([3, 8]) true mode(All) [0.0014979]
+load:matrices/3,32-sRc-3,32 [0.030573388]
+load:matrices/3,32-sRc-3,32_3,32-sFc-3,32 [0.030843097]
+load:matrices/3,32-sRc-3,32_3,32-sFc-3,32_3,32-sRr-3,32 [0.030721318]
+load:matrices/3,32-sRc-3,32_3,32-sFc-3,32_3,32-sRr-3,32_3,32-sFr-3,32 [0.03191903]
+load:matrices/3,32-sRc-3,32_3,32-sFc-3,32_3,32-sRr-3,32_3,32-sFr-3,32_3,32-sRc-3,32 [0.031064051]
+load:matrices/3,32-sRc-3,32_3,32-sFc-3,32_3,32-sRr-3,32_3,32-sFr-3,32_3,32-sRc-3,32_3,32-sFc-3,32 [0.031380148]
+soln:id;id;rot(-29,32,-2);fan(0,3);rot(-11,3,-10);fan(0,2);rot(-30,32,-2)
+soln:id;fan(0,2);rot(-31,32,0);fan(0,3);rot(-21,3,0)
+search:trove shape([3, 32]) true mode(All) [0.066672718]
+load:matrices/4,32-sRc-4,32 [0.105358266]
+load:matrices/4,32-sRc-4,32_4,32-sFc-4,32 [0.098502081]
+load:matrices/4,32-sRc-4,32_4,32-sFc-4,32_4,32-sFr-4,32 [0.098000242]
+load:matrices/4,32-sRc-4,32_4,32-sFc-4,32_4,32-sFr-4,32_4,32-sRr-4,32 [0.096932644]
+load:matrices/4,32-sRc-4,32_4,32-sFc-4,32_4,32-sFr-4,32_4,32-sRr-4,32_4,32-sRc-4,32 [0.097445838]
+load:matrices/4,32-sRc-4,32_4,32-sFc-4,32_4,32-sFr-4,32_4,32-sRr-4,32_4,32-sRc-4,32_4,32-sFc-4,32 [0.093280962]
+search:trove shape([4, 32]) false mode(All) [0.038698038]

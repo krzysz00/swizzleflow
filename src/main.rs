@@ -106,6 +106,7 @@ fn run() -> Result<()> {
     for (initial, target, mut levels) in problems {
         operators::add_matrices(matrix_dir, &mut levels)?;
         synthesize(initial, &target, &levels, synthesis_mode);
+        operators::remove_matrices(&mut levels);
     }
     Ok(())
 }
