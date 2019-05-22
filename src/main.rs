@@ -22,10 +22,10 @@ mod synthesis;
 use clap::clap_app;
 use std::path::Path;
 use std::io::BufReader;
-use std::fs::File;
 
 use crate::problem_desc::ProblemDesc;
 use crate::synthesis::{Mode, synthesize};
+use crate::misc::open_file;
 
 pub mod errors {
     use error_chain::error_chain;
@@ -36,6 +36,10 @@ pub mod errors {
         }
 
         errors {
+            FileOpFailure(p: std::path::PathBuf) {
+                description("couldn't open or create file")
+                display("couldn't open or create file: {}", p.display())
+            }
             NotAMatrix {
                 description("not a matrix")
                 display("not a matrix")
@@ -68,7 +72,7 @@ use errors::*;
 
 const DEFAULT_MATRIX_DIR: &'static str = "matrices/";
 
-fn main() -> Result<()> {
+fn run() -> Result<()> {
     let args =
         clap_app!(swizzleflow =>
                   (version: "0.1")
@@ -86,7 +90,7 @@ fn main() -> Result<()> {
     let matrix_dir = Path::new(args.value_of_os("matrix_dir").unwrap()); // We have a default
     let specs: Vec<ProblemDesc> = match args.values_of_os("specs") {
         Some(iter) => {
-            let files: Result<Vec<_>> = iter.map(|s| File::open(s).map_err(|e| e.into())).collect();
+            let files: Result<Vec<_>> = iter.map(|s| open_file(s)).collect();
             let result: Result<Vec<_>> =
                 files?.iter().map(|f|
                                  serde_json::from_reader(BufReader::new(f))
@@ -104,6 +108,17 @@ fn main() -> Result<()> {
         synthesize(initial, &target, &levels, synthesis_mode);
     }
     Ok(())
+}
+
+fn main() {
+    if let Err(e) = run() {
+        use std::io::Write;
+        use error_chain::ChainedError; // trait which holds `display_chain`
+        let stderr = &mut std::io::stderr();
+
+        writeln!(stderr, "{}", e.display_chain()).expect("Failed to write error message");
+        std::process::exit(1);
+    }
 }
 
 #[cfg(test)]

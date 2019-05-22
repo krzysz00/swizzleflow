@@ -12,6 +12,8 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+use crate::errors::*;
+
 pub(crate) const EPSILON: f32 = 1e-5;
 pub type ShapeVec = smallvec::SmallVec<[usize; 3]>;
 
@@ -23,4 +25,14 @@ pub fn time_since(start: std::time::Instant) -> f64 {
 use ndarray::Array2;
 pub fn regularize_float_mat(arr: &mut Array2<f32>) {
     arr.mapv_inplace(|v| if v.abs() < EPSILON { 0.0 } else { 1.0 })
+}
+
+use std::fs::File;
+use std::path::Path;
+pub fn open_file<P: AsRef<Path>>(path: P) -> Result<File> {
+    File::open(path.as_ref()).map_err(|e| Error::from(e)).chain_err(|| ErrorKind::FileOpFailure(path.as_ref().to_owned()))
+}
+
+pub fn create_file<P: AsRef<Path>>(path: P) -> Result<File> {
+    File::create(path.as_ref()).map_err(|e| Error::from(e)).chain_err(|| ErrorKind::FileOpFailure(path.as_ref().to_owned()))
 }

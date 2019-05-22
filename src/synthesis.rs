@@ -22,6 +22,8 @@ use ndarray::Dimension;
 
 use std::time::Instant;
 
+use itertools::iproduct;
+
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Mode {
     All,
@@ -36,10 +38,17 @@ fn viable(current: &ProgState, target: &ProgState, matrix: &TransitionMatrix) ->
     }
     let dm = target.domain_max as usize;
     for a in 0..dm {
-        for b in (a + 1)..dm {
-            for (t1, t2) in target.inv_state[a].iter().zip(target.inv_state[b].iter()) {
-                let result = current.inv_state[a].iter().zip(current.inv_state[b].iter())
-                    .any(|(c1, c2)| matrix.get(c1.slice(), c2.slice(), t1.slice(), t2.slice()));
+        for b in 0..dm {
+            for (t1, t2) in iproduct!(target.inv_state[a].iter(), target.inv_state[b].iter()) {
+                let result = iproduct!(current.inv_state[a].iter(), current.inv_state[b].iter())
+                    .any(|(c1, c2)| {
+                        let v = matrix.get(c1.slice(), c2.slice(), t1.slice(), t2.slice());
+                        if !v {
+                            println!("({:?}, {:?}) !-> ({:?}, {:?})", c1.slice(), c2.slice(), t1.slice(), t2.slice());
+                        }
+                        v
+                    });
+                println!("---");
                 if !result {
                     return false;
                 }
@@ -62,6 +71,7 @@ fn search(current: ProgState, target: &ProgState,
 
     let level = &levels[current_level];
     if level.prune && !viable(&current, target, level.matrix.as_ref().unwrap()) {
+        println!("Pruned at {}", current_level);
         return false;
     }
 

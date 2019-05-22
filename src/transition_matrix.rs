@@ -16,11 +16,10 @@ use ndarray::{Ix,Array2,Axis,Dimension};
 use std::io::{Write,Read};
 use std::io;
 use std::path::Path;
-use std::fs::File;
 use std::time::Instant;
 
 use crate::operators::OpSet;
-use crate::misc::{EPSILON,ShapeVec,time_since};
+use crate::misc::{EPSILON,ShapeVec,time_since,open_file,create_file};
 use crate::errors::*;
 
 use bit_vec::BitVec;
@@ -38,6 +37,7 @@ pub trait TransitionMatrixOps: Sized + std::fmt::Debug {
     fn from_f32_mat(mat: &Array2<f32>, out_shape: &[Ix], in_shape: &[Ix]) -> Self;
 
     fn n_ones(&self) -> usize;
+    fn n_elements(&self) -> usize;
 }
 
 fn to_index(i1: &[Ix], i2: &[Ix], ishape: &[Ix], j1: &[Ix], j2: &[Ix], jshape: &[Ix]) -> Ix {
@@ -138,6 +138,10 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
     fn n_ones(&self) -> usize {
         self.data.iter().filter(|x| *x).count()
     }
+
+    fn n_elements(&self) -> usize {
+        self.data.len()
+    }
 }
 
 pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet) -> T {
@@ -227,16 +231,22 @@ impl TransitionMatrixOps for TransitionMatrix {
             TransitionMatrix::Dense(d) => d.n_ones()
         }
     }
+
+    fn n_elements(&self) -> usize {
+        match self {
+            TransitionMatrix::Dense(d) => d.n_elements()
+        }
+    }
 }
 
 impl TransitionMatrix {
     pub fn load_matrix(path: impl AsRef<Path>) -> Result<Self> {
-        let mut file = File::open(path.as_ref())?;
+        let mut file = open_file(path)?;
         Self::read(&mut file)
     }
 
     pub fn store_matrix(&self, path: impl AsRef<Path>) -> Result<()> {
-        let mut file = File::create(path)?;
+        let mut file = create_file(path)?;
         self.write(&mut file)
     }
 }
@@ -265,6 +275,7 @@ pub fn build_or_load_matrix(ops: &OpSet, path: impl AsRef<Path>) -> Result<Trans
         Ok(matrix)
     }
 }
+
 
 #[cfg(test)]
 mod tests {
