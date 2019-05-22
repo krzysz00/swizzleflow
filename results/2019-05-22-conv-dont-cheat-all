@@ -1,0 +1,22 @@
+load:matrices/16,3-sRc-16,3 [0.003048269]
+build:matrices/16,3-sFc-16,3 density(0.020845012900270063) [0.062047646]
+mul:16,3-sRc-16,3_16,3-sFc-16,3 density(0.09419005594135803) [0.249208385]
+load:matrices/16,3-regSelNC-16,2 [0.001221034]
+mul:16,3-sRc-16,3_16,3-sFc-16,3_16,3-regSelNC-16,2 density(0.5202907986111112) [0.055580909]
+soln:conv_regs_loaded;select(0 >= 1);id;rot(-15,3,0)
+stats:0 tested(1), found(0), pruned(0), continued(1)
+stats:1 tested(8), found(0), pruned(7), continued(1)
+stats:2 tested(255), found(0), pruned(254), continued(1)
+stats:3 tested(256), found(1), pruned(0), continued(255)
+search:conv_dealg shape([16, 3]) true mode(All) [0.005152404]
+load:matrices/32,3-sRc-32,3 [0.041976298]
+build:matrices/32,3-sFc-32,3 density(0.01984057014371142) [1.362421229]
+mul:32,3-sRc-32,3_32,3-sFc-32,3 density(0.09448845003858025) [11.684770081]
+load:matrices/32,3-regSelNC-32,2 [0.011508654]
+mul:32,3-sRc-32,3_32,3-sFc-32,3_32,3-regSelNC-32,2 density(0.4757656521267361) [4.660024959]
+soln:conv_regs_loaded;select(0 >= 1);id;rot(-31,3,0)
+stats:0 tested(1), found(0), pruned(0), continued(1)
+stats:1 tested(8), found(0), pruned(7), continued(1)
+stats:2 tested(1023), found(0), pruned(1022), continued(1)
+stats:3 tested(1024), found(1), pruned(0), continued(1023)
+search:conv_dealg shape([32, 3]) true mode(All) [0.024335554]
