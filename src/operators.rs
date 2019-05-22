@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pub mod swizzle;
+pub mod reg_select;
 
 use crate::state::Gather;
 use crate::misc::{ShapeVec,time_since,regularize_float_mat};

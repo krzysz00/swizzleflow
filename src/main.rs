@@ -128,7 +128,7 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use crate::problem_desc::trove;
+    use crate::problem_desc::{ProblemDesc,trove};
     use crate::operators::swizzle::{fan,rotate,OpAxis};
     use crate::state::ProgState;
 

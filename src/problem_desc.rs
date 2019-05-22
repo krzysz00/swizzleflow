@@ -15,6 +15,7 @@
 use crate::operators::SynthesisLevel;
 use crate::state::{ProgState,Symbolic};
 use crate::operators::swizzle::{simple_fans, simple_rotations, OpAxis};
+use crate::operators::reg_select::{reg_select_no_const};
 use crate::errors::*;
 use crate::misc::ShapeVec;
 
@@ -61,6 +62,17 @@ impl SynthesisLevelDesc {
                     }
                     simple_fans(&out_shape, OpAxis::Columns)?
                 }
+                "regSelNC" => {
+                    if &out_shape[0..out_shape.len()-1] != &in_shape[0..in_shape.len()-1] {
+                        return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
+                    }
+                    if in_shape[in_shape.len()-1] != 2 {
+                        let mut correct_shape = in_shape.to_vec();
+                        correct_shape[in_shape.len()-1] = 2;
+                        return Err(ErrorKind::ShapeMismatch(correct_shape, in_shape.to_vec()).into());
+                    }
+                    reg_select_no_const(&out_shape)?
+                }
                 other => {
                     return Err(ErrorKind::UnknownBasisType(other.to_owned()).into())
                 }
@@ -77,19 +89,20 @@ pub fn trove(m: Ix, n: Ix) -> ProgState {
 }
 
 fn convolve_start(width: Ix, k: Ix) -> ProgState {
+    let k = k - 1; // For our purposes, we need k - 1 extra elements
     let dm = width + k;
     let array = Array::from_shape_fn((width, 2),
-                                     move |(i, j)| if i == 0 { i as Symbolic }
-                                     else if j < k { (i + width) as Symbolic }
+                                     move |(i, j)| if j == 0 { i as Symbolic }
+                                     else if i < k { (i + width) as Symbolic }
                                      else { dm as Symbolic }).into_dyn();
     ProgState::new(dm as Symbolic, array, "conv_regs_loaded")
 }
 
 fn convolve_dealg(width: Ix, k: Ix) -> ProgState {
     let array = Array::from_shape_fn((width, k),
-                                     move |(i, j)| ((i + j) % width) as Symbolic)
+                                     move |(i, j)| (i + j)  as Symbolic)
         .into_dyn();
-    ProgState::new((width + k) as Symbolic, array, "conv_dealg")
+    ProgState::new((width + k - 1) as Symbolic, array, "conv_dealg")
 }
 
 pub fn lookup_problem(problem: &str, shape: &[Ix], info: Option<&[Ix]>) -> Result<ProgState> {
@@ -162,6 +175,28 @@ mod tests {
         let trove_spec_arr = Array::from_shape_vec((3, 4), (&trove_spec).to_vec()).unwrap().into_dyn();
         let trove_spec_prog = ProgState::new(12, trove_spec_arr, "trove");
         assert_eq!(trove_spec_prog, trove(3, 4));
+    }
+
+    #[test]
+    pub fn conv_1d_start_works() {
+        let conv_initial: [ProgValue; 4 * 2] = [0, 4,
+                                                1, 5,
+                                                2, 6,
+                                                3, 6];
+        let conv_initial_arr = Array::from_shape_vec((4, 2), (&conv_initial).to_vec()).unwrap().into_dyn();
+        let conv_initial_prog = ProgState::new(6, conv_initial_arr, "conv_regs_loaded");
+        assert_eq!(conv_initial_prog, convolve_start(4, 3));
+    }
+
+    #[test]
+    pub fn conv_1d_end_works() {
+        let conv_final: [ProgValue; 4 * 3] = [0, 1, 2,
+                                              1, 2, 3,
+                                              2, 3, 4,
+                                              3, 4, 5];
+        let conv_final_arr = Array::from_shape_vec((4, 3), (&conv_final).to_vec()).unwrap().into_dyn();
+        let conv_final_prog = ProgState::new(6, conv_final_arr, "conv_regs_loaded");
+        assert_eq!(conv_final_prog, convolve_dealg(4, 3));
     }
 
     #[test]
