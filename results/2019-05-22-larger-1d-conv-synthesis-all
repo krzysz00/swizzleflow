@@ -1,0 +1,9 @@
+build:matrices/32,3-sRc-32,3 density(0.0628858024691358) [1.6884319030000001]
+Using newly-build matrices/32,3-sRc-32,3
+build:matrices/32,3-regSelNC-32,2 density(0.0005464553833007813) [0.064324756]
+mul:32,3-sRc-32,3_32,3-regSelNC-32,2 density(0.316802978515625) [4.418577798]
+soln:conv_regs_loaded;select(0 >= 1);rot(-31,3,0)
+stats:0 tested(1), found(0), pruned(0), continued(1)
+stats:1 tested(8), found(0), pruned(7), continued(1)
+stats:2 tested(1024), found(1), pruned(0), continued(1023)
+search:conv_dealg shape([32, 3]) true mode(All) [0.013559766]

@@ -1,0 +1,19 @@
+{
+  "start_name": "conv_regs_loaded",
+  "start_info": [3],
+  "end_name": "conv_dealg",
+  "steps": [
+    {
+      "basis": "regSelNC",
+      "in_sizes": [32, 2],
+      "out_sizes": [32, 3],
+      "prune": true
+    },
+    {
+      "basis": "sRc",
+      "in_sizes": [32, 3],
+      "out_sizes": [32, 3],
+      "prune": true
+    }
+  ]
+}

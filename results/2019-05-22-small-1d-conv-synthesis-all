@@ -1,0 +1,9 @@
+build:matrices/16,3-sRc-16,3 density(0.06404320987654322) [0.092450483]
+Using newly-build matrices/16,3-sRc-16,3
+build:matrices/16,3-regSelNC-16,2 density(0.0023956298828125) [0.004971815]
+mul:16,3-sRc-16,3_16,3-regSelNC-16,2 density(0.3538682725694444) [0.062377506]
+soln:conv_regs_loaded;select(0 >= 1);rot(-15,3,0)
+stats:0 tested(1), found(0), pruned(0), continued(1)
+stats:1 tested(8), found(0), pruned(7), continued(1)
+stats:2 tested(256), found(1), pruned(0), continued(255)
+search:conv_dealg shape([16, 3]) true mode(All) [0.002411959]
