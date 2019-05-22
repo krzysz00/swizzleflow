@@ -281,6 +281,7 @@ pub fn build_or_load_matrix(ops: &OpSet, path: impl AsRef<Path>) -> Result<Trans
 mod tests {
     use super::*;
     use crate::operators::swizzle::{simple_fans,OpAxis};
+    use tempfile::tempfile;
 
     #[test]
     fn correct_length_trove_rows() {
@@ -295,5 +296,29 @@ mod tests {
         use crate::operators::swizzle::simple_rotations;
         let big_matrix: DenseTransitionMatrix = build_mat(&simple_rotations(&[4, 32], OpAxis::Columns).unwrap());
         assert_eq!(big_matrix.n_ones(), 246272);
+    }
+
+    #[test]
+    fn test_write_round_trip() {
+        use ndarray::Array2;
+        use std::io::{Seek,SeekFrom};
+
+        const M: usize = 3;
+        const N: usize = 8;
+
+        let size = (M * N).pow(2);
+        let floats: Vec<f32> = (0..size.pow(2)).map(|x| if x % 4 == 0 { 1.0 } else { 0.0 }).collect();
+        let floats = Array2::from_shape_vec((size, size), floats).unwrap();
+        let matrix = DenseTransitionMatrix::from_f32_mat(
+            &floats, &[M, N], &[M, N]);
+
+        let mut file = tempfile().unwrap();
+        matrix.write(&mut file).unwrap();
+        file.seek(SeekFrom::Start(0)).unwrap();
+
+        let matrix2 = DenseTransitionMatrix::read(&mut file).unwrap();
+        assert_eq!(matrix.data, matrix2.data);
+        assert_eq!(matrix.current_shape, matrix2.current_shape);
+        assert_eq!(matrix.target_shape, matrix2.target_shape);
     }
 }
