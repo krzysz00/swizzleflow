@@ -17,11 +17,15 @@ mod state;
 mod transition_matrix;
 mod operators;
 mod problem_desc;
+mod synthesis;
 
 use clap::clap_app;
 use std::path::Path;
 use std::io::BufReader;
 use std::fs::File;
+
+use crate::problem_desc::ProblemDesc;
+use crate::synthesis::{Mode, synthesize};
 
 pub mod errors {
     use error_chain::error_chain;
@@ -64,7 +68,6 @@ use errors::*;
 
 const DEFAULT_MATRIX_DIR: &'static str = "matrices/";
 
-use crate::problem_desc::ProblemDesc;
 fn main() -> Result<()> {
     let args =
         clap_app!(swizzleflow =>
@@ -74,8 +77,12 @@ fn main() -> Result<()> {
                   (@arg matrix_dir: -m --("matrix-dir") +takes_value value_name("MATRIX_DIR")
                    default_value_os(DEFAULT_MATRIX_DIR.as_ref())
                    "Directory to store matrices in")
+                  (@arg all: -a --all "Find all solutions")
                   (@arg specs: ... value_name("SPEC") "Specification files (stdin if none specified)")
         ).setting(clap::AppSettings::TrailingVarArg).get_matches();
+
+    let synthesis_mode = if args.is_present("all") { Mode::All } else { Mode::First };
+
     let matrix_dir = Path::new(args.value_of_os("matrix_dir").unwrap()); // We have a default
     let specs: Vec<ProblemDesc> = match args.values_of_os("specs") {
         Some(iter) => {
@@ -91,10 +98,10 @@ fn main() -> Result<()> {
 
     let problems: Result<Vec<_>> = specs.iter().map(|s| s.to_problem()).collect();
     let problems = problems?;
+
     for (initial, target, mut levels) in problems {
-        println!("Initial {}", initial);
-        println!("Target {}", target);
-        crate::operators::add_matrices(matrix_dir, &mut levels)?;
+        operators::add_matrices(matrix_dir, &mut levels)?;
+        synthesize(initial, &target, &levels, synthesis_mode);
     }
     Ok(())
 }

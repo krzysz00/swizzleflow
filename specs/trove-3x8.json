@@ -21,7 +21,7 @@
       "prune": true
     },
     {
-      "basis": "sFc",
+      "basis": "sRr",
       "in_sizes": [3, 8],
       "out_sizes": [3, 8],
       "prune": true

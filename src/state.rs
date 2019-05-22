@@ -31,9 +31,9 @@ pub type ProgValue = Symbolic;
 // Program states
 #[derive(Clone, Debug)]
 pub struct ProgState {
-    state: ArrayD<ProgValue>,
+    pub(crate) state: ArrayD<ProgValue>,
     // Note: IxDyn is basically SmallVec, though that's not obvious anywhere
-    inv_state: Vec<Vec<IxDyn>>,
+    pub(crate) inv_state: Vec<Vec<IxDyn>>,
     pub domain_max: Symbolic,
     pub name: String
 }
