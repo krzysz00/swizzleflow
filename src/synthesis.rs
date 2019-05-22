@@ -43,12 +43,8 @@ fn viable(current: &ProgState, target: &ProgState, matrix: &TransitionMatrix) ->
                 let result = iproduct!(current.inv_state[a].iter(), current.inv_state[b].iter())
                     .any(|(c1, c2)| {
                         let v = matrix.get(c1.slice(), c2.slice(), t1.slice(), t2.slice());
-                        if !v {
-                            println!("({:?}, {:?}) !-> ({:?}, {:?})", c1.slice(), c2.slice(), t1.slice(), t2.slice());
-                        }
                         v
                     });
-                println!("---");
                 if !result {
                     return false;
                 }
@@ -71,16 +67,16 @@ fn search(current: ProgState, target: &ProgState,
 
     let level = &levels[current_level];
     if level.prune && !viable(&current, target, level.matrix.as_ref().unwrap()) {
-        println!("Pruned at {}", current_level);
         return false;
     }
 
     let ops = &level.ops.ops; // Get at the actual vector of gathers
     match mode {
         Mode::All => {
+            // Yep, this is meant not to be short-circuiting
             ops.iter().map(|o| search(current.gather_by(o), target,
                                       levels, current_level + 1, mode))
-                .any(|r| r)
+                .fold(false, |acc, new| new || acc)
         }
         Mode::First => {
             ops.iter().any(|o| search(current.gather_by(o), target,

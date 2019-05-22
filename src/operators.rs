@@ -64,6 +64,7 @@ impl SynthesisLevel {
 }
 
 pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel]) -> Result<()> {
+    use crate::transition_matrix::density;
     // Error checking
     for subslice in levels.windows(2) {
         if subslice[0].ops.out_shape != subslice[1].ops.in_shape {
@@ -113,12 +114,12 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel]) -> Result<(
                     let start = Instant::now();
                     ndarray::linalg::general_mat_mul(1.0, prev, &basis_matrix, 0.0, &mut output);
                     let time = time_since(start);
-                    println!("mul:{} [{}]", names, time);
                     regularize_float_mat(&mut output);
                     std::mem::swap(&mut output, prev);
                     std::mem::drop(output);
 
                     let our_form = TransitionMatrix::from_f32_mat(prev, &outmost_shape, &level.ops.in_shape);
+                    println!("mul:{} density({}) [{}]", names, density(&our_form), time);
                     our_form.store_matrix(&our_path)?;
                     if level.prune {
                         level.matrix = Some(our_form);

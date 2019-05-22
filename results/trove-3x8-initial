@@ -1,0 +1,15 @@
+build:matrices/3,8-sRc-3,8 density(0.013509114583333334) [0.003400814]
+Using newly-build matrices/3,8-sRc-3,8
+build:matrices/3,8-sFc-3,8 density(0.0042920524691358024) [0.00163593]
+mul:3,8-sRc-3,8_3,8-sFc-3,8 density(0.014485677083333334) [0.003062266]
+build:matrices/3,8-sRr-3,8 density(0.06635802469135803) [0.008263299]
+mul:3,8-sRc-3,8_3,8-sFc-3,8_3,8-sRr-3,8 density(0.5684317129629629) [0.002040903]
+build:matrices/3,8-sFr-3,8 density(0.022858796296296297) [0.0049853]
+mul:3,8-sRc-3,8_3,8-sFc-3,8_3,8-sRr-3,8_3,8-sFr-3,8 density(0.8006365740740741) [0.001229774]
+load:matrices/3,8-sRc-3,8 [0.000183954]
+mul:3,8-sRc-3,8_3,8-sFc-3,8_3,8-sRr-3,8_3,8-sFr-3,8_3,8-sRc-3,8 density(0.9201388888888888) [0.001573403]
+load:matrices/3,8-sFc-3,8 [0.000186007]
+mul:3,8-sRc-3,8_3,8-sFc-3,8_3,8-sRr-3,8_3,8-sFr-3,8_3,8-sRc-3,8_3,8-sFc-3,8 density(0.9201388888888888) [0.00466463]
+soln:id;id;rot(-5,8,-2);fan(0,3);rot(-3,3,-2);fan(0,2);rot(-6,8,-2)
+soln:id;fan(0,2);rot(-7,8,0);fan(0,3);rot(-5,3,0)
+search:trove ([3, 8]) true [0.001922306]

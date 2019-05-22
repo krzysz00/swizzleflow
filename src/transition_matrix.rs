@@ -131,7 +131,7 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
     }
 
     fn from_f32_mat(mat: &Array2<f32>, out_shape: &[Ix], in_shape: &[Ix]) -> Self {
-        let bits = mat.as_slice().unwrap().iter().map(|f| f.abs() < EPSILON).collect();
+        let bits = mat.as_slice().unwrap().iter().map(|f| !(f.abs() < EPSILON)).collect();
         Self::new(bits, ShapeVec::from_slice(out_shape), ShapeVec::from_slice(in_shape))
     }
 
@@ -271,11 +271,14 @@ pub fn build_or_load_matrix(ops: &OpSet, path: impl AsRef<Path>) -> Result<Trans
         let matrix = TransitionMatrix::Dense(build_mat(ops));
         matrix.store_matrix(path)?;
         let dur = time_since(start);
-        println!("build:{} [{}]", path.display(), dur);
+        println!("build:{} density({}) [{}]", path.display(), density(&matrix), dur);
         Ok(matrix)
     }
 }
 
+pub fn density<T: TransitionMatrixOps>(matrix: &T) -> f64 {
+    (matrix.n_ones() as f64) / (matrix.n_elements() as f64)
+}
 
 #[cfg(test)]
 mod tests {

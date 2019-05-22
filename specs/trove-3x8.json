@@ -25,6 +25,18 @@
       "in_sizes": [3, 8],
       "out_sizes": [3, 8],
       "prune": true
+    },
+    {
+      "basis": "sFc",
+      "in_sizes": [3, 8],
+      "out_sizes": [3, 8],
+      "prune": true
+    },
+    {
+      "basis": "sRc",
+      "in_sizes": [3, 8],
+      "out_sizes": [3, 8],
+      "prune": true
     }
   ]
 }
