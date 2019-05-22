@@ -90,6 +90,6 @@ pub fn synthesize(start: ProgState, target: &ProgState,
     let start_time = Instant::now();
     let ret = search(start, target, levels, 0, mode);
     let dur = time_since(start_time);
-    println!("search:{} ({:?}) {} [{}]", target.name, target.state.shape(), ret, dur);
+    println!("search:{} shape({:?}) {} mode({:?}) [{}]", target.name, target.state.shape(), ret, mode, dur);
     ret
 }
