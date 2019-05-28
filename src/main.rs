@@ -12,6 +12,8 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+extern crate intel_mkl_src;
+
 mod misc;
 mod state;
 mod transition_matrix;
@@ -128,7 +130,7 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use crate::problem_desc::{ProblemDesc,trove};
+    use crate::problem_desc::{trove};
     use crate::operators::swizzle::{fan,rotate,OpAxis};
     use crate::state::ProgState;
 
