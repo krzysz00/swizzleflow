@@ -16,6 +16,7 @@ use crate::operators::SynthesisLevel;
 use crate::state::{ProgState,Symbolic};
 use crate::operators::swizzle::{simple_fans, simple_rotations, OpAxis};
 use crate::operators::reg_select::{reg_select_no_const};
+use crate::operators::load::{load_rep,load_trunc};
 use crate::errors::*;
 use crate::misc::ShapeVec;
 
@@ -38,6 +39,12 @@ impl SynthesisLevelDesc {
 
         let ops =
             match self.basis.as_ref() {
+                "load_rep" => {
+                    load_rep(&in_shape, &out_shape)?
+                },
+                "load_trunc" => {
+                    load_trunc(&in_shape, &out_shape)?
+                },
                 "sRr" => {
                     if out_shape != in_shape {
                         return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
@@ -83,19 +90,9 @@ impl SynthesisLevelDesc {
 
 pub fn trove(m: Ix, n: Ix) -> ProgState {
     let array = Array::from_shape_fn((m, n),
-                                     move |(i, j)| (i + j * m) as Symbolic)
+                                     move |(i, j)| (j + i * n) as Symbolic)
         .into_dyn();
     ProgState::new((m * n) as Symbolic, array, "trove")
-}
-
-fn convolve_start(width: Ix, k: Ix) -> ProgState {
-    let k = k - 1; // For our purposes, we need k - 1 extra elements
-    let dm = width + k;
-    let array = Array::from_shape_fn((width, 2),
-                                     move |(i, j)| if j == 0 { i as Symbolic }
-                                     else if i < k { (i + width) as Symbolic }
-                                     else { dm as Symbolic }).into_dyn();
-    ProgState::new(dm as Symbolic, array, "conv_regs_loaded")
 }
 
 fn convolve_dealg(width: Ix, k: Ix) -> ProgState {
@@ -105,7 +102,7 @@ fn convolve_dealg(width: Ix, k: Ix) -> ProgState {
     ProgState::new((width + k - 1) as Symbolic, array, "conv_dealg")
 }
 
-pub fn lookup_problem(problem: &str, shape: &[Ix], info: Option<&[Ix]>) -> Result<ProgState> {
+pub fn lookup_problem(problem: &str, shape: &[Ix]) -> Result<ProgState> {
     match problem {
         "trove" => {
             match shape {
@@ -119,25 +116,12 @@ pub fn lookup_problem(problem: &str, shape: &[Ix], info: Option<&[Ix]>) -> Resul
                 other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
             }
         }
-        "conv_regs_loaded" => {
-            match shape {
-                &[width, 2] => match info {
-                    Some(&[k]) => Ok(convolve_start(width, k)),
-                    _other => Err(ErrorKind::MissingInfo("conv_regs_loaded".to_owned(), 1).into())
-                }
-                &[width, other] => Err(ErrorKind::ShapeMismatch(vec![width, other], vec![width, 2]).into()),
-                other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into()),
-            }
-        }
-        "id" | "linear" => Ok(ProgState::linear(shape)),
         other => Err(ErrorKind::UnknownProblem(other.to_owned()).into())
     }
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ProblemDesc {
-    pub start_name: String,
-    pub start_info: Option<Vec<u64>>,
     pub end_name: String,
     pub steps: Vec<SynthesisLevelDesc>,
 }
@@ -147,17 +131,11 @@ impl ProblemDesc {
         let levels: Result<Vec<SynthesisLevel>> = self.steps.iter().map(|x| x.to_synthesis_level()).collect();
         let levels = levels?;
 
-        let start_info: Option<Vec<usize>> = match self.start_info {
-            Some(ref v) => Some(v.iter().map(|x| *x as usize).collect()),
-            None => None,
-        };
         let start_shape = levels[0].ops.in_shape.as_slice();
-
         let end_shape = levels[levels.len() - 1].ops.out_shape.as_slice();
 
-        let start_info_ref: Option<&[Ix]> = match start_info { Some(ref v) => Some(v.as_ref()), None => None };
-        let initial = lookup_problem(&self.start_name, start_shape, start_info_ref)?;
-        let spec = lookup_problem(&self.end_name, end_shape, None)?;
+        let initial = ProgState::linear(start_shape);
+        let spec = lookup_problem(&self.end_name, end_shape)?;
         Ok((initial, spec, levels))
     }
 }
@@ -178,17 +156,6 @@ mod tests {
     }
 
     #[test]
-    pub fn conv_1d_start_works() {
-        let conv_initial: [ProgValue; 4 * 2] = [0, 4,
-                                                1, 5,
-                                                2, 6,
-                                                3, 6];
-        let conv_initial_arr = Array::from_shape_vec((4, 2), (&conv_initial).to_vec()).unwrap().into_dyn();
-        let conv_initial_prog = ProgState::new(6, conv_initial_arr, "conv_regs_loaded");
-        assert_eq!(conv_initial_prog, convolve_start(4, 3));
-    }
-
-    #[test]
     pub fn conv_1d_end_works() {
         let conv_final: [ProgValue; 4 * 3] = [0, 1, 2,
                                               1, 2, 3,
@@ -206,8 +173,6 @@ mod tests {
         use std::collections::HashSet;
 
         let desc = ProblemDesc {
-            start_name: "linear".to_owned(),
-            start_info: None,
             end_name: "trove".to_owned(),
             steps: vec![
                 SynthesisLevelDesc { basis: "sRr".to_owned(),

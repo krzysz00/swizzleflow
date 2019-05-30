@@ -76,8 +76,10 @@ impl ProgState {
 
     pub fn gather_by(&self, gather: &Gather) -> Self {
         let axis_num = Axis(gather.data.ndim() - 1);
+        // Read off the edge to get the "garbage" value
         let array = gather.data.map_axis(axis_num,
-                                         move |v| self.state[v.into_slice().unwrap()]);
+                                         move |v| self.state.get(v.into_slice().unwrap())
+                                         .copied().unwrap_or(self.domain_max));
         let mut name = self.name.to_owned();
         name.push_str(";");
         name.push_str(&gather.name);
@@ -138,7 +140,7 @@ impl Gather {
         let length = source_dim * dim_prod;
         let mut array = Vec::with_capacity(length);
 
-        let mut index: IxDyn = IxDyn::zeros(source_dim);
+        let mut index: IxDyn = IxDyn::zeros(dest_shape.len());
         while {
             builder(index.slice(), &mut array);
             inc_slice(index.slice_mut(), dest_shape)

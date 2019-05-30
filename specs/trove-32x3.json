@@ -1,0 +1,48 @@
+{
+  "start_name": "linear",
+  "end_name": "trove",
+  "steps": [
+    {
+      "basis": "load_rep",
+      "in_sizes": [96],
+      "out_sizes": [32, 3],
+      "prune": false
+    },
+    {
+      "basis": "sFr",
+      "in_sizes": [32, 3],
+      "out_sizes": [32, 3],
+      "prune": true
+    },
+    {
+      "basis": "sRr",
+      "in_sizes": [32, 3],
+      "out_sizes": [32, 3],
+      "prune": true
+    },
+    {
+      "basis": "sFc",
+      "in_sizes": [32, 3],
+      "out_sizes": [32, 3],
+      "prune": true
+    },
+    {
+      "basis": "sRc",
+      "in_sizes": [32, 3],
+      "out_sizes": [32, 3],
+      "prune": true
+    },
+    {
+      "basis": "sFr",
+      "in_sizes": [32, 3],
+      "out_sizes": [32, 3],
+      "prune": true
+    },
+    {
+      "basis": "sRr",
+      "in_sizes": [32, 3],
+      "out_sizes": [32, 3],
+      "prune": true
+    }
+  ]
+}

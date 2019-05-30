@@ -14,6 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pub mod swizzle;
 pub mod reg_select;
+pub mod load;
 
 use crate::state::Gather;
 use crate::misc::{ShapeVec,time_since,regularize_float_mat};

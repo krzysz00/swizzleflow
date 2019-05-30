@@ -121,6 +121,7 @@ fn search(current: ProgState, target: &ProgState,
 
     let level = &levels[current_level];
     if level.prune && !viable(&current, target, level.matrix.as_ref().unwrap()) {
+//        println!("{}", current);
         tracker.pruned();
         return false;
     }
