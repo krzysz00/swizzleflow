@@ -25,8 +25,11 @@ use std::time::Instant;
 use std::fmt;
 use std::fmt::{Display,Formatter};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, RwLock};
 
 use itertools::iproduct;
+
+use hashbrown::HashMap;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Mode {
@@ -34,35 +37,13 @@ pub enum Mode {
     First,
 }
 
-// Invariant: any level with pruning enabled has a corresponding pruning matrix available
-fn viable(current: &ProgState, target: &ProgState, matrix: &TransitionMatrix) -> bool {
-    if target.domain_max != current.domain_max {
-        println!("WARNING domain max differs {} -> {}", current.domain_max, target.domain_max);
-        return false;
-    }
-    let dm = target.domain_max as usize;
-    for a in 0..dm {
-        for b in 0..dm {
-            for (t1, t2) in iproduct!(target.inv_state[a].iter(), target.inv_state[b].iter()) {
-                let result = iproduct!(current.inv_state[a].iter(), current.inv_state[b].iter())
-                    .any(|(c1, c2)| {
-                        let v = matrix.get(c1.slice(), c2.slice(), t1.slice(), t2.slice());
-                        v
-                    });
-                if !result {
-                    return false;
-                }
-            }
-        }
-    }
-    true
-}
-
 #[derive(Debug, Default)]
 struct SearchLevelStats {
     tested: AtomicUsize,
     pruned: AtomicUsize,
     succeeded: AtomicUsize,
+    cache_hit: AtomicUsize,
+    cache_set: AtomicUsize,
 }
 
 impl SearchLevelStats {
@@ -81,15 +62,27 @@ impl SearchLevelStats {
     pub fn pruned(&self) {
         self.pruned.fetch_add(1, Ordering::Relaxed);
     }
+
+    pub fn cache_hit(&self) {
+        self.cache_hit.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn cache_set(&self) {
+        self.cache_set.fetch_add(1, Ordering::Relaxed);
+    }
 }
 
 impl Clone for SearchLevelStats {
     fn clone(&self) -> Self {
         Self { tested: AtomicUsize::new(self.tested.load(Ordering::SeqCst)),
                pruned: AtomicUsize::new(self.pruned.load(Ordering::SeqCst)),
-               succeeded: AtomicUsize::new(self.succeeded.load(Ordering::SeqCst)), }
+               succeeded: AtomicUsize::new(self.succeeded.load(Ordering::SeqCst)),
+               cache_hit: AtomicUsize::new(self.cache_hit.load(Ordering::SeqCst)),
+               cache_set: AtomicUsize::new(self.cache_set.load(Ordering::SeqCst)),
+        }
     }
 }
+
 impl Display for SearchLevelStats {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         // Let's force a memory fence here to be safe
@@ -99,14 +92,68 @@ impl Display for SearchLevelStats {
 
         let continued = tested - found - pruned;
 
-        write!(f, "tested({}), found({}), pruned({}), continued({})",
-               tested, found, pruned, continued)
+        let cache_hits = self.cache_hit.load(Ordering::SeqCst);
+        let cache_puts = self.cache_set.load(Ordering::SeqCst);
+
+        write!(f, "tested({}), found({}), pruned({}), continued({}) cache({}:{})",
+               tested, found, pruned, continued, cache_hits, cache_puts)
     }
+}
+
+type ResultMap = RwLock<HashMap<ProgState, bool>>;
+type SearchResultCache = Arc<ResultMap>;
+
+// Invariant: any level with pruning enabled has a corresponding pruning matrix available
+fn viable(current: &ProgState, target: &ProgState, matrix: &TransitionMatrix,
+          cache: &ResultMap, tracker: &SearchLevelStats) -> bool {
+    if target.domain_max != current.domain_max {
+        println!("WARNING domain max differs {} -> {}", current.domain_max, target.domain_max);
+        return false;
+    }
+    let dm = target.domain_max as usize;
+    let mut did_lookup = false;
+    for a in 0..dm {
+        for b in 0..dm {
+            for (t1, t2) in iproduct!(target.inv_state[a].iter(), target.inv_state[b].iter()) {
+                let result = iproduct!(current.inv_state[a].iter(), current.inv_state[b].iter())
+                    .any(|(c1, c2)| {
+                        let v = matrix.get(c1.slice(), c2.slice(), t1.slice(), t2.slice());
+                        v
+                    });
+                if !result {
+                    if did_lookup {
+                        cache.write().unwrap().insert(current.clone(), false);
+                        tracker.cache_set();
+                    }
+                    return false;
+                }
+            }
+        }
+        // Why don't we check the cache right away?
+        // Because, if the pruning rule fails before for (0, k) for some k,
+        // we'll have done about fewer memory accesses than we would have for
+        // the hash and equality testing needed to do the hash lookup
+        // Therefore, we put this off a bit, to let the fast pruning pass go first
+        //
+        // This could probably be a tuneable parameter,
+        // letting you control how aggressively you cache,
+        // but I can't think of a good way to expose that.
+        if a == 0 {
+            let probe = {cache.read().unwrap().get(current).copied()};
+            if let Some(v) = probe {
+                tracker.cache_hit();
+                return v;
+            }
+            did_lookup = true;
+        }
+    }
+    true
 }
 
 fn search(current: ProgState, target: &ProgState,
           levels: &[SynthesisLevel], current_level: usize,
-          stats: &[SearchLevelStats], mode: Mode) -> bool {
+          stats: &[SearchLevelStats], mode: Mode,
+          caches: &[SearchResultCache]) -> bool {
     let tracker = &stats[current_level];
     tracker.checking();
 
@@ -120,25 +167,36 @@ fn search(current: ProgState, target: &ProgState,
     }
 
     let level = &levels[current_level];
-    if level.prune && !viable(&current, target, level.matrix.as_ref().unwrap()) {
+    let cache = caches[current_level].clone();
+    if level.prune {
+        if !viable(&current, target,
+                   level.matrix.as_ref().unwrap(),
+                   cache.as_ref(), &tracker) {
 //        println!("{}", current);
         tracker.pruned();
         return false;
+        }
+    }
+    else {
+
     }
 
     let ops = &level.ops.ops; // Get at the actual vector of gathers
-    match mode {
+    let ret = match mode {
         Mode::All => {
             // Yep, this is meant not to be short-circuiting
             ops.iter().map(|o| search(current.gather_by(o), target,
-                                      levels, current_level + 1, stats, mode))
+                                      levels, current_level + 1, stats, mode, caches))
                 .fold(false, |acc, new| new || acc)
         }
         Mode::First => {
             ops.iter().any(|o| search(current.gather_by(o), target,
-                                      levels, current_level + 1, stats, mode))
+                                      levels, current_level + 1, stats, mode, caches))
         }
-    }
+    };
+    { cache.write().unwrap().insert(current.clone(), ret); }
+    tracker.cache_set();
+    ret
 }
 
 pub fn synthesize(start: ProgState, target: &ProgState,
@@ -146,9 +204,11 @@ pub fn synthesize(start: ProgState, target: &ProgState,
 
     let n_levels = levels.len();
     let stats = vec![SearchLevelStats::new(); n_levels + 1];
+    let caches: Vec<SearchResultCache>
+        = (0..n_levels).map(|_| Arc::new(RwLock::new(HashMap::new()))).collect();
 
     let start_time = Instant::now();
-    let ret = search(start, target, levels, 0, &stats, mode);
+    let ret = search(start, target, levels, 0, &stats, mode, &caches);
     let dur = time_since(start_time);
 
     for (idx, stats) in (&stats).iter().enumerate() {
