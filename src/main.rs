@@ -73,7 +73,7 @@ pub mod errors {
             LevelBuild(step: Box<crate::problem_desc::SynthesisLevelDesc>) {
                 description("couldn't create level")
                 display("couldn't create level: {}", serde_json::to_string(&step)
-                        .unwrap_or("couldn't print".to_owned()))
+                        .unwrap_or_else(|_| "couldn't print".to_owned()))
             }
         }
     }
@@ -81,7 +81,7 @@ pub mod errors {
 
 use errors::*;
 
-const DEFAULT_MATRIX_DIR: &'static str = "matrices/";
+const DEFAULT_MATRIX_DIR: &str = "matrices/";
 
 fn run() -> Result<()> {
     let args =
@@ -101,7 +101,7 @@ fn run() -> Result<()> {
     let matrix_dir = Path::new(args.value_of_os("matrix_dir").unwrap()); // We have a default
     let specs: Vec<ProblemDesc> = match args.values_of_os("specs") {
         Some(iter) => {
-            let files: Result<Vec<_>> = iter.map(|s| open_file(s)).collect();
+            let files: Result<Vec<_>> = iter.map(open_file).collect();
             let result: Result<Vec<_>> =
                 files?.iter().map(|f|
                                  serde_json::from_reader(BufReader::new(f))

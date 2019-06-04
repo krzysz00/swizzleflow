@@ -97,7 +97,7 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
         write_length_tagged_idxs(io, &self.target_shape)?;
         write_length_tagged_idxs(io, &self.current_shape)?;
         io.write_u64::<LittleEndian>(self.data.len() as u64)?;
-        io.write_all(&mut self.data.to_bytes()).map_err(|e| e.into())
+        io.write_all(&self.data.to_bytes()).map_err(|e| e.into())
     }
 
     fn read<T: Read>(io: &mut T) -> Result<Self> {
@@ -145,7 +145,7 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
 }
 
 fn in_bounds(index: ndarray::ArrayView1<Ix>, bounds: &[Ix]) -> bool {
-    index.into_iter().zip(bounds.into_iter()).all(move |(i, v)| i < v)
+    index.into_iter().zip(bounds.iter()).all(move |(i, v)| i < v)
 }
 
 pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet) -> T {

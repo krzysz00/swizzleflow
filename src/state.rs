@@ -55,15 +55,15 @@ pub struct Domain {
 
 impl Domain {
     pub fn new(symbol_max: usize) -> Self {
-        let mut elements: Vec<Value> = (0..symbol_max).into_iter()
+        let mut elements: Vec<Value> = (0..symbol_max)
             .map(|x| Value::Symbol(x as Symbolic)).collect();
         elements.push(Value::Garbage);
 
-        let mut element_map: HashMap<Value, DomRef> = (0..symbol_max).into_iter()
+        let mut element_map: HashMap<Value, DomRef> = (0..symbol_max)
             .map(|x| (Value::Symbol(x as Symbolic), x)).collect();
         element_map.insert(Value::Garbage, symbol_max);
 
-        let mut symbols_in: Vec<Vec<DomRef>> = (0..symbol_max).into_iter()
+        let mut symbols_in: Vec<Vec<DomRef>> = (0..symbol_max)
             .map(|x| vec![x]).collect();
         symbols_in.push(vec![]); // Garbage
 
@@ -127,7 +127,7 @@ impl<'d> ProgState<'d> {
                 inverse[*s].push(idx.clone())
             }
         }
-        Self { domain: domain , state: state, name: name, inv_state: inverse }
+        Self { domain, state, name, inv_state: inverse }
     }
 
     pub fn new(domain: &'d Domain, state: ArrayD<DomRef>, name: impl Into<String>) -> Self {
@@ -136,7 +136,7 @@ impl<'d> ProgState<'d> {
 
     pub fn new_from_spec(domain: &'d Domain, state: ArrayD<Value>, name: impl Into<String>) -> Option<Self> {
         let ref_vec: Option<Vec<DomRef>> = state.as_slice().unwrap()
-            .into_iter().map(|v| domain.find_value(v))
+            .iter().map(|v| domain.find_value(v))
             .collect();
         let ref_vec = ref_vec?;
         let ref_mat = ArrayD::from_shape_vec(state.shape(), ref_vec).unwrap();

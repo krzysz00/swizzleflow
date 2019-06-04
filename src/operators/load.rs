@@ -37,7 +37,7 @@ fn load(in_shape: &[Ix], out_shape: &[Ix], mode: Mode) -> Result<OpSet> {
     let in_bound = in_shape[0];
     let out_split = out_shape.len() - (in_shape.len() - 1);
 
-    if &in_shape[1..] != &out_shape[out_split..] {
+    if in_shape[1..] != out_shape[out_split..] {
         return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
     }
     let gather =

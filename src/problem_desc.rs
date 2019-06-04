@@ -70,7 +70,7 @@ impl SynthesisLevelDesc {
                     simple_fans(&out_shape, OpAxis::Columns)?
                 }
                 "regSelNC" => {
-                    if &out_shape[0..out_shape.len()-1] != &in_shape[0..in_shape.len()-1] {
+                    if out_shape[0..out_shape.len()-1] != in_shape[0..in_shape.len()-1] {
                         return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
                     }
                     if in_shape[in_shape.len()-1] != 2 {
@@ -88,14 +88,14 @@ impl SynthesisLevelDesc {
     }
 }
 
-pub fn trove<'d>(domain: &'d Domain, m: Ix, n: Ix) -> ProgState<'d> {
+pub fn trove(domain: &Domain, m: Ix, n: Ix) -> ProgState<'_> {
     let array = Array::from_shape_fn((m, n),
                                      move |(i, j)| (j + i * n) as DomRef)
         .into_dyn();
     ProgState::new(domain, array, "trove")
 }
 
-fn convolve_dealg<'d>(domain: &'d Domain, width: Ix, k: Ix) -> ProgState<'d> {
+fn convolve_dealg(domain: &Domain, width: Ix, k: Ix) -> ProgState<'_> {
     let array = Array::from_shape_fn((width, k),
                                      move |(i, j)| Value::Symbol((i + j)  as Symbolic))
         .into_dyn();
@@ -143,7 +143,7 @@ impl ProblemDesc {
         let levels = levels?;
 
         let start_shape = levels[0].ops.in_shape.as_slice();
-        let start_symbols: usize = start_shape.into_iter().product();
+        let start_symbols: usize = start_shape.iter().product();
         if start_symbols != domain.symbol_max {
             return Err(ErrorKind::ShapeMismatch(
                 levels[0].ops.in_shape.to_vec(),

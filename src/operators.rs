@@ -75,21 +75,22 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel]) -> Result<(
         }
     }
 
+    let n_levels = levels.len();
     let first_prune = levels.iter().enumerate()
         .filter_map(|(i, v)| if v.prune { Some(i) } else { None })
-        .next().unwrap_or(levels.len());
+        .next().unwrap_or(n_levels);
     let mut our_path = directory.to_path_buf();
     our_path.push("dummy");
 
-    let outmost_shape = levels[levels.len() - 1].ops.out_shape.clone();
+    let outmost_shape = levels[n_levels - 1].ops.out_shape.clone();
 
     let mut previous_matrix: Option<Array2<f32>> = None;
 
     let mut names = String::new();
-    for (_idx, level) in levels.iter_mut().enumerate().rev().take_while(|(i, _)| i >= &first_prune) {
+    for (_idx, level) in levels.iter_mut().enumerate().rev().take_while(|(i, _)| *i >= first_prune) {
         let name = level.ops.to_name();
 
-        if names.len() > 0{
+        if !names.is_empty() {
             names.push('_');
         }
         names.push_str(&name);

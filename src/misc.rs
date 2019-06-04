@@ -19,7 +19,7 @@ pub type ShapeVec = smallvec::SmallVec<[usize; 3]>;
 
 pub fn time_since(start: std::time::Instant) -> f64 {
     let dur = start.elapsed();
-    dur.as_secs() as f64 + (dur.subsec_nanos() as f64 / 1.0e9)
+    dur.as_secs() as f64 + (f64::from(dur.subsec_nanos()) / 1.0e9)
 }
 
 use ndarray::Array2;
@@ -30,9 +30,11 @@ pub fn regularize_float_mat(arr: &mut Array2<f32>) {
 use std::fs::File;
 use std::path::Path;
 pub fn open_file<P: AsRef<Path>>(path: P) -> Result<File> {
-    File::open(path.as_ref()).map_err(|e| Error::from(e)).chain_err(|| ErrorKind::FileOpFailure(path.as_ref().to_owned()))
+    File::open(path.as_ref()).map_err(Error::from)
+        .chain_err(|| ErrorKind::FileOpFailure(path.as_ref().to_owned()))
 }
 
 pub fn create_file<P: AsRef<Path>>(path: P) -> Result<File> {
-    File::create(path.as_ref()).map_err(|e| Error::from(e)).chain_err(|| ErrorKind::FileOpFailure(path.as_ref().to_owned()))
+    File::create(path.as_ref()).map_err(Error::from)
+        .chain_err(|| ErrorKind::FileOpFailure(path.as_ref().to_owned()))
 }
