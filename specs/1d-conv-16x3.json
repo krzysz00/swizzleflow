@@ -1,6 +1,5 @@
 {
-  "start_name": "conv_regs_loaded",
-  "start_info": [3],
+  "num_symbols": 18,
   "end_name": "conv_dealg",
   "steps": [
     {

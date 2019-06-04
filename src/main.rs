@@ -66,9 +66,14 @@ pub mod errors {
                 description("unknown problem")
                 display("unknown problem: {}", problem)
             }
-            MissingInfo(problem: String, expected_length: usize) {
-                description("missing info")
-                display("missing info for problem {}, expected {} items", problem, expected_length)
+            MatrixLoad(p: std::path::PathBuf) {
+                description("couldn't read matrix file")
+                display("couldn't read matrix file: {}", p.display())
+            }
+            LevelBuild(step: Box<crate::problem_desc::SynthesisLevelDesc>) {
+                description("couldn't create level")
+                display("couldn't create level: {}", serde_json::to_string(&step)
+                        .unwrap_or("couldn't print".to_owned()))
             }
         }
     }
@@ -106,10 +111,9 @@ fn run() -> Result<()> {
         None => vec![serde_json::from_reader(BufReader::new(std::io::stdin().lock()))?]
     };
 
-    let problems: Result<Vec<_>> = specs.iter().map(|s| s.to_problem()).collect();
-    let problems = problems?;
-
-    for (initial, target, mut levels) in problems {
+    for spec in specs {
+        let domain = spec.make_domain();
+        let (initial, target, mut levels) = spec.to_problem(&domain)?;
         operators::add_matrices(matrix_dir, &mut levels)?;
         synthesize(initial, &target, &levels, synthesis_mode);
         operators::remove_matrices(&mut levels);
@@ -132,10 +136,10 @@ fn main() {
 mod tests {
     use crate::problem_desc::{trove};
     use crate::operators::swizzle::{fan,rotate,OpAxis};
-    use crate::state::ProgState;
+    use crate::state::{ProgState, Domain};
 
-    fn fixed_solution_from_scala_3x8() -> ProgState {
-        let initial = ProgState::linear(&[3, 8]);
+    fn fixed_solution_from_scala_3x8<'d>(d: &'d Domain) -> ProgState<'d> {
+        let initial = ProgState::linear(d, &[3, 8]);
         let s1 = initial.gather_by(&fan(3, 8, OpAxis::Columns, 0, 2));
         let s2 = s1.gather_by(&rotate(3, 8, OpAxis::Columns, -7, 8, 0));
         let s3 = s2.gather_by(&fan(3, 8, OpAxis::Rows, 0, 3));
@@ -145,8 +149,9 @@ mod tests {
 
     #[test]
     fn trove_solution_works() {
-        let spec = trove(3, 8);
-        let solution = fixed_solution_from_scala_3x8();
+        let domain = Domain::new(24);
+        let spec = trove(&domain, 3, 8);
+        let solution = fixed_solution_from_scala_3x8(&domain);
         println!("spec {}\n solution {}", spec, solution);
         assert_eq!(spec, solution);
     }

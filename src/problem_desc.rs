@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::operators::SynthesisLevel;
-use crate::state::{ProgState,Symbolic};
+use crate::state::{ProgState,DomRef,Domain,Value,Symbolic};
 use crate::operators::swizzle::{simple_fans, simple_rotations, OpAxis};
 use crate::operators::reg_select::{reg_select_no_const};
 use crate::operators::load::{load_rep,load_trunc};
@@ -88,31 +88,31 @@ impl SynthesisLevelDesc {
     }
 }
 
-pub fn trove(m: Ix, n: Ix) -> ProgState {
+pub fn trove<'d>(domain: &'d Domain, m: Ix, n: Ix) -> ProgState<'d> {
     let array = Array::from_shape_fn((m, n),
-                                     move |(i, j)| (j + i * n) as Symbolic)
+                                     move |(i, j)| (j + i * n) as DomRef)
         .into_dyn();
-    ProgState::new((m * n) as Symbolic, array, "trove")
+    ProgState::new(domain, array, "trove")
 }
 
-fn convolve_dealg(width: Ix, k: Ix) -> ProgState {
+fn convolve_dealg<'d>(domain: &'d Domain, width: Ix, k: Ix) -> ProgState<'d> {
     let array = Array::from_shape_fn((width, k),
-                                     move |(i, j)| (i + j)  as Symbolic)
+                                     move |(i, j)| Value::Symbol((i + j)  as Symbolic))
         .into_dyn();
-    ProgState::new((width + k - 1) as Symbolic, array, "conv_dealg")
+    ProgState::new_from_spec(domain, array, "conv_dealg").unwrap()
 }
 
-pub fn lookup_problem(problem: &str, shape: &[Ix]) -> Result<ProgState> {
+pub fn lookup_problem<'d>(problem: &str, domain: &'d Domain, shape: &[Ix]) -> Result<ProgState<'d>> {
     match problem {
         "trove" => {
             match shape {
-                &[m, n] => Ok(trove(m, n)),
+                &[m, n] => Ok(trove(domain, m, n)),
                 other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
             }
         }
         "conv_dealg" => {
             match shape {
-                &[width, k] => Ok(convolve_dealg(width, k)),
+                &[width, k] => Ok(convolve_dealg(domain, width, k)),
                 other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
             }
         }
@@ -122,20 +122,37 @@ pub fn lookup_problem(problem: &str, shape: &[Ix]) -> Result<ProgState> {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ProblemDesc {
+    pub num_symbols: u64,
     pub end_name: String,
     pub steps: Vec<SynthesisLevelDesc>,
 }
 
 impl ProblemDesc {
-    pub fn to_problem(&self) -> Result<(ProgState, ProgState, Vec<SynthesisLevel>)> {
-        let levels: Result<Vec<SynthesisLevel>> = self.steps.iter().map(|x| x.to_synthesis_level()).collect();
+    pub fn make_domain(&self) -> Domain {
+        Domain::new(self.num_symbols as usize)
+    }
+
+    pub fn to_problem<'d>(&self,
+                          domain: &'d Domain) -> Result<(ProgState<'d>,
+                                                         ProgState<'d>,
+                                                         Vec<SynthesisLevel>)> {
+        let levels: Result<Vec<SynthesisLevel>> =
+            self.steps.iter()
+            .map(|x| x.to_synthesis_level().chain_err(|| ErrorKind::LevelBuild(Box::new(x.clone()))))
+            .collect();
         let levels = levels?;
 
         let start_shape = levels[0].ops.in_shape.as_slice();
+        let start_symbols: usize = start_shape.into_iter().product();
+        if start_symbols != domain.symbol_max {
+            return Err(ErrorKind::ShapeMismatch(
+                levels[0].ops.in_shape.to_vec(),
+                vec![domain.symbol_max]).into());
+        }
         let end_shape = levels[levels.len() - 1].ops.out_shape.as_slice();
 
-        let initial = ProgState::linear(start_shape);
-        let spec = lookup_problem(&self.end_name, end_shape)?;
+        let initial = ProgState::linear(domain, start_shape);
+        let spec = lookup_problem(&self.end_name, domain, end_shape)?;
         Ok((initial, spec, levels))
     }
 }
@@ -143,27 +160,29 @@ impl ProblemDesc {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::state::ProgValue;
+    use crate::state::{Domain, DomRef};
 
     #[test]
     pub fn trove_works() {
-        let trove_spec: [ProgValue; 12] = [0, 3, 6, 9,
-                                          1, 4, 7, 10,
-                                          2, 5, 8, 11];
+        let domain = Domain::new(12);
+        let trove_spec: [DomRef; 12] = [0, 3, 6, 9,
+                                        1, 4, 7, 10,
+                                        2, 5, 8, 11];
         let trove_spec_arr = Array::from_shape_vec((3, 4), (&trove_spec).to_vec()).unwrap().into_dyn();
-        let trove_spec_prog = ProgState::new(12, trove_spec_arr, "trove");
-        assert_eq!(trove_spec_prog, trove(3, 4));
+        let trove_spec_prog = ProgState::new(&domain, trove_spec_arr, "trove");
+        assert_eq!(trove_spec_prog, trove(&domain, 3, 4));
     }
 
     #[test]
     pub fn conv_1d_end_works() {
-        let conv_final: [ProgValue; 4 * 3] = [0, 1, 2,
-                                              1, 2, 3,
-                                              2, 3, 4,
-                                              3, 4, 5];
+        let domain = Domain::new(4 + 3 - 1);
+        let conv_final: [DomRef; 4 * 3] = [0, 1, 2,
+                                           1, 2, 3,
+                                           2, 3, 4,
+                                           3, 4, 5];
         let conv_final_arr = Array::from_shape_vec((4, 3), (&conv_final).to_vec()).unwrap().into_dyn();
-        let conv_final_prog = ProgState::new(6, conv_final_arr, "conv_regs_loaded");
-        assert_eq!(conv_final_prog, convolve_dealg(4, 3));
+        let conv_final_prog = ProgState::new(&domain, conv_final_arr, "conv_regs_loaded");
+        assert_eq!(conv_final_prog, convolve_dealg(&domain, 4, 3));
     }
 
     #[test]
@@ -173,6 +192,7 @@ mod tests {
         use std::collections::HashSet;
 
         let desc = ProblemDesc {
+            num_symbols: 12,
             end_name: "trove".to_owned(),
             steps: vec![
                 SynthesisLevelDesc { basis: "sRr".to_owned(),
@@ -180,9 +200,10 @@ mod tests {
                                      prune: false},
             ]
         };
-        let (start, end, levels) = desc.to_problem().unwrap();
-        assert_eq!(start, crate::state::ProgState::linear(&[3, 4]));
-        assert_eq!(end, trove(3, 4));
+        let domain = desc.make_domain();
+        let (start, end, levels) = desc.to_problem(&domain).unwrap();
+        assert_eq!(start, crate::state::ProgState::linear(&domain, &[3, 4]));
+        assert_eq!(end, trove(&domain, 3, 4));
         assert_eq!(levels.len(), 1);
         assert_eq!(levels[0].prune, false);
         assert!(levels[0].matrix.is_none());

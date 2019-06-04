@@ -247,8 +247,9 @@ impl TransitionMatrixOps for TransitionMatrix {
 
 impl TransitionMatrix {
     pub fn load_matrix(path: impl AsRef<Path>) -> Result<Self> {
+        let path = path.as_ref();
         let mut file = open_file(path)?;
-        Self::read(&mut file)
+        Self::read(&mut file).chain_err(|| ErrorKind::MatrixLoad(path.to_owned()))
     }
 
     pub fn store_matrix(&self, path: impl AsRef<Path>) -> Result<()> {

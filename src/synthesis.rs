@@ -100,17 +100,17 @@ impl Display for SearchLevelStats {
     }
 }
 
-type ResultMap = RwLock<HashMap<ProgState, bool>>;
-type SearchResultCache = Arc<ResultMap>;
+type ResultMap<'d> = RwLock<HashMap<ProgState<'d>, bool>>;
+type SearchResultCache<'d> = Arc<ResultMap<'d>>;
 
 // Invariant: any level with pruning enabled has a corresponding pruning matrix available
-fn viable(current: &ProgState, target: &ProgState, matrix: &TransitionMatrix,
-          cache: &ResultMap, tracker: &SearchLevelStats) -> bool {
-    if target.domain_max != current.domain_max {
-        println!("WARNING domain max differs {} -> {}", current.domain_max, target.domain_max);
+fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
+              cache: &ResultMap<'d>, tracker: &SearchLevelStats) -> bool {
+    let dm = target.domain.symbol_max;
+    if dm != current.domain.symbol_max {
+        println!("WARNING symbol max differs {} -> {}", current.domain.symbol_max, dm);
         return false;
     }
-    let dm = target.domain_max as usize;
     let mut did_lookup = false;
     for a in 0..dm {
         for b in 0..dm {
@@ -150,10 +150,10 @@ fn viable(current: &ProgState, target: &ProgState, matrix: &TransitionMatrix,
     true
 }
 
-fn search(current: ProgState, target: &ProgState,
-          levels: &[SynthesisLevel], current_level: usize,
-          stats: &[SearchLevelStats], mode: Mode,
-          caches: &[SearchResultCache]) -> bool {
+fn search<'d, 'f>(current: ProgState<'d>, target: &ProgState<'d>,
+                  levels: &'f [SynthesisLevel], current_level: usize,
+                  stats: &'f [SearchLevelStats], mode: Mode,
+                  caches: &'f [SearchResultCache<'d>]) -> bool {
     let tracker = &stats[current_level];
     tracker.checking();
 

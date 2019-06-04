@@ -20,76 +20,151 @@ use std::fmt::{Display,Formatter};
 use std::cmp::{PartialEq,Eq};
 use std::hash::{Hash,Hasher};
 
-pub type Symbolic = u16;
-pub type ProgValue = Symbolic;
+use hashbrown::HashMap;
 
+pub type Symbolic = u16;
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub enum Value {
+    Symbol(Symbolic),
+    Garbage,
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        use Value::*;
+        match self {
+            Symbol(s) => write!(f, "{}", s),
+            Garbage => write!(f, "⊥")
+        }
+    }
+}
+
+pub type DomRef = usize;
+
+// It's an invariant of this structure that references [0..domain_max)
+// contain the symbols [0..domain_max), in order, and than reference domain_max
+// contains Garbage
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Domain {
+    elements: Vec<Value>,
+    element_map: HashMap<Value, DomRef>,
+    symbols_in: Vec<Vec<DomRef>>,
+    pub symbol_max: usize,
+}
+
+impl Domain {
+    pub fn new(symbol_max: usize) -> Self {
+        let mut elements: Vec<Value> = (0..symbol_max).into_iter()
+            .map(|x| Value::Symbol(x as Symbolic)).collect();
+        elements.push(Value::Garbage);
+
+        let mut element_map: HashMap<Value, DomRef> = (0..symbol_max).into_iter()
+            .map(|x| (Value::Symbol(x as Symbolic), x)).collect();
+        element_map.insert(Value::Garbage, symbol_max);
+
+        let mut symbols_in: Vec<Vec<DomRef>> = (0..symbol_max).into_iter()
+            .map(|x| vec![x]).collect();
+        symbols_in.push(vec![]); // Garbage
+
+        Domain { elements, element_map, symbols_in, symbol_max }
+    }
+
+    pub fn find_value(&self, value: &Value) -> Option<DomRef> {
+        self.element_map.get(value).copied()
+    }
+
+    pub fn get_value(&self, dom_ref: DomRef) -> &Value {
+        &self.elements[dom_ref]
+    }
+
+    pub fn symbols_in(&self, dom_ref: DomRef) -> &[DomRef] {
+        &self.symbols_in[dom_ref]
+    }
+}
 // Ok, the general pruning rule is this:
 // For a symbolic value v, let Loc(s, v), be the set of locations where v is placed in state s
 // Suppose we want to prune from state c to state t
 // There's a general path with value v, called c ->'(v) t, if, in the pruning matrix, for each l in Loc(v, t), there is a l' in Loc(v, c) such that l' -> l
 // A value can continue, if for each pair of values v1, v2, we have c ->'(v1) t and c ->'(v2) t
 // Program states
-#[derive(Clone, Debug)]
-pub struct ProgState {
-    pub(crate) state: ArrayD<ProgValue>,
+#[derive(Debug)]
+pub struct ProgState<'d> {
+    pub domain: &'d Domain,
+    pub(crate) state: ArrayD<DomRef>,
     // Note: IxDyn is basically SmallVec, though that's not obvious anywhere
     pub(crate) inv_state: Vec<Vec<IxDyn>>,
-    // The value domain_max is the "trash" value
-    pub domain_max: Symbolic,
     pub name: String
 }
 
-impl PartialEq for ProgState {
+impl Clone for ProgState<'_> {
+    fn clone(&self) -> Self {
+        ProgState { domain: self.domain,
+                    state: self.state.clone(),
+                    inv_state: self.inv_state.clone(),
+                    name: self.name.clone() }
+    }
+}
+impl PartialEq for ProgState<'_> {
     fn eq(&self, other: &ProgState) -> bool {
-        self.domain_max == other.domain_max && self.state == other.state
+        self.state == other.state
     }
 }
 
-impl Eq for ProgState {}
+impl Eq for ProgState<'_> {}
 
-impl Hash for ProgState {
+impl Hash for ProgState<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.domain_max.hash(state);
         self.state.hash(state);
     }
 }
 
-impl ProgState {
-    fn making_inverse(domain_max: Symbolic, state: ArrayD<ProgValue>, name: String) -> Self {
-        let mut inverse: Vec<Vec<IxDyn>> = (0..domain_max).map(|_| Vec::with_capacity(1)).collect();
-        for (idx, elem) in state.indexed_iter().filter(|&(_, x)| *x < domain_max) {
-            inverse[*elem as usize].push(idx.clone())
+impl<'d> ProgState<'d> {
+    fn making_inverse(domain: &'d Domain, state: ArrayD<DomRef>, name: String) -> Self {
+        let mut inverse: Vec<Vec<IxDyn>> = (0..domain.symbol_max).map(|_| Vec::with_capacity(1)).collect();
+        for (idx, elem) in state.indexed_iter() {
+            for s in domain.symbols_in(*elem) {
+                inverse[*s].push(idx.clone())
+            }
         }
-        Self { domain_max: domain_max, state: state, name: name, inv_state: inverse }
+        Self { domain: domain , state: state, name: name, inv_state: inverse }
     }
 
-    pub fn new(domain_max: Symbolic, state: ArrayD<ProgValue>, name: impl Into<String>) -> Self {
-        Self::making_inverse(domain_max, state, name.into())
+    pub fn new(domain: &'d Domain, state: ArrayD<DomRef>, name: impl Into<String>) -> Self {
+        Self::making_inverse(domain, state, name.into())
     }
 
-    pub fn linear(shape: &[Ix]) -> Self {
-        let domain_max: Ix = shape.iter().product();
-        let domain_max = domain_max as Symbolic;
-        let array = (0..domain_max).collect();
-        Self::making_inverse(domain_max, Array::from_shape_vec(shape, array).unwrap(), "id".to_owned())
+    pub fn new_from_spec(domain: &'d Domain, state: ArrayD<Value>, name: impl Into<String>) -> Option<Self> {
+        let ref_vec: Option<Vec<DomRef>> = state.as_slice().unwrap()
+            .into_iter().map(|v| domain.find_value(v))
+            .collect();
+        let ref_vec = ref_vec?;
+        let ref_mat = ArrayD::from_shape_vec(state.shape(), ref_vec).unwrap();
+        Some(Self::making_inverse(domain, ref_mat, name.into()))
+    }
+
+    pub fn linear(domain: &'d Domain, shape: &[Ix]) -> Self {
+        let array = (0..domain.symbol_max).collect();
+        Self::making_inverse(domain, Array::from_shape_vec(shape, array).unwrap(), "id".to_owned())
     }
 
     pub fn gather_by(&self, gather: &Gather) -> Self {
         let axis_num = Axis(gather.data.ndim() - 1);
         // Read off the edge to get the "garbage" value
+        let dm = self.domain.symbol_max;
         let array = gather.data.map_axis(axis_num,
                                          move |v| self.state.get(v.into_slice().unwrap())
-                                         .copied().unwrap_or(self.domain_max));
+                                         .copied().unwrap_or(dm));
         let mut name = self.name.to_owned();
         name.push_str(";");
         name.push_str(&gather.name);
-        Self::making_inverse(self.domain_max, array, name)
+        Self::making_inverse(self.domain, array, name)
     }
 }
 
-impl Display for ProgState {
+impl Display for ProgState<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "{}:\n{}", self.name, self.state)
+        write!(f, "{}:\n{}", self.name, self.state.mapv(|r| self.domain.get_value(r)))
     }
 }
 
