@@ -144,18 +144,24 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
     }
 }
 
+fn in_bounds(index: ndarray::ArrayView1<Ix>, bounds: &[Ix]) -> bool {
+    index.into_iter().zip(bounds.into_iter()).all(move |(i, v)| i < v)
+}
+
 pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet) -> T {
     let out_slots: usize = ops.out_shape.iter().product();
     let in_slots: usize = ops.in_shape.iter().product();
+    let bounds = &ops.in_shape;
     let len = (out_slots.pow(2)) * (in_slots.pow(2));
+    // empty takes out, in, unlike set and their friends
     let mut ret = T::empty(len, &ops.out_shape, &ops.in_shape);
     for op in &ops.ops {
         let axis_num = op.data.ndim() - 1;
         let output_shape = &op.data.shape()[0..axis_num];
         for (input1, output1) in op.data.lanes(Axis(axis_num)).into_iter()
-            .zip(ndarray::indices(output_shape)) {
+            .zip(ndarray::indices(output_shape)).filter(|&(i, _)| in_bounds(i, bounds)) {
                 for (input2, output2) in op.data.lanes(Axis(axis_num)).into_iter()
-                    .zip(ndarray::indices(output_shape)) {
+                    .zip(ndarray::indices(output_shape)).filter(|&(i, _)| in_bounds(i, bounds)) {
                         ret.set(input1.as_slice().unwrap(), input2.as_slice().unwrap(),
                                 output1.slice(), output2.slice(),
                                 true);
