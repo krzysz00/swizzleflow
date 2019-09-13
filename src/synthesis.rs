@@ -20,6 +20,8 @@ use crate::misc::{time_since};
 
 use ndarray::Dimension;
 
+use std::collections::HashMap;
+
 use std::time::Instant;
 
 use std::fmt;
@@ -29,7 +31,6 @@ use std::sync::{Arc, RwLock};
 
 use itertools::iproduct;
 
-use hashbrown::HashMap;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Mode {
@@ -106,14 +107,12 @@ type SearchResultCache<'d> = Arc<ResultMap<'d>>;
 // Invariant: any level with pruning enabled has a corresponding pruning matrix available
 fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
               cache: &ResultMap<'d>, tracker: &SearchLevelStats) -> bool {
-    let dm = target.domain.symbol_max;
-    if dm != current.domain.symbol_max {
-        println!("WARNING symbol max differs {} -> {}", current.domain.symbol_max, dm);
-        return false;
-    }
+    let level_min = target.domain.level_bounds[current.level];
+    let level_max = target.domain.level_bounds[current.level + 1];
+
     let mut did_lookup = false;
-    for a in 0..dm {
-        for b in 0..dm {
+    for a in level_min..level_max {
+        for b in level_min..level_max {
             for (t1, t2) in iproduct!(target.inv_state[a].iter(), target.inv_state[b].iter()) {
                 let result = iproduct!(current.inv_state[a].iter(), current.inv_state[b].iter())
                     .any(|(c1, c2)| {

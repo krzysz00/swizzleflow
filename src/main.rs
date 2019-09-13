@@ -111,9 +111,10 @@ fn run() -> Result<()> {
         None => vec![serde_json::from_reader(BufReader::new(std::io::stdin().lock()))?]
     };
 
-    for spec in specs {
-        let domain = spec.make_domain();
-        let (initial, target, mut levels) = spec.to_problem(&domain)?;
+    for desc in specs {
+        let spec = desc.get_spec()?;
+        let domain = desc.make_domain(spec.view());
+        let (initial, target, mut levels) = desc.to_problem(&domain, spec)?;
         operators::add_matrices(matrix_dir, &mut levels)?;
         synthesize(initial, &target, &levels, synthesis_mode);
         operators::remove_matrices(&mut levels);
@@ -136,7 +137,7 @@ fn main() {
 mod tests {
     use crate::problem_desc::{trove};
     use crate::operators::swizzle::{fan,rotate,OpAxis};
-    use crate::state::{ProgState, Domain};
+    use crate::state::{ProgState, Domain, Value};
 
     fn fixed_solution_from_scala_3x8<'d>(d: &'d Domain) -> ProgState<'d> {
         let initial = ProgState::linear(d, &[3, 8]);
@@ -149,8 +150,10 @@ mod tests {
 
     #[test]
     fn trove_solution_works() {
-        let domain = Domain::new(24);
-        let spec = trove(&domain, 3, 8);
+        let symbols: ndarray::Array1<Value> = (0u16..24u16).map(Value::Symbol).collect();
+        let symbols = symbols.into_dyn();
+        let domain = Domain::new(symbols.view());
+        let spec = ProgState::new_from_spec(&domain, trove(3, 8), "trove").unwrap();
         let solution = fixed_solution_from_scala_3x8(&domain);
         println!("spec {}\n solution {}", spec, solution);
         assert_eq!(spec, solution);

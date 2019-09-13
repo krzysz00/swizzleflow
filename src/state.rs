@@ -12,22 +12,22 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use ndarray::{Array,ArrayD,Ix,Axis,IxDyn};
+use ndarray::{Array,ArrayViewD,ArrayD,Ix,Axis,IxDyn};
 use ndarray::Dimension;
 
 use std::fmt;
 use std::fmt::{Display,Formatter};
 use std::cmp::{PartialEq,Eq};
 use std::hash::{Hash,Hasher};
-
-use hashbrown::HashMap;
+use std::collections::{HashMap,BTreeSet};
 
 pub type Symbolic = u16;
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum Value {
-    Symbol(Symbolic),
     Garbage,
+    Symbol(Symbolic),
+    Fold(BTreeSet<Value>),
 }
 
 impl Display for Value {
@@ -35,7 +35,46 @@ impl Display for Value {
         use Value::*;
         match self {
             Symbol(s) => write!(f, "{}", s),
+            Fold(v) => {
+                write!(f, "∑(")?;
+                for e in v {
+                    write!(f, "{}, ", e)?;
+                }
+                write!(f, ")")
+            }
             Garbage => write!(f, "⊥")
+        }
+    }
+}
+
+impl Value {
+    pub fn collect_subterms(&self, store: &mut Vec<BTreeSet<Value>>) -> usize {
+        match self {
+            Value::Garbage => {
+                if store.len() == 0 {
+                    store.push(BTreeSet::new())
+                }
+                store[0].insert(self.clone());
+                0
+            }
+            Value::Symbol(_) => {
+                for _ in store.len()..=1 {
+                    store.push(BTreeSet::new())
+                }
+                store[1].insert(self.clone());
+                1
+            }
+            Value::Fold(v) => {
+                if let Some(sub_max) = v.iter().map(|e| e.collect_subterms(store)).max() {
+                    let ret = sub_max + 1;
+                    // Need all indices up through (max of subterms) + 1 to be valid
+                    for _ in store.len()..=ret {
+                        store.push(BTreeSet::new())
+                    }
+                    store[ret].insert(self.clone());
+                    ret
+                } else { 0 }
+            }
         }
     }
 }
@@ -48,26 +87,57 @@ pub type DomRef = usize;
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Domain {
     elements: Vec<Value>,
+    pub level_bounds: Vec<usize>,
+    pub levels: usize,
     element_map: HashMap<Value, DomRef>,
-    symbols_in: Vec<Vec<DomRef>>,
-    pub symbol_max: usize,
+    subterms_of: Vec<Vec<DomRef>>,
 }
 
 impl Domain {
-    pub fn new(symbol_max: usize) -> Self {
-        let mut elements: Vec<Value> = (0..symbol_max)
-            .map(|x| Value::Symbol(x as Symbolic)).collect();
-        elements.push(Value::Garbage);
+    pub fn new(spec: ArrayViewD<Value>) -> Self {
+        let mut store: Vec<BTreeSet<Value>> = Vec::new();
+        Value::Garbage.collect_subterms(&mut store);
 
-        let mut element_map: HashMap<Value, DomRef> = (0..symbol_max)
-            .map(|x| (Value::Symbol(x as Symbolic), x)).collect();
-        element_map.insert(Value::Garbage, symbol_max);
+        for e in spec {
+            e.collect_subterms(&mut store);
+        }
 
-        let mut symbols_in: Vec<Vec<DomRef>> = (0..symbol_max)
-            .map(|x| vec![x]).collect();
-        symbols_in.push(vec![]); // Garbage
+        let mut level_bounds = vec![0; 1];
+        let mut elements: Vec<Value> = Vec::new();
+        for level in store.into_iter() {
+            for e in level.into_iter() {
+                elements.push(e)
+            }
+            level_bounds.push(elements.len())
+        }
+        let levels = level_bounds.len() - 1;
 
-        Domain { elements, element_map, symbols_in, symbol_max }
+        let element_map: HashMap<Value, DomRef> =
+            elements.iter().cloned().enumerate().map(|(i, e)| (e, i)).collect();
+
+        let mut subterm_sets: Vec<_> = (0..elements.len()).map(|i| {
+            let mut v = BTreeSet::<DomRef>::new();
+            v.insert(i);
+            v }).collect();
+        // Must exist due to base symbols
+        let complex_min = level_bounds[2];
+        for (i, e) in (&elements[complex_min..]).into_iter().enumerate() {
+            let i = i + complex_min;
+            match e {
+                Value::Garbage | Value::Symbol(_) =>
+                    panic!("Unexpected base symbol at depth > 1: {}", e),
+                Value::Fold(v) => {
+                    for subterm in v {
+                        // At this point, any term with lower depth has complete subterms
+                        let idx = *element_map.get(subterm).unwrap();
+                        subterm_sets[i] = &subterm_sets[i] | &subterm_sets[idx];
+                    }
+                }
+            }
+        }
+
+        let subterms_of = subterm_sets.into_iter().map(|v| v.into_iter().collect()).collect();
+        Domain { level_bounds, levels, elements, element_map, subterms_of }
     }
 
     pub fn find_value(&self, value: &Value) -> Option<DomRef> {
@@ -78,10 +148,19 @@ impl Domain {
         &self.elements[dom_ref]
     }
 
-    pub fn symbols_in(&self, dom_ref: DomRef) -> &[DomRef] {
-        &self.symbols_in[dom_ref]
+    pub fn subterms_of(&self, dom_ref: DomRef) -> &[DomRef] {
+        &self.subterms_of[dom_ref]
+    }
+
+    pub fn size(&self) -> usize {
+        self.elements.len()
+    }
+
+    pub fn num_symbols(&self) -> usize {
+        self.level_bounds[2] - self.level_bounds[1]
     }
 }
+
 // Ok, the general pruning rule is this:
 // For a symbolic value v, let Loc(s, v), be the set of locations where v is placed in state s
 // Suppose we want to prune from state c to state t
@@ -94,6 +173,7 @@ pub struct ProgState<'d> {
     pub(crate) state: ArrayD<DomRef>,
     // Note: IxDyn is basically SmallVec, though that's not obvious anywhere
     pub(crate) inv_state: Vec<Vec<IxDyn>>,
+    pub level: usize,
     pub name: String
 }
 
@@ -102,6 +182,7 @@ impl Clone for ProgState<'_> {
         ProgState { domain: self.domain,
                     state: self.state.clone(),
                     inv_state: self.inv_state.clone(),
+                    level: self.level,
                     name: self.name.clone() }
     }
 }
@@ -120,18 +201,20 @@ impl Hash for ProgState<'_> {
 }
 
 impl<'d> ProgState<'d> {
-    fn making_inverse(domain: &'d Domain, state: ArrayD<DomRef>, name: String) -> Self {
-        let mut inverse: Vec<Vec<IxDyn>> = (0..domain.symbol_max).map(|_| Vec::with_capacity(1)).collect();
+    fn making_inverse(domain: &'d Domain, state: ArrayD<DomRef>, level: usize,
+                      name: String) -> Self {
+        let mut inverse: Vec<Vec<IxDyn>> = (0..domain.size()).map(|_| Vec::with_capacity(1)).collect();
         for (idx, elem) in state.indexed_iter() {
-            for s in domain.symbols_in(*elem) {
+            for s in domain.subterms_of(*elem) {
                 inverse[*s].push(idx.clone())
             }
         }
-        Self { domain, state, name, inv_state: inverse }
+        Self { domain, state, level, name, inv_state: inverse }
     }
 
-    pub fn new(domain: &'d Domain, state: ArrayD<DomRef>, name: impl Into<String>) -> Self {
-        Self::making_inverse(domain, state, name.into())
+    pub fn new(domain: &'d Domain, state: ArrayD<DomRef>,
+               level: usize, name: impl Into<String>) -> Self {
+        Self::making_inverse(domain, state, level, name.into())
     }
 
     pub fn new_from_spec(domain: &'d Domain, state: ArrayD<Value>, name: impl Into<String>) -> Option<Self> {
@@ -140,25 +223,26 @@ impl<'d> ProgState<'d> {
             .collect();
         let ref_vec = ref_vec?;
         let ref_mat = ArrayD::from_shape_vec(state.shape(), ref_vec).unwrap();
-        Some(Self::making_inverse(domain, ref_mat, name.into()))
+        let level = domain.levels - 1;
+        Some(Self::new(domain, ref_mat, level, name))
     }
 
     pub fn linear(domain: &'d Domain, shape: &[Ix]) -> Self {
-        let array = (0..domain.symbol_max).collect();
-        Self::making_inverse(domain, Array::from_shape_vec(shape, array).unwrap(), "id".to_owned())
+        let array = (domain.level_bounds[1]..domain.level_bounds[2]).collect();
+        Self::making_inverse(domain, Array::from_shape_vec(shape, array).unwrap(),
+                             1, "id".to_owned())
     }
 
     pub fn gather_by(&self, gather: &Gather) -> Self {
         let axis_num = Axis(gather.data.ndim() - 1);
         // Read off the edge to get the "garbage" value
-        let dm = self.domain.symbol_max;
         let array = gather.data.map_axis(axis_num,
                                          move |v| self.state.get(v.into_slice().unwrap())
-                                         .copied().unwrap_or(dm));
+                                         .copied().unwrap_or(0));
         let mut name = self.name.to_owned();
         name.push_str(";");
         name.push_str(&gather.name);
-        Self::making_inverse(self.domain, array, name)
+        Self::making_inverse(self.domain, array, self.level, name)
     }
 }
 

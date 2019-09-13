@@ -22,7 +22,5 @@ error-chain = "0.12.1"
 
 clap = "2"
 
-hashbrown = "0.4"
-
 [dev-dependencies]
 tempfile = "3"
