@@ -27,7 +27,8 @@ pub type Symbolic = u16;
 pub enum Value {
     Garbage,
     Symbol(Symbolic),
-    Fold(BTreeSet<Value>),
+    // Note: as an invariant, these are sorted
+    Fold(Vec<Value>),
 }
 
 impl Display for Value {
@@ -48,6 +49,11 @@ impl Display for Value {
 }
 
 impl Value {
+    pub fn fold(mut terms: Vec<Value>) -> Self {
+        terms.sort();
+        Value::Fold(terms)
+    }
+
     pub fn collect_subterms(&self, store: &mut Vec<BTreeSet<Value>>) -> usize {
         match self {
             Value::Garbage => {
@@ -81,9 +87,9 @@ impl Value {
 
 pub type DomRef = usize;
 
-// It's an invariant of this structure that references [0..domain_max)
-// contain the symbols [0..domain_max), in order, and than reference domain_max
-// contains Garbage
+// Invariants on Domains
+// - Domain reference 0 is to Garbage, which is the only term at level 0
+// - DomRefs are sorted: id1 < id1 implies that the corresponding v1 < v2
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Domain {
     elements: Vec<Value>,
@@ -91,6 +97,7 @@ pub struct Domain {
     pub levels: usize,
     element_map: HashMap<Value, DomRef>,
     subterms_of: Vec<Vec<DomRef>>,
+    fold_ref_map: HashMap<Vec<DomRef>, DomRef>,
 }
 
 impl Domain {
@@ -105,6 +112,7 @@ impl Domain {
         let mut level_bounds = vec![0; 1];
         let mut elements: Vec<Value> = Vec::new();
         for level in store.into_iter() {
+            // Returned in sorted order
             for e in level.into_iter() {
                 elements.push(e)
             }
@@ -137,7 +145,16 @@ impl Domain {
         }
 
         let subterms_of = subterm_sets.into_iter().map(|v| v.into_iter().collect()).collect();
-        Domain { level_bounds, levels, elements, element_map, subterms_of }
+
+        let fold_ref_map =
+            elements.iter().enumerate()
+            .filter_map(|(i, e)| {
+                if let Value::Fold(v) = e {
+                    Some((v.iter().map(|s| *element_map.get(s).unwrap())
+                          .collect::<Vec<_>>(), i))
+                } else { None }
+            }).collect::<HashMap<Vec<DomRef>, DomRef>>();
+        Domain { level_bounds, levels, elements, element_map, subterms_of, fold_ref_map }
     }
 
     pub fn find_value(&self, value: &Value) -> Option<DomRef> {
