@@ -176,6 +176,11 @@ impl Domain {
     pub fn num_symbols(&self) -> usize {
         self.level_bounds[2] - self.level_bounds[1]
     }
+
+    // The set of indices must be sorted
+    pub fn find_fold(&self, elems: &[DomRef]) -> Option<DomRef> {
+        self.fold_ref_map.get(elems).copied()
+    }
 }
 
 // Ok, the general pruning rule is this:

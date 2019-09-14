@@ -1,36 +1,41 @@
 {
-  "num_symbols": 12,
   "end_name": "trove",
+  "end_info": [4, 3],
   "steps": [
     {
       "basis": "load_rep",
       "in_sizes": [12],
       "out_sizes": [4, 3],
-      "prune": false
+      "prune": false,
+      "then_fold": false
     },
     {
       "basis": "sFr",
       "in_sizes": [4, 3],
       "out_sizes": [4, 3],
-      "prune": false
+      "prune": false,
+      "then_fold": false
     },
     {
       "basis": "sRr",
       "in_sizes": [4, 3],
       "out_sizes": [4, 3],
-      "prune": false
+      "prune": false,
+      "then_fold": false
     },
     {
       "basis": "sFc",
       "in_sizes": [4, 3],
       "out_sizes": [4, 3],
-      "prune": false
+      "prune": false,
+      "then_fold": false
     },
     {
       "basis": "sRc",
       "in_sizes": [4, 3],
       "out_sizes": [4, 3],
-      "prune": false
+      "prune": false,
+      "then_fold": false
     }
   ]
 }

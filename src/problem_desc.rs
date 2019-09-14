@@ -32,6 +32,7 @@ pub struct SynthesisLevelDesc {
     pub in_sizes: Vec<u64>,
     pub out_sizes: Vec<u64>,
     pub prune: bool,
+    pub then_fold: bool,
 }
 
 impl SynthesisLevelDesc {
@@ -106,23 +107,23 @@ fn convolve_dealg(width: Ix, k: Ix) -> ArrayD<Value> {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ProblemDesc {
     pub end_name: String,
+    pub end_info: Vec<u64>,
     pub steps: Vec<SynthesisLevelDesc>,
 }
 
 impl ProblemDesc {
     pub fn get_spec(&self) -> Result<ArrayD<Value>> {
-        let end_shape = self.steps[self.steps.len() - 1].out_sizes
-            .iter().copied().map(|x| x as usize)
+        let end_info = self.end_info.iter().copied().map(|x| x as usize)
             .collect::<SmallVec<[usize; 4]>>();
         match self.end_name.as_str() {
             "trove" => {
-                match end_shape.as_slice() {
+                match end_info.as_slice() {
                     &[m, n] => Ok(trove( m, n)),
                     other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
                 }
             }
             "conv_dealg" => {
-                match end_shape.as_slice() {
+                match end_info.as_slice() {
                     &[width, k] => Ok(convolve_dealg(width, k)),
                     other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
                 }
@@ -196,10 +197,11 @@ mod tests {
 
         let desc = ProblemDesc {
             end_name: "trove".to_owned(),
+            end_info: vec![3, 4],
             steps: vec![
                 SynthesisLevelDesc { basis: "sRr".to_owned(),
                                      in_sizes: vec![3, 4], out_sizes: vec![3, 4],
-                                     prune: false},
+                                     prune: false, then_fold: false},
             ]
         };
         let spec = desc.get_spec().unwrap();

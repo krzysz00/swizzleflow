@@ -1,30 +1,34 @@
 {
-  "num_symbols": 36,
   "end_name": "conv_dealg",
+  "end_info": [32, 5],
   "steps": [
     {
       "basis": "load_trunc",
       "in_sizes": [36],
       "out_sizes": [32, 2],
-      "prune": false
+      "prune": false,
+      "then_fold": false
     },
     {
       "basis": "regSelNC",
       "in_sizes": [32, 2],
       "out_sizes": [32, 5],
-      "prune": true
+      "prune": true,
+      "then_fold": false
     },
     {
       "basis": "sFc",
       "in_sizes": [32, 5],
       "out_sizes": [32, 5],
-      "prune": true
+      "prune": true,
+      "then_fold": false
     },
     {
       "basis": "sRc",
       "in_sizes": [32, 5],
       "out_sizes": [32, 5],
-      "prune": true
+      "prune": true,
+      "then_fold": false
     }
   ]
 }
