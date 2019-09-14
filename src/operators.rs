@@ -36,12 +36,21 @@ pub struct OpSet {
     pub ops: Vec<Gather>,
     pub in_shape: ShapeVec,
     pub out_shape: ShapeVec,
+    pub fused_fold: bool,
 }
 
 impl OpSet {
-    pub fn new<T>(name: T, ops: Vec<Gather>, in_shape: ShapeVec, out_shape: ShapeVec) -> Self
+    pub fn new<T>(name: T, ops: Vec<Gather>, in_shape: ShapeVec, out_shape: ShapeVec,
+                  fused_fold: bool) -> Self
     where T: Into<Cow<'static, str>> {
-        Self { name: name.into(), ops, in_shape, out_shape }
+        Self { name: name.into(), ops, in_shape, out_shape, fused_fold }
+    }
+
+    pub fn add_fused_fold(&mut self) {
+        if !self.fused_fold {
+            self.fused_fold = true;
+            self.out_shape.pop();
+        }
     }
 
     pub fn to_name(&self) -> String {

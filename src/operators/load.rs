@@ -57,7 +57,8 @@ fn load(in_shape: &[Ix], out_shape: &[Ix], mode: Mode) -> Result<OpSet> {
                         in_idx_output.extend(&out_idxs[out_split..]);
                     }, name);
     Ok(OpSet::new(name, vec![gather],
-                  ShapeVec::from_slice(in_shape), ShapeVec::from_slice(out_shape)))
+                  ShapeVec::from_slice(in_shape), ShapeVec::from_slice(out_shape),
+                  false))
 }
 
 pub fn load_rep(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSet> {

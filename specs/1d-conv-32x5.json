@@ -1,5 +1,5 @@
 {
-  "end_name": "conv_dealg",
+  "end_name": "conv",
   "end_info": [32, 5],
   "steps": [
     {
@@ -28,7 +28,7 @@
       "in_sizes": [32, 5],
       "out_sizes": [32, 5],
       "prune": true,
-      "then_fold": false
+      "then_fold": true
     }
   ]
 }

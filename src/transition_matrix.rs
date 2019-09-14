@@ -153,6 +153,7 @@ pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet) -> T {
     let in_slots: usize = ops.in_shape.iter().product();
     let bounds = &ops.in_shape;
     let len = (out_slots.pow(2)) * (in_slots.pow(2));
+    let fold = ops.fused_fold;
     // empty takes out, in, unlike set and their friends
     let mut ret = T::empty(len, &ops.out_shape, &ops.in_shape);
     for op in &ops.ops {
@@ -162,9 +163,17 @@ pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet) -> T {
             .zip(ndarray::indices(output_shape)).filter(|&(i, _)| in_bounds(i, bounds)) {
                 for (input2, output2) in op.data.lanes(Axis(axis_num)).into_iter()
                     .zip(ndarray::indices(output_shape)).filter(|&(i, _)| in_bounds(i, bounds)) {
-                        ret.set(input1.as_slice().unwrap(), input2.as_slice().unwrap(),
-                                output1.slice(), output2.slice(),
-                                true);
+                        if fold {
+                            ret.set(input1.as_slice().unwrap(), input2.as_slice().unwrap(),
+                                    &output1.slice()[0..axis_num-1],
+                                    &output2.slice()[0..axis_num-1],
+                                    true);
+                        }
+                        else {
+                            ret.set(input1.as_slice().unwrap(), input2.as_slice().unwrap(),
+                                    output1.slice(), output2.slice(),
+                                    true);
+                        }
                     }
             }
     }

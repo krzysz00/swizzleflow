@@ -40,7 +40,7 @@ impl SynthesisLevelDesc {
         let in_shape: ShapeVec = self.in_sizes.iter().map(|x| *x as usize).collect();
         let out_shape: ShapeVec = self.out_sizes.iter().map(|x| *x as usize).collect();
 
-        let ops =
+        let mut ops =
             match self.basis.as_ref() {
                 "load_rep" => {
                     load_rep(&in_shape, &out_shape)?
@@ -87,6 +87,10 @@ impl SynthesisLevelDesc {
                     return Err(ErrorKind::UnknownBasisType(other.to_owned()).into())
                 }
             };
+        // Handle operations that don't natively fold
+        if self.then_fold {
+            ops.add_fused_fold();
+        }
         Ok(SynthesisLevel::new(ops, self.prune))
     }
 }
@@ -102,6 +106,17 @@ fn convolve_dealg(width: Ix, k: Ix) -> ArrayD<Value> {
     Array::from_shape_fn((width, k),
                          move |(i, j)| Value::Symbol((i + j)  as Symbolic))
         .into_dyn()
+}
+
+fn convolve(width: Ix, k: Ix) -> ArrayD<Value> {
+    // Hopefully u16 is enough for everyone
+    let width = width as Symbolic;
+    let k = k as Symbolic;
+    let arr: ndarray::Array1<Value> =
+        (0..width).map(|w|
+                       (0..k).map(|i| Value::Symbol(w + i)).collect())
+        .map(Value::fold).collect();
+    arr.into_dyn()
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -127,6 +142,13 @@ impl ProblemDesc {
                     &[width, k] => Ok(convolve_dealg(width, k)),
                     other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
                 }
+            }
+            "conv" => {
+                match end_info.as_slice() {
+                    &[width, k] => Ok(convolve(width, k)),
+                    other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
+                }
+
             }
             other => Err(ErrorKind::UnknownProblem(other.to_owned()).into())
         }

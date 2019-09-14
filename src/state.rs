@@ -255,16 +255,29 @@ impl<'d> ProgState<'d> {
                              1, "id".to_owned())
     }
 
-    pub fn gather_by(&self, gather: &Gather) -> Self {
+    pub fn gather_by(&self, gather: &Gather, fold: bool) -> Option<Self> {
         let axis_num = Axis(gather.data.ndim() - 1);
         // Read off the edge to get the "garbage" value
-        let array = gather.data.map_axis(axis_num,
-                                         move |v| self.state.get(v.into_slice().unwrap())
-                                         .copied().unwrap_or(0));
+        let mut array = gather.data.map_axis(axis_num,
+                                             move |v| self.state.get(v.into_slice().unwrap())
+                                             .copied().unwrap_or(0));
+        if fold {
+            let fold_axis = array.ndim() - 1;
+            let elements: Option<Vec<DomRef>> =
+                array.lanes(Axis(fold_axis)).into_iter()
+                .map(|es| {
+                    let mut es = es.to_vec();
+                    es.sort();
+                    self.domain.find_fold(&es)
+                }).collect();
+            let elements = elements?;
+            array = ArrayD::from_shape_vec(&array.shape()[0..fold_axis],
+                                           elements).unwrap();
+        }
         let mut name = self.name.to_owned();
         name.push_str(";");
         name.push_str(&gather.name);
-        Self::making_inverse(self.domain, array, self.level, name)
+        Some(Self::making_inverse(self.domain, array, self.level, name))
     }
 }
 

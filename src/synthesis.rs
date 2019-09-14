@@ -180,17 +180,22 @@ fn search<'d, 'f>(current: ProgState<'d>, target: &ProgState<'d>,
 
     }
 
+    let fold = level.ops.fused_fold;
     let ops = &level.ops.ops; // Get at the actual vector of gathers
     let ret = match mode {
         Mode::All => {
             // Yep, this is meant not to be short-circuiting
-            ops.iter().map(|o| search(current.gather_by(o), target,
-                                      levels, current_level + 1, stats, mode, caches))
+            ops.iter().map(|o| if let Some(res) = current.gather_by(o, fold) {
+                search(res, target,
+                       levels, current_level + 1, stats, mode, caches)
+            } else { false })
                 .fold(false, |acc, new| new || acc)
         }
         Mode::First => {
-            ops.iter().any(|o| search(current.gather_by(o), target,
-                                      levels, current_level + 1, stats, mode, caches))
+            ops.iter().any(|o| if let Some(res) = current.gather_by(o, fold) {
+                search(res, target,
+                       levels, current_level + 1, stats, mode, caches)
+            } else { false })
         }
     };
     { cache.write().unwrap().insert(current.clone(), ret); }

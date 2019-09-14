@@ -87,5 +87,5 @@ pub fn reg_select_no_const(shape: &[Ix]) -> Result<OpSet> {
     in_shape[op_len - 1] = 2;
 
     let name = "regSelNC";
-    Ok(OpSet::new(name, ret.into_iter().collect(), in_shape, out_shape))
+    Ok(OpSet::new(name, ret.into_iter().collect(), in_shape, out_shape, false))
 }
