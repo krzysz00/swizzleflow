@@ -168,9 +168,10 @@ mod tests {
 
     #[test]
     pub fn trove_works() {
-        let trove_spec: [Symbolic; 12] = [0, 3, 6, 9,
-                                          1, 4, 7, 10,
-                                          2, 5, 8, 11];
+        let trove_spec: [Symbolic; 12] = [0, 1, 2,
+                                          3, 4, 5,
+                                          6, 7, 8,
+                                          9, 10, 11];
         let trove_spec: Vec<Value> = (&trove_spec).iter().copied().map(Value::Symbol).collect();
         let trove_spec_arr = Array::from_shape_vec((3, 4), trove_spec).unwrap().into_dyn();
         assert_eq!(trove_spec_arr, trove(3, 4));

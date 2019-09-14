@@ -137,14 +137,16 @@ fn main() {
 mod tests {
     use crate::problem_desc::{trove};
     use crate::operators::swizzle::{fan,rotate,OpAxis};
+    use crate::operators::load::load_rep;
     use crate::state::{ProgState, Domain, Value};
 
-    fn fixed_solution_from_scala_3x8<'d>(d: &'d Domain) -> ProgState<'d> {
-        let initial = ProgState::linear(d, &[3, 8]);
-        let s1 = initial.gather_by(&fan(3, 8, OpAxis::Columns, 0, 2));
-        let s2 = s1.gather_by(&rotate(3, 8, OpAxis::Columns, -7, 8, 0));
-        let s3 = s2.gather_by(&fan(3, 8, OpAxis::Rows, 0, 3));
-        let s4 = s3.gather_by(&rotate(3, 8, OpAxis::Rows, -5, 3, 0));
+    fn fixed_solution_from_scalar_8x3<'d>(d: &'d Domain) -> ProgState<'d> {
+        let initial = ProgState::linear(d, &[24]);
+        let s0 = initial.gather_by(&load_rep(&[24], &[8, 3]).unwrap().ops[0]);
+        let s1 = s0.gather_by(&fan(8, 3, OpAxis::Rows, 0, 2));
+        let s2 = s1.gather_by(&rotate(8, 3, OpAxis::Rows, -7, 8, 0));
+        let s3 = s2.gather_by(&fan(8, 3, OpAxis::Columns, 0, 3));
+        let s4 = s3.gather_by(&rotate(8, 3, OpAxis::Columns, -5, 3, 0));
         s4
     }
 
@@ -153,8 +155,8 @@ mod tests {
         let symbols: ndarray::Array1<Value> = (0u16..24u16).map(Value::Symbol).collect();
         let symbols = symbols.into_dyn();
         let domain = Domain::new(symbols.view());
-        let spec = ProgState::new_from_spec(&domain, trove(3, 8), "trove").unwrap();
-        let solution = fixed_solution_from_scala_3x8(&domain);
+        let spec = ProgState::new_from_spec(&domain, trove(8, 3), "trove").unwrap();
+        let solution = fixed_solution_from_scalar_8x3(&domain);
         println!("spec {}\n solution {}", spec, solution);
         assert_eq!(spec, solution);
     }
