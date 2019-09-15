@@ -264,9 +264,9 @@ impl<'d> ProgState<'d> {
         if fold {
             let fold_axis = array.ndim() - 1;
             let elements: Option<Vec<DomRef>> =
-                array.lanes(Axis(fold_axis)).into_iter()
+                array.lanes_mut(Axis(fold_axis)).into_iter()
                 .map(|es| {
-                    let mut es = es.to_vec();
+                    let es = es.into_slice().unwrap();
                     es.sort();
                     self.domain.find_fold(&es)
                 }).collect();
