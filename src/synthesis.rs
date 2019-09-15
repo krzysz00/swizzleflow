@@ -172,32 +172,45 @@ fn search<'d, 'f>(current: ProgState<'d>, target: &ProgState<'d>,
                    level.matrix.as_ref().unwrap(),
                    cache.as_ref(), &tracker) {
 //        println!("{}", current);
-        tracker.pruned();
-        return false;
+            tracker.pruned();
+            return false;
         }
     }
-    else {
-
-    }
-
-    let fold = level.ops.fused_fold;
     let ops = &level.ops.ops; // Get at the actual vector of gathers
-    let ret = match mode {
-        Mode::All => {
-            // Yep, this is meant not to be short-circuiting
-            ops.iter().map(|o| if let Some(res) = current.gather_by(o, fold) {
-                search(res, target,
-                       levels, current_level + 1, stats, mode, caches)
-            } else { false })
-                .fold(false, |acc, new| new || acc)
+    let ret =
+        if level.ops.fused_fold {
+            match mode {
+                Mode::All => {
+                    ops.iter().map(|o|
+                                   if let Some(res) = current.gather_fold_by(o) {
+                                       search(res, target, levels, current_level + 1,
+                                              stats, mode, caches)
+                                   } else { false })
+                        .fold(false, |acc, new| new || acc)
+                }
+                Mode::First => {
+                    ops.iter().any(|o|
+                                   if let Some(res) = current.gather_fold_by(o) {
+                                       search(res, target, levels, current_level + 1,
+                                              stats, mode, caches)
+                                   } else { false })
+                }
+            }
         }
-        Mode::First => {
-            ops.iter().any(|o| if let Some(res) = current.gather_by(o, fold) {
-                search(res, target,
-                       levels, current_level + 1, stats, mode, caches)
-            } else { false })
-        }
-    };
+        else {
+            match mode {
+                Mode::All => {
+                    // Yep, this is meant not to be short-circuiting
+                    ops.iter().map(|o| search(current.gather_by(o), target,
+                                              levels, current_level + 1, stats, mode, caches))
+                        .fold(false, |acc, new| new || acc)
+                }
+                Mode::First => {
+                    ops.iter().any(|o| search(current.gather_by(o), target,
+                                              levels, current_level + 1, stats, mode, caches))
+                }
+            }
+        };
     { cache.write().unwrap().insert(current.clone(), ret); }
     tracker.cache_set();
     ret

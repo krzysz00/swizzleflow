@@ -21,6 +21,8 @@ use std::cmp::{PartialEq,Eq};
 use std::hash::{Hash,Hasher};
 use std::collections::{HashMap,BTreeSet};
 
+use smallvec::SmallVec;
+
 pub type Symbolic = u16;
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -255,26 +257,47 @@ impl<'d> ProgState<'d> {
                              1, "id".to_owned())
     }
 
-    pub fn gather_by(&self, gather: &Gather, fold: bool) -> Option<Self> {
+    pub fn gather_by(&self, gather: &Gather) -> Self {
         let axis_num = Axis(gather.data.ndim() - 1);
         // Read off the edge to get the "garbage" value
-        let mut array = gather.data.map_axis(axis_num,
-                                             move |v| self.state.get(v.into_slice().unwrap())
-                                             .copied().unwrap_or(0));
-        if fold {
-            let fold_axis = array.ndim() - 1;
-            let elements: Option<Vec<DomRef>> =
-                array.genrows_mut().into_iter()
-                .map(|es| {
-                    let es = es.into_slice().unwrap();
-                    es.sort_unstable();
-                    let bound = es.iter().copied().take_while(|b| *b == 0).count();
-                    self.domain.find_fold(&es[bound..])
-                }).collect();
-            let elements = elements?;
-            array = ArrayD::from_shape_vec(&array.shape()[0..fold_axis],
-                                           elements).unwrap();
+        let array = gather.data.map_axis(axis_num,
+                                         move |v| self.state.get(v.into_slice().unwrap())
+                                         .copied().unwrap_or(0));
+
+        let mut name = self.name.to_owned();
+        name.push_str(";");
+        name.push_str(&gather.name);
+        Self::making_inverse(self.domain, array, self.level, name)
+    }
+
+    pub fn gather_fold_by(&self, gather: &Gather) -> Option<Self> {
+        let index_axis = gather.data.ndim() - 1;
+        let fold_axis = index_axis - 1;
+        let index_len = gather.data.shape()[index_axis];
+
+        let mut view = gather.data.view();
+        if !view.merge_axes(Axis(fold_axis), Axis(index_axis)) {
+            panic!("Axes that should've statically been mergeable weren't");
         }
+
+        let result: Option<Vec<DomRef>> =
+            view.genrows().into_iter()
+            .map(|data| {
+                let data = data.as_slice().unwrap();
+                let mut elements: SmallVec<[DomRef; 4]> =
+                    data.chunks(index_len)
+                    .map(|idx| self.state.get(idx)
+                         .copied().unwrap_or(0))
+                    // Drop garbage values
+                    .filter(|v| *v != 0)
+                    .collect();
+                elements.sort_unstable();
+                self.domain.find_fold(&elements)
+            }).collect();
+        let result = result?;
+        let array = ArrayD::from_shape_vec(&gather.data.shape()[0..fold_axis],
+                                           result).unwrap();
+
         let mut name = self.name.to_owned();
         name.push_str(";");
         name.push_str(&gather.name);

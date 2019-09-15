@@ -142,11 +142,11 @@ mod tests {
 
     fn fixed_solution_from_scalar_8x3<'d>(d: &'d Domain) -> ProgState<'d> {
         let initial = ProgState::linear(d, &[24]);
-        let s0 = initial.gather_by(&load_rep(&[24], &[8, 3]).unwrap().ops[0], false).unwrap();
-        let s1 = s0.gather_by(&fan(8, 3, OpAxis::Rows, 0, 2), false).unwrap();
-        let s2 = s1.gather_by(&rotate(8, 3, OpAxis::Rows, -7, 8, 0), false).unwrap();
-        let s3 = s2.gather_by(&fan(8, 3, OpAxis::Columns, 0, 3), false).unwrap();
-        let s4 = s3.gather_by(&rotate(8, 3, OpAxis::Columns, -5, 3, 0), false).unwrap();
+        let s0 = initial.gather_by(&load_rep(&[24], &[8, 3]).unwrap().ops[0]);
+        let s1 = s0.gather_by(&fan(8, 3, OpAxis::Rows, 0, 2));
+        let s2 = s1.gather_by(&rotate(8, 3, OpAxis::Rows, -7, 8, 0));
+        let s3 = s2.gather_by(&fan(8, 3, OpAxis::Columns, 0, 3));
+        let s4 = s3.gather_by(&rotate(8, 3, OpAxis::Columns, -5, 3, 0));
         s4
     }
 
