@@ -12,7 +12,7 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use ndarray::{Ix,Array2,Axis,Dimension};
+use ndarray::{Ix,Array2,Dimension};
 use std::io::{Write,Read};
 use std::io;
 use std::path::Path;
@@ -159,9 +159,9 @@ pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet) -> T {
     for op in &ops.ops {
         let axis_num = op.data.ndim() - 1;
         let output_shape = &op.data.shape()[0..axis_num];
-        for (input1, output1) in op.data.lanes(Axis(axis_num)).into_iter()
+        for (input1, output1) in op.data.genrows().into_iter()
             .zip(ndarray::indices(output_shape)).filter(|&(i, _)| in_bounds(i, bounds)) {
-                for (input2, output2) in op.data.lanes(Axis(axis_num)).into_iter()
+                for (input2, output2) in op.data.genrows().into_iter()
                     .zip(ndarray::indices(output_shape)).filter(|&(i, _)| in_bounds(i, bounds)) {
                         if fold {
                             ret.set(input1.as_slice().unwrap(), input2.as_slice().unwrap(),
