@@ -31,6 +31,7 @@ use std::sync::{Arc, RwLock};
 
 use itertools::iproduct;
 
+use smallvec::SmallVec;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Mode {
@@ -103,6 +104,7 @@ impl Display for SearchLevelStats {
 
 type ResultMap<'d> = RwLock<HashMap<ProgState<'d>, bool>>;
 type SearchResultCache<'d> = Arc<ResultMap<'d>>;
+type States<'d, 'l> = SmallVec<[&'l ProgState<'d>; 4]>;
 
 // Invariant: any level with pruning enabled has a corresponding pruning matrix available
 fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
@@ -149,14 +151,22 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
     true
 }
 
-fn search<'d, 'f>(current: ProgState<'d>, target: &ProgState<'d>,
-                  levels: &'f [SynthesisLevel], current_level: usize,
-                  stats: &'f [SearchLevelStats], mode: Mode,
-                  caches: &'f [SearchResultCache<'d>]) -> bool {
+fn copy_replacing<'d, 'm, 'l: 'm>(s: &States<'d, 'l>, idx: usize,
+                                  elem: &'m ProgState<'d>) -> States<'d, 'm> {
+    let mut ret: States<'d, 'm> = s.iter().copied().map(|e| e ).collect();
+    ret[idx] = elem;
+    ret
+}
+
+fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
+                      levels: &'f [SynthesisLevel], current_level: usize,
+                      stats: &'f [SearchLevelStats], mode: Mode,
+                      caches: &'f [SearchResultCache<'d>]) -> bool {
     let tracker = &stats[current_level];
     tracker.checking();
 
-    if &current == target {
+    let current: &ProgState<'d> = curr_states[0];
+    if current == target {
         tracker.success();
         println!("soln:{}", &current.name);
         return true;
@@ -168,7 +178,7 @@ fn search<'d, 'f>(current: ProgState<'d>, target: &ProgState<'d>,
     let level = &levels[current_level];
     let cache = caches[current_level].clone();
     if level.prune {
-        if !viable(&current, target,
+        if !viable(current, target,
                    level.matrix.as_ref().unwrap(),
                    cache.as_ref(), &tracker) {
 //        println!("{}", current);
@@ -183,7 +193,8 @@ fn search<'d, 'f>(current: ProgState<'d>, target: &ProgState<'d>,
                 Mode::All => {
                     ops.iter().map(|o|
                                    if let Some(res) = current.gather_fold_by(o) {
-                                       search(res, target, levels, current_level + 1,
+                                       let new_states = copy_replacing(&curr_states, 0, &res);
+                                       search(new_states, target, levels, current_level + 1,
                                               stats, mode, caches)
                                    } else { false })
                         .fold(false, |acc, new| new || acc)
@@ -191,7 +202,8 @@ fn search<'d, 'f>(current: ProgState<'d>, target: &ProgState<'d>,
                 Mode::First => {
                     ops.iter().any(|o|
                                    if let Some(res) = current.gather_fold_by(o) {
-                                       search(res, target, levels, current_level + 1,
+                                       let new_states = copy_replacing(&curr_states, 0, &res);
+                                       search(new_states, target, levels, current_level + 1,
                                               stats, mode, caches)
                                    } else { false })
                 }
@@ -201,13 +213,21 @@ fn search<'d, 'f>(current: ProgState<'d>, target: &ProgState<'d>,
             match mode {
                 Mode::All => {
                     // Yep, this is meant not to be short-circuiting
-                    ops.iter().map(|o| search(current.gather_by(o), target,
-                                              levels, current_level + 1, stats, mode, caches))
+                    ops.iter().map(|o| {
+                        let res = current.gather_by(o);
+                        let new_states = copy_replacing(&curr_states, 0, &res);
+                        search(new_states, target,
+                               levels, current_level + 1, stats, mode, caches)
+                    })
                         .fold(false, |acc, new| new || acc)
                 }
                 Mode::First => {
-                    ops.iter().any(|o| search(current.gather_by(o), target,
-                                              levels, current_level + 1, stats, mode, caches))
+                    ops.iter().any(|o| {
+                        let res = current.gather_by(o);
+                        let new_states = copy_replacing(&curr_states, 0, &res);
+                        search(new_states, target,
+                               levels, current_level + 1, stats, mode, caches)
+                    })
                 }
             }
         };
@@ -224,8 +244,9 @@ pub fn synthesize(start: ProgState, target: &ProgState,
     let caches: Vec<SearchResultCache>
         = (0..n_levels).map(|_| Arc::new(RwLock::new(HashMap::new()))).collect();
 
+    let states: States = SmallVec::from_elem(&start, 1);
     let start_time = Instant::now();
-    let ret = search(start, target, levels, 0, &stats, mode, &caches);
+    let ret = search(states, target, levels, 0, &stats, mode, &caches);
     let dur = time_since(start_time);
 
     for (idx, stats) in (&stats).iter().enumerate() {
