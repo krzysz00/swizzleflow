@@ -114,8 +114,9 @@ fn run() -> Result<()> {
     for desc in specs {
         let spec = desc.get_spec()?;
         let domain = desc.make_domain(spec.view());
-        let (initial, target, mut levels, max_lanes) =
+        let (initial, target, mut levels) =
             desc.to_problem(&domain, spec)?;
+        let max_lanes = initial.len();
         operators::add_matrices(matrix_dir, &mut levels, max_lanes)?;
         synthesize(initial, &target, &levels, synthesis_mode);
         operators::remove_matrices(&mut levels);

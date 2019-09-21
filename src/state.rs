@@ -23,6 +23,8 @@ use std::collections::{HashMap,BTreeSet};
 
 use smallvec::SmallVec;
 
+use itertools::Itertools;
+
 pub type Symbolic = u16;
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -280,7 +282,7 @@ impl<'d> ProgState<'d> {
             panic!("Axes that should've statically been mergeable weren't");
         }
 
-        let mut elements: SmallVec<[DomRef; 4]> = SmallVec::with_capacity(index_len);
+        let mut elements: SmallVec<[DomRef; 6]> = SmallVec::with_capacity(index_len);
         let result: Option<Vec<DomRef>> =
             view.genrows().into_iter()
             .map(|data| {
@@ -304,6 +306,42 @@ impl<'d> ProgState<'d> {
         name.push_str(";");
         name.push_str(&gather.name);
         Some(Self::making_inverse(self.domain, array, self.level + 1, name))
+    }
+
+    pub fn merge(states: &[&ProgState<'d>]) -> Self {
+        let axis_number = Axis(states[0].state.ndim());
+        let views: SmallVec<[ArrayViewD<DomRef>; 6]> =
+            states.into_iter().map(|s| s.state.view().insert_axis(axis_number))
+            .collect();
+        let array = ndarray::stack(axis_number, &views).unwrap();
+        let level = states.iter().map(|s| s.level).max().unwrap();
+        let name = format!("merge[{}]",
+                               states.iter().map(|s| s.name.clone()).join(","));
+        Self::making_inverse(states[0].domain, array, level, name)
+    }
+
+    pub fn merge_folding(states: &[&ProgState<'d>]) -> Option<Self> {
+        let slices: SmallVec<[&[DomRef]; 6]> =
+            states.into_iter().map(|s| s.state.as_slice().unwrap())
+            .collect();
+        let len = slices[0].len();
+        let domain = states[0].domain;
+        let mut elements: SmallVec<[DomRef; 6]> = SmallVec::with_capacity(len);
+        let result: Option<Vec<DomRef>> = (0..len).map(
+            |i| {
+                elements.extend(slices.iter().map(|s| s[i]));
+                elements.sort_unstable();
+                let ret = domain.find_fold(&elements);
+                elements.clear();
+                ret
+            }).collect();
+        let result = result?;
+        let array = ArrayD::from_shape_vec(states[0].state.shape(),
+                                           result).unwrap();
+        let level = states.iter().map(|s| s.level).max().unwrap() + 1;
+        let name = format!("merge_fold[{}]",
+                           states.iter().map(|s| s.name.clone()).join(","));
+        Some(Self::making_inverse(domain, array, level, name))
     }
 }
 
