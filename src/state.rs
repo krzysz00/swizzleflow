@@ -301,7 +301,7 @@ impl<'d> ProgState<'d> {
         let mut name = self.name.to_owned();
         name.push_str(";");
         name.push_str(&gather.name);
-        Some(Self::making_inverse(self.domain, array, self.level, name))
+        Some(Self::making_inverse(self.domain, array, self.level + 1, name))
     }
 }
 
