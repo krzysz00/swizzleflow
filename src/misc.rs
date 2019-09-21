@@ -22,9 +22,14 @@ pub fn time_since(start: std::time::Instant) -> f64 {
     dur.as_secs() as f64 + (f64::from(dur.subsec_nanos()) / 1.0e9)
 }
 
-use ndarray::Array2;
+use ndarray::{Array2};
 pub fn regularize_float_mat(arr: &mut Array2<f32>) {
     arr.mapv_inplace(|v| if v.abs() < EPSILON { 0.0 } else { 1.0 })
+}
+
+pub fn intersect_matrices(target: &mut Array2<f32>,
+                          src: &Array2<f32>) {
+    target.zip_mut_with(src, |d, s| *d *= s);
 }
 
 use std::fs::File;
@@ -37,4 +42,15 @@ pub fn open_file<P: AsRef<Path>>(path: P) -> Result<File> {
 pub fn create_file<P: AsRef<Path>>(path: P) -> Result<File> {
     File::create(path.as_ref()).map_err(Error::from)
         .chain_err(|| ErrorKind::FileOpFailure(path.as_ref().to_owned()))
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+pub struct MergeSpot {
+    pub lane: usize, pub total_size: usize
+}
+
+impl From<(usize, usize)> for MergeSpot {
+    fn from(tuple: (usize, usize)) -> MergeSpot {
+        MergeSpot { lane: tuple.0, total_size: tuple.1 }
+    }
 }

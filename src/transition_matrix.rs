@@ -19,16 +19,20 @@ use std::path::Path;
 use std::time::Instant;
 
 use crate::operators::OpSet;
-use crate::misc::{EPSILON,ShapeVec,time_since,open_file,create_file};
+use crate::misc::{EPSILON,ShapeVec,time_since,open_file,create_file,MergeSpot};
 use crate::errors::*;
 
 use bit_vec::BitVec;
 
 use byteorder::{LittleEndian,WriteBytesExt,ReadBytesExt};
 
+use smallvec::SmallVec;
+
 pub trait TransitionMatrixOps: Sized + std::fmt::Debug {
     fn get(&self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix]) -> bool;
+    fn get_pos(&self, pos: Ix) -> bool;
     fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool);
+    fn set_pos(&mut self, pos: Ix, value: bool);
     fn write<T: Write>(&self, io: &mut T) -> Result<()>;
     fn read<T: Read>(io: &mut T) -> Result<Self>;
     fn empty(len: usize, out_shape: &[Ix], in_shape: &[Ix]) -> Self;
@@ -87,10 +91,18 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
                            current1, current2, &self.current_shape)]
     }
 
+    fn get_pos(&self, pos: Ix) -> bool {
+        self.data[pos]
+    }
+
     fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool) {
         let index = to_index(target1, target2, &self.target_shape,
                              current1, current2, &self.current_shape);
         self.data.set(index, value);
+    }
+
+    fn set_pos(&mut self, pos: Ix, value: bool) {
+        self.data.set(pos, value);
     }
 
     fn write<T: Write>(&self, io: &mut T) -> Result<()> {
@@ -148,32 +160,45 @@ fn in_bounds(index: ndarray::ArrayView1<Ix>, bounds: &[Ix]) -> bool {
     index.into_iter().zip(bounds.iter()).all(move |(i, v)| i < v)
 }
 
-pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet) -> T {
-    let out_slots: usize = ops.out_shape.iter().product();
+pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet, merge: Option<MergeSpot>) -> T {
+    let mut out_shape = ops.out_shape.to_owned();
+    // Folds are already handled
+    if let Some(ms) = merge {
+        out_shape.push(ms.total_size);
+    }
+
+    let out_slots: usize = out_shape.iter().product();
     let in_slots: usize = ops.in_shape.iter().product();
     let bounds = &ops.in_shape;
     let len = (out_slots.pow(2)) * (in_slots.pow(2));
     let fold = ops.fused_fold;
+    let merge_lane = merge.map(|ms| ms.lane);
+
     // empty takes out, in, unlike set and their friends
-    let mut ret = T::empty(len, &ops.out_shape, &ops.in_shape);
-    for op in &ops.ops {
+    let mut ret = T::empty(len, &out_shape, &ops.in_shape);
+    let gathers = ops.ops.swizzle().unwrap();
+    for op in gathers {
         let axis_num = op.data.ndim() - 1;
         let output_shape = &op.data.shape()[0..axis_num];
         for (input1, output1) in op.data.genrows().into_iter()
             .zip(ndarray::indices(output_shape)).filter(|&(i, _)| in_bounds(i, bounds)) {
                 for (input2, output2) in op.data.genrows().into_iter()
                     .zip(ndarray::indices(output_shape)).filter(|&(i, _)| in_bounds(i, bounds)) {
+                        let mut out1: SmallVec<[usize; 6]> =
+                            SmallVec::from_slice(output1.slice());
+                        let mut out2: SmallVec<[usize; 6]> =
+                            SmallVec::from_slice(output2.slice());
                         if fold {
-                            ret.set(input1.as_slice().unwrap(), input2.as_slice().unwrap(),
-                                    &output1.slice()[0..axis_num-1],
-                                    &output2.slice()[0..axis_num-1],
-                                    true);
+                            out1.pop();
+                            out2.pop();
                         }
-                        else {
-                            ret.set(input1.as_slice().unwrap(), input2.as_slice().unwrap(),
-                                    output1.slice(), output2.slice(),
-                                    true);
+                        if let Some(l) = merge_lane {
+                            out1.push(l);
+                            out2.push(l);
                         }
+                        ret.set(input1.as_slice().unwrap(), input2.as_slice().unwrap(),
+                                &out1, &out2,
+                                true);
                     }
             }
     }
@@ -195,9 +220,21 @@ impl TransitionMatrixOps for TransitionMatrix {
         }
     }
 
+    fn get_pos(&self, pos: Ix) -> bool {
+        match self {
+            TransitionMatrix::Dense(d) => d.get_pos(pos)
+        }
+    }
+
     fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool) {
         match self {
             TransitionMatrix::Dense(d) => d.set(current1, current2, target1, target2, value)
+        }
+    }
+
+    fn set_pos(&mut self, pos: Ix, value: bool) {
+        match self {
+            TransitionMatrix::Dense(d) => d.set_pos(pos, value)
         }
     }
 
@@ -273,7 +310,8 @@ impl From<DenseTransitionMatrix> for TransitionMatrix {
     }
 }
 
-pub fn build_or_load_matrix(ops: &OpSet, path: impl AsRef<Path>) -> Result<TransitionMatrix> {
+pub fn build_or_load_matrix(ops: &OpSet, path: impl AsRef<Path>,
+                            merge: Option<MergeSpot>) -> Result<TransitionMatrix> {
     let path = path.as_ref();
     if path.exists() {
         let start = Instant::now();
@@ -284,7 +322,7 @@ pub fn build_or_load_matrix(ops: &OpSet, path: impl AsRef<Path>) -> Result<Trans
     }
     else {
         let start = Instant::now();
-        let matrix = TransitionMatrix::Dense(build_mat(ops));
+        let matrix = TransitionMatrix::Dense(build_mat(ops, merge));
         matrix.store_matrix(path)?;
         let dur = time_since(start);
         println!("build:{} density({}) [{}]", path.display(), density(&matrix), dur);
@@ -305,7 +343,7 @@ mod tests {
     #[test]
     fn correct_length_trove_rows() {
         let small_fans = simple_fans(&[3, 4], OpAxis::Rows).unwrap();
-        let matrix: DenseTransitionMatrix = build_mat(&small_fans);
+        let matrix: DenseTransitionMatrix = build_mat(&small_fans, None);
         assert_eq!(matrix.n_ones(), 488);
     }
 
@@ -313,7 +351,7 @@ mod tests {
     #[test]
     fn correct_length_big_matrix() {
         use crate::operators::swizzle::simple_rotations;
-        let big_matrix: DenseTransitionMatrix = build_mat(&simple_rotations(&[4, 32], OpAxis::Columns).unwrap());
+        let big_matrix: DenseTransitionMatrix = build_mat(&simple_rotations(&[4, 32], OpAxis::Columns).unwrap(), None);
         assert_eq!(big_matrix.n_ones(), 246272);
     }
 

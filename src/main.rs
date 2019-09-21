@@ -114,8 +114,9 @@ fn run() -> Result<()> {
     for desc in specs {
         let spec = desc.get_spec()?;
         let domain = desc.make_domain(spec.view());
-        let (initial, target, mut levels) = desc.to_problem(&domain, spec)?;
-        operators::add_matrices(matrix_dir, &mut levels)?;
+        let (initial, target, mut levels, max_lanes) =
+            desc.to_problem(&domain, spec)?;
+        operators::add_matrices(matrix_dir, &mut levels, max_lanes)?;
         synthesize(initial, &target, &levels, synthesis_mode);
         operators::remove_matrices(&mut levels);
     }
@@ -142,7 +143,8 @@ mod tests {
 
     fn fixed_solution_from_scalar_8x3<'d>(d: &'d Domain) -> ProgState<'d> {
         let initial = ProgState::linear(d, &[24]);
-        let s0 = initial.gather_by(&load_rep(&[24], &[8, 3]).unwrap().ops[0]);
+        let s0 = initial.gather_by(&load_rep(&[24], &[8, 3]).unwrap()
+                                   .ops.swizzle().unwrap()[0]);
         let s1 = s0.gather_by(&fan(8, 3, OpAxis::Rows, 0, 2));
         let s2 = s1.gather_by(&rotate(8, 3, OpAxis::Rows, -7, 8, 0));
         let s3 = s2.gather_by(&fan(8, 3, OpAxis::Columns, 0, 3));

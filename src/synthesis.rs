@@ -15,6 +15,7 @@
 use crate::state::ProgState;
 use crate::transition_matrix::{TransitionMatrix,TransitionMatrixOps};
 use crate::operators::SynthesisLevel;
+use crate::operators::OpSetKind;
 
 use crate::misc::{time_since};
 
@@ -188,48 +189,58 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
     }
     let ops = &level.ops.ops; // Get at the actual vector of gathers
     let ret =
-        if level.ops.fused_fold {
-            match mode {
-                Mode::All => {
-                    ops.iter().map(|o|
-                                   if let Some(res) = current.gather_fold_by(o) {
-                                       let new_states = copy_replacing(&curr_states, 0, &res);
-                                       search(new_states, target, levels, current_level + 1,
-                                              stats, mode, caches)
-                                   } else { false })
-                        .fold(false, |acc, new| new || acc)
+        match ops {
+            OpSetKind::Swizzle(gathers) => {
+                if level.ops.fused_fold {
+                    match mode {
+                        Mode::All => {
+                            gathers.iter().map(
+                                |o|
+                                if let Some(res) = current.gather_fold_by(o) {
+                                    let new_states = copy_replacing(&curr_states, 0, &res);
+                                    search(new_states, target, levels, current_level + 1,
+                                           stats, mode, caches)
+                                } else { false })
+                                .fold(false, |acc, new| new || acc)
+                        }
+                        Mode::First => {
+                            gathers.iter().any(
+                                |o|
+                                if let Some(res) = current.gather_fold_by(o) {
+                                    let new_states = copy_replacing(&curr_states, 0, &res);
+                                    search(new_states, target, levels, current_level + 1,
+                                           stats, mode, caches)
+                                } else { false })
+                        }
+                    }
                 }
-                Mode::First => {
-                    ops.iter().any(|o|
-                                   if let Some(res) = current.gather_fold_by(o) {
-                                       let new_states = copy_replacing(&curr_states, 0, &res);
-                                       search(new_states, target, levels, current_level + 1,
-                                              stats, mode, caches)
-                                   } else { false })
+                else {
+                    match mode {
+                        Mode::All => {
+                            // Yep, this is meant not to be short-circuiting
+                            gathers.iter().map(
+                                |o| {
+                                    let res = current.gather_by(o);
+                                    let new_states = copy_replacing(&curr_states, 0, &res);
+                                    search(new_states, target,
+                                           levels, current_level + 1, stats, mode, caches)
+                                })
+                                .fold(false, |acc, new| new || acc)
+                        }
+                        Mode::First => {
+                            gathers.iter().any(
+                                |o| {
+                                    let res = current.gather_by(o);
+                                    let new_states = copy_replacing(&curr_states, 0, &res);
+                                    search(new_states, target,
+                                           levels, current_level + 1, stats, mode, caches)
+                                })
+                        }
+                    }
                 }
-            }
-        }
-        else {
-            match mode {
-                Mode::All => {
-                    // Yep, this is meant not to be short-circuiting
-                    ops.iter().map(|o| {
-                        let res = current.gather_by(o);
-                        let new_states = copy_replacing(&curr_states, 0, &res);
-                        search(new_states, target,
-                               levels, current_level + 1, stats, mode, caches)
-                    })
-                        .fold(false, |acc, new| new || acc)
-                }
-                Mode::First => {
-                    ops.iter().any(|o| {
-                        let res = current.gather_by(o);
-                        let new_states = copy_replacing(&curr_states, 0, &res);
-                        search(new_states, target,
-                               levels, current_level + 1, stats, mode, caches)
-                    })
-                }
-            }
+            },
+            OpSetKind::Merge(from, to) => panic!("Unimplemented merge: {:?}, {:?}", from, to),
+            OpSetKind::Split(into, copies) => panic!("Unimplemented split: {:?} {:?}", into, copies),
         };
     { cache.write().unwrap().insert(current.clone(), ret); }
     tracker.cache_set();

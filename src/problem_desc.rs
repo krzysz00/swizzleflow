@@ -91,7 +91,7 @@ impl SynthesisLevelDesc {
         if self.then_fold {
             ops.add_fused_fold();
         }
-        Ok(SynthesisLevel::new(ops, self.prune))
+        Ok(SynthesisLevel::new(ops, 0, self.prune))
     }
 }
 
@@ -162,7 +162,8 @@ impl ProblemDesc {
                           domain: &'d Domain,
                           spec: ArrayD<Value>) -> Result<(ProgState<'d>,
                                                           ProgState<'d>,
-                                                         Vec<SynthesisLevel>)> {
+                                                          Vec<SynthesisLevel>,
+                                                          usize)> {
         let levels: Result<Vec<SynthesisLevel>> =
             self.steps.iter()
             .map(|x| x.to_synthesis_level().chain_err(|| ErrorKind::LevelBuild(Box::new(x.clone()))))
@@ -180,7 +181,7 @@ impl ProblemDesc {
         let initial = ProgState::linear(domain, start_shape);
         // All the values in the spec had better be in the domain
         let spec = ProgState::new_from_spec(domain, spec, &self.end_name).unwrap();
-        Ok((initial, spec, levels))
+        Ok((initial, spec, levels, 1))
     }
 }
 
@@ -229,18 +230,21 @@ mod tests {
         let spec = desc.get_spec().unwrap();
         let domain = desc.make_domain(spec.view());
         let trove_state = ProgState::new_from_spec(&domain, trove(3, 4), "trove").unwrap();
-        let (start, end, levels) = desc.to_problem(&domain, spec).unwrap();
+        let (start, end, levels, max_width)
+            = desc.to_problem(&domain, spec).unwrap();
         assert_eq!(start, crate::state::ProgState::linear(&domain, &[3, 4]));
         assert_eq!(end, trove_state);
         assert_eq!(levels.len(), 1);
         assert_eq!(levels[0].prune, false);
+        assert_eq!(max_width, 1);
         assert!(levels[0].matrix.is_none());
         let ops = &levels[0].ops;
         let trove_shape: ShapeVec = smallvec![3, 4];
         assert_eq!(ops.in_shape, trove_shape);
         assert_eq!(ops.out_shape, trove_shape);
-        assert_eq!(ops.ops.iter().collect::<HashSet<_>>(),
-                   swizzle::simple_rotations(&[3, 4], swizzle::OpAxis::Rows).unwrap().ops
+        assert_eq!(ops.ops.swizzle().unwrap().iter().collect::<HashSet<_>>(),
+                   swizzle::simple_rotations(&[3, 4], swizzle::OpAxis::Rows).unwrap()
+                   .ops.swizzle().unwrap()
                    .iter().collect::<HashSet<_>>());
     }
 }

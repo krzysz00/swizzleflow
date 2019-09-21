@@ -99,7 +99,8 @@ pub fn simple_fans(shape: &[Ix], perm_within: OpAxis) -> Result<OpSet> {
     let c_bound = match perm_within { Rows => n, Columns => m };
     ret.extend(iproduct!((0..k_bound), (0..c_bound)).map(|(k, c)| fan(m, n, perm_within, k, c)));
     let name = match perm_within { Rows => "sFr", Columns => "sFc"};
-    Ok(OpSet::new(name, ret.into_iter().collect(), smallvec![m, n], smallvec![m, n], false))
+    Ok(OpSet::new(name, ret.into_iter().collect::<Vec<_>>().into(),
+                  smallvec![m, n], smallvec![m, n], false))
 }
 
 pub fn simple_rotations(shape: &[Ix], perm_within: OpAxis) -> Result<OpSet> {
@@ -120,7 +121,8 @@ pub fn simple_rotations(shape: &[Ix], perm_within: OpAxis) -> Result<OpSet> {
                          (-c_bound+1..c_bound))
                .map(|(k, d, c)| rotate(m, n, perm_within, k, d, c)));
     let name = match perm_within { Rows => "sRr", Columns => "sRc"};
-    Ok(OpSet::new(name, ret.into_iter().collect(), smallvec![m, n], smallvec![m, n], false))
+    Ok(OpSet::new(name, ret.into_iter().collect::<Vec<_>>().into(),
+                  smallvec![m, n], smallvec![m, n], false))
 }
 
 #[cfg(test)]
@@ -129,10 +131,14 @@ mod tests {
 
     #[test]
     fn scala_3x16_basis_sizes() {
-        assert_eq!(simple_fans(&[3, 16], OpAxis::Columns).unwrap().ops.len(), 5);
-        assert_eq!(simple_rotations(&[3, 16], OpAxis::Columns).unwrap().ops.len(), 36);
-        assert_eq!(simple_fans(&[3, 16], OpAxis::Rows).unwrap().ops.len(), 255);
-        assert_eq!(simple_rotations(&[3, 16], OpAxis::Rows).unwrap().ops.len(), 256);
+        assert_eq!(simple_fans(&[3, 16], OpAxis::Columns).unwrap()
+                   .ops.swizzle().unwrap().len(), 5);
+        assert_eq!(simple_rotations(&[3, 16], OpAxis::Columns).unwrap()
+                   .ops.swizzle().unwrap().len(), 36);
+        assert_eq!(simple_fans(&[3, 16], OpAxis::Rows).unwrap()
+                   .ops.swizzle().unwrap().len(), 255);
+        assert_eq!(simple_rotations(&[3, 16], OpAxis::Rows).unwrap()
+                   .ops.swizzle().unwrap().len(), 256);
     }
 
     #[test]

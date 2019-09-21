@@ -1,0 +1,117 @@
+load:matrices/16-sRc-16,3 [0.001673801]
+load:matrices/16-sRc-16,3_16,3-sFc-16,3 [0.003442423]
+load:matrices/16-sRc-16,3_16,3-sFc-16,3_16,3-regSelNC-16,2 [0.000578332]
+soln:id;load_trunc;select(0 >= 1);id;rot(-15,3,0)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(8), found(0), pruned(7), continued(1) cache(0:1)
+stats:3 tested(255), found(0), pruned(112), continued(143) cache(0:143)
+stats:4 tested(128), found(1), pruned(0), continued(127) cache(0:0)
+search:conv shape([16]) true mode(All) [0.025144116]
+load:matrices/32-sRc-32,3 [0.005758229]
+load:matrices/32-sRc-32,3_32,3-sFc-32,3 [0.005070394]
+load:matrices/32-sRc-32,3_32,3-sFc-32,3_32,3-regSelNC-32,2 [0.003082995]
+soln:id;load_trunc;select(0 >= 1);id;rot(-31,3,0)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(8), found(0), pruned(7), continued(1) cache(0:1)
+stats:3 tested(1023), found(0), pruned(480), continued(543) cache(0:543)
+stats:4 tested(512), found(1), pruned(0), continued(511) cache(0:0)
+search:conv shape([32]) true mode(All) [0.271146835]
+load:matrices/32-sRc-32,5 [0.013332198]
+load:matrices/32-sRc-32,5_32,5-sFc-32,5 [0.012640397]
+load:matrices/32-sRc-32,5_32,5-sFc-32,5_32,5-regSelNC-32,2 [0.002700097]
+soln:id;load_trunc;select(0 >= 1);id;rot(-31,5,0)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(8), found(0), pruned(7), continued(1) cache(0:1)
+stats:3 tested(1023), found(0), pruned(608), continued(415) cache(0:415)
+stats:4 tested(256), found(1), pruned(0), continued(255) cache(0:0)
+search:conv shape([32]) true mode(All) [0.440965283]
+load:matrices/16,3-sRc-16,3 [0.003636009]
+load:matrices/16,3-sRc-16,3_16,3-sFc-16,3 [0.003157074]
+load:matrices/16,3-sRc-16,3_16,3-sFc-16,3_16,3-regSelNC-16,2 [0.001652197]
+soln:id;load_trunc;select(0 >= 1);id;rot(-15,3,0)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(8), found(0), pruned(7), continued(1) cache(0:1)
+stats:3 tested(255), found(0), pruned(254), continued(1) cache(0:1)
+stats:4 tested(256), found(1), pruned(0), continued(255) cache(0:0)
+search:conv_dealg shape([16, 3]) true mode(All) [0.003166212]
+load:matrices/32,3-sRc-32,3 [0.03783489]
+load:matrices/32,3-sRc-32,3_32,3-sFc-32,3 [0.040437693]
+load:matrices/32,3-sRc-32,3_32,3-sFc-32,3_32,3-regSelNC-32,2 [0.016372922]
+soln:id;load_trunc;select(0 >= 1);id;rot(-31,3,0)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(8), found(0), pruned(7), continued(1) cache(0:1)
+stats:3 tested(1023), found(0), pruned(1022), continued(1) cache(0:1)
+stats:4 tested(1024), found(1), pruned(0), continued(1023) cache(0:0)
+search:conv_dealg shape([32, 3]) true mode(All) [0.021764588]
+load:matrices/32,5-sRc-32,5 [0.277524882]
+load:matrices/32,5-sRc-32,5_32,5-sFc-32,5 [0.283132873]
+load:matrices/32,5-sRc-32,5_32,5-sFc-32,5_32,5-regSelNC-32,2 [0.046282672]
+soln:id;load_trunc;select(0 >= 1);id;rot(-31,5,0)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(8), found(0), pruned(7), continued(1) cache(0:1)
+stats:3 tested(1023), found(0), pruned(1022), continued(1) cache(0:1)
+stats:4 tested(1024), found(1), pruned(0), continued(1023) cache(0:0)
+search:conv_dealg shape([32, 5]) true mode(All) [0.049427525]
+load:matrices/32,3-sRr-32,3 [0.036061143]
+load:matrices/32,3-sRr-32,3_32,3-sFr-32,3 [0.038229402]
+load:matrices/32,3-sRr-32,3_32,3-sFr-32,3_32,3-sRc-32,3 [0.038710926]
+load:matrices/32,3-sRr-32,3_32,3-sFr-32,3_32,3-sRc-32,3_32,3-sFc-32,3 [0.039888049]
+load:matrices/32,3-sRr-32,3_32,3-sFr-32,3_32,3-sRc-32,3_32,3-sFc-32,3_32,3-sRr-32,3 [0.039343122]
+load:matrices/32,3-sRr-32,3_32,3-sFr-32,3_32,3-sRc-32,3_32,3-sFc-32,3_32,3-sRr-32,3_32,3-sFr-32,3 [0.037343223]
+soln:id;load_rep;fan(0,2);rot(-31,32,0);fan(0,3);rot(-21,3,0)
+soln:id;load_rep;id;rot(-29,32,-2);fan(0,3);rot(-11,3,-10);fan(0,2);rot(-30,32,-2)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(5), found(0), pruned(0), continued(5) cache(0:5)
+stats:3 tested(225), found(0), pruned(223), continued(2) cache(0:2)
+stats:4 tested(2046), found(0), pruned(2044), continued(2) cache(0:2)
+stats:5 tested(2048), found(1), pruned(2046), continued(1) cache(0:1)
+stats:6 tested(5), found(0), pruned(4), continued(1) cache(0:1)
+stats:7 tested(45), found(1), pruned(0), continued(44) cache(0:0)
+search:trove shape([32, 3]) true mode(All) [0.048379372]
+load:matrices/32,4-sRr-32,4 [0.118887521]
+load:matrices/32,4-sRr-32,4_32,4-sFr-32,4 [0.117921572]
+load:matrices/32,4-sRr-32,4_32,4-sFr-32,4_32,4-sFc-32,4 [0.119128192]
+load:matrices/32,4-sRr-32,4_32,4-sFr-32,4_32,4-sFc-32,4_32,4-sRc-32,4 [0.119723299]
+load:matrices/32,4-sRr-32,4_32,4-sFr-32,4_32,4-sFc-32,4_32,4-sRc-32,4_32,4-sRr-32,4 [0.11999861]
+load:matrices/32,4-sRr-32,4_32,4-sFr-32,4_32,4-sFc-32,4_32,4-sRc-32,4_32,4-sRr-32,4_32,4-sFr-32,4 [0.151760437]
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(15), found(0), pruned(0), continued(15) cache(0:15)
+stats:3 tested(1200), found(0), pruned(1200), continued(0) cache(0:0)
+stats:4 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+stats:5 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+stats:6 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+stats:7 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+search:trove shape([32, 4]) false mode(All) [0.024521471]
+soln:id;load_rep;id;rot(-1,4,0);fan(0,3);rot(-1,3,0)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(5), found(0), pruned(0), continued(5) cache(0:5)
+stats:3 tested(90), found(0), pruned(0), continued(90) cache(0:90)
+stats:4 tested(1350), found(0), pruned(0), continued(1350) cache(0:1350)
+stats:5 tested(21600), found(1), pruned(0), continued(21599) cache(0:0)
+search:trove shape([4, 3]) true mode(All) [0.03258583]
+load:matrices/8,3-sRr-8,3 [0.00095754]
+load:matrices/8,3-sRr-8,3_8,3-sFr-8,3 [0.000447425]
+load:matrices/8,3-sRr-8,3_8,3-sFr-8,3_8,3-sRc-8,3 [0.000447304]
+load:matrices/8,3-sRr-8,3_8,3-sFr-8,3_8,3-sRc-8,3_8,3-sFc-8,3 [0.000401721]
+load:matrices/8,3-sRr-8,3_8,3-sFr-8,3_8,3-sRc-8,3_8,3-sFc-8,3_8,3-sRr-8,3 [0.000530864]
+load:matrices/8,3-sRr-8,3_8,3-sFr-8,3_8,3-sRc-8,3_8,3-sFc-8,3_8,3-sRr-8,3_8,3-sFr-8,3 [0.000403932]
+soln:id;load_rep;fan(0,2);rot(-7,8,0);fan(0,3);rot(-5,3,0)
+soln:id;load_rep;id;rot(-5,8,-2);fan(0,3);rot(-3,3,-2);fan(0,2);rot(-6,8,-2)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(5), found(0), pruned(0), continued(5) cache(0:5)
+stats:3 tested(135), found(0), pruned(133), continued(2) cache(0:2)
+stats:4 tested(126), found(0), pruned(124), continued(2) cache(0:2)
+stats:5 tested(128), found(1), pruned(126), continued(1) cache(0:1)
+stats:6 tested(5), found(0), pruned(4), continued(1) cache(0:1)
+stats:7 tested(27), found(1), pruned(0), continued(26) cache(0:0)
+search:trove shape([8, 3]) true mode(All) [0.001208406]
