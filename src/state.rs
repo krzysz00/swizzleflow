@@ -280,19 +280,21 @@ impl<'d> ProgState<'d> {
             panic!("Axes that should've statically been mergeable weren't");
         }
 
+        let mut elements: SmallVec<[DomRef; 4]> = SmallVec::with_capacity(index_len);
         let result: Option<Vec<DomRef>> =
             view.genrows().into_iter()
             .map(|data| {
                 let data = data.as_slice().unwrap();
-                let mut elements: SmallVec<[DomRef; 4]> =
+                elements.extend(
                     data.chunks(index_len)
                     .map(|idx| self.state.get(idx)
                          .copied().unwrap_or(0))
                     // Drop garbage values
-                    .filter(|v| *v != 0)
-                    .collect();
+                    .filter(|v| *v != 0));
                 elements.sort_unstable();
-                self.domain.find_fold(&elements)
+                let ret = self.domain.find_fold(&elements);
+                elements.clear();
+                ret
             }).collect();
         let result = result?;
         let array = ArrayD::from_shape_vec(&gather.data.shape()[0..fold_axis],
