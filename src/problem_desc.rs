@@ -12,11 +12,11 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use crate::operators::{SynthesisLevel,OpSet,OpSetKind};
+use crate::operators::{SynthesisLevel,OpSet,OpSetKind,identity};
 use crate::state::{ProgState,Domain,Value,Symbolic};
 use crate::operators::swizzle::{simple_fans, simple_rotations, OpAxis};
 use crate::operators::reg_select::{reg_select_no_const};
-use crate::operators::load::{load_rep,load_trunc};
+use crate::operators::load::{load_rep, load_trunc, broadcast};
 use crate::errors::*;
 use crate::misc::ShapeVec;
 
@@ -38,12 +38,18 @@ impl GathersDesc {
         match self {
             Builtin(s) => {
                 match s.as_ref() {
+                    "identity" => {
+                        identity(out_shape)
+                    }
                     "load_rep" => {
                         load_rep(in_shape, out_shape)
                     },
                     "load_trunc" => {
                         load_trunc(in_shape, out_shape)
                     },
+                    "broadcast" => {
+                        broadcast(in_shape, out_shape)
+                    }
                     "sRr" => {
                         if out_shape != in_shape {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
@@ -289,6 +295,20 @@ fn convolve(width: Ix, k: Ix) -> ArrayD<Value> {
     arr.into_dyn()
 }
 
+fn weighted_convolve(width: Ix, k: Ix) -> ArrayD<Value> {
+    // Hopefully u16 is enough for everyone
+    let width = width as Symbolic;
+    let k = k as Symbolic;
+    let weight_min = width + k - 1;
+    let arr: ndarray::Array1<Value> =
+        (0..width).map(|w|
+                       (0..k).map(|i| Value::fold(vec![Value::Symbol(w + i),
+                                                       Value::Symbol(weight_min + i)]))
+                       .collect())
+        .map(Value::fold).collect();
+    arr.into_dyn()
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum TargetDesc {
     Builtin(String),
@@ -370,6 +390,13 @@ impl ProblemDesc {
                     "conv" => {
                         match target_info.as_slice() {
                             &[width, k] => Ok(convolve(width, k)),
+                            other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
+                        }
+
+                    }
+                    "weight_conv" => {
+                        match target_info.as_slice() {
+                            &[width, k] => Ok(weighted_convolve(width, k)),
                             other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
                         }
 

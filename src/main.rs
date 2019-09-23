@@ -100,6 +100,10 @@ pub mod errors {
                 display("couldn't create level: {}", serde_json::to_string(&step)
                         .unwrap_or_else(|_| "couldn't print".to_owned()))
             }
+            BadSpec(spec: crate::problem_desc::ProblemDesc) {
+                description("bad specification")
+                display("bad specification: {:?}", spec)
+            }
         }
     }
 }
@@ -137,10 +141,11 @@ fn run() -> Result<()> {
     };
 
     for desc in specs {
-        let spec = desc.get_spec()?;
+        let spec = desc.get_spec().chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
         let domain = desc.make_domain(spec.view());
         let (initial, target, mut levels) =
-            desc.to_problem(&domain, spec)?;
+            desc.to_problem(&domain, spec)
+            .chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
         let max_lanes = initial.len();
         operators::add_matrices(matrix_dir, &mut levels, max_lanes)?;
         synthesize(initial, &target, &levels, synthesis_mode);

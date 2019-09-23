@@ -65,3 +65,19 @@ pub fn load_rep(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSetKind> {
 pub fn load_trunc(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSetKind> {
     load(in_shape, out_shape, Mode::Trunc)
 }
+
+pub fn broadcast(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSetKind> {
+    let name = "broadcast";
+
+    let out_split = out_shape.len() - in_shape.len();
+
+    if in_shape != &out_shape[out_split..] {
+        return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
+    }
+    let gather =
+        Gather::new(in_shape.len(), out_shape,
+                    move |out_idxs: &[Ix], in_idx_output: &mut Vec<Ix>| {
+                        in_idx_output.extend(&out_idxs[out_split..]);
+                    }, name);
+    Ok(vec![gather].into())
+}

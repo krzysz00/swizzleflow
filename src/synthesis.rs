@@ -124,6 +124,9 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
                         v
                     });
                 if !result {
+                    println!("{}, {} {:?} {:?}", a, b, t1, t2);
+                    println!("target: {}", target);
+                    println!("current: {}", current);
                     if did_lookup {
                         cache.write().unwrap().insert(current.clone(), false);
                         tracker.cache_set();

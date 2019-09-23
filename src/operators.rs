@@ -29,7 +29,7 @@ use std::borrow::Cow;
 use std::path::Path;
 use std::time::Instant;
 
-use ndarray::Array2;
+use ndarray::{Array2,Ix};
 
 use itertools::Itertools;
 
@@ -93,6 +93,14 @@ impl OpSet {
             format!("{}-{}-{}", out_strings.join(","), self.name, in_strings.join(","))
         }
     }
+}
+
+pub fn identity_gather(shape: &[Ix]) -> Gather {
+    Gather::new(shape.len(), shape, |idxs, ops| ops.extend(idxs), "id")
+}
+
+pub fn identity(shape: &[Ix]) -> Result<OpSetKind> {
+    Ok(OpSetKind::Gathers(vec![identity_gather(shape)]))
 }
 
 #[derive(Debug)]
@@ -191,6 +199,9 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel],
                 merges[lane] = None;
             },
             OpSetKind::Merge(ref from, to) => {
+                if level.prune {
+                    println!("WARNING: pruning on merges doesn't actually do anything");
+                }
                 // We assume that two non-folding merges aren't next to each other
                 if !level.ops.fused_fold {
                     if let Some(ms) = merges[to] {

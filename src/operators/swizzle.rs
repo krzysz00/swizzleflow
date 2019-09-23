@@ -14,6 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::state::Gather;
 use super::OpSetKind;
+use super::identity_gather;
 use crate::errors::*;
 
 use ndarray::{Ix,Ixs};
@@ -80,10 +81,6 @@ pub fn rotate(m: Ix, n: Ix, perm_within: OpAxis, stable_scale: Ixs, div: Ix, shi
     }
 }
 
-pub fn identity(shape: &[Ix]) -> Gather {
-    Gather::new(shape.len(), shape, |idxs, ops| ops.extend(idxs), "id")
-}
-
 pub fn simple_fans(shape: &[Ix], perm_within: OpAxis) -> Result<OpSetKind> {
     let mut ret = HashSet::new();
 
@@ -93,7 +90,7 @@ pub fn simple_fans(shape: &[Ix], perm_within: OpAxis) -> Result<OpSetKind> {
     let m = shape[0];
     let n = shape[1];
 
-    ret.insert(identity(shape));
+    ret.insert(identity_gather(shape));
     let k_bound = cmp::max(m, n);
     let c_bound = match perm_within { Rows => n, Columns => m };
     ret.extend(iproduct!((0..k_bound), (0..c_bound)).map(|(k, c)| fan(m, n, perm_within, k, c)));
@@ -109,7 +106,7 @@ pub fn simple_rotations(shape: &[Ix], perm_within: OpAxis) -> Result<OpSetKind> 
     let m = shape[0];
     let n = shape[1];
 
-    ret.insert(identity(shape));
+    ret.insert(identity_gather(shape));
     let k_bound = cmp::max(m, n) as isize;
     let c_bound = match perm_within { Rows => n, Columns => m } as isize;
     let d_bound = match perm_within { Rows => m, Columns => n};
