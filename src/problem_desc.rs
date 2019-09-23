@@ -135,7 +135,7 @@ impl InitialDesc {
                     InitialDesc::Data(_) => "custom_start".to_owned(),
                 }
             };
-        ProgState::new_from_spec(domain, array, name)
+        ProgState::new_from_spec(domain, array, 1, name)
             .ok_or_else(|| ErrorKind::SymbolsNotInSpec.into())
     }
 }
@@ -439,7 +439,8 @@ impl ProblemDesc {
                 TargetDesc::Builtin(s) => s.clone().into(),
                 TargetDesc::Custom { data: _d, n_folds: _n } => "custom_target".into(),
             };
-        let spec = ProgState::new_from_spec(domain, spec, target_name).unwrap();
+        let spec = ProgState::new_from_spec(domain, spec, domain.levels - 1,
+                                            target_name).unwrap();
         Ok((initials, spec, ret))
     }
 }
@@ -491,7 +492,7 @@ mod tests {
         };
         let spec = desc.get_spec().unwrap();
         let domain = desc.make_domain(spec.view());
-        let trove_state = ProgState::new_from_spec(&domain, trove(3, 4), "trove").unwrap();
+        let trove_state = ProgState::new_from_spec(&domain, trove(3, 4), 1, "trove").unwrap();
         let (start, end, levels)
             = desc.to_problem(&domain, spec).unwrap();
         assert_eq!(start, vec![Some(

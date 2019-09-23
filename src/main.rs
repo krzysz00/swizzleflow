@@ -43,6 +43,10 @@ pub mod errors {
                 description("couldn't open or create file")
                 display("couldn't open or create file: {}", p.display())
             }
+            ParseError(p: std::path::PathBuf) {
+                description("couldn't parse spec")
+                display("couldn't parse spec: {}", p.display())
+            }
             NotAMatrix {
                 description("not a matrix")
                 display("not a matrix")
@@ -122,12 +126,12 @@ fn run() -> Result<()> {
     let matrix_dir = Path::new(args.value_of_os("matrix_dir").unwrap()); // We have a default
     let specs: Vec<ProblemDesc> = match args.values_of_os("specs") {
         Some(iter) => {
-            let files: Result<Vec<_>> = iter.map(open_file).collect();
-            let result: Result<Vec<_>> =
-                files?.iter().map(|f|
-                                 serde_json::from_reader(BufReader::new(f))
-                                 .map_err(|e| e.into())).collect();
-            result?
+            iter.map(
+                |path| {
+                    let file = open_file(path)?;
+                    serde_json::from_reader(BufReader::new(file))
+                        .chain_err(|| ErrorKind::ParseError(path.into()))
+                }).collect::<Result<Vec<_>>>()?
         },
         None => vec![serde_json::from_reader(BufReader::new(std::io::stdin().lock()))?]
     };
@@ -179,7 +183,7 @@ mod tests {
         let symbols: ndarray::Array1<Value> = (0u16..24u16).map(Value::Symbol).collect();
         let symbols = symbols.into_dyn();
         let domain = Domain::new(symbols.view());
-        let spec = ProgState::new_from_spec(&domain, trove(8, 3), "trove").unwrap();
+        let spec = ProgState::new_from_spec(&domain, trove(8, 3), 1, "trove").unwrap();
         let solution = fixed_solution_from_scalar_8x3(&domain);
         println!("spec {}\n solution {}", spec, solution);
         assert_eq!(spec, solution);

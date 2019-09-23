@@ -1,32 +1,39 @@
 {
-  "end_name": "conv_dealg",
-  "end_info": [32, 3],
+  "target": {"Builtin": "conv_dealg"},
+  "target_info": [32, 3],
   "steps": [
     {
-      "basis": "load_trunc",
-      "in_sizes": [34],
-      "out_sizes": [32, 2],
+      "step": {"Initial": {"From": 0}},
+      "out_shape": [34],
+      "lane": 0,
       "prune": false,
       "then_fold": false
     },
     {
-      "basis": "regSelNC",
-      "in_sizes": [32, 2],
-      "out_sizes": [32, 3],
+      "step": { "Gather": { "Builtin": "load_trunc"}},
+      "lane": 0,
+      "out_shape": [32, 2],
+      "prune": false,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "regSelNC"}},
+      "lane": 0,
+      "out_shape": [32, 3],
       "prune": true,
       "then_fold": false
     },
     {
-      "basis": "sFc",
-      "in_sizes": [32, 3],
-      "out_sizes": [32, 3],
+      "step": { "Gather": { "Builtin": "sFc"}},
+      "lane": 0,
+      "out_shape": [32, 3],
       "prune": true,
       "then_fold": false
     },
     {
-      "basis": "sRc",
-      "in_sizes": [32, 3],
-      "out_sizes": [32, 3],
+      "step": { "Gather": { "Builtin": "sRc"}},
+      "lane": 0,
+      "out_shape": [32, 3],
       "prune": true,
       "then_fold": false
     }

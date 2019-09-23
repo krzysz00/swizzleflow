@@ -186,7 +186,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
         if !viable(current, target,
                    level.matrix.as_ref().unwrap(),
                    cache.as_ref(), &tracker) {
-//        println!("{}", current);
+            //println!("{}", current);
             tracker.pruned();
             return false;
         }

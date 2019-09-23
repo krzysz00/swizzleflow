@@ -243,13 +243,13 @@ impl<'d> ProgState<'d> {
         Self::making_inverse(domain, state, level, name.into())
     }
 
-    pub fn new_from_spec(domain: &'d Domain, state: ArrayD<Value>, name: impl Into<String>) -> Option<Self> {
+    pub fn new_from_spec(domain: &'d Domain, state: ArrayD<Value>, level: usize,
+                         name: impl Into<String>) -> Option<Self> {
         let ref_vec: Option<Vec<DomRef>> = state.as_slice().unwrap()
             .iter().map(|v| domain.find_value(v))
             .collect();
         let ref_vec = ref_vec?;
         let ref_mat = ArrayD::from_shape_vec(state.shape(), ref_vec).unwrap();
-        let level = domain.levels - 1;
         Some(Self::new(domain, ref_mat, level, name))
     }
 

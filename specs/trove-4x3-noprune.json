@@ -1,39 +1,46 @@
 {
-  "end_name": "trove",
-  "end_info": [4, 3],
+  "target": {"Builtin": "trove"},
+  "target_info": [4, 3],
   "steps": [
     {
-      "basis": "load_rep",
-      "in_sizes": [12],
-      "out_sizes": [4, 3],
+      "step": {"Initial": {"From": 0}},
+      "out_shape": [12],
+      "lane": 0,
       "prune": false,
       "then_fold": false
     },
     {
-      "basis": "sFr",
-      "in_sizes": [4, 3],
-      "out_sizes": [4, 3],
+      "step": { "Gather": { "Builtin": "load_rep"}},
+      "lane": 0,
+      "out_shape": [4, 3],
       "prune": false,
       "then_fold": false
     },
     {
-      "basis": "sRr",
-      "in_sizes": [4, 3],
-      "out_sizes": [4, 3],
+      "step": { "Gather": { "Builtin": "sFr"}},
+      "lane": 0,
+      "out_shape": [4, 3],
       "prune": false,
       "then_fold": false
     },
     {
-      "basis": "sFc",
-      "in_sizes": [4, 3],
-      "out_sizes": [4, 3],
+      "step": { "Gather": { "Builtin": "sRr"}},
+      "lane": 0,
+      "out_shape": [4, 3],
       "prune": false,
       "then_fold": false
     },
     {
-      "basis": "sRc",
-      "in_sizes": [4, 3],
-      "out_sizes": [4, 3],
+      "step": { "Gather": { "Builtin": "sFc"}},
+      "lane": 0,
+      "out_shape": [4, 3],
+      "prune": false,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "sRc"}},
+      "lane": 0,
+      "out_shape": [4, 3],
       "prune": false,
       "then_fold": false
     }
