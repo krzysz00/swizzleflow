@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::state::Gather;
-use super::OpSet;
+use super::OpSetKind;
 use crate::errors::*;
 
 use ndarray::{Ix,Ixs};
@@ -23,7 +23,6 @@ use std::collections::HashSet;
 use std::cmp;
 
 use itertools::iproduct;
-use smallvec::smallvec;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum OpAxis { Rows, Columns }
@@ -85,7 +84,7 @@ pub fn identity(shape: &[Ix]) -> Gather {
     Gather::new(shape.len(), shape, |idxs, ops| ops.extend(idxs), "id")
 }
 
-pub fn simple_fans(shape: &[Ix], perm_within: OpAxis) -> Result<OpSet> {
+pub fn simple_fans(shape: &[Ix], perm_within: OpAxis) -> Result<OpSetKind> {
     let mut ret = HashSet::new();
 
     if shape.len() != 2 {
@@ -98,12 +97,10 @@ pub fn simple_fans(shape: &[Ix], perm_within: OpAxis) -> Result<OpSet> {
     let k_bound = cmp::max(m, n);
     let c_bound = match perm_within { Rows => n, Columns => m };
     ret.extend(iproduct!((0..k_bound), (0..c_bound)).map(|(k, c)| fan(m, n, perm_within, k, c)));
-    let name = match perm_within { Rows => "sFr", Columns => "sFc"};
-    Ok(OpSet::new(name, ret.into_iter().collect::<Vec<_>>().into(),
-                  smallvec![m, n], smallvec![m, n], false))
+    Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 
-pub fn simple_rotations(shape: &[Ix], perm_within: OpAxis) -> Result<OpSet> {
+pub fn simple_rotations(shape: &[Ix], perm_within: OpAxis) -> Result<OpSetKind> {
     let mut ret = HashSet::new();
 
     if shape.len() != 2 {
@@ -120,9 +117,7 @@ pub fn simple_rotations(shape: &[Ix], perm_within: OpAxis) -> Result<OpSet> {
                          (2..=d_bound).filter(|i| d_bound % i == 0),
                          (-c_bound+1..c_bound))
                .map(|(k, d, c)| rotate(m, n, perm_within, k, d, c)));
-    let name = match perm_within { Rows => "sRr", Columns => "sRc"};
-    Ok(OpSet::new(name, ret.into_iter().collect::<Vec<_>>().into(),
-                  smallvec![m, n], smallvec![m, n], false))
+    Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 
 #[cfg(test)]
@@ -132,13 +127,13 @@ mod tests {
     #[test]
     fn scala_3x16_basis_sizes() {
         assert_eq!(simple_fans(&[3, 16], OpAxis::Columns).unwrap()
-                   .ops.swizzle().unwrap().len(), 5);
+                   .gathers().unwrap().len(), 5);
         assert_eq!(simple_rotations(&[3, 16], OpAxis::Columns).unwrap()
-                   .ops.swizzle().unwrap().len(), 36);
+                   .gathers().unwrap().len(), 36);
         assert_eq!(simple_fans(&[3, 16], OpAxis::Rows).unwrap()
-                   .ops.swizzle().unwrap().len(), 255);
+                   .gathers().unwrap().len(), 255);
         assert_eq!(simple_rotations(&[3, 16], OpAxis::Rows).unwrap()
-                   .ops.swizzle().unwrap().len(), 256);
+                   .gathers().unwrap().len(), 256);
     }
 
     #[test]

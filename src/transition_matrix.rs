@@ -176,7 +176,7 @@ pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet, merge: Option<MergeSpot>) 
 
     // empty takes out, in, unlike set and their friends
     let mut ret = T::empty(len, &out_shape, &ops.in_shape);
-    let gathers = ops.ops.swizzle().unwrap();
+    let gathers = ops.ops.gathers().unwrap();
     for op in gathers {
         let axis_num = op.data.ndim() - 1;
         let output_shape = &op.data.shape()[0..axis_num];
@@ -338,12 +338,15 @@ pub fn density<T: TransitionMatrixOps>(matrix: &T) -> f64 {
 mod tests {
     use super::*;
     use crate::operators::swizzle::{simple_fans,OpAxis};
+    use smallvec::smallvec;
     use tempfile::tempfile;
 
     #[test]
     fn correct_length_trove_rows() {
         let small_fans = simple_fans(&[3, 4], OpAxis::Rows).unwrap();
-        let matrix: DenseTransitionMatrix = build_mat(&small_fans, None);
+        let opset = OpSet::new("sFr", small_fans, smallvec![3, 4],
+                               smallvec![3, 4], false);
+        let matrix: DenseTransitionMatrix = build_mat(&opset, None);
         assert_eq!(matrix.n_ones(), 488);
     }
 
@@ -351,7 +354,10 @@ mod tests {
     #[test]
     fn correct_length_big_matrix() {
         use crate::operators::swizzle::simple_rotations;
-        let big_matrix: DenseTransitionMatrix = build_mat(&simple_rotations(&[4, 32], OpAxis::Columns).unwrap(), None);
+        let big_rots = simple_rotations(&[4, 32], OpAxis::Columns).unwrap();
+        let opset = OpSet::new("sRr", big_rots, smallvec![4, 32],
+                               smallvec![4, 32], false);
+        let big_matrix: DenseTransitionMatrix = build_mat(&opset, None);
         assert_eq!(big_matrix.n_ones(), 246272);
     }
 

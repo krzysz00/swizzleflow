@@ -37,24 +37,32 @@ pub type IdxVec = SmallVec<[usize; 3]>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum OpSetKind {
-    Swizzle(Vec<Gather>),
+    Gathers(Vec<Gather>),
     Merge(IdxVec, usize),
     Split(usize, IdxVec),
 }
 
 impl OpSetKind {
-    pub fn swizzle(&self) -> Option<&[Gather]> {
+    pub fn gathers(&self) -> Option<&[Gather]> {
         use OpSetKind::*;
         match self {
-            Swizzle(vec) => Some(vec),
+            Gathers(vec) => Some(vec),
             Merge(_, _) | Split(_, _) => None,
+        }
+    }
+
+    pub fn merge_target(&self) -> Option<usize> {
+        use OpSetKind::*;
+        match self {
+            Merge(_, to) => Some(*to),
+            Gathers(_) | Split(_, _) => None,
         }
     }
 }
 
 impl From<Vec<Gather>> for OpSetKind {
-    fn from(swizzles: Vec<Gather>) -> OpSetKind {
-        OpSetKind::Swizzle(swizzles)
+    fn from(gathers: Vec<Gather>) -> OpSetKind {
+        OpSetKind::Gathers(gathers)
     }
 }
 
@@ -72,13 +80,6 @@ impl OpSet {
                   fused_fold: bool) -> Self
     where T: Into<Cow<'static, str>> {
         Self { name: name.into(), ops, in_shape, out_shape, fused_fold }
-    }
-
-    pub fn add_fused_fold(&mut self) {
-        if !self.fused_fold {
-            self.fused_fold = true;
-            self.out_shape.pop();
-        }
     }
 
     pub fn to_name(&self, merge: Option<MergeSpot>) -> String {
@@ -133,7 +134,7 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel],
         .filter(|(i, l)| *i >= first_prunes[l.lane])
     {
         match level.ops.ops {
-            OpSetKind::Swizzle(ref _swiz) => {
+            OpSetKind::Gathers(ref _swiz) => {
                 let lane = level.lane;
                 let name = level.ops.to_name(merges[lane]);
 

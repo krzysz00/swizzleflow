@@ -12,7 +12,7 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use crate::operators::SynthesisLevel;
+use crate::operators::{SynthesisLevel,OpSet,OpSetKind};
 use crate::state::{ProgState,Domain,Value,Symbolic};
 use crate::operators::swizzle::{simple_fans, simple_rotations, OpAxis};
 use crate::operators::reg_select::{reg_select_no_const};
@@ -27,71 +27,241 @@ use ndarray::{Array, ArrayD, Ix};
 use smallvec::SmallVec;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
+pub enum GathersDesc {
+    Builtin(String),
+    Custom(Vec<(String, Vec<u64>)>)
+}
+
+impl GathersDesc {
+    pub fn to_opset_kind(&self, in_shape: &[usize], out_shape: &[usize]) -> Result<OpSetKind> {
+        use GathersDesc::*;
+        match self {
+            Builtin(s) => {
+                match s.as_ref() {
+                    "load_rep" => {
+                        load_rep(in_shape, out_shape)
+                    },
+                    "load_trunc" => {
+                        load_trunc(in_shape, out_shape)
+                    },
+                    "sRr" => {
+                        if out_shape != in_shape {
+                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
+                        }
+                        simple_rotations(out_shape, OpAxis::Rows)
+                    },
+                    "sRc" => {
+                        if out_shape != in_shape {
+                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
+                        }
+                        simple_rotations(out_shape, OpAxis::Columns)
+                    },
+                    "sFr" => {
+                        if out_shape != in_shape {
+                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
+                        }
+                        simple_fans(out_shape, OpAxis::Rows)
+                    },
+                    "sFc" => {
+                        if out_shape != in_shape {
+                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
+                        }
+                        simple_fans(out_shape, OpAxis::Columns)
+                    },
+                    "regSelNC" => {
+                        if out_shape[0..out_shape.len()-1] != in_shape[0..in_shape.len()-1] {
+                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
+                        }
+                        if in_shape[in_shape.len()-1] != 2 {
+                            let mut correct_shape = in_shape.to_vec();
+                            correct_shape[in_shape.len()-1] = 2;
+                            return Err(ErrorKind::ShapeMismatch(correct_shape, in_shape.to_vec()).into());
+                        }
+                        reg_select_no_const(out_shape)
+                    },
+                    other => {
+                        return Err(ErrorKind::UnknownBasisType(other.to_owned()).into())
+                    }
+                }
+            },
+            Custom(gathers) => {
+                gathers.iter().map(
+                    |(name, gather)| {
+                        let gather = gather.iter().copied().map(|d| d as Ix).collect();
+                        let array_shape = out_shape.iter().copied()
+                            .chain(Some(in_shape.len()).iter().copied())
+                            .collect::<Vec<usize>>();
+                        let array = ArrayD::from_shape_vec(array_shape.as_ref(), gather)
+                            .chain_err(|| ErrorKind::InvalidArrayData(array_shape.clone()))?;
+                        Ok(crate::state::Gather::new_raw(array, name.clone()))
+                    }).collect::<Result<Vec<_>>>().map(|r| r.into())
+            }
+        }
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub enum InitialDesc {
+    From(Symbolic),
+    Data(Vec<Symbolic>),
+}
+
+impl InitialDesc {
+    pub fn to_progstate<'d>(&self, domain: &'d Domain, shape: &[Ix],
+                            name: &Option<String>) -> Result<ProgState<'d>> {
+        let array =
+            match self {
+                InitialDesc::From(offset) => {
+                    let shape_len: usize = shape.iter().copied().product();
+                    let shape_len = shape_len as u16;
+                    let array: Vec<Value> = (*offset..offset+shape_len)
+                        .map(Value::Symbol).collect();
+                    ArrayD::from_shape_vec(shape, array)
+                        .chain_err(|| ErrorKind::ShapeMismatch(shape.to_owned(),
+                                                               vec![*offset as usize]))
+                },
+                InitialDesc::Data(data) => {
+                    let array: Vec<Value> = data.iter().copied().map(Value::Symbol).collect();
+                    ArrayD::from_shape_vec(shape, array)
+                        .chain_err(|| ErrorKind::InvalidArrayData(shape.to_owned()))
+                }
+            };
+        let array = array?;
+        let name =
+            match name {
+                Some(n) => n.to_owned(),
+                None => match self {
+                    InitialDesc::From(_) => "id".to_owned(),
+                    InitialDesc::Data(_) => "custom_start".to_owned(),
+                }
+            };
+        ProgState::new_from_spec(domain, array, name)
+            .ok_or_else(|| ErrorKind::SymbolsNotInSpec.into())
+    }
+}
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub enum SynthesisLevelKind {
+    Gather(GathersDesc),
+    Merge(Vec<u64>),
+    Split(Vec<u64>),
+    Initial(InitialDesc),
+}
+
+impl SynthesisLevelKind {
+    pub fn is_initial(&self) -> bool {
+        use SynthesisLevelKind::*;
+        match self {
+            Gather(_) => false,
+            Merge(_) => false,
+            Split(_) => false,
+            Initial(_) => true,
+        }
+    }
+
+    pub fn to_opset_kind(&self, in_shape: &[usize], out_shape: &[usize],
+                         lane: usize) -> Result<OpSetKind> {
+        use SynthesisLevelKind::*;
+        match self {
+            Gather(desc) => desc.to_opset_kind(in_shape, out_shape),
+            Merge(from) => Ok(OpSetKind::Merge(from.iter().copied()
+                                               .map(|x| x as usize).collect(),
+                                               lane)),
+            Split(to) => Ok(OpSetKind::Split(lane,
+                                             to.iter().copied()
+                                             .map(|x| x as usize).collect())),
+            Initial(_) => panic!("Shouldn't be called with initial inputs")
+        }
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct SynthesisLevelDesc {
-    pub basis: String,
-    pub in_sizes: Vec<u64>,
-    pub out_sizes: Vec<u64>,
+    pub name: Option<String>,
+    pub lane: u64,
+    pub step: SynthesisLevelKind,
+    pub out_shape: Vec<u64>,
     pub prune: bool,
     pub then_fold: bool,
 }
 
 impl SynthesisLevelDesc {
-    pub fn to_synthesis_level(&self) -> Result<SynthesisLevel> {
-        let in_shape: ShapeVec = self.in_sizes.iter().map(|x| *x as usize).collect();
-        let out_shape: ShapeVec = self.out_sizes.iter().map(|x| *x as usize).collect();
+    pub fn is_initial(&self) -> bool {
+        self.step.is_initial()
+    }
 
-        let mut ops =
-            match self.basis.as_ref() {
-                "load_rep" => {
-                    load_rep(&in_shape, &out_shape)?
-                },
-                "load_trunc" => {
-                    load_trunc(&in_shape, &out_shape)?
-                },
-                "sRr" => {
-                    if out_shape != in_shape {
-                        return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
-                    }
-                    simple_rotations(&out_shape, OpAxis::Rows)?
-                }
-                "sRc" => {
-                    if out_shape != in_shape {
-                        return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
-                    }
-                    simple_rotations(&out_shape, OpAxis::Columns)?
-                }
-                "sFr" => {
-                    if out_shape != in_shape {
-                        return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
-                    }
-                    simple_fans(&out_shape, OpAxis::Rows)?
-                }
-                "sFc" => {
-                    if out_shape != in_shape {
-                        return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
-                    }
-                    simple_fans(&out_shape, OpAxis::Columns)?
-                }
-                "regSelNC" => {
-                    if out_shape[0..out_shape.len()-1] != in_shape[0..in_shape.len()-1] {
-                        return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
-                    }
-                    if in_shape[in_shape.len()-1] != 2 {
-                        let mut correct_shape = in_shape.to_vec();
-                        correct_shape[in_shape.len()-1] = 2;
-                        return Err(ErrorKind::ShapeMismatch(correct_shape, in_shape.to_vec()).into());
-                    }
-                    reg_select_no_const(&out_shape)?
-                }
-                other => {
-                    return Err(ErrorKind::UnknownBasisType(other.to_owned()).into())
-                }
-            };
-        // Handle operations that don't natively fold
-        if self.then_fold {
-            ops.add_fused_fold();
+    pub fn initial_desc(&self) -> Option<&InitialDesc> {
+        match self.step {
+            SynthesisLevelKind::Initial(ref d) => Some(d),
+            _ => None
         }
-        Ok(SynthesisLevel::new(ops, 0, self.prune))
+    }
+
+    pub fn to_synthesis_level(&self, in_shapes: &[Option<Vec<usize>>]) -> Result<SynthesisLevel> {
+        let lane = self.lane as usize;
+        let mut out_shape: ShapeVec = self.out_shape.iter().copied().map(|x| x as usize).collect();
+        let in_shape: ShapeVec = if self.step.is_initial() {
+            panic!("You shouldn't've called this with an initial state")
+        } else if let Some(Some(s)) = in_shapes.get(lane) {
+            ShapeVec::from_slice(s.as_ref())
+        } else {
+            return Err(ErrorKind::MissingShape(lane).into());
+        };
+
+        let opset = self.step.to_opset_kind(in_shape.as_slice(),
+                                            out_shape.as_slice(), lane)?;
+
+        // Post-processing
+        match &opset {
+            OpSetKind::Gathers(_) => {
+                if self.then_fold {
+                    out_shape.pop();
+                }
+            },
+            OpSetKind::Merge(from, _to) => {
+                for idx in from.iter().copied() {
+                    if let Some(Some(s)) = in_shapes.get(idx) {
+                        if self.then_fold && s.as_slice() != out_shape.as_ref() {
+                            return Err(ErrorKind::ShapeMismatch(s.to_owned(),
+                                                                out_shape.to_vec()).into());
+                        }
+                        else if !self.then_fold && s.as_slice() != &out_shape.as_slice()[0..out_shape.len()-1] {
+                            return Err(ErrorKind::ShapeMismatch(s.to_owned(),
+                                                                out_shape.to_vec()).into());
+                        }
+                    }
+                    else {
+                        return Err(ErrorKind::MissingShape(idx).into())
+                    }
+                }
+                if !self.then_fold && out_shape[out_shape.len()-1] != from.len() {
+                    return Err(ErrorKind::WrongMergeArgs(out_shape[out_shape.len()-1],
+                                                         from.len()).into());
+                }
+            }
+            OpSetKind::Split(_, _) => if self.then_fold {
+                println!("WARNING: fold on splits is useless and ignored");
+            }
+        }
+        let name: std::borrow::Cow<'static, str> =
+            match &self.name {
+                Some(n) => n.to_owned().into(),
+                None =>
+                    match &self.step {
+                        SynthesisLevelKind::Gather(GathersDesc::Builtin(s)) =>
+                            s.to_owned().into(),
+                        SynthesisLevelKind::Gather(_) => "custom_gathers".into(),
+                        SynthesisLevelKind::Merge(_) =>
+                            if self.then_fold {
+                                "merge_folding".into()
+                            } else {
+                                "merge".into()
+                            },
+                        SynthesisLevelKind::Split(_) => "split".into(),
+                        SynthesisLevelKind::Initial(_) => "inital??".into(),
+                    }
+            };
+        let level = OpSet::new(name, opset, in_shape.clone(), out_shape, self.then_fold);
+        Ok(SynthesisLevel::new(level, lane, self.prune))
     }
 }
 
@@ -120,38 +290,97 @@ fn convolve(width: Ix, k: Ix) -> ArrayD<Value> {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
+pub enum TargetDesc {
+    Builtin(String),
+    Custom { data: Vec<Symbolic>, n_folds: u64 }
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ProblemDesc {
-    pub end_name: String,
-    pub end_info: Vec<u64>,
+    pub target: TargetDesc,
+    pub target_info: Vec<u64>,
     pub steps: Vec<SynthesisLevelDesc>,
 }
 
+fn custom_target(data: &[Symbolic], shape: &[usize], n_folds: usize) -> Result<ArrayD<Value>> {
+    let data: Vec<Value> = data.iter().copied().map(Value::Symbol).collect();
+    let mut array = ArrayD::from_shape_vec(shape, data)
+        .chain_err(|| ErrorKind::InvalidArrayData(shape.to_owned()))?;
+    for _ in 0..n_folds {
+        array = array.map_axis(ndarray::Axis(array.ndim() - 1),
+                               |data| Value::fold(data.to_vec()));
+    }
+    Ok(array)
+}
+
+fn update_shape_info(level: &SynthesisLevel, shapes: &mut Vec<Option<Vec<usize>>>,
+                     were_merged: &mut Vec<bool>) {
+    let lane = level.lane;
+    for _ in shapes.len()..=lane {
+        shapes.push(None);
+        were_merged.push(false);
+    }
+
+    were_merged[lane] = false;
+    if let Some(target) = level.ops.ops.merge_target() {
+        if !level.ops.fused_fold {
+            were_merged[target] = true;
+        }
+    }
+
+    match &level.ops.ops {
+        OpSetKind::Gathers(_) => {
+            shapes[lane] = Some(level.ops.out_shape.to_vec());
+        },
+        OpSetKind::Merge(from, to) => {
+            for idx in from {
+                shapes[*idx] = None;
+            }
+            shapes[*to] = Some(level.ops.out_shape.to_vec());
+        }
+        OpSetKind::Split(from, to) => {
+            shapes[*from] = None;
+            were_merged[*from] = false;
+            for idx in to {
+                shapes[*idx] = Some(level.ops.out_shape.to_vec());
+                were_merged[*idx] = false;
+            }
+        }
+    }
+}
 impl ProblemDesc {
     pub fn get_spec(&self) -> Result<ArrayD<Value>> {
-        let end_info = self.end_info.iter().copied().map(|x| x as usize)
+        let target_info = self.target_info.iter().copied().map(|x| x as usize)
             .collect::<SmallVec<[usize; 4]>>();
-        match self.end_name.as_str() {
-            "trove" => {
-                match end_info.as_slice() {
-                    &[m, n] => Ok(trove( m, n)),
-                    other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
-                }
-            }
-            "conv_dealg" => {
-                match end_info.as_slice() {
-                    &[width, k] => Ok(convolve_dealg(width, k)),
-                    other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
-                }
-            }
-            "conv" => {
-                match end_info.as_slice() {
-                    &[width, k] => Ok(convolve(width, k)),
-                    other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
-                }
+        match &self.target {
+            TargetDesc::Builtin(name) =>
+                match name.as_str() {
+                    "trove" => {
+                        match target_info.as_slice() {
+                            &[m, n] => Ok(trove(m, n)),
+                            other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
+                        }
+                    }
+                    "conv_dealg" => {
+                        match target_info.as_slice() {
+                            &[width, k] => Ok(convolve_dealg(width, k)),
+                            other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
+                        }
+                    }
+                    "conv" => {
+                        match target_info.as_slice() {
+                            &[width, k] => Ok(convolve(width, k)),
+                            other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
+                        }
 
+                    }
+                    other => Err(ErrorKind::UnknownProblem(other.to_owned()).into())
+                },
+                TargetDesc::Custom { data, n_folds } => {
+                    let n_folds = *n_folds as usize;
+                    custom_target(data, &target_info, n_folds)
+                }
             }
-            other => Err(ErrorKind::UnknownProblem(other.to_owned()).into())
-        }
     }
 
     pub fn make_domain(&self, spec: ndarray::ArrayViewD<Value>) -> Domain {
@@ -163,24 +392,55 @@ impl ProblemDesc {
                           spec: ArrayD<Value>) -> Result<(Vec<Option<ProgState<'d>>>,
                                                           ProgState<'d>,
                                                           Vec<SynthesisLevel>)> {
-        let levels: Result<Vec<SynthesisLevel>> =
-            self.steps.iter()
-            .map(|x| x.to_synthesis_level().chain_err(|| ErrorKind::LevelBuild(Box::new(x.clone()))))
-            .collect();
-        let levels = levels?;
 
-        let start_shape = levels[0].ops.in_shape.as_slice();
-        let start_symbols: usize = start_shape.iter().product();
-        if start_symbols != domain.num_symbols() {
-            return Err(ErrorKind::ShapeMismatch(
-                levels[0].ops.in_shape.to_vec(),
-                vec![domain.num_symbols()]).into());
+        let mut ret = Vec::<SynthesisLevel>::with_capacity(self.steps.len());
+        let mut initials = Vec::<Option<ProgState<'d>>>::new();
+        let mut shapes: Vec<Option<Vec<usize>>> = Vec::new();
+        let mut were_merged = Vec::<bool>::new();
+
+        for step in &self.steps {
+            let lane = step.lane as usize;
+            if step.is_initial() {
+                for _ in shapes.len()..=lane {
+                    shapes.push(None);
+                    were_merged.push(false);
+                }
+                initials.extend((initials.len()..=lane).map(|_| None));
+
+                let shape: Vec<usize> = step.out_shape.iter().copied()
+                    .map(|x| x as usize).collect();
+                let state = step.initial_desc().unwrap()
+                     .to_progstate(domain, &shape, &step.name)
+                    .chain_err(|| ErrorKind::LevelBuild(Box::new(step.clone())))?;
+
+                shapes[lane] = Some(shape);
+                initials[lane] = Some(state);
+                were_merged[lane] = false;
+            }
+            else {
+                let level = step.to_synthesis_level(&shapes)
+                    .chain_err(|| ErrorKind::LevelBuild(Box::new(step.clone())))?;
+                if level.ops.fused_fold {
+                    if let OpSetKind::Merge(ref from, _to) = level.ops.ops {
+                        for idx in from.iter().copied() {
+                            if were_merged[idx] {
+                                return Err(ErrorKind::ConsecutiveMerges(idx).into());
+                            }
+                        }
+                    }
+                }
+                update_shape_info(&level, &mut shapes, &mut were_merged);
+                ret.push(level);
+            }
         }
 
-        let initial = ProgState::linear(domain, start_shape);
-        // All the values in the spec had better be in the domain
-        let spec = ProgState::new_from_spec(domain, spec, &self.end_name).unwrap();
-        Ok((vec![Some(initial)], spec, levels))
+        let target_name: std::borrow::Cow<'static, str> =
+            match &self.target {
+                TargetDesc::Builtin(s) => s.clone().into(),
+                TargetDesc::Custom { data: _d, n_folds: _n } => "custom_target".into(),
+            };
+        let spec = ProgState::new_from_spec(domain, spec, target_name).unwrap();
+        Ok((initials, spec, ret))
     }
 }
 
@@ -218,11 +478,14 @@ mod tests {
         use std::collections::HashSet;
 
         let desc = ProblemDesc {
-            end_name: "trove".to_owned(),
-            end_info: vec![3, 4],
+            target: TargetDesc::Builtin("trove".to_owned()),
+            target_info: vec![3, 4],
             steps: vec![
-                SynthesisLevelDesc { basis: "sRr".to_owned(),
-                                     in_sizes: vec![3, 4], out_sizes: vec![3, 4],
+                SynthesisLevelDesc { step: SynthesisLevelKind::Initial(InitialDesc::From(0)),
+                                     out_shape: vec![3, 4], lane: 0, name: None,
+                                     prune: false, then_fold: false},
+                SynthesisLevelDesc { step: SynthesisLevelKind::Gather(GathersDesc::Builtin("sRr".to_owned())),
+                                     out_shape: vec![3, 4], lane: 0, name: None,
                                      prune: false, then_fold: false},
             ]
         };
@@ -241,9 +504,9 @@ mod tests {
         let trove_shape: ShapeVec = smallvec![3, 4];
         assert_eq!(ops.in_shape, trove_shape);
         assert_eq!(ops.out_shape, trove_shape);
-        assert_eq!(ops.ops.swizzle().unwrap().iter().collect::<HashSet<_>>(),
+        assert_eq!(ops.ops.gathers().unwrap().iter().collect::<HashSet<_>>(),
                    swizzle::simple_rotations(&[3, 4], swizzle::OpAxis::Rows).unwrap()
-                   .ops.swizzle().unwrap()
+                   .gathers().unwrap()
                    .iter().collect::<HashSet<_>>());
     }
 }

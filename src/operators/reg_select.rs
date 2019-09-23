@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::state::Gather;
-use super::OpSet;
+use super::OpSetKind;
 
 use crate::misc::ShapeVec;
 use crate::errors::*;
@@ -74,7 +74,7 @@ pub fn reg_select(shape: &[Ix], operand1: usize, operand2: usize, op: Op) -> Gat
                 }, name)
 }
 
-pub fn reg_select_no_const(shape: &[Ix]) -> Result<OpSet> {
+pub fn reg_select_no_const(shape: &[Ix]) -> Result<OpSetKind> {
     let mut ret = HashSet::new();
 
     let op_len = shape.len();
@@ -86,7 +86,5 @@ pub fn reg_select_no_const(shape: &[Ix]) -> Result<OpSet> {
     let mut in_shape = out_shape.clone();
     in_shape[op_len - 1] = 2;
 
-    let name = "regSelNC";
-    Ok(OpSet::new(name, ret.into_iter().collect::<Vec<_>>().into(),
-                  in_shape, out_shape, false))
+    Ok(ret.into_iter().collect::<Vec<_>>().into())
 }

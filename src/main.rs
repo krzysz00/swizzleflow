@@ -35,6 +35,7 @@ pub mod errors {
         foreign_links {
             Io(std::io::Error);
             Json(serde_json::Error);
+            Ndarray(ndarray::ShapeError);
         }
 
         errors {
@@ -58,6 +59,22 @@ pub mod errors {
                 description("shapes don't match")
                 display("{:?} should match up with {:?}", shape1, shape2)
             }
+            WrongMergeArgs(expected: usize, got: usize) {
+                description("incorrect number of merge arguments")
+                display("incorrect number of merge arguments: expected {}, got {}", expected, got)
+            }
+            ConsecutiveMerges(lane: usize) {
+                description("consecutive foldless merges")
+                display("consecutive foldless merges on lane {}. Add an id?", lane)
+            }
+            InvalidArrayData(shape: Vec<usize>) {
+                description("invalid array data"),
+                display("invalid array data for shape: {:?}", shape)
+            }
+            MissingShape(lane: usize) {
+                description("no known input shape in lane"),
+                display("no known input shape in lane: {}", lane)
+            }
             UnknownBasisType(basis: String) {
                 description("unknown basis type")
                 display("unknown basis type: {}", basis)
@@ -65,6 +82,10 @@ pub mod errors {
             UnknownProblem(problem: String) {
                 description("unknown problem")
                 display("unknown problem: {}", problem)
+            }
+            SymbolsNotInSpec {
+                description("symbols not in spec")
+                display("symbols not in spec")
             }
             MatrixLoad(p: std::path::PathBuf) {
                 description("couldn't read matrix file")
@@ -145,7 +166,7 @@ mod tests {
     fn fixed_solution_from_scalar_8x3<'d>(d: &'d Domain) -> ProgState<'d> {
         let initial = ProgState::linear(d, &[24]);
         let s0 = initial.gather_by(&load_rep(&[24], &[8, 3]).unwrap()
-                                   .ops.swizzle().unwrap()[0]);
+                                   .gathers().unwrap()[0]);
         let s1 = s0.gather_by(&fan(8, 3, OpAxis::Rows, 0, 2));
         let s2 = s1.gather_by(&rotate(8, 3, OpAxis::Rows, -7, 8, 0));
         let s3 = s2.gather_by(&fan(8, 3, OpAxis::Columns, 0, 3));

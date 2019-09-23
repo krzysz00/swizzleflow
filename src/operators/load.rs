@@ -13,10 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::errors::*;
-use crate::misc::ShapeVec;
 
 use crate::state::Gather;
-use crate::operators::OpSet;
+use crate::operators::OpSetKind;
 
 use ndarray::Ix;
 
@@ -28,7 +27,7 @@ enum Mode {
     Trunc,
 }
 
-fn load(in_shape: &[Ix], out_shape: &[Ix], mode: Mode) -> Result<OpSet> {
+fn load(in_shape: &[Ix], out_shape: &[Ix], mode: Mode) -> Result<OpSetKind> {
     let name = match mode {
         Mode::Rep => "load_rep",
         Mode::Trunc => "load_trunc",
@@ -56,15 +55,13 @@ fn load(in_shape: &[Ix], out_shape: &[Ix], mode: Mode) -> Result<OpSet> {
 
                         in_idx_output.extend(&out_idxs[out_split..]);
                     }, name);
-    Ok(OpSet::new(name, vec![gather].into(),
-                  ShapeVec::from_slice(in_shape), ShapeVec::from_slice(out_shape),
-                  false))
+    Ok(vec![gather].into())
 }
 
-pub fn load_rep(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSet> {
+pub fn load_rep(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSetKind> {
     load(in_shape, out_shape, Mode::Rep)
 }
 
-pub fn load_trunc(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSet> {
+pub fn load_trunc(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSetKind> {
     load(in_shape, out_shape, Mode::Trunc)
 }

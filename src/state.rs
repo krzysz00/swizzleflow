@@ -409,6 +409,10 @@ impl Gather {
         let array = Array::from_shape_vec(shape, array).unwrap();
         Self { data: array,  name: name.into() }
     }
+
+    pub fn new_raw(data: ArrayD<Ix>, name: String) -> Self {
+        Self { data, name }
+    }
 }
 
 impl fmt::Display for Gather {
