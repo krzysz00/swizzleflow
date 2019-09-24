@@ -19,7 +19,7 @@ use std::path::Path;
 use std::time::Instant;
 
 use crate::operators::OpSet;
-use crate::misc::{EPSILON,ShapeVec,time_since,open_file,create_file,MergeSpot};
+use crate::misc::{EPSILON,ShapeVec,time_since,open_file,create_file};
 use crate::errors::*;
 
 use bit_vec::BitVec;
@@ -27,6 +27,17 @@ use bit_vec::BitVec;
 use byteorder::{LittleEndian,WriteBytesExt,ReadBytesExt};
 
 use smallvec::SmallVec;
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+pub struct MergeSpot {
+    pub lane: usize, pub total_size: usize
+}
+
+impl From<(usize, usize)> for MergeSpot {
+    fn from(tuple: (usize, usize)) -> MergeSpot {
+        MergeSpot { lane: tuple.0, total_size: tuple.1 }
+    }
+}
 
 pub trait TransitionMatrixOps: Sized + std::fmt::Debug {
     fn get(&self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix]) -> bool;

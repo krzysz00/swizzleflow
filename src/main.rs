@@ -17,6 +17,7 @@ extern crate intel_mkl_src;
 mod misc;
 mod state;
 mod transition_matrix;
+mod matrix_load;
 mod operators;
 mod problem_desc;
 mod synthesis;
@@ -147,9 +148,9 @@ fn run() -> Result<()> {
             desc.to_problem(&domain, spec)
             .chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
         let max_lanes = initial.len();
-        operators::add_matrices(matrix_dir, &mut levels, max_lanes)?;
+        matrix_load::add_matrices(matrix_dir, &mut levels, max_lanes)?;
         synthesize(initial, &target, &levels, synthesis_mode);
-        operators::remove_matrices(&mut levels);
+        matrix_load::remove_matrices(&mut levels);
     }
     Ok(())
 }
