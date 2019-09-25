@@ -1,0 +1,76 @@
+[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18], [19, 20, 21], [22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69], [70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85]]
+load:matrices/16-identity-16,3 [0.00029112]
+load:matrices/16-identity-16,3_16,3-sRc-16,3 [0.000259054]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3 [0.000245437]
+load:matrices/16-identity-16,3_16,3-sRr-16,3 [0.000254279]
+load:matrices/16-identity-16,3_16,3-sRr-16,3_16,3-sFr-16,3 [0.00024057]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3_16,3-regSelNC-16,2 [0.000105556]
+soln:merge_fold[id;load_trunc;select(0 >= 1);id;rot(-15,3,0),id;broadcast;id;id];id
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:3 tested(8), found(0), pruned(0), continued(8) cache(0:8)
+stats:4 tested(40), found(0), pruned(0), continued(40) cache(0:40)
+stats:5 tested(1440), found(0), pruned(1260), continued(180) cache(0:180)
+stats:6 tested(45900), found(0), pruned(20160), continued(25740) cache(0:25740)
+stats:7 tested(6589440), found(0), pruned(0), continued(6589440) cache(0:6589440)
+stats:8 tested(244916), found(0), pruned(244915), continued(1) cache(0:1)
+stats:9 tested(1), found(1), pruned(0), continued(0) cache(0:0)
+search:weight_conv shape([16]) true mode(All) [78.751700972]
+[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18], [19, 20, 21], [22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69], [70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85]]
+load:matrices/16-identity-16,3 [0.000321934]
+load:matrices/16-identity-16,3_16,3-sRr-16,3 [0.000343608]
+load:matrices/16-identity-16,3_16,3-sRc-16,3 [0.000307446]
+load:matrices/16-identity-16,3_16,3-sRr-16,3_16,3-sFr-16,3 [0.000297429]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3 [0.000293784]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3_16,3-regSelNC-16,2 [0.00015479]
+soln:merge_fold[id;load_trunc;select(0 >= 1);id;rot(-15,3,0),id;broadcast;id;id];id
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:3 tested(8), found(0), pruned(7), continued(1) cache(0:1)
+stats:4 tested(255), found(0), pruned(0), continued(255) cache(0:255)
+stats:5 tested(1275), found(0), pruned(560), continued(715) cache(0:715)
+stats:6 tested(183040), found(0), pruned(0), continued(183040) cache(0:183040)
+stats:7 tested(6589440), found(0), pruned(0), continued(6589440) cache(0:6589440)
+stats:8 tested(244916), found(0), pruned(244915), continued(1) cache(0:1)
+stats:9 tested(1), found(1), pruned(0), continued(0) cache(0:0)
+search:weight_conv shape([16]) true mode(All) [718.758837907]
+[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18], [19, 20, 21], [22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69], [70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85]]
+load:matrices/16-identity-16,3 [0.000354729]
+load:matrices/16-identity-16,3_16,3-sRr-16,3 [0.000331152]
+load:matrices/16-identity-16,3_16,3-sRr-16,3_16,3-sFr-16,3 [0.000309758]
+load:matrices/16-identity-16,3_16,3-sRc-16,3 [0.000305619]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3 [0.000293345]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3_16,3-regSelNC-16,2 [0.000140216]
+soln:merge_fold[id;load_trunc;select(0 >= 1);id;rot(-15,3,0),id;broadcast;id;id];id
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:3 tested(8), found(0), pruned(7), continued(1) cache(0:1)
+stats:4 tested(255), found(0), pruned(112), continued(143) cache(0:143)
+stats:5 tested(36608), found(0), pruned(0), continued(36608) cache(0:36608)
+stats:6 tested(183040), found(0), pruned(0), continued(183040) cache(0:183040)
+stats:7 tested(6589440), found(0), pruned(0), continued(6589440) cache(0:6589440)
+stats:8 tested(244916), found(0), pruned(244915), continued(1) cache(0:1)
+stats:9 tested(1), found(1), pruned(0), continued(0) cache(0:0)
+search:weight_conv shape([16]) true mode(All) [849.087108319]
+[[1, 2, 3, 4, 5, 6, 7, 8], [9, 10, 11], [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29], [30, 31, 32, 33, 34, 35]]
+load:matrices/6-identity-6,3 [0.000036409]
+load:matrices/6-identity-6,3_6,3-sRc-6,3 [0.000049455]
+load:matrices/6-identity-6,3_6,3-sRc-6,3_6,3-sFc-6,3 [0.00002286]
+load:matrices/6-identity-6,3_6,3-sRc-6,3_6,3-sFc-6,3_6,3-regSelNC-6,2 [0.00001766]
+load:matrices/6-identity-6,3_6,3-sRr-6,3 [0.000021857]
+load:matrices/6-identity-6,3_6,3-sRr-6,3_6,3-sFr-6,3 [0.000021944]
+soln:merge_fold[id;load_trunc;select(0 >= 1);id;rot(-5,3,0),id;broadcast;id;id];id
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:3 tested(5), found(0), pruned(0), continued(5) cache(0:5)
+stats:4 tested(135), found(0), pruned(0), continued(135) cache(0:135)
+stats:5 tested(1080), found(0), pruned(945), continued(135) cache(0:135)
+stats:6 tested(4725), found(0), pruned(810), continued(3915) cache(0:3915)
+stats:7 tested(140940), found(0), pruned(0), continued(140940) cache(0:140940)
+stats:8 tested(5900), found(0), pruned(5899), continued(1) cache(0:1)
+stats:9 tested(1), found(1), pruned(0), continued(0) cache(0:0)
+search:weight_conv shape([6]) true mode(All) [0.641028185]
