@@ -19,6 +19,7 @@ mod state;
 mod transition_matrix;
 mod matrix_load;
 mod operators;
+mod expected_syms_util;
 mod problem_desc;
 mod synthesis;
 
@@ -92,6 +93,10 @@ pub mod errors {
                 description("symbols not in spec")
                 display("symbols not in spec")
             }
+            NoSplitFolds {
+                description("folds on splits is forbidden")
+                display("fold on splits is forbidden")
+            }
             MatrixLoad(p: std::path::PathBuf) {
                 description("couldn't read matrix file")
                 display("couldn't read matrix file: {}", p.display())
@@ -144,12 +149,13 @@ fn run() -> Result<()> {
     for desc in specs {
         let spec = desc.get_spec().chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
         let domain = desc.make_domain(spec.view());
-        let (initial, target, mut levels) =
+        let (initial, target, mut levels, expected_syms) =
             desc.to_problem(&domain, spec)
             .chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
         let max_lanes = initial.len();
+        println!("{:?}", expected_syms);
         matrix_load::add_matrices(matrix_dir, &mut levels, max_lanes)?;
-        synthesize(initial, &target, &levels, synthesis_mode);
+        synthesize(initial, &target, &levels, &expected_syms, synthesis_mode);
         matrix_load::remove_matrices(&mut levels);
     }
     Ok(())
@@ -174,7 +180,7 @@ mod tests {
     use crate::state::{ProgState, Domain, Value};
 
     fn fixed_solution_from_scalar_8x3<'d>(d: &'d Domain) -> ProgState<'d> {
-        let initial = ProgState::linear(d, &[24]);
+        let initial = ProgState::linear(d, 0, &[24]);
         let s0 = initial.gather_by(&load_rep(&[24], &[8, 3]).unwrap()
                                    .gathers().unwrap()[0]);
         let s1 = s0.gather_by(&fan(8, 3, OpAxis::Rows, 0, 2));
@@ -189,7 +195,7 @@ mod tests {
         let symbols: ndarray::Array1<Value> = (0u16..24u16).map(Value::Symbol).collect();
         let symbols = symbols.into_dyn();
         let domain = Domain::new(symbols.view());
-        let spec = ProgState::new_from_spec(&domain, trove(8, 3), 1, "trove").unwrap();
+        let spec = ProgState::new_from_spec(&domain, trove(8, 3), "trove").unwrap();
         let solution = fixed_solution_from_scalar_8x3(&domain);
         println!("spec {}\n solution {}", spec, solution);
         assert_eq!(spec, solution);

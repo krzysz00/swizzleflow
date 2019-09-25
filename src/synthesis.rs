@@ -12,7 +12,7 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use crate::state::ProgState;
+use crate::state::{DomRef,ProgState};
 use crate::transition_matrix::{TransitionMatrix,TransitionMatrixOps};
 use crate::operators::SynthesisLevel;
 use crate::operators::OpSetKind;
@@ -110,13 +110,11 @@ type States<'d, 'l> = SmallVec<[Option<&'l ProgState<'d>>; 4]>;
 
 // Invariant: any level with pruning enabled has a corresponding pruning matrix available
 fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
+              expected_syms: &[DomRef],
               cache: &ResultMap<'d>, tracker: &SearchLevelStats) -> bool {
-    let level_min = target.domain.level_bounds[current.level];
-    let level_max = target.domain.level_bounds[current.level + 1];
-
     let mut did_lookup = false;
-    for a in level_min..level_max {
-        for b in level_min..level_max {
+    for a in expected_syms.iter().copied() {
+        for b in expected_syms.iter().copied() {
             for (t1, t2) in iproduct!(target.inv_state[a].iter(), target.inv_state[b].iter()) {
                 let result = iproduct!(current.inv_state[a].iter(), current.inv_state[b].iter())
                     .any(|(c1, c2)| {
@@ -124,9 +122,6 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
                         v
                     });
                 if !result {
-                    println!("{}, {} {:?} {:?}", a, b, t1, t2);
-                    println!("target: {}", target);
-                    println!("current: {}", current);
                     if did_lookup {
                         cache.write().unwrap().insert(current.clone(), false);
                         tracker.cache_set();
@@ -164,7 +159,8 @@ fn copy_replacing<'d, 'm, 'l: 'm>(s: &States<'d, 'l>, idx: usize,
 }
 
 fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
-                      levels: &'f [SynthesisLevel], current_level: usize,
+                      levels: &'f [SynthesisLevel], expected_syms: &'f [Vec<DomRef>],
+                      current_level: usize,
                       stats: &'f [SearchLevelStats], mode: Mode,
                       caches: &'f [SearchResultCache<'d>]) -> bool {
     let tracker = &stats[current_level];
@@ -184,10 +180,10 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
     let lane = level.lane;
     let current: &ProgState<'d> = curr_states[lane].unwrap();
     let cache = caches[current_level].clone();
-
     if level.prune {
         if !viable(current, target,
                    level.matrix.as_ref().unwrap(),
+                   &expected_syms[level.expected_syms],
                    cache.as_ref(), &tracker) {
             //println!("{}", current);
             tracker.pruned();
@@ -207,8 +203,8 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                                     if res.is_some() {
                                         let new_states = copy_replacing(&curr_states,
                                                                         lane, res.as_ref());
-                                        search(new_states, target, levels, current_level + 1,
-                                               stats, mode, caches)
+                                        search(new_states, target, levels, expected_syms,
+                                               current_level + 1, stats, mode, caches)
                                     } else { false }})
                                 .fold(false, |acc, new| new || acc)
                         }
@@ -219,8 +215,8 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                                     if res.is_some()  {
                                         let new_states = copy_replacing(&curr_states,
                                                                         lane, res.as_ref());
-                                        search(new_states, target, levels, current_level + 1,
-                                               stats, mode, caches)
+                                        search(new_states, target, levels, expected_syms,
+                                               current_level + 1, stats, mode, caches)
                                     } else { false }})
                         }
                     }
@@ -234,8 +230,8 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                                     let res = Some(current.gather_by(o));
                                     let new_states = copy_replacing(&curr_states,
                                                                     lane, res.as_ref());
-                                    search(new_states, target,
-                                           levels, current_level + 1, stats, mode, caches)
+                                    search(new_states, target, levels, expected_syms,
+                                           current_level + 1, stats, mode, caches)
                                 })
                                 .fold(false, |acc, new| new || acc)
                         }
@@ -245,8 +241,8 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                                     let res = Some(current.gather_by(o));
                                     let new_states = copy_replacing(&curr_states,
                                                                     lane, res.as_ref());
-                                    search(new_states, target,
-                                           levels, current_level + 1, stats, mode, caches)
+                                    search(new_states, target, levels, expected_syms,
+                                           current_level + 1, stats, mode, caches)
                                 })
                         }
                     }
@@ -271,8 +267,8 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                             new_states[i] = None
                         }
                     }
-                    search(new_states, target,
-                           levels, current_level + 1, stats, mode, caches)
+                    search(new_states, target, levels, expected_syms,
+                           current_level + 1, stats, mode, caches)
                 } else { false }
             }
             OpSetKind::Split(into, copies) => {
@@ -281,8 +277,8 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                 for i in copies.iter().copied() {
                     new_states[i] = to_copy;
                 }
-                search(new_states, target,
-                       levels, current_level + 1, stats, mode, caches)
+                search(new_states, target, levels, expected_syms,
+                       current_level + 1, stats, mode, caches)
             }
         };
     { cache.write().unwrap().insert(current.clone(), ret); }
@@ -292,6 +288,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
 
 pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
                   levels: &[SynthesisLevel],
+                  expected_syms: &[Vec<DomRef>],
                   mode: Mode) -> bool {
 
     let n_levels = levels.len();
@@ -301,7 +298,7 @@ pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
 
     let states: States = SmallVec::from_iter(start.iter().map(|e| e.as_ref()));
     let start_time = Instant::now();
-    let ret = search(states, target, levels, 0, &stats, mode, &caches);
+    let ret = search(states, target, levels, expected_syms, 0, &stats, mode, &caches);
     let dur = time_since(start_time);
 
     for (idx, stats) in (&stats).iter().enumerate() {

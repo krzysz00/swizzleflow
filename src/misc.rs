@@ -33,3 +33,17 @@ pub fn create_file<P: AsRef<Path>>(path: P) -> Result<File> {
     File::create(path.as_ref()).map_err(Error::from)
         .chain_err(|| ErrorKind::FileOpFailure(path.as_ref().to_owned()))
 }
+
+pub fn extending_set<T: Default>(vec: &mut Vec<T>, idx: usize, item: T) {
+    for _ in vec.len()..=idx {
+        vec.push(T::default());
+    }
+    vec[idx] = item
+}
+
+pub fn extending_set_def<T: Clone>(vec: &mut Vec<T>, idx: usize, item: T, default: T) {
+    for _ in vec.len()..=idx {
+        vec.push(default.clone());
+    }
+    vec[idx] = item
+}

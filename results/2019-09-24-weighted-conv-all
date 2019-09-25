@@ -1,0 +1,19 @@
+[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18], [19, 20, 21], [22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69], [70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85]]
+load:matrices/16-identity-16,3 [0.000349915]
+load:matrices/16-identity-16,3_16,3-sRr-16,3 [0.000266364]
+load:matrices/16-identity-16,3_16,3-sRc-16,3 [0.000262456]
+load:matrices/16-identity-16,3_16,3-sRr-16,3_16,3-sFr-16,3 [0.000282791]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3 [0.000246741]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3_16,3-regSelNC-16,2 [0.000104491]
+soln:merge_fold[id;load_trunc;select(0 >= 1);id;rot(-15,3,0),id;broadcast;id;id];id
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:3 tested(8), found(0), pruned(7), continued(1) cache(0:1)
+stats:4 tested(255), found(0), pruned(0), continued(255) cache(0:255)
+stats:5 tested(1275), found(0), pruned(560), continued(715) cache(0:715)
+stats:6 tested(183040), found(0), pruned(0), continued(183040) cache(0:183040)
+stats:7 tested(6589440), found(0), pruned(0), continued(6589440) cache(0:6589440)
+stats:8 tested(244916), found(0), pruned(244915), continued(1) cache(0:1)
+stats:9 tested(1), found(1), pruned(0), continued(0) cache(0:0)
+search:weight_conv shape([16]) true mode(All) [738.346585218]

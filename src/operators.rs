@@ -103,11 +103,12 @@ pub struct SynthesisLevel {
     pub ops: OpSet,
     pub matrix: Option<TransitionMatrix>,
     pub lane: usize,
+    pub expected_syms: usize,
     pub prune: bool,
 }
 
 impl SynthesisLevel {
-    pub fn new(ops: OpSet, lane: usize, prune: bool) -> Self {
-        Self {ops , matrix: None, lane, prune }
+    pub fn new(ops: OpSet, lane: usize, expected_syms: usize, prune: bool) -> Self {
+        Self {ops , matrix: None, lane, expected_syms, prune }
     }
 }

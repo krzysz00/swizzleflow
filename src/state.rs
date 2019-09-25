@@ -97,10 +97,10 @@ pub type DomRef = usize;
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Domain {
     elements: Vec<Value>,
-    pub level_bounds: Vec<usize>,
-    pub levels: usize,
     element_map: HashMap<Value, DomRef>,
     subterms_of: Vec<Vec<DomRef>>,
+    imm_superterms: Vec<Vec<DomRef>>,
+    imm_subterms: Vec<BTreeSet<DomRef>>,
     fold_ref_map: HashMap<Vec<DomRef>, DomRef>,
 }
 
@@ -113,16 +113,13 @@ impl Domain {
             e.collect_subterms(&mut store);
         }
 
-        let mut level_bounds = vec![0; 1];
         let mut elements: Vec<Value> = Vec::new();
         for level in store.into_iter() {
             // Returned in sorted order
             for e in level.into_iter() {
                 elements.push(e)
             }
-            level_bounds.push(elements.len())
         }
-        let levels = level_bounds.len() - 1;
 
         let element_map: HashMap<Value, DomRef> =
             elements.iter().cloned().enumerate().map(|(i, e)| (e, i)).collect();
@@ -131,24 +128,29 @@ impl Domain {
             let mut v = BTreeSet::<DomRef>::new();
             v.insert(i);
             v }).collect();
+        let mut imm_subterms: Vec<BTreeSet<DomRef>> =
+            (0..elements.len()).map(|_| BTreeSet::new()).collect();
+        let mut immediate_superterms: Vec<BTreeSet<DomRef>> =
+            (0..elements.len()).map(|_| BTreeSet::new()).collect();
         // Must exist due to base symbols
-        let complex_min = level_bounds[2];
-        for (i, e) in (&elements[complex_min..]).into_iter().enumerate() {
-            let i = i + complex_min;
+        for (i, e) in elements.iter().enumerate() {
             match e {
                 Value::Garbage | Value::Symbol(_) =>
-                    panic!("Unexpected base symbol at depth > 1: {}", e),
+                    (),
                 Value::Fold(v) => {
                     for subterm in v {
                         // At this point, any term with lower depth has complete subterms
                         let idx = *element_map.get(subterm).unwrap();
                         subterm_sets[i] = &subterm_sets[i] | &subterm_sets[idx];
+                        imm_subterms[i].insert(idx);
+                        immediate_superterms[idx].insert(i);
                     }
                 }
             }
         }
 
         let subterms_of = subterm_sets.into_iter().map(|v| v.into_iter().collect()).collect();
+        let imm_superterms = immediate_superterms.into_iter().map(|v| v.into_iter().collect()).collect();
 
         let fold_ref_map =
             elements.iter().enumerate()
@@ -158,7 +160,8 @@ impl Domain {
                           .collect::<Vec<_>>(), i))
                 } else { None }
             }).collect::<HashMap<Vec<DomRef>, DomRef>>();
-        Domain { level_bounds, levels, elements, element_map, subterms_of, fold_ref_map }
+        Domain { elements, element_map, subterms_of, fold_ref_map,
+                 imm_subterms, imm_superterms }
     }
 
     pub fn find_value(&self, value: &Value) -> Option<DomRef> {
@@ -177,13 +180,17 @@ impl Domain {
         self.elements.len()
     }
 
-    pub fn num_symbols(&self) -> usize {
-        self.level_bounds[2] - self.level_bounds[1]
-    }
-
     // The set of indices must be sorted
     pub fn find_fold(&self, elems: &[DomRef]) -> Option<DomRef> {
         self.fold_ref_map.get(elems).copied()
+    }
+
+    pub fn subterms_all_within(&self, elem: DomRef, expected: &BTreeSet<DomRef>) -> bool {
+        self.imm_subterms[elem].is_subset(expected)
+    }
+
+    pub fn imm_superterms(&self, elem: DomRef) -> &[DomRef] {
+        &self.imm_superterms[elem]
     }
 }
 
@@ -199,7 +206,6 @@ pub struct ProgState<'d> {
     pub(crate) state: ArrayD<DomRef>,
     // Note: IxDyn is basically SmallVec, though that's not obvious anywhere
     pub(crate) inv_state: Vec<Vec<IxDyn>>,
-    pub level: usize,
     pub name: String
 }
 
@@ -208,7 +214,6 @@ impl Clone for ProgState<'_> {
         ProgState { domain: self.domain,
                     state: self.state.clone(),
                     inv_state: self.inv_state.clone(),
-                    level: self.level,
                     name: self.name.clone() }
     }
 }
@@ -227,7 +232,7 @@ impl Hash for ProgState<'_> {
 }
 
 impl<'d> ProgState<'d> {
-    fn making_inverse(domain: &'d Domain, state: ArrayD<DomRef>, level: usize,
+    fn making_inverse(domain: &'d Domain, state: ArrayD<DomRef>,
                       name: String) -> Self {
         let mut inverse: Vec<Vec<IxDyn>> = (0..domain.size()).map(|_| Vec::with_capacity(1)).collect();
         for (idx, elem) in state.indexed_iter() {
@@ -235,28 +240,29 @@ impl<'d> ProgState<'d> {
                 inverse[*s].push(idx.clone())
             }
         }
-        Self { domain, state, level, name, inv_state: inverse }
+        Self { domain, state, name, inv_state: inverse }
     }
 
     pub fn new(domain: &'d Domain, state: ArrayD<DomRef>,
-               level: usize, name: impl Into<String>) -> Self {
-        Self::making_inverse(domain, state, level, name.into())
+               name: impl Into<String>) -> Self {
+        Self::making_inverse(domain, state, name.into())
     }
 
-    pub fn new_from_spec(domain: &'d Domain, state: ArrayD<Value>, level: usize,
+    pub fn new_from_spec(domain: &'d Domain, state: ArrayD<Value>,
                          name: impl Into<String>) -> Option<Self> {
         let ref_vec: Option<Vec<DomRef>> = state.as_slice().unwrap()
             .iter().map(|v| domain.find_value(v))
             .collect();
         let ref_vec = ref_vec?;
         let ref_mat = ArrayD::from_shape_vec(state.shape(), ref_vec).unwrap();
-        Some(Self::new(domain, ref_mat, level, name))
+        Some(Self::new(domain, ref_mat, name))
     }
 
-    pub fn linear(domain: &'d Domain, shape: &[Ix]) -> Self {
-        let array = (domain.level_bounds[1]..domain.level_bounds[2]).collect();
+    pub fn linear(domain: &'d Domain, start: Ix, shape: &[Ix]) -> Self {
+        let shape_len: usize = shape.iter().copied().product();
+        let array = (start..start+shape_len).collect();
         Self::making_inverse(domain, Array::from_shape_vec(shape, array).unwrap(),
-                             1, "id".to_owned())
+                             "id".to_owned())
     }
 
     pub fn gather_by(&self, gather: &Gather) -> Self {
@@ -269,7 +275,7 @@ impl<'d> ProgState<'d> {
         let mut name = self.name.to_owned();
         name.push_str(";");
         name.push_str(&gather.name);
-        Self::making_inverse(self.domain, array, self.level, name)
+        Self::making_inverse(self.domain, array, name)
     }
 
     pub fn gather_fold_by(&self, gather: &Gather) -> Option<Self> {
@@ -305,7 +311,7 @@ impl<'d> ProgState<'d> {
         let mut name = self.name.to_owned();
         name.push_str(";");
         name.push_str(&gather.name);
-        Some(Self::making_inverse(self.domain, array, self.level + 1, name))
+        Some(Self::making_inverse(self.domain, array, name))
     }
 
     pub fn merge(states: &[&ProgState<'d>]) -> Self {
@@ -314,10 +320,9 @@ impl<'d> ProgState<'d> {
             states.into_iter().map(|s| s.state.view().insert_axis(axis_number))
             .collect();
         let array = ndarray::stack(axis_number, &views).unwrap();
-        let level = states.iter().map(|s| s.level).max().unwrap();
         let name = format!("merge[{}]",
                                states.iter().map(|s| s.name.clone()).join(","));
-        Self::making_inverse(states[0].domain, array, level, name)
+        Self::making_inverse(states[0].domain, array, name)
     }
 
     pub fn merge_folding(states: &[&ProgState<'d>]) -> Option<Self> {
@@ -338,10 +343,9 @@ impl<'d> ProgState<'d> {
         let result = result?;
         let array = ArrayD::from_shape_vec(states[0].state.shape(),
                                            result).unwrap();
-        let level = states.iter().map(|s| s.level).max().unwrap() + 1;
         let name = format!("merge_fold[{}]",
                            states.iter().map(|s| s.name.clone()).join(","));
-        Some(Self::making_inverse(domain, array, level, name))
+        Some(Self::making_inverse(domain, array, name))
     }
 }
 

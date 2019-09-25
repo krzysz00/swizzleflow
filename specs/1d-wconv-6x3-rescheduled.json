@@ -1,16 +1,16 @@
 {
   "target": {"Builtin": "weight_conv"},
-  "target_info": [16, 3],
+  "target_info": [6, 3],
   "steps": [
     {
       "step": {"Initial": {"From": 0}},
-      "out_shape": [18],
+      "out_shape": [8],
       "lane": 0,
       "prune": false,
       "then_fold": false
     },
     {
-      "step": {"Initial": {"From": 18}},
+      "step": {"Initial": {"From": 8}},
       "out_shape": [3],
       "lane": 1,
       "prune": false,
@@ -19,63 +19,63 @@
     {
       "step": { "Gather": { "Builtin": "load_trunc"}},
       "lane": 0,
-      "out_shape": [16, 2],
+      "out_shape": [6, 2],
       "prune": false,
       "then_fold": false
     },
     {
       "step": { "Gather": { "Builtin": "broadcast"}},
       "lane": 1,
-      "out_shape": [16, 3],
+      "out_shape": [6, 3],
       "prune": false,
-      "then_fold": false
-    },
-    {
-      "step": { "Gather": { "Builtin": "regSelNC"}},
-      "lane": 0,
-      "out_shape": [16, 3],
-      "prune": true,
-      "then_fold": false
-    },
-    {
-      "step": { "Gather": { "Builtin": "sFc"}},
-      "lane": 0,
-      "out_shape": [16, 3],
-      "prune": true,
       "then_fold": false
     },
     {
       "step": { "Gather": { "Builtin": "sFr"}},
       "lane": 1,
-      "out_shape": [16, 3],
-      "prune": true,
-      "then_fold": false
-    },
-    {
-      "step": { "Gather": { "Builtin": "sRc"}},
-      "lane": 0,
-      "out_shape": [16, 3],
+      "out_shape": [6, 3],
       "prune": true,
       "then_fold": false
     },
     {
       "step": { "Gather": { "Builtin": "sRr"}},
       "lane": 1,
-      "out_shape": [16, 3],
+      "out_shape": [6, 3],
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "regSelNC"}},
+      "lane": 0,
+      "out_shape": [6, 3],
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "sFc"}},
+      "lane": 0,
+      "out_shape": [6, 3],
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "sRc"}},
+      "lane": 0,
+      "out_shape": [6, 3],
       "prune": true,
       "then_fold": false
     },
     {
       "step": { "Merge": [0, 1] },
       "lane": 0,
-      "out_shape": [16, 3],
+      "out_shape": [6, 3],
       "prune": false,
       "then_fold": true
     },
     {
       "step": { "Gather": { "Builtin": "identity"}},
       "lane": 0,
-      "out_shape": [16, 3],
+      "out_shape": [6, 3],
       "prune": true,
       "then_fold": true
     }

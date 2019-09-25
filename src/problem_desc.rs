@@ -12,13 +12,17 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+use crate::errors::*;
+
 use crate::operators::{SynthesisLevel,OpSet,OpSetKind,identity};
-use crate::state::{ProgState,Domain,Value,Symbolic};
+use crate::state::{ProgState,Domain,Value,Symbolic,DomRef};
 use crate::operators::swizzle::{simple_fans, simple_rotations, OpAxis};
 use crate::operators::reg_select::{reg_select_no_const};
 use crate::operators::load::{load_rep, load_trunc, broadcast};
-use crate::errors::*;
-use crate::misc::ShapeVec;
+use crate::expected_syms_util::fold_expected;
+use crate::misc::{ShapeVec, extending_set, extending_set_def};
+
+use std::collections::BTreeSet;
 
 use serde::{Serialize, Deserialize};
 
@@ -141,7 +145,7 @@ impl InitialDesc {
                     InitialDesc::Data(_) => "custom_start".to_owned(),
                 }
             };
-        ProgState::new_from_spec(domain, array, 1, name)
+        ProgState::new_from_spec(domain, array, name)
             .ok_or_else(|| ErrorKind::SymbolsNotInSpec.into())
     }
 }
@@ -202,7 +206,8 @@ impl SynthesisLevelDesc {
         }
     }
 
-    pub fn to_synthesis_level(&self, in_shapes: &[Option<Vec<usize>>]) -> Result<SynthesisLevel> {
+    pub fn to_synthesis_level(&self, in_shapes: &[Option<Vec<usize>>],
+                              expected_syms: usize) -> Result<SynthesisLevel> {
         let lane = self.lane as usize;
         let mut out_shape: ShapeVec = self.out_shape.iter().copied().map(|x| x as usize).collect();
         let in_shape: ShapeVec = if self.step.is_initial() {
@@ -245,7 +250,7 @@ impl SynthesisLevelDesc {
                 }
             }
             OpSetKind::Split(_, _) => if self.then_fold {
-                println!("WARNING: fold on splits is useless and ignored");
+                return Err(ErrorKind::NoSplitFolds.into());
             }
         }
         let name: std::borrow::Cow<'static, str> =
@@ -267,7 +272,7 @@ impl SynthesisLevelDesc {
                     }
             };
         let level = OpSet::new(name, opset, in_shape.clone(), out_shape, self.then_fold);
-        Ok(SynthesisLevel::new(level, lane, self.prune))
+        Ok(SynthesisLevel::new(level, lane, expected_syms, self.prune))
     }
 }
 
@@ -333,15 +338,12 @@ fn custom_target(data: &[Symbolic], shape: &[usize], n_folds: usize) -> Result<A
     Ok(array)
 }
 
+
 fn update_shape_info(level: &SynthesisLevel, shapes: &mut Vec<Option<Vec<usize>>>,
                      were_merged: &mut Vec<bool>) {
     let lane = level.lane;
-    for _ in shapes.len()..=lane {
-        shapes.push(None);
-        were_merged.push(false);
-    }
 
-    were_merged[lane] = false;
+    extending_set_def(were_merged, lane, false, false);
     if let Some(target) = level.ops.ops.merge_target() {
         if !level.ops.fused_fold {
             were_merged[target] = true;
@@ -350,24 +352,63 @@ fn update_shape_info(level: &SynthesisLevel, shapes: &mut Vec<Option<Vec<usize>>
 
     match &level.ops.ops {
         OpSetKind::Gathers(_) => {
-            shapes[lane] = Some(level.ops.out_shape.to_vec());
+            extending_set(shapes, lane, Some(level.ops.out_shape.to_vec()));
         },
         OpSetKind::Merge(from, to) => {
             for idx in from {
                 shapes[*idx] = None;
             }
-            shapes[*to] = Some(level.ops.out_shape.to_vec());
+            extending_set(shapes, *to, Some(level.ops.out_shape.to_vec()));
         }
         OpSetKind::Split(from, to) => {
             shapes[*from] = None;
             were_merged[*from] = false;
             for idx in to {
-                shapes[*idx] = Some(level.ops.out_shape.to_vec());
-                were_merged[*idx] = false;
+                extending_set(shapes, *idx, Some(level.ops.out_shape.to_vec()));
+                extending_set_def(were_merged, *idx, false, false);
             }
         }
     }
 }
+
+fn update_expected_syms(level: &SynthesisLevel, domain: &Domain,
+                        expected_syms_idxs: &mut Vec<Option<usize>>,
+                        expected_syms_sets: &mut Vec<BTreeSet<DomRef>>) {
+    use OpSetKind::*;
+    let lane = level.lane;
+    match level.ops.ops {
+        Gathers(_) => {
+            if level.ops.fused_fold {
+                let new_set = fold_expected(domain,
+                                            &expected_syms_sets[
+                                                expected_syms_idxs[lane].unwrap()]);
+                expected_syms_idxs[lane] = Some(expected_syms_sets.len());
+                expected_syms_sets.push(new_set);
+            }
+        }
+        Merge(ref from, to) => {
+            let mut merge_set = BTreeSet::<DomRef>::new();
+            for idx in from.iter().copied() {
+                match expected_syms_idxs[idx].take() {
+                    Some(v) => merge_set.extend(expected_syms_sets[v].iter()),
+                    None => ()
+                }
+            }
+            if level.ops.fused_fold {
+                merge_set = fold_expected(domain, &merge_set);
+            }
+            expected_syms_idxs[to] = Some(expected_syms_sets.len());
+            expected_syms_sets.push(merge_set);
+        }
+        Split(from, ref to) => {
+            let idx = expected_syms_idxs[from].take();
+            for i in to.iter().copied() {
+                extending_set(expected_syms_idxs, i, idx);
+            }
+        }
+    }
+}
+
 impl ProblemDesc {
     pub fn get_spec(&self) -> Result<ArrayD<Value>> {
         let target_info = self.target_info.iter().copied().map(|x| x as usize)
@@ -416,38 +457,40 @@ impl ProblemDesc {
 
     pub fn to_problem<'d>(&self,
                           domain: &'d Domain,
-                          spec: ArrayD<Value>) -> Result<(Vec<Option<ProgState<'d>>>,
-                                                          ProgState<'d>,
-                                                          Vec<SynthesisLevel>)> {
-
+                          spec: ArrayD<Value>)
+                          -> Result<(Vec<Option<ProgState<'d>>>,
+                                     ProgState<'d>,
+                                     Vec<SynthesisLevel>,
+                                     Vec<Vec<DomRef>>)>
+    {
         let mut ret = Vec::<SynthesisLevel>::with_capacity(self.steps.len());
         let mut initials = Vec::<Option<ProgState<'d>>>::new();
         let mut shapes: Vec<Option<Vec<usize>>> = Vec::new();
         let mut were_merged = Vec::<bool>::new();
+        let mut expected_syms_idxs = Vec::<Option<usize>>::new();
+        let mut expected_syms_sets = Vec::<BTreeSet<DomRef>>::new();
 
         for step in &self.steps {
             let lane = step.lane as usize;
             if step.is_initial() {
-                for _ in shapes.len()..=lane {
-                    shapes.push(None);
-                    were_merged.push(false);
-                }
-                initials.extend((initials.len()..=lane).map(|_| None));
-
                 let shape: Vec<usize> = step.out_shape.iter().copied()
                     .map(|x| x as usize).collect();
                 let state = step.initial_desc().unwrap()
                      .to_progstate(domain, &shape, &step.name)
                     .chain_err(|| ErrorKind::LevelBuild(Box::new(step.clone())))?;
+                let symbols = crate::expected_syms_util::expcted_of_inital_state(&state);
 
-                shapes[lane] = Some(shape);
-                initials[lane] = Some(state);
-                were_merged[lane] = false;
+                extending_set(&mut shapes, lane, Some(shape));
+                extending_set(&mut initials, lane, Some(state));
+                extending_set_def(&mut were_merged, lane, false, false);
+                extending_set(&mut expected_syms_idxs, lane, Some(expected_syms_sets.len()));
+                expected_syms_sets.push(symbols);
             }
             else {
-                let level = step.to_synthesis_level(&shapes)
+                let level = step.to_synthesis_level(&shapes,
+                                                    expected_syms_idxs[step.lane as usize].unwrap())
                     .chain_err(|| ErrorKind::LevelBuild(Box::new(step.clone())))?;
-                if level.ops.fused_fold {
+                if !level.ops.fused_fold {
                     if let OpSetKind::Merge(ref from, _to) = level.ops.ops {
                         for idx in from.iter().copied() {
                             if were_merged[idx] {
@@ -457,6 +500,8 @@ impl ProblemDesc {
                     }
                 }
                 update_shape_info(&level, &mut shapes, &mut were_merged);
+                update_expected_syms(&level, domain, &mut expected_syms_idxs,
+                                     &mut expected_syms_sets);
                 ret.push(level);
             }
         }
@@ -466,9 +511,11 @@ impl ProblemDesc {
                 TargetDesc::Builtin(s) => s.clone().into(),
                 TargetDesc::Custom { data: _d, n_folds: _n } => "custom_target".into(),
             };
-        let spec = ProgState::new_from_spec(domain, spec, domain.levels - 1,
+        let spec = ProgState::new_from_spec(domain, spec,
                                             target_name).unwrap();
-        Ok((initials, spec, ret))
+        let expected_syms = expected_syms_sets.into_iter()
+            .map(|s| s.into_iter().collect()).collect();
+        Ok((initials, spec, ret, expected_syms))
     }
 }
 
@@ -519,15 +566,17 @@ mod tests {
         };
         let spec = desc.get_spec().unwrap();
         let domain = desc.make_domain(spec.view());
-        let trove_state = ProgState::new_from_spec(&domain, trove(3, 4), 1, "trove").unwrap();
-        let (start, end, levels)
+        let trove_state = ProgState::new_from_spec(&domain, trove(3, 4), "trove").unwrap();
+        let (start, end, levels, expected_syms)
             = desc.to_problem(&domain, spec).unwrap();
         assert_eq!(start, vec![Some(
-            crate::state::ProgState::linear(&domain, &[3, 4]))]);
+            crate::state::ProgState::linear(&domain, 0, &[3, 4]))]);
         assert_eq!(end, trove_state);
         assert_eq!(levels.len(), 1);
         assert_eq!(levels[0].prune, false);
         assert!(levels[0].matrix.is_none());
+        assert_eq!(expected_syms.len(), 1);
+        assert_eq!(expected_syms[0].len(), 12);
         let ops = &levels[0].ops;
         let trove_shape: ShapeVec = smallvec![3, 4];
         assert_eq!(ops.in_shape, trove_shape);
