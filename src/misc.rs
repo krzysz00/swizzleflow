@@ -47,3 +47,8 @@ pub fn extending_set_def<T: Clone>(vec: &mut Vec<T>, idx: usize, item: T, defaul
     }
     vec[idx] = item
 }
+
+use ndarray::Ix;
+pub fn in_bounds(index: &[Ix], bounds: &[Ix]) -> bool {
+    index.iter().zip(bounds.iter()).all(move |(i, v)| i < v)
+}

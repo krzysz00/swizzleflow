@@ -41,9 +41,9 @@ impl From<(usize, usize)> for MergeSpot {
 
 pub trait TransitionMatrixOps: Sized + std::fmt::Debug {
     fn get(&self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix]) -> bool;
-    fn get_pos(&self, pos: Ix) -> bool;
+    fn get_cur_pos(&self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix]) -> bool;
     fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool);
-    fn set_pos(&mut self, pos: Ix, value: bool);
+    fn set_cur_pos(&mut self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix], value: bool);
     fn write<T: Write>(&self, io: &mut T) -> Result<()>;
     fn read<T: Read>(io: &mut T) -> Result<Self>;
     fn empty(len: usize, out_shape: &[Ix], in_shape: &[Ix]) -> Self;
@@ -88,11 +88,13 @@ pub struct DenseTransitionMatrix {
     data: BitVec,
     target_shape: ShapeVec,
     current_shape: ShapeVec,
+    current_len: usize,
 }
 
 impl DenseTransitionMatrix {
     fn new(data: BitVec, target_shape: ShapeVec, current_shape: ShapeVec) -> Self {
-        Self {data, target_shape, current_shape}
+        let current_len: usize = current_shape.iter().product();
+        Self {data, target_shape, current_shape, current_len}
     }
 }
 
@@ -102,8 +104,9 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
                            current1, current2, &self.current_shape)]
     }
 
-    fn get_pos(&self, pos: Ix) -> bool {
-        self.data[pos]
+    fn get_cur_pos(&self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix]) -> bool {
+        self.data[to_index(target1, target2, &self.target_shape,
+                           &[current1], &[current2], &[self.current_len])]
     }
 
     fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool) {
@@ -112,8 +115,10 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
         self.data.set(index, value);
     }
 
-    fn set_pos(&mut self, pos: Ix, value: bool) {
-        self.data.set(pos, value);
+    fn set_cur_pos(&mut self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix], value: bool) {
+        let index = to_index(target1, target2, &self.target_shape,
+                             &[current1], &[current2], &[self.current_len]);
+        self.data.set(index, value);
     }
 
     fn write<T: Write>(&self, io: &mut T) -> Result<()> {
@@ -167,10 +172,6 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
     }
 }
 
-fn in_bounds(index: ndarray::ArrayView1<Ix>, bounds: &[Ix]) -> bool {
-    index.into_iter().zip(bounds.iter()).all(move |(i, v)| i < v)
-}
-
 pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet, merge: Option<MergeSpot>) -> T {
     let mut out_shape = ops.out_shape.to_owned();
     // Folds are already handled
@@ -180,7 +181,7 @@ pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet, merge: Option<MergeSpot>) 
 
     let out_slots: usize = out_shape.iter().product();
     let in_slots: usize = ops.in_shape.iter().product();
-    let bounds = &ops.in_shape;
+    let in_bound = in_slots as isize;
     let len = (out_slots.pow(2)) * (in_slots.pow(2));
     let fold = ops.fused_fold;
     let merge_lane = merge.map(|ms| ms.lane);
@@ -189,12 +190,11 @@ pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet, merge: Option<MergeSpot>) 
     let mut ret = T::empty(len, &out_shape, &ops.in_shape);
     let gathers = ops.ops.gathers().unwrap();
     for op in gathers {
-        let axis_num = op.data.ndim() - 1;
-        let output_shape = &op.data.shape()[0..axis_num];
-        for (input1, output1) in op.data.genrows().into_iter()
-            .zip(ndarray::indices(output_shape)).filter(|&(i, _)| in_bounds(i, bounds)) {
-                for (input2, output2) in op.data.genrows().into_iter()
-                    .zip(ndarray::indices(output_shape)).filter(|&(i, _)| in_bounds(i, bounds)) {
+        let output_shape = op.data.shape();
+        for (input1, output1) in op.data.into_iter().copied()
+            .zip(ndarray::indices(output_shape)).filter(|&(i, _)| i >= 0 && i < in_bound) {
+                for (input2, output2) in op.data.into_iter().copied()
+                    .zip(ndarray::indices(output_shape)).filter(|&(i, _)| i >= 0 && i < in_bound) {
                         let mut out1: SmallVec<[usize; 6]> =
                             SmallVec::from_slice(output1.slice());
                         let mut out2: SmallVec<[usize; 6]> =
@@ -207,9 +207,9 @@ pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet, merge: Option<MergeSpot>) 
                             out1.push(l);
                             out2.push(l);
                         }
-                        ret.set(input1.as_slice().unwrap(), input2.as_slice().unwrap(),
-                                &out1, &out2,
-                                true);
+                        ret.set_cur_pos(input1 as usize, input2 as usize,
+                                        &out1, &out2,
+                                        true);
                     }
             }
     }
@@ -231,9 +231,9 @@ impl TransitionMatrixOps for TransitionMatrix {
         }
     }
 
-    fn get_pos(&self, pos: Ix) -> bool {
+    fn get_cur_pos(&self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix]) -> bool {
         match self {
-            TransitionMatrix::Dense(d) => d.get_pos(pos)
+            TransitionMatrix::Dense(d) => d.get_cur_pos(current1, current2, target1, target2)
         }
     }
 
@@ -243,9 +243,9 @@ impl TransitionMatrixOps for TransitionMatrix {
         }
     }
 
-    fn set_pos(&mut self, pos: Ix, value: bool) {
+    fn set_cur_pos(&mut self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix], value: bool) {
         match self {
-            TransitionMatrix::Dense(d) => d.set_pos(pos, value)
+            TransitionMatrix::Dense(d) => d.set_cur_pos(current1, current2, target1, target2, value)
         }
     }
 

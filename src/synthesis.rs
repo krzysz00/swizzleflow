@@ -179,6 +179,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
     let level = &levels[current_level];
     let lane = level.lane;
     let current: &ProgState<'d> = curr_states[lane].unwrap();
+    // println!("[{} - {}] {}", current_level, level.ops.name, current);
     let cache = caches[current_level].clone();
     if level.prune {
         if !viable(current, target,

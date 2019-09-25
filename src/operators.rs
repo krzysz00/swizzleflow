@@ -18,7 +18,7 @@ pub mod load;
 
 use crate::errors::*;
 
-use crate::state::Gather;
+use crate::state::{Gather,to_opt_ix};
 use crate::transition_matrix::{TransitionMatrix,MergeSpot};
 use crate::misc::ShapeVec;
 
@@ -91,7 +91,7 @@ impl OpSet {
 }
 
 pub fn identity_gather(shape: &[Ix]) -> Gather {
-    Gather::new(shape.len(), shape, |idxs, ops| ops.extend(idxs), "id")
+    Gather::new(shape, |idxs| to_opt_ix(idxs, shape), "id")
 }
 
 pub fn identity(shape: &[Ix]) -> Result<OpSetKind> {

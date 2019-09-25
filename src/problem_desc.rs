@@ -15,7 +15,7 @@
 use crate::errors::*;
 
 use crate::operators::{SynthesisLevel,OpSet,OpSetKind,identity};
-use crate::state::{ProgState,Domain,Value,Symbolic,DomRef};
+use crate::state::{ProgState,Domain,Value,Symbolic,DomRef,Gather,to_opt_ix};
 use crate::operators::swizzle::{simple_fans, simple_rotations, OpAxis};
 use crate::operators::reg_select::{reg_select_no_const};
 use crate::operators::load::{load_rep, load_trunc, broadcast};
@@ -97,13 +97,13 @@ impl GathersDesc {
             Custom(gathers) => {
                 gathers.iter().map(
                     |(name, gather)| {
-                        let gather = gather.iter().copied().map(|d| d as Ix).collect();
-                        let array_shape = out_shape.iter().copied()
-                            .chain(Some(in_shape.len()).iter().copied())
-                            .collect::<Vec<usize>>();
-                        let array = ArrayD::from_shape_vec(array_shape.as_ref(), gather)
-                            .chain_err(|| ErrorKind::InvalidArrayData(array_shape.clone()))?;
-                        Ok(crate::state::Gather::new_raw(array, name.clone()))
+                        let gather: Vec<Ix> = gather.iter().copied().map(|d| d as Ix).collect();
+                        let array = gather.chunks(in_shape.len())
+                            .map(|s| to_opt_ix(s, in_shape))
+                            .collect();
+                        let array = ArrayD::from_shape_vec(out_shape.as_ref(), array)
+                            .chain_err(|| ErrorKind::InvalidArrayData(out_shape.to_vec()))?;
+                        Ok(Gather::new_raw(array, name.clone()))
                     }).collect::<Result<Vec<_>>>().map(|r| r.into())
             }
         }

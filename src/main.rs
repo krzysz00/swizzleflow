@@ -138,6 +138,7 @@ fn run() -> Result<()> {
         Some(iter) => {
             iter.map(
                 |path| {
+                    println!("spec:{}", path.to_string_lossy());
                     let file = open_file(path)?;
                     serde_json::from_reader(BufReader::new(file))
                         .chain_err(|| ErrorKind::ParseError(path.into()))
@@ -153,7 +154,6 @@ fn run() -> Result<()> {
             desc.to_problem(&domain, spec)
             .chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
         let max_lanes = initial.len();
-        println!("{:?}", expected_syms);
         matrix_load::add_matrices(matrix_dir, &mut levels, max_lanes)?;
         synthesize(initial, &target, &levels, &expected_syms, synthesis_mode);
         matrix_load::remove_matrices(&mut levels);

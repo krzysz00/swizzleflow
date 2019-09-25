@@ -12,7 +12,7 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use crate::state::Gather;
+use crate::state::{Gather,to_opt_ix};
 use super::OpSetKind;
 
 use crate::misc::ShapeVec;
@@ -21,6 +21,8 @@ use crate::errors::*;
 use ndarray::Ix;
 
 use std::collections::HashSet;
+
+use smallvec::SmallVec;
 
 use itertools::iproduct;
 
@@ -60,17 +62,22 @@ impl Op {
 pub fn reg_select(shape: &[Ix], operand1: usize, operand2: usize, op: Op) -> Gather {
     let name = format!("select({} {} {})", operand1, op.name(), operand2);
     let copy_idx = shape.len() - 1;
-    Gather::new(shape.len(), shape,
-                move |idxs: &[Ix], out: &mut Vec<Ix>| {
-                    out.extend(&idxs[0..copy_idx]);
+
+    let mut in_shape = shape.to_vec();
+    in_shape[copy_idx] = 2;
+    Gather::new(shape,
+                |idxs: &[Ix]| {
+                    let mut storage: SmallVec<[usize; 4]> =
+                        SmallVec::from_slice(&idxs[0..copy_idx]);
                     let op1 = idxs[operand1];
                     let op2 = idxs[operand2];
                     if op.perform(op1, op2) {
-                        out.push(0);
+                        storage.push(0);
                     }
                     else {
-                        out.push(1);
+                        storage.push(1);
                     }
+                    to_opt_ix(&storage, &in_shape)
                 }, name)
 }
 

@@ -12,6 +12,8 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+use crate::misc::in_bounds;
+
 use ndarray::{Array,ArrayViewD,ArrayD,Ix,Axis,IxDyn};
 use ndarray::Dimension;
 
@@ -266,12 +268,10 @@ impl<'d> ProgState<'d> {
     }
 
     pub fn gather_by(&self, gather: &Gather) -> Self {
-        let axis_num = Axis(gather.data.ndim() - 1);
         // Read off the edge to get the "garbage" value
-        let array = gather.data.map_axis(axis_num,
-                                         move |v| self.state.get(v.into_slice().unwrap())
-                                         .copied().unwrap_or(0));
-
+        let slice = self.state.as_slice().unwrap();
+        let array = gather.data.mapv(move |v| if v < 0 { 0 }
+                                     else { slice.get(v as usize).copied().unwrap_or(0) });
         let mut name = self.name.to_owned();
         name.push_str(";");
         name.push_str(&gather.name);
@@ -279,33 +279,26 @@ impl<'d> ProgState<'d> {
     }
 
     pub fn gather_fold_by(&self, gather: &Gather) -> Option<Self> {
-        let index_axis = gather.data.ndim() - 1;
-        let fold_axis = index_axis - 1;
-        let index_len = gather.data.shape()[index_axis];
-
-        let mut view = gather.data.view();
-        if !view.merge_axes(Axis(fold_axis), Axis(index_axis)) {
-            panic!("Axes that should've statically been mergeable weren't");
-        }
-
-        let mut elements: SmallVec<[DomRef; 6]> = SmallVec::with_capacity(index_len);
+        let mut elements: SmallVec<[DomRef; 6]> =
+            SmallVec::with_capacity(gather.data.shape()[gather.data.ndim()-1]);
+        let slice = self.state.as_slice().unwrap();
         let result: Option<Vec<DomRef>> =
-            view.genrows().into_iter()
+            gather.data.genrows().into_iter()
             .map(|data| {
                 let data = data.as_slice().unwrap();
                 elements.extend(
-                    data.chunks(index_len)
-                    .map(|idx| self.state.get(idx)
-                         .copied().unwrap_or(0))
-                    // Drop garbage values
-                    .filter(|v| *v != 0));
+                    data.iter().copied()
+                        .filter_map(|idx|
+                                    if idx < 0 { None }
+                                    else { slice.get(idx as usize).copied() })
+                        .filter(|x| *x != 0));
                 elements.sort_unstable();
                 let ret = self.domain.find_fold(&elements);
                 elements.clear();
                 ret
             }).collect();
         let result = result?;
-        let array = ArrayD::from_shape_vec(&gather.data.shape()[0..fold_axis],
+        let array = ArrayD::from_shape_vec(&gather.data.shape()[0..gather.data.ndim()-1],
                                            result).unwrap();
 
         let mut name = self.name.to_owned();
@@ -334,7 +327,7 @@ impl<'d> ProgState<'d> {
         let mut elements: SmallVec<[DomRef; 6]> = SmallVec::with_capacity(len);
         let result: Option<Vec<DomRef>> = (0..len).map(
             |i| {
-                elements.extend(slices.iter().map(|s| s[i]));
+                elements.extend(slices.iter().map(|s| s[i]).filter(|v| *v != 0));
                 elements.sort_unstable();
                 let ret = domain.find_fold(&elements);
                 elements.clear();
@@ -356,27 +349,21 @@ impl Display for ProgState<'_> {
 }
 
 // Gather operator creation
-fn inc_slice(slice: &mut [Ix], bound: &[Ix]) -> bool {
-    if slice.len() != bound.len() {
-        panic!("Bound and slice must be the same length")
+pub type OptIx = isize;
+pub fn to_opt_ix(index: &[Ix], shape: &[Ix]) -> OptIx {
+    if in_bounds(index, shape) {
+        index.iter().zip(shape.iter())
+            .fold(0, |acc, (i, b)| acc * b + i)
+            as isize
     }
-    let mut success = false;
-    for (slice, bound) in slice.iter_mut().zip(bound.iter()).rev() {
-        *slice += 1;
-        if *slice == *bound {
-            *slice = 0;
-        }
-        else {
-            success = true;
-            break;
-        }
+    else {
+        -1
     }
-    success
 }
 
 #[derive(Clone, Debug)]
 pub struct Gather {
-    pub data: ArrayD<Ix>,
+    pub data: ArrayD<OptIx>,
     pub name: String,
 }
 
@@ -395,26 +382,14 @@ impl Hash for Gather {
 }
 
 impl Gather {
-    pub fn new<F>(source_dim: usize, dest_shape: &[Ix],
+    pub fn new<F>(dest_shape: &[Ix],
                   builder: F, name: impl Into<String>) -> Self
-    where F: Fn(&[Ix], &mut Vec<Ix>) {
-        let dim_prod: usize = dest_shape.iter().product();
-        let length = source_dim * dim_prod;
-        let mut array = Vec::with_capacity(length);
-
-        let mut index: IxDyn = IxDyn::zeros(dest_shape.len());
-        while {
-            builder(index.slice(), &mut array);
-            inc_slice(index.slice_mut(), dest_shape)
-        } {} // Black magic for a do-while loop
-
-        let mut shape = dest_shape.to_owned();
-        shape.push(source_dim);
-        let array = Array::from_shape_vec(shape, array).unwrap();
+    where F: Fn(&[Ix]) -> isize {
+        let array = ArrayD::from_shape_fn(dest_shape, |v| builder(v.slice()));
         Self { data: array,  name: name.into() }
     }
 
-    pub fn new_raw(data: ArrayD<Ix>, name: String) -> Self {
+    pub fn new_raw(data: ArrayD<OptIx>, name: String) -> Self {
         Self { data, name }
     }
 }

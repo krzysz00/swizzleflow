@@ -14,12 +14,14 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::errors::*;
 
-use crate::state::Gather;
+use crate::state::{Gather,to_opt_ix};
 use crate::operators::OpSetKind;
+
+use std::cmp::min;
 
 use ndarray::Ix;
 
-use std::cmp::min;
+use smallvec::SmallVec;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 enum Mode {
@@ -40,8 +42,8 @@ fn load(in_shape: &[Ix], out_shape: &[Ix], mode: Mode) -> Result<OpSetKind> {
         return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
     }
     let gather =
-        Gather::new(in_shape.len(), out_shape,
-                    move |out_idxs: &[Ix], in_idx_output: &mut Vec<Ix>| {
+        Gather::new(out_shape,
+                    move |out_idxs: &[Ix]| {
                         let mut linear_idx = 0;
                         for (idx, stride) in out_idxs[0..out_split].iter()
                             .zip(out_shape[0..out_split].iter()).rev() {
@@ -51,9 +53,10 @@ fn load(in_shape: &[Ix], out_shape: &[Ix], mode: Mode) -> Result<OpSetKind> {
                             Mode::Rep => linear_idx % in_bound,
                             Mode::Trunc => min(linear_idx, in_bound),
                         };
-                        in_idx_output.push(linear_idx);
-
-                        in_idx_output.extend(&out_idxs[out_split..]);
+                        let mut storage = SmallVec::<[usize; 4]>::new();
+                        storage.push(linear_idx);
+                        storage.extend((&out_idxs[out_split..]).iter().copied());
+                        to_opt_ix(&storage, &in_shape)
                     }, name);
     Ok(vec![gather].into())
 }
@@ -75,9 +78,9 @@ pub fn broadcast(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSetKind> {
         return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
     }
     let gather =
-        Gather::new(in_shape.len(), out_shape,
-                    move |out_idxs: &[Ix], in_idx_output: &mut Vec<Ix>| {
-                        in_idx_output.extend(&out_idxs[out_split..]);
+        Gather::new(out_shape,
+                    move |out_idxs: &[Ix]| {
+                        to_opt_ix(&out_idxs[out_split..], in_shape)
                     }, name);
     Ok(vec![gather].into())
 }
