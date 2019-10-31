@@ -139,12 +139,13 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
         // This could probably be a tuneable parameter,
         // letting you control how aggressively you cache,
         // but I can't think of a good way to expose that.
-        if a == 0 {
-            let probe = {cache.read().unwrap().get(current).copied()};
-            if let Some(v) = probe {
-                tracker.cache_hit();
-                return v;
-            }
+        if !did_lookup {
+            // TODO: disable cache because it's causing correctness issues
+            // let probe = {cache.read().unwrap().get(current).copied()};
+            // if let Some(v) = probe {
+            //     tracker.cache_hit();
+            //     return v;
+            // }
             did_lookup = true;
         }
     }
@@ -282,7 +283,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                        current_level + 1, stats, mode, caches)
             }
         };
-    { cache.write().unwrap().insert(current.clone(), ret); }
+    cache.write().unwrap().insert(current.clone(), ret);
     tracker.cache_set();
     ret
 }
