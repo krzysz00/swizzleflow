@@ -16,18 +16,23 @@ use crate::misc::in_bounds;
 
 use ndarray::{Array,ArrayViewD,ArrayD,Ix,Axis,IxDyn};
 use ndarray::Dimension;
+use ndarray::RemoveAxis;
 
 use std::fmt;
 use std::fmt::{Display,Formatter};
 use std::cmp::{PartialEq,Eq};
 use std::hash::{Hash,Hasher};
 use std::collections::{HashMap,BTreeSet};
+use std::sync::Arc;
 
 use smallvec::SmallVec;
 
 use itertools::Itertools;
 
 pub type Symbolic = u16;
+
+pub type TopIdx = u16;
+pub type TopsVec = Arc<[TopIdx]>;
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum Value {
@@ -206,6 +211,7 @@ impl Domain {
 pub struct ProgState<'d> {
     pub domain: &'d Domain,
     pub(crate) state: ArrayD<DomRef>,
+    pub(crate) tops: Option<ArrayD<TopsVec>>,
     // Note: IxDyn is basically SmallVec, though that's not obvious anywhere
     pub(crate) inv_state: Vec<Vec<IxDyn>>,
     pub name: String
@@ -215,6 +221,7 @@ impl Clone for ProgState<'_> {
     fn clone(&self) -> Self {
         ProgState { domain: self.domain,
                     state: self.state.clone(),
+                    tops: self.tops.clone(),
                     inv_state: self.inv_state.clone(),
                     name: self.name.clone() }
     }
@@ -235,6 +242,7 @@ impl Hash for ProgState<'_> {
 
 impl<'d> ProgState<'d> {
     fn making_inverse(domain: &'d Domain, state: ArrayD<DomRef>,
+                      tops: Option<ArrayD<TopsVec>>,
                       name: String) -> Self {
         let mut inverse: Vec<Vec<IxDyn>> = (0..domain.size()).map(|_| Vec::with_capacity(1)).collect();
         for (idx, elem) in state.indexed_iter() {
@@ -242,12 +250,13 @@ impl<'d> ProgState<'d> {
                 inverse[*s].push(idx.clone())
             }
         }
-        Self { domain, state, name, inv_state: inverse }
+        Self { domain, state, tops, name, inv_state: inverse }
     }
 
     pub fn new(domain: &'d Domain, state: ArrayD<DomRef>,
                name: impl Into<String>) -> Self {
-        Self::making_inverse(domain, state, name.into())
+        Self::making_inverse(domain, state, Option::<ArrayD<TopsVec>>::None,
+                             name.into())
     }
 
     pub fn new_from_spec(domain: &'d Domain, state: ArrayD<Value>,
@@ -264,6 +273,7 @@ impl<'d> ProgState<'d> {
         let shape_len: usize = shape.iter().copied().product();
         let array = (start..start+shape_len).collect();
         Self::making_inverse(domain, Array::from_shape_vec(shape, array).unwrap(),
+                             None,
                              "id".to_owned())
     }
 
@@ -272,15 +282,21 @@ impl<'d> ProgState<'d> {
         let slice = self.state.as_slice().unwrap();
         let array = gather.data.mapv(move |v| if v < 0 { 0 }
                                      else { slice.get(v as usize).copied().unwrap_or(0) });
+        let tops = self.tops.as_ref().map(
+            |t|
+            gather.data.mapv(move |v| if v < 0 { Arc::new([]) }
+                             else { t.get(v as usize).cloned().unwrap_or(Arc::new([])) }));
         let mut name = self.name.to_owned();
         name.push_str(";");
         name.push_str(&gather.name);
-        Self::making_inverse(self.domain, array, name)
+        Self::making_inverse(self.domain, array, tops, name)
     }
 
     pub fn gather_fold_by(&self, gather: &Gather) -> Option<Self> {
         let mut elements: SmallVec<[DomRef; 6]> =
             SmallVec::with_capacity(gather.data.shape()[gather.data.ndim()-1]);
+        let last_axis = ndarray::Axis(gather.data.ndim() - 1);
+
         let slice = self.state.as_slice().unwrap();
         let result: Option<Vec<DomRef>> =
             gather.data.genrows().into_iter()
@@ -301,10 +317,32 @@ impl<'d> ProgState<'d> {
         let array = ArrayD::from_shape_vec(&gather.data.shape()[0..gather.data.ndim()-1],
                                            result).unwrap();
 
+        let tops = self.tops.as_ref().map(
+            |t| {
+                let mut top_refs: Vec<&[TopIdx]> =
+                    Vec::with_capacity(gather.data.shape()[gather.data.ndim()-1]);
+                let t = t.as_slice().unwrap();
+                gather.data.map_axis(
+                    last_axis,
+                    |data| {
+                        let data = data.as_slice().unwrap();
+                        top_refs.extend(data.iter().copied()
+                                        .filter_map(|idx|
+                                                    if idx < 0 { None }
+                                                    else { t.get(idx as usize)
+                                                           .map(|i| i.as_ref()) }));
+                        let ret: Arc<[TopIdx]> =
+                            top_refs.iter().map(|i| i.iter().copied())
+                            .kmerge().collect::<Vec<_>>().into();
+                        top_refs.clear();
+                        ret
+                    })
+            });
+
         let mut name = self.name.to_owned();
         name.push_str(";");
         name.push_str(&gather.name);
-        Some(Self::making_inverse(self.domain, array, name))
+        Some(Self::making_inverse(self.domain, array, tops, name))
     }
 
     pub fn merge(states: &[&ProgState<'d>]) -> Self {
@@ -313,9 +351,23 @@ impl<'d> ProgState<'d> {
             states.into_iter().map(|s| s.state.view().insert_axis(axis_number))
             .collect();
         let array = ndarray::stack(axis_number, &views).unwrap();
+        let tops =
+            if states.into_iter().all(|s| s.tops.is_none()) {
+                None
+            } else {
+                // We assume at least one branch doesn't have tops
+                let none: TopsVec = vec![].into();
+                Some(ArrayD::from_shape_fn(array.shape(), |idxs| {
+                    let k = idxs[axis_number.0];
+                    states[k].tops.as_ref().
+                        map_or_else(|| none.clone(),
+                                    |a| a[idxs.remove_axis(axis_number)]
+                                    .clone())
+                }))
+            };
         let name = format!("merge[{}]",
                                states.iter().map(|s| s.name.clone()).join(","));
-        Self::making_inverse(states[0].domain, array, name)
+        Self::making_inverse(states[0].domain, array, tops, name)
     }
 
     pub fn merge_folding(states: &[&ProgState<'d>]) -> Option<Self> {
@@ -336,9 +388,20 @@ impl<'d> ProgState<'d> {
         let result = result?;
         let array = ArrayD::from_shape_vec(states[0].state.shape(),
                                            result).unwrap();
+        let tops = if states.iter().all(|s| s.tops.is_none()) {
+            None
+        } else {
+            Some(ArrayD::from_shape_fn(
+                array.shape(),
+                |idxs| {
+                    states.iter().filter_map(|s| s.tops.as_ref())
+                        .map(|t| t[&idxs].iter().copied())
+                        .kmerge().collect::<Vec<_>>().into()
+                }))
+        };
         let name = format!("merge_fold[{}]",
                            states.iter().map(|s| s.name.clone()).join(","));
-        Some(Self::making_inverse(domain, array, name))
+        Some(Self::making_inverse(domain, array, tops, name))
     }
 }
 
