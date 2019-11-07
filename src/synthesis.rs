@@ -304,7 +304,7 @@ pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
     let dur = time_since(start_time);
 
     for (idx, stats) in (&stats).iter().enumerate() {
-        println!("stats:{} {}", idx, stats);
+        println!("stats:{} ({}) {}", idx, levels.get(idx).map_or(&"[last]".into(), |x| &x.ops.name), stats);
     }
     println!("search:{} shape({:?}) {} mode({:?}) [{}]", target.name, target.state.shape(), ret, mode, dur);
     ret

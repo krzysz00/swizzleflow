@@ -150,8 +150,10 @@ fn run() -> Result<()> {
     for desc in specs {
         let spec = desc.get_spec().chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
         let domain = desc.make_domain(spec.view());
-        let (initial, target, mut levels, expected_syms) =
-            desc.to_problem(&domain, spec)
+        let mut levels = desc.get_levels()
+            .chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
+        let (initial, target, expected_syms) =
+            desc.build_problem(&domain, &levels, spec)
             .chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
         let max_lanes = initial.len();
         matrix_load::add_matrices(matrix_dir, &mut levels, max_lanes)?;

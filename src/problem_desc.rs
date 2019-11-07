@@ -371,6 +371,34 @@ fn update_shape_info(level: &SynthesisLevel, shapes: &mut Vec<Option<Vec<usize>>
     }
 }
 
+fn update_expected_syms_idxs(level: &SynthesisLevel,
+                             expected_syms_idxs: &mut Vec<Option<usize>>,
+                             count: &mut usize) {
+    use OpSetKind::*;
+    let lane = level.lane;
+    match level.ops.ops {
+        Gathers(_) => {
+            if level.ops.fused_fold {
+                expected_syms_idxs[lane] = Some(*count);
+                *count += 1;
+            }
+        }
+        Merge(ref from, to) => {
+            for idx in from.iter().copied() {
+                expected_syms_idxs[idx] = None;
+            }
+            expected_syms_idxs[to] = Some(*count);
+            *count += 1;
+        }
+        Split(from, ref to) => {
+            let idx = expected_syms_idxs[from].take();
+            for i in to.iter().copied() {
+                extending_set(expected_syms_idxs, i, idx);
+            }
+        }
+    }
+}
+
 fn update_expected_syms(level: &SynthesisLevel, domain: &Domain,
                         expected_syms_idxs: &mut Vec<Option<usize>>,
                         expected_syms_sets: &mut Vec<BTreeSet<DomRef>>) {
@@ -455,36 +483,23 @@ impl ProblemDesc {
         Domain::new(spec)
     }
 
-    pub fn to_problem<'d>(&self,
-                          domain: &'d Domain,
-                          spec: ArrayD<Value>)
-                          -> Result<(Vec<Option<ProgState<'d>>>,
-                                     ProgState<'d>,
-                                     Vec<SynthesisLevel>,
-                                     Vec<Vec<DomRef>>)>
-    {
+    pub fn get_levels(&self) -> Result<Vec<SynthesisLevel>> {
         let mut ret = Vec::<SynthesisLevel>::with_capacity(self.steps.len());
-        let mut initials = Vec::<Option<ProgState<'d>>>::new();
         let mut shapes: Vec<Option<Vec<usize>>> = Vec::new();
         let mut were_merged = Vec::<bool>::new();
         let mut expected_syms_idxs = Vec::<Option<usize>>::new();
-        let mut expected_syms_sets = Vec::<BTreeSet<DomRef>>::new();
+        let mut expected_syms_count = 0;
 
         for step in &self.steps {
             let lane = step.lane as usize;
             if step.is_initial() {
                 let shape: Vec<usize> = step.out_shape.iter().copied()
                     .map(|x| x as usize).collect();
-                let state = step.initial_desc().unwrap()
-                     .to_progstate(domain, &shape, &step.name)
-                    .chain_err(|| ErrorKind::LevelBuild(Box::new(step.clone())))?;
-                let symbols = crate::expected_syms_util::expcted_of_inital_state(&state);
 
                 extending_set(&mut shapes, lane, Some(shape));
-                extending_set(&mut initials, lane, Some(state));
                 extending_set_def(&mut were_merged, lane, false, false);
-                extending_set(&mut expected_syms_idxs, lane, Some(expected_syms_sets.len()));
-                expected_syms_sets.push(symbols);
+                extending_set(&mut expected_syms_idxs, lane, Some(expected_syms_count));
+                expected_syms_count += 1;
             }
             else {
                 let level = step.to_synthesis_level(&shapes,
@@ -500,9 +515,44 @@ impl ProblemDesc {
                     }
                 }
                 update_shape_info(&level, &mut shapes, &mut were_merged);
+                update_expected_syms_idxs(&level, &mut expected_syms_idxs,
+                                          &mut expected_syms_count);
+                ret.push(level);
+            }
+        }
+        Ok(ret)
+    }
+
+    pub fn build_problem<'d>(&self,
+                             domain: &'d Domain,
+                             levels: &[SynthesisLevel],
+                             spec: ArrayD<Value>)
+                             -> Result<(Vec<Option<ProgState<'d>>>,
+                                        ProgState<'d>,
+                                        Vec<Vec<DomRef>>)>
+    {
+        let mut initials = Vec::<Option<ProgState<'d>>>::new();
+        let mut expected_syms_idxs = Vec::<Option<usize>>::new();
+        let mut expected_syms_sets = Vec::<BTreeSet<DomRef>>::new();
+
+        for (idx, step) in self.steps.iter().enumerate() {
+            let lane = step.lane as usize;
+            if step.is_initial() {
+                let shape: Vec<usize> = step.out_shape.iter().copied()
+                    .map(|x| x as usize).collect();
+                let state = step.initial_desc().unwrap()
+                     .to_progstate(domain, &shape, &step.name)
+                    .chain_err(|| ErrorKind::LevelBuild(Box::new(step.clone())))?;
+                let symbols = crate::expected_syms_util::expcted_of_inital_state(&state);
+
+                extending_set(&mut initials, lane, Some(state));
+                extending_set(&mut expected_syms_idxs, lane, Some(expected_syms_sets.len()));
+                expected_syms_sets.push(symbols);
+            }
+            else {
+                let level = &levels[idx - initials.len()]; // Initial steps aren't synthesis levels
                 update_expected_syms(&level, domain, &mut expected_syms_idxs,
                                      &mut expected_syms_sets);
-                ret.push(level);
             }
         }
 
@@ -515,7 +565,7 @@ impl ProblemDesc {
                                             target_name).unwrap();
         let expected_syms = expected_syms_sets.into_iter()
             .map(|s| s.into_iter().collect()).collect();
-        Ok((initials, spec, ret, expected_syms))
+        Ok((initials, spec, expected_syms))
     }
 }
 
@@ -567,8 +617,9 @@ mod tests {
         let spec = desc.get_spec().unwrap();
         let domain = desc.make_domain(spec.view());
         let trove_state = ProgState::new_from_spec(&domain, trove(3, 4), "trove").unwrap();
-        let (start, end, levels, expected_syms)
-            = desc.to_problem(&domain, spec).unwrap();
+        let levels = desc.get_levels().unwrap();
+        let (start, end, expected_syms)
+            = desc.build_problem(&domain, &levels, spec).unwrap();
         assert_eq!(start, vec![Some(
             crate::state::ProgState::linear(&domain, 0, &[3, 4]))]);
         assert_eq!(end, trove_state);
