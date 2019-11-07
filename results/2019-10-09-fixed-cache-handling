@@ -1,0 +1,199 @@
+spec:./specs/1d-conv-16x3.json
+spec:./specs/1d-conv-32x3.json
+spec:./specs/1d-conv-32x5.json
+spec:./specs/1d-conv-dealg-16x3.json
+spec:./specs/1d-conv-dealg-32x3.json
+spec:./specs/1d-conv-dealg-32x5.json
+spec:./specs/1d-wconv-16x3-e-first.json
+spec:./specs/1d-wconv-16x3.json
+spec:./specs/1d-wconv-16x3-w-first.json
+spec:./specs/1d-wconv-6x3-rescheduled.json
+spec:./specs/trove-32x3.json
+spec:./specs/trove-32x4-flipped-rot.json
+spec:./specs/trove-4x3-noprune.json
+spec:./specs/trove-8x3.json
+load:matrices/16-sRc-16,3 [0.000346887]
+load:matrices/16-sRc-16,3_16,3-sFc-16,3 [0.000271075]
+load:matrices/16-sRc-16,3_16,3-sFc-16,3_16,3-regSelNC-16,2 [0.000122052]
+soln:id;load_trunc;select(0 >= 1);id;rot(-15,3,0)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(8), found(0), pruned(7), continued(1) cache(0:2)
+stats:3 tested(255), found(0), pruned(112), continued(143) cache(0:143)
+stats:4 tested(128), found(1), pruned(0), continued(127) cache(0:0)
+search:conv shape([16]) true mode(All) [0.020691423]
+load:matrices/32-sRc-32,3 [0.003515659]
+load:matrices/32-sRc-32,3_32,3-sFc-32,3 [0.003461795]
+load:matrices/32-sRc-32,3_32,3-sFc-32,3_32,3-regSelNC-32,2 [0.001428037]
+soln:id;load_trunc;select(0 >= 1);id;rot(-31,3,0)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(8), found(0), pruned(7), continued(1) cache(0:2)
+stats:3 tested(1023), found(0), pruned(480), continued(543) cache(0:543)
+stats:4 tested(512), found(1), pruned(0), continued(511) cache(0:0)
+search:conv shape([32]) true mode(All) [0.257266438]
+load:matrices/32-sRc-32,5 [0.009960156]
+load:matrices/32-sRc-32,5_32,5-sFc-32,5 [0.009819457]
+load:matrices/32-sRc-32,5_32,5-sFc-32,5_32,5-regSelNC-32,2 [0.001474753]
+soln:id;load_trunc;select(0 >= 1);id;rot(-31,5,0)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(8), found(0), pruned(7), continued(1) cache(0:2)
+stats:3 tested(1023), found(0), pruned(608), continued(415) cache(0:415)
+stats:4 tested(256), found(1), pruned(0), continued(255) cache(0:0)
+search:conv shape([32]) true mode(All) [0.388947499]
+load:matrices/16,3-sRc-16,3 [0.001695208]
+load:matrices/16,3-sRc-16,3_16,3-sFc-16,3 [0.00178427]
+load:matrices/16,3-sRc-16,3_16,3-sFc-16,3_16,3-regSelNC-16,2 [0.000765369]
+soln:id;load_trunc;select(0 >= 1);id;rot(-15,3,0)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(8), found(0), pruned(7), continued(1) cache(0:1)
+stats:3 tested(255), found(0), pruned(254), continued(1) cache(0:17)
+stats:4 tested(256), found(1), pruned(0), continued(255) cache(0:0)
+search:conv_dealg shape([16, 3]) true mode(All) [0.002602459]
+load:matrices/32,3-sRc-32,3 [0.026596192]
+load:matrices/32,3-sRc-32,3_32,3-sFc-32,3 [0.029088503]
+load:matrices/32,3-sRc-32,3_32,3-sFc-32,3_32,3-regSelNC-32,2 [0.014604643]
+soln:id;load_trunc;select(0 >= 1);id;rot(-31,3,0)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(8), found(0), pruned(7), continued(1) cache(0:1)
+stats:3 tested(1023), found(0), pruned(1022), continued(1) cache(0:33)
+stats:4 tested(1024), found(1), pruned(0), continued(1023) cache(0:0)
+search:conv_dealg shape([32, 3]) true mode(All) [0.021351366]
+load:matrices/32,5-sRc-32,5 [0.252357666]
+load:matrices/32,5-sRc-32,5_32,5-sFc-32,5 [0.289408064]
+load:matrices/32,5-sRc-32,5_32,5-sFc-32,5_32,5-regSelNC-32,2 [0.038987084]
+soln:id;load_trunc;select(0 >= 1);id;rot(-31,5,0)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(8), found(0), pruned(7), continued(1) cache(0:1)
+stats:3 tested(1023), found(0), pruned(1022), continued(1) cache(0:33)
+stats:4 tested(1024), found(1), pruned(0), continued(1023) cache(0:0)
+search:conv_dealg shape([32, 5]) true mode(All) [0.054842118]
+load:matrices/16-identity-16,3 [0.000246332]
+load:matrices/16-identity-16,3_16,3-sRr-16,3 [0.000306838]
+load:matrices/16-identity-16,3_16,3-sRr-16,3_16,3-sFr-16,3 [0.000256092]
+load:matrices/16-identity-16,3_16,3-sRc-16,3 [0.000265196]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3 [0.000252048]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3_16,3-regSelNC-16,2 [0.000108838]
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:3 tested(8), found(0), pruned(7), continued(1) cache(0:2)
+stats:4 tested(255), found(0), pruned(112), continued(143) cache(0:143)
+stats:5 tested(36608), found(0), pruned(36607), continued(1) cache(36607:1)
+stats:6 tested(5), found(0), pruned(0), continued(5) cache(0:5)
+stats:7 tested(180), found(0), pruned(0), continued(180) cache(0:180)
+stats:8 tested(4), found(0), pruned(4), continued(0) cache(0:0)
+stats:9 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+search:weight_conv shape([16]) false mode(All) [40.599577184]
+load:matrices/16-identity-16,3 [0.000216614]
+load:matrices/16-identity-16,3_16,3-sRr-16,3 [0.000212372]
+load:matrices/16-identity-16,3_16,3-sRc-16,3 [0.000250063]
+load:matrices/16-identity-16,3_16,3-sRr-16,3_16,3-sFr-16,3 [0.000198537]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3 [0.000201128]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3_16,3-regSelNC-16,2 [0.000097884]
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:3 tested(8), found(0), pruned(7), continued(1) cache(0:2)
+stats:4 tested(255), found(0), pruned(254), continued(1) cache(254:1)
+stats:5 tested(5), found(0), pruned(5), continued(0) cache(0:0)
+stats:6 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+stats:7 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+stats:8 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+stats:9 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+search:weight_conv shape([16]) false mode(All) [0.284434664]
+load:matrices/16-identity-16,3 [0.000207182]
+load:matrices/16-identity-16,3_16,3-sRc-16,3 [0.000208016]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3 [0.000220527]
+load:matrices/16-identity-16,3_16,3-sRr-16,3 [0.000196136]
+load:matrices/16-identity-16,3_16,3-sRr-16,3_16,3-sFr-16,3 [0.000198822]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3_16,3-regSelNC-16,2 [0.000100037]
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:3 tested(8), found(0), pruned(7), continued(1) cache(7:1)
+stats:4 tested(5), found(0), pruned(0), continued(5) cache(0:5)
+stats:5 tested(180), found(0), pruned(180), continued(0) cache(179:1)
+stats:6 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+stats:7 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+stats:8 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+stats:9 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+search:weight_conv shape([16]) false mode(All) [0.028957105]
+load:matrices/6-identity-6,3 [0.000017976]
+load:matrices/6-identity-6,3_6,3-sRc-6,3 [0.000010814]
+load:matrices/6-identity-6,3_6,3-sRc-6,3_6,3-sFc-6,3 [0.000010498]
+load:matrices/6-identity-6,3_6,3-sRc-6,3_6,3-sFc-6,3_6,3-regSelNC-6,2 [0.000009087]
+load:matrices/6-identity-6,3_6,3-sRr-6,3 [0.000015421]
+load:matrices/6-identity-6,3_6,3-sRr-6,3_6,3-sFr-6,3 [0.000013891]
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:3 tested(5), found(0), pruned(0), continued(5) cache(0:5)
+stats:4 tested(135), found(0), pruned(134), continued(1) cache(134:1)
+stats:5 tested(8), found(0), pruned(7), continued(1) cache(0:2)
+stats:6 tested(35), found(0), pruned(6), continued(29) cache(0:29)
+stats:7 tested(1044), found(0), pruned(0), continued(1044) cache(0:1044)
+stats:8 tested(37), found(0), pruned(37), continued(0) cache(0:0)
+stats:9 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+search:weight_conv shape([6]) false mode(All) [0.005078477]
+load:matrices/32,3-sRr-32,3 [0.028813817]
+load:matrices/32,3-sRr-32,3_32,3-sFr-32,3 [0.029489258]
+load:matrices/32,3-sRr-32,3_32,3-sFr-32,3_32,3-sRc-32,3 [0.037566336]
+load:matrices/32,3-sRr-32,3_32,3-sFr-32,3_32,3-sRc-32,3_32,3-sFc-32,3 [0.036416466]
+load:matrices/32,3-sRr-32,3_32,3-sFr-32,3_32,3-sRc-32,3_32,3-sFc-32,3_32,3-sRr-32,3 [0.039479754]
+load:matrices/32,3-sRr-32,3_32,3-sFr-32,3_32,3-sRc-32,3_32,3-sFc-32,3_32,3-sRr-32,3_32,3-sFr-32,3 [0.040274673]
+soln:id;load_rep;fan(0,2);rot(-31,32,0);fan(0,3);rot(-21,3,0);id;id
+soln:id;load_rep;id;rot(-29,32,-2);fan(0,3);rot(-11,3,-10);fan(0,2);rot(-30,32,-2)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(5), found(0), pruned(0), continued(5) cache(0:5)
+stats:3 tested(225), found(0), pruned(223), continued(2) cache(0:6)
+stats:4 tested(2046), found(0), pruned(2044), continued(2) cache(0:64)
+stats:5 tested(2048), found(0), pruned(2046), continued(2) cache(0:2)
+stats:6 tested(10), found(0), pruned(8), continued(2) cache(0:5)
+stats:7 tested(90), found(2), pruned(0), continued(88) cache(0:0)
+search:trove shape([32, 3]) true mode(All) [0.053794164]
+load:matrices/32,4-sRr-32,4 [0.120563035]
+load:matrices/32,4-sRr-32,4_32,4-sFr-32,4 [0.10568941]
+load:matrices/32,4-sRr-32,4_32,4-sFr-32,4_32,4-sFc-32,4 [0.129196729]
+load:matrices/32,4-sRr-32,4_32,4-sFr-32,4_32,4-sFc-32,4_32,4-sRc-32,4 [0.128107234]
+load:matrices/32,4-sRr-32,4_32,4-sFr-32,4_32,4-sFc-32,4_32,4-sRc-32,4_32,4-sRr-32,4 [0.119993179]
+load:matrices/32,4-sRr-32,4_32,4-sFr-32,4_32,4-sFc-32,4_32,4-sRc-32,4_32,4-sRr-32,4_32,4-sFr-32,4 [0.126719876]
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(15), found(0), pruned(0), continued(15) cache(0:15)
+stats:3 tested(1200), found(0), pruned(1200), continued(0) cache(0:0)
+stats:4 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+stats:5 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+stats:6 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+stats:7 tested(0), found(0), pruned(0), continued(0) cache(0:0)
+search:trove shape([32, 4]) false mode(All) [0.028615096]
+soln:id;load_rep;id;rot(-1,4,0);fan(0,3);rot(-1,3,0)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(5), found(0), pruned(0), continued(5) cache(0:5)
+stats:3 tested(90), found(0), pruned(0), continued(90) cache(0:90)
+stats:4 tested(1350), found(0), pruned(0), continued(1350) cache(0:1350)
+stats:5 tested(21600), found(1), pruned(0), continued(21599) cache(0:0)
+search:trove shape([4, 3]) true mode(All) [0.028902975]
+load:matrices/8,3-sRr-8,3 [0.000157715]
+load:matrices/8,3-sRr-8,3_8,3-sFr-8,3 [0.000135919]
+load:matrices/8,3-sRr-8,3_8,3-sFr-8,3_8,3-sRc-8,3 [0.000138967]
+load:matrices/8,3-sRr-8,3_8,3-sFr-8,3_8,3-sRc-8,3_8,3-sFc-8,3 [0.000134099]
+load:matrices/8,3-sRr-8,3_8,3-sFr-8,3_8,3-sRc-8,3_8,3-sFc-8,3_8,3-sRr-8,3 [0.00013435]
+load:matrices/8,3-sRr-8,3_8,3-sFr-8,3_8,3-sRc-8,3_8,3-sFc-8,3_8,3-sRr-8,3_8,3-sFr-8,3 [0.000130634]
+soln:id;load_rep;fan(0,2);rot(-7,8,0);fan(0,3);rot(-5,3,0);id;id
+soln:id;load_rep;id;rot(-5,8,-2);fan(0,3);rot(-3,3,-2);fan(0,2);rot(-6,8,-2)
+stats:0 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:1 tested(1), found(0), pruned(0), continued(1) cache(0:1)
+stats:2 tested(5), found(0), pruned(0), continued(5) cache(0:5)
+stats:3 tested(135), found(0), pruned(133), continued(2) cache(0:6)
+stats:4 tested(126), found(0), pruned(124), continued(2) cache(0:16)
+stats:5 tested(128), found(0), pruned(126), continued(2) cache(0:2)
+stats:6 tested(10), found(0), pruned(8), continued(2) cache(0:5)
+stats:7 tested(54), found(2), pruned(0), continued(52) cache(0:0)
+search:trove shape([8, 3]) true mode(All) [0.001075262]
