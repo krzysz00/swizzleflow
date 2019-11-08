@@ -19,7 +19,7 @@ pub mod load;
 use crate::errors::*;
 
 use crate::state::{Gather,to_opt_ix};
-use crate::transition_matrix::{TransitionMatrix,MergeSpot};
+use crate::transition_matrix::{TransitionMatrix};
 use crate::misc::ShapeVec;
 
 use smallvec::SmallVec;
@@ -77,21 +77,24 @@ impl OpSet {
         Self { name: name.into(), ops, in_shape, out_shape, fused_fold }
     }
 
-    pub fn to_name(&self, merge: Option<MergeSpot>) -> String {
+    pub fn to_name(&self) -> String {
         let in_strings: SmallVec<[String; 4]> = self.in_shape.iter().map(|v| v.to_string()).collect();
         let out_strings: SmallVec<[String; 4]> = self.out_shape.iter().map(|v| v.to_string()).collect();
-        if let Some(MergeSpot { lane, total_size }) = merge {
-            format!("[{}/{}]{}-{}-{}", lane, total_size,
-                    out_strings.join(","), self.name, in_strings.join(","))
-        }
-        else {
-            format!("{}-{}-{}", out_strings.join(","), self.name, in_strings.join(","))
-        }
+        format!("{}-{}-{}", out_strings.join(","), self.name, in_strings.join(","))
     }
 }
 
 pub fn identity_gather(shape: &[Ix]) -> Gather {
     Gather::new(shape, |idxs| to_opt_ix(idxs, shape), "id")
+}
+
+pub fn merge_adapter_gather(out_shape: &[Ix], index: Ix) -> Gather {
+    let last = out_shape.len() - 1;
+    let in_shape = &out_shape[0..last];
+    Gather::new(out_shape, |idxs|
+                if idxs[last] != index { -1 }
+                else { to_opt_ix(&idxs[0..last], in_shape) },
+                format!("(merge){}", index))
 }
 
 pub fn identity(shape: &[Ix]) -> Result<OpSetKind> {

@@ -15,31 +15,104 @@
 
 use crate::errors::*;
 
-use crate::operators::{OpSetKind,SynthesisLevel};
+use crate::operators::{OpSet, OpSetKind, SynthesisLevel, merge_adapter_gather};
 use crate::transition_matrix::{TransitionMatrix, build_or_load_matrix,
-                               TransitionMatrixOps, MergeSpot};
-use crate::misc::{time_since,EPSILON};
+                               TransitionMatrixOps, density};
+use crate::misc::{time_since};
 
-use std::path::Path;
+use std::collections::HashMap;
+use std::path::{Path,PathBuf};
 use std::time::Instant;
 
-use ndarray::Array2;
+use ndarray::{Array2,Ix};
 
 use itertools::Itertools;
+use itertools::iproduct;
 
-fn regularize_float_mat(arr: &mut Array2<f32>) {
-    arr.mapv_inplace(|v| if v.abs() < EPSILON { 0.0 } else { 1.0 })
+fn union_matrices(a: &mut TransitionMatrix, b: &TransitionMatrix) {
+    let slots = a.slots();
+    if slots != b.slots() {
+        panic!("Length mismatches in matrix union {:?} {:?}", slots, b.slots());
+    }
+    let current = slots.0;
+    let target = slots.1;
+    for (c1, c2, t1, t2) in iproduct![(0..current), (0..current),
+                                      (0..target), (0..target)] {
+        if b.get_idxs(c1, c2, t1, t2) {
+            a.set_idxs(c1, c2, t1, t2, true);
+        }
+    }
 }
 
-fn intersect_matrices(target: &mut Array2<f32>,
-                          src: &Array2<f32>) {
-    target.zip_mut_with(src, |d, s| *d *= s);
+fn get_basis_mat<'a>(bases: &'a mut HashMap<String, Array2<f32>>,
+                 directory: &Path, name: &str,
+                 ops: &OpSet) -> Result<&'a Array2<f32>> {
+    if !bases.contains_key(name) {
+        let mut basis_path = directory.to_path_buf();
+        basis_path.push(name);
+        let ret = build_or_load_matrix(ops, &basis_path)?.to_f32_mat();
+        bases.insert(name.to_owned(), ret);
+    }
+    Ok(bases.get(name).unwrap())
+}
+
+fn load_matrix(path: &Path) -> Result<TransitionMatrix> {
+    let start = Instant::now();
+    let mat = TransitionMatrix::load_matrix(path)?;
+    let load_time = time_since(start);
+    println!("load:{} [{}]", path.display(), load_time);
+    Ok(mat)
+}
+
+fn add_matrix(ops: &OpSet, lane: usize,
+              path: &mut PathBuf,
+              names: &mut [String], prev_mats: &mut [Option<TransitionMatrix>],
+              bases: &mut HashMap<String, Array2<f32>>,
+              outmost_shape: &[Ix]) -> Result<()> {
+    let name = ops.to_name();
+
+    if !names[lane].is_empty() {
+        names[lane].push('_');
+    }
+    names[lane].push_str(&name);
+
+    path.set_file_name(names[lane].clone());
+
+    if path.exists() {
+        let mat = load_matrix(path.as_path())?;
+        prev_mats[lane] = Some(mat);
+    }
+    else {
+        let basis_matrix = get_basis_mat(bases,
+                                         path.parent().unwrap(), &name,
+                                         ops)?;
+        match prev_mats[lane] {
+            Some(ref mut prev) => {
+                let float = prev.to_f32_mat();
+                let mut output = Array2::<f32>::zeros((float.shape()[0], basis_matrix.shape()[1]));
+                let start = Instant::now();
+                ndarray::linalg::general_mat_mul(1.0, &float, &basis_matrix, 0.0, &mut output);
+                let time = time_since(start);
+
+                let mut our_form = TransitionMatrix::from_f32_mat(&output, &outmost_shape, &ops.in_shape);
+                println!("mul:{} density({}) [{}]", names[lane], density(&our_form), time);
+                our_form.store_matrix(&path)?;
+                std::mem::swap(&mut our_form, prev);
+            },
+            None => {
+                // Here, we've just generated the basis matrix
+                println!("Using newly-built {}", path.display());
+                prev_mats[lane] =
+                    Some(TransitionMatrix::from_f32_mat(
+                        &basis_matrix, &ops.out_shape, &ops.in_shape));
+            }
+        }
+    }
+    Ok(())
 }
 
 pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel],
                     max_lanes: usize) -> Result<()> {
-    use crate::transition_matrix::density;
-
     let mut first_prunes = vec![levels.len(); max_lanes];
     for (idx, l) in levels.iter().enumerate().rev() {
         if l.prune {
@@ -53,120 +126,75 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel],
     let outmost_shape = levels[levels.len() - 1].ops.out_shape.clone();
 
     let mut names = vec![String::new(); max_lanes];
-    let mut merges: Vec<Option<MergeSpot>> = vec![None; max_lanes];
-    let mut prev_mats: Vec<Option<Array2<f32>>> = vec![None; max_lanes];
+    let mut bases = HashMap::<String, Array2<f32>>::new();
+    let mut prev_mats: Vec<Option<TransitionMatrix>> = vec![None; max_lanes];
 
-    for (_idx, level) in levels.iter_mut().enumerate().rev()
+    for (idx, level) in levels.iter_mut().enumerate().rev()
         .filter(|(i, l)| *i >= first_prunes[l.lane])
     {
+        if level.prune {
+            level.matrix = prev_mats[level.lane].clone();
+        }
+
+        let lane = level.lane;
+        if idx == first_prunes[lane] {
+            prev_mats[lane] = None;
+            continue;
+        }
+
         match level.ops.ops {
             OpSetKind::Gathers(ref _swiz) => {
-                let lane = level.lane;
-                let name = level.ops.to_name(merges[lane]);
-
-                if !names[lane].is_empty() {
-                    names[lane].push('_');
-                }
-                names[lane].push_str(&name);
-
-                our_path.set_file_name(names[lane].clone());
-
-                if our_path.exists() {
-                    let start = Instant::now();
-                    let mat = TransitionMatrix::load_matrix(our_path.as_path())?;
-                    let load_time = time_since(start);
-                    println!("load:{} [{}]", our_path.display(), load_time);
-                    prev_mats[lane] = Some(mat.to_f32_mat());
-                    if level.prune {
-                        level.matrix = Some(mat);
+                add_matrix(&level.ops, lane, &mut our_path, &mut names, &mut prev_mats,
+                           &mut bases, &outmost_shape)?;
+            },
+            OpSetKind::Merge(ref from, to) => {
+                if level.ops.fused_fold {
+                    for lane in from.iter().copied() {
+                        if lane != to {
+                            names[lane] = names[to].clone();
+                            prev_mats[lane] = prev_mats[to].clone();
+                        }
                     }
                 }
                 else {
-                    let mut basis_path = directory.to_path_buf();
-                    basis_path.push(name);
-                    let basis_matrix = build_or_load_matrix(&level.ops, &basis_path,
-                                                            merges[lane])?.to_f32_mat();
-                    match &mut prev_mats[lane] {
-                        Some(prev) => {
-                            let mut output = Array2::<f32>::zeros((prev.shape()[0], basis_matrix.shape()[1]));
-                            let start = Instant::now();
-                            ndarray::linalg::general_mat_mul(1.0, prev, &basis_matrix, 0.0, &mut output);
-                            let time = time_since(start);
-                            regularize_float_mat(&mut output);
-                            std::mem::swap(&mut output, prev);
-                            std::mem::drop(output);
-
-                            let our_form = TransitionMatrix::from_f32_mat(prev, &outmost_shape, &level.ops.in_shape);
-                            println!("mul:{} density({}) [{}]", names[lane], density(&our_form), time);
-                            our_form.store_matrix(&our_path)?;
-                            if level.prune {
-                                level.matrix = Some(our_form);
-                            }
-                        }
-                        None => {
-                            // Here, we've just generated the basis matrix
-                            println!("Using newly-built {}", our_path.display());
-                            if level.prune {
-                                level.matrix = Some(TransitionMatrix::from_f32_mat(
-                                    &basis_matrix, &level.ops.out_shape, &level.ops.in_shape));
-                            }
-                            prev_mats[lane] = Some(basis_matrix);
-                        }
-                    }
-                }
-                merges[lane] = None;
-            },
-            OpSetKind::Merge(ref from, to) => {
-                if level.prune {
-                    println!("WARNING: pruning on merges doesn't actually do anything");
-                }
-                // We assume that two non-folding merges aren't next to each other
-                if !level.ops.fused_fold {
-                    if let Some(ms) = merges[to] {
-                        panic!("Chained fusion-less folds at {}, ({:?})", to, ms)
-                    }
-                    let size = from.len();
-                    for (idx, lane) in from.iter().copied().enumerate() {
-                        merges[lane] = Some((idx, size).into());
-                    }
-                }
-                for lane in from.iter().copied() {
-                    if lane != to {
-                        names[lane] = names[to].clone();
-                        prev_mats[lane] = prev_mats[to].clone();
+                    let out_shape = &level.ops.out_shape;
+                    let in_shape = &level.ops.in_shape;
+                    for lane in from.iter().copied() {
+                        let gather = vec![merge_adapter_gather(out_shape, lane)];
+                        let name = gather[0].name.clone();
+                        let opset = OpSetKind::Gathers(gather);
+                        let ops = OpSet::new(name, opset,
+                                             in_shape.clone(), out_shape.clone(),
+                                             false);
+                        add_matrix(&ops, lane, &mut our_path, &mut names,
+                                   &mut prev_mats, &mut bases, &outmost_shape)?;
                     }
                 }
             },
             OpSetKind::Split(into, ref copies) => {
+                if level.prune {
+                    panic!("Pruning right after a split isn't well-defined, aborting");
+                }
                 let name = format!("&({})",
                                    copies.iter().map(|i| names[*i].clone()).join(","));
                 our_path.set_file_name(name.clone());
                 let mat = if our_path.exists() {
                     let start = Instant::now();
-                    let load = TransitionMatrix::load_matrix(our_path.as_path())?;
+                    let ret = TransitionMatrix::load_matrix(our_path.as_path())?;
                     let load_time = time_since(start);
                     println!("load:{} [{}]", our_path.display(), load_time);
-                    let ret = load.to_f32_mat();
-                    if level.prune {
-                        level.matrix = Some(load);
-                    }
                     ret
                 }
                 else {
                     let mut gather = prev_mats[copies[0]].as_ref().unwrap().clone();
                     let start = Instant::now();
-                    for idx in copies.iter().copied() {
-                        intersect_matrices(&mut gather, prev_mats[idx].as_ref().unwrap());
+                    for idx in copies[1..].iter().copied() {
+                        union_matrices(&mut gather, prev_mats[idx].as_ref().unwrap());
                     }
-                    let intersect_time = time_since(start);
-                    let our_form = TransitionMatrix::from_f32_mat(&gather, &outmost_shape,
-                                                                  &level.ops.in_shape);
-                    println!("intersect:{} density({}) [{}]", our_path.display(),
-                             density(&our_form), intersect_time);
-                    our_form.store_matrix(&our_path)?;
-                    if level.prune {
-                        level.matrix = Some(our_form);
-                    }
+                    let union_time = time_since(start);
+                    println!("union:{} density({}) [{}]", our_path.display(),
+                             density(&gather), union_time);
+                    gather.store_matrix(&our_path)?;
                     gather
                 };
 

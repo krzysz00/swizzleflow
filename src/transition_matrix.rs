@@ -28,22 +28,13 @@ use byteorder::{LittleEndian,WriteBytesExt,ReadBytesExt};
 
 use smallvec::SmallVec;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
-pub struct MergeSpot {
-    pub lane: usize, pub total_size: usize
-}
-
-impl From<(usize, usize)> for MergeSpot {
-    fn from(tuple: (usize, usize)) -> MergeSpot {
-        MergeSpot { lane: tuple.0, total_size: tuple.1 }
-    }
-}
-
-pub trait TransitionMatrixOps: Sized + std::fmt::Debug {
+pub trait TransitionMatrixOps: Sized + std::fmt::Debug + std::clone::Clone {
     fn get(&self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix]) -> bool;
     fn get_cur_pos(&self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix]) -> bool;
+    fn get_idxs(&self, current1: Ix, current2: Ix, target1: Ix, target2: Ix) -> bool;
     fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool);
     fn set_cur_pos(&mut self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix], value: bool);
+    fn set_idxs(&mut self, current1: Ix, current2: Ix, target1: Ix, target2: Ix, value: bool);
     fn write<T: Write>(&self, io: &mut T) -> Result<()>;
     fn read<T: Read>(io: &mut T) -> Result<Self>;
     fn empty(len: usize, out_shape: &[Ix], in_shape: &[Ix]) -> Self;
@@ -51,6 +42,7 @@ pub trait TransitionMatrixOps: Sized + std::fmt::Debug {
     fn to_f32_mat(&self) -> Array2<f32>;
     fn from_f32_mat(mat: &Array2<f32>, out_shape: &[Ix], in_shape: &[Ix]) -> Self;
 
+    fn slots(&self) -> (usize, usize);
     fn n_ones(&self) -> usize;
     fn n_elements(&self) -> usize;
 }
@@ -83,18 +75,20 @@ fn read_length_tagged_idxs<T: Read>(io: &mut T) -> io::Result<ShapeVec> {
     Ok(buffer)
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct DenseTransitionMatrix {
     data: BitVec,
     target_shape: ShapeVec,
     current_shape: ShapeVec,
     current_len: usize,
+    target_len: usize,
 }
 
 impl DenseTransitionMatrix {
     fn new(data: BitVec, target_shape: ShapeVec, current_shape: ShapeVec) -> Self {
         let current_len: usize = current_shape.iter().product();
-        Self {data, target_shape, current_shape, current_len}
+        let target_len: usize = target_shape.iter().product();
+        Self {data, target_shape, current_shape, current_len, target_len}
     }
 }
 
@@ -109,6 +103,11 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
                            &[current1], &[current2], &[self.current_len])]
     }
 
+    fn get_idxs(&self, current1: Ix, current2: Ix, target1: Ix, target2: Ix) -> bool {
+        self.data[to_index(&[target1], &[target2], &[self.target_len],
+                           &[current1], &[current2], &[self.current_len])]
+    }
+
     fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool) {
         let index = to_index(target1, target2, &self.target_shape,
                              current1, current2, &self.current_shape);
@@ -117,6 +116,12 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
 
     fn set_cur_pos(&mut self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix], value: bool) {
         let index = to_index(target1, target2, &self.target_shape,
+                             &[current1], &[current2], &[self.current_len]);
+        self.data.set(index, value);
+    }
+
+    fn set_idxs(&mut self, current1: Ix, current2: Ix, target1: Ix, target2: Ix, value: bool) {
+        let index = to_index(&[target1], &[target2], &[self.target_len],
                              &[current1], &[current2], &[self.current_len]);
         self.data.set(index, value);
     }
@@ -163,6 +168,10 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
         Self::new(bits, ShapeVec::from_slice(out_shape), ShapeVec::from_slice(in_shape))
     }
 
+    fn slots(&self) -> (usize, usize) {
+        (self.current_len, self.target_len)
+    }
+
     fn n_ones(&self) -> usize {
         self.data.iter().filter(|x| *x).count()
     }
@@ -172,19 +181,14 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
     }
 }
 
-pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet, merge: Option<MergeSpot>) -> T {
-    let mut out_shape = ops.out_shape.to_owned();
-    // Folds are already handled
-    if let Some(ms) = merge {
-        out_shape.push(ms.total_size);
-    }
+pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet) -> T {
+    let out_shape = ops.out_shape.to_owned();
 
     let out_slots: usize = out_shape.iter().product();
     let in_slots: usize = ops.in_shape.iter().product();
     let in_bound = in_slots as isize;
     let len = (out_slots.pow(2)) * (in_slots.pow(2));
     let fold = ops.fused_fold;
-    let merge_lane = merge.map(|ms| ms.lane);
 
     // empty takes out, in, unlike set and their friends
     let mut ret = T::empty(len, &out_shape, &ops.in_shape);
@@ -203,10 +207,6 @@ pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet, merge: Option<MergeSpot>) 
                             out1.pop();
                             out2.pop();
                         }
-                        if let Some(l) = merge_lane {
-                            out1.push(l);
-                            out2.push(l);
-                        }
                         ret.set_cur_pos(input1 as usize, input2 as usize,
                                         &out1, &out2,
                                         true);
@@ -216,7 +216,7 @@ pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet, merge: Option<MergeSpot>) 
     ret
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum TransitionMatrix {
     Dense(DenseTransitionMatrix),
 }
@@ -237,6 +237,12 @@ impl TransitionMatrixOps for TransitionMatrix {
         }
     }
 
+    fn get_idxs(&self, current1: Ix, current2: Ix, target1: Ix, target2: Ix) -> bool {
+        match self {
+            TransitionMatrix::Dense(d) => d.get_idxs(current1, current2, target1, target2)
+        }
+    }
+
     fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool) {
         match self {
             TransitionMatrix::Dense(d) => d.set(current1, current2, target1, target2, value)
@@ -246,6 +252,12 @@ impl TransitionMatrixOps for TransitionMatrix {
     fn set_cur_pos(&mut self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix], value: bool) {
         match self {
             TransitionMatrix::Dense(d) => d.set_cur_pos(current1, current2, target1, target2, value)
+        }
+    }
+
+    fn set_idxs(&mut self, current1: Ix, current2: Ix, target1: Ix, target2: Ix, value: bool) {
+        match self {
+            TransitionMatrix::Dense(d) => d.set_idxs(current1, current2, target1, target2, value)
         }
     }
 
@@ -289,6 +301,12 @@ impl TransitionMatrixOps for TransitionMatrix {
        TransitionMatrix::Dense(DenseTransitionMatrix::from_f32_mat(mat, out_shape, in_shape))
     }
 
+    fn slots(&self) -> (usize, usize) {
+        match self {
+            TransitionMatrix::Dense(d) => d.slots()
+        }
+    }
+
     fn n_ones(&self) -> usize {
         match self {
             TransitionMatrix::Dense(d) => d.n_ones()
@@ -321,8 +339,7 @@ impl From<DenseTransitionMatrix> for TransitionMatrix {
     }
 }
 
-pub fn build_or_load_matrix(ops: &OpSet, path: impl AsRef<Path>,
-                            merge: Option<MergeSpot>) -> Result<TransitionMatrix> {
+pub fn build_or_load_matrix(ops: &OpSet, path: impl AsRef<Path>) -> Result<TransitionMatrix> {
     let path = path.as_ref();
     if path.exists() {
         let start = Instant::now();
@@ -333,7 +350,7 @@ pub fn build_or_load_matrix(ops: &OpSet, path: impl AsRef<Path>,
     }
     else {
         let start = Instant::now();
-        let matrix = TransitionMatrix::Dense(build_mat(ops, merge));
+        let matrix = TransitionMatrix::Dense(build_mat(ops));
         matrix.store_matrix(path)?;
         let dur = time_since(start);
         println!("build:{} density({}) [{}]", path.display(), density(&matrix), dur);
@@ -357,7 +374,7 @@ mod tests {
         let small_fans = simple_fans(&[3, 4], OpAxis::Rows).unwrap();
         let opset = OpSet::new("sFr", small_fans, smallvec![3, 4],
                                smallvec![3, 4], false);
-        let matrix: DenseTransitionMatrix = build_mat(&opset, None);
+        let matrix: DenseTransitionMatrix = build_mat(&opset);
         assert_eq!(matrix.n_ones(), 488);
     }
 

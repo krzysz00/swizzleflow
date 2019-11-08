@@ -20,7 +20,7 @@ use crate::operators::swizzle::{simple_fans, simple_rotations, OpAxis};
 use crate::operators::reg_select::{reg_select_no_const};
 use crate::operators::load::{load_rep, load_trunc, broadcast};
 use crate::expected_syms_util::fold_expected;
-use crate::misc::{ShapeVec, extending_set, extending_set_def};
+use crate::misc::{ShapeVec, extending_set};
 
 use std::collections::BTreeSet;
 
@@ -206,8 +206,8 @@ impl SynthesisLevelDesc {
         }
     }
 
-    pub fn to_synthesis_level(&self, in_shapes: &[Option<Vec<usize>>],
-                              expected_syms: usize) -> Result<SynthesisLevel> {
+    fn to_opset(&self, in_shapes: &[Option<Vec<usize>>])
+                -> Result<OpSet> {
         let lane = self.lane as usize;
         let mut out_shape: ShapeVec = self.out_shape.iter().copied().map(|x| x as usize).collect();
         let in_shape: ShapeVec = if self.step.is_initial() {
@@ -249,8 +249,13 @@ impl SynthesisLevelDesc {
                                                          from.len()).into());
                 }
             }
-            OpSetKind::Split(_, _) => if self.then_fold {
-                return Err(ErrorKind::NoSplitFolds.into());
+            OpSetKind::Split(_, _) => {
+                if self.then_fold {
+                    return Err(ErrorKind::NoSplitFolds.into());
+                }
+                if self.prune {
+                    return Err(ErrorKind::NoSplitPrune.into());
+                }
             }
         }
         let name: std::borrow::Cow<'static, str> =
@@ -271,8 +276,19 @@ impl SynthesisLevelDesc {
                         SynthesisLevelKind::Initial(_) => "inital??".into(),
                     }
             };
-        let level = OpSet::new(name, opset, in_shape.clone(), out_shape, self.then_fold);
-        Ok(SynthesisLevel::new(level, lane, expected_syms, self.prune))
+        Ok(OpSet::new(name, opset, in_shape.clone(), out_shape, self.then_fold))
+    }
+
+    pub fn to_synthesis_level(&self, shapes: &mut Vec<Option<Vec<usize>>>,
+                              expected_syms_idxs: &mut Vec<Option<usize>>,
+                              count: &mut usize) -> Result<SynthesisLevel> {
+        let opset = self.to_opset(&shapes)?;
+        let lane = self.lane as usize;
+        update_expected_syms_idxs(&opset, lane, expected_syms_idxs, count);
+        let expected_syms = expected_syms_idxs[lane].unwrap();
+        let ret = SynthesisLevel::new(opset, lane, expected_syms, self.prune);
+        update_shape_info(&ret, shapes);
+        Ok(ret)
     }
 }
 
@@ -339,16 +355,8 @@ fn custom_target(data: &[Symbolic], shape: &[usize], n_folds: usize) -> Result<A
 }
 
 
-fn update_shape_info(level: &SynthesisLevel, shapes: &mut Vec<Option<Vec<usize>>>,
-                     were_merged: &mut Vec<bool>) {
+fn update_shape_info(level: &SynthesisLevel, shapes: &mut Vec<Option<Vec<usize>>>) {
     let lane = level.lane;
-
-    extending_set_def(were_merged, lane, false, false);
-    if let Some(target) = level.ops.ops.merge_target() {
-        if !level.ops.fused_fold {
-            were_merged[target] = true;
-        }
-    }
 
     match &level.ops.ops {
         OpSetKind::Gathers(_) => {
@@ -362,23 +370,22 @@ fn update_shape_info(level: &SynthesisLevel, shapes: &mut Vec<Option<Vec<usize>>
         }
         OpSetKind::Split(from, to) => {
             shapes[*from] = None;
-            were_merged[*from] = false;
             for idx in to {
                 extending_set(shapes, *idx, Some(level.ops.out_shape.to_vec()));
-                extending_set_def(were_merged, *idx, false, false);
             }
         }
     }
 }
 
-fn update_expected_syms_idxs(level: &SynthesisLevel,
+// Note: levels take expected syms indices of their immediate successor
+// because pruning happens at the end of a level
+fn update_expected_syms_idxs(ops: &OpSet, lane: usize,
                              expected_syms_idxs: &mut Vec<Option<usize>>,
                              count: &mut usize) {
     use OpSetKind::*;
-    let lane = level.lane;
-    match level.ops.ops {
+    match ops.ops {
         Gathers(_) => {
-            if level.ops.fused_fold {
+            if ops.fused_fold {
                 expected_syms_idxs[lane] = Some(*count);
                 *count += 1;
             }
@@ -486,7 +493,6 @@ impl ProblemDesc {
     pub fn get_levels(&self) -> Result<Vec<SynthesisLevel>> {
         let mut ret = Vec::<SynthesisLevel>::with_capacity(self.steps.len());
         let mut shapes: Vec<Option<Vec<usize>>> = Vec::new();
-        let mut were_merged = Vec::<bool>::new();
         let mut expected_syms_idxs = Vec::<Option<usize>>::new();
         let mut expected_syms_count = 0;
 
@@ -497,27 +503,27 @@ impl ProblemDesc {
                     .map(|x| x as usize).collect();
 
                 extending_set(&mut shapes, lane, Some(shape));
-                extending_set_def(&mut were_merged, lane, false, false);
                 extending_set(&mut expected_syms_idxs, lane, Some(expected_syms_count));
                 expected_syms_count += 1;
             }
             else {
-                let level = step.to_synthesis_level(&shapes,
-                                                    expected_syms_idxs[step.lane as usize].unwrap())
+                let level = step.to_synthesis_level(&mut shapes,
+                                                    &mut expected_syms_idxs,
+                                                    &mut expected_syms_count)
                     .chain_err(|| ErrorKind::LevelBuild(Box::new(step.clone())))?;
-                if !level.ops.fused_fold {
-                    if let OpSetKind::Merge(ref from, _to) = level.ops.ops {
-                        for idx in from.iter().copied() {
-                            if were_merged[idx] {
-                                return Err(ErrorKind::ConsecutiveMerges(idx).into());
-                            }
-                        }
-                    }
-                }
-                update_shape_info(&level, &mut shapes, &mut were_merged);
-                update_expected_syms_idxs(&level, &mut expected_syms_idxs,
-                                          &mut expected_syms_count);
                 ret.push(level);
+            }
+        }
+        // Error checking
+        {
+            let last_idx = ret.len() - 1;
+            let last = &mut ret[last_idx];
+            if last.prune {
+                println!("WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.");
+                last.prune = false;
+            }
+            if last.lane != 0 {
+                return Err(ErrorKind::FinalLane(last.lane).into());
             }
         }
         Ok(ret)

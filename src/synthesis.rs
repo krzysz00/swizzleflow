@@ -45,9 +45,8 @@ pub enum Mode {
 struct SearchLevelStats {
     tested: AtomicUsize,
     pruned: AtomicUsize,
+    failed: AtomicUsize,
     succeeded: AtomicUsize,
-    cache_hit: AtomicUsize,
-    cache_set: AtomicUsize,
 }
 
 impl SearchLevelStats {
@@ -67,12 +66,8 @@ impl SearchLevelStats {
         self.pruned.fetch_add(1, Ordering::Relaxed);
     }
 
-    pub fn cache_hit(&self) {
-        self.cache_hit.fetch_add(1, Ordering::Relaxed);
-    }
-
-    pub fn cache_set(&self) {
-        self.cache_set.fetch_add(1, Ordering::Relaxed);
+    pub fn failed(&self) {
+        self.failed.fetch_add(1, Ordering::Relaxed);
     }
 }
 
@@ -81,8 +76,7 @@ impl Clone for SearchLevelStats {
         Self { tested: AtomicUsize::new(self.tested.load(Ordering::SeqCst)),
                pruned: AtomicUsize::new(self.pruned.load(Ordering::SeqCst)),
                succeeded: AtomicUsize::new(self.succeeded.load(Ordering::SeqCst)),
-               cache_hit: AtomicUsize::new(self.cache_hit.load(Ordering::SeqCst)),
-               cache_set: AtomicUsize::new(self.cache_set.load(Ordering::SeqCst)),
+               failed: AtomicUsize::new(self.failed.load(Ordering::SeqCst)),
         }
     }
 }
@@ -93,14 +87,12 @@ impl Display for SearchLevelStats {
         let tested = self.tested.load(Ordering::SeqCst);
         let found = self.succeeded.load(Ordering::Relaxed);
         let pruned = self.pruned.load(Ordering::Relaxed);
+        let failed = self.failed.load(Ordering::Relaxed);
 
-        let continued = tested - found - pruned;
+        let continued = tested - found - pruned - failed;
 
-        let cache_hits = self.cache_hit.load(Ordering::SeqCst);
-        let cache_puts = self.cache_set.load(Ordering::SeqCst);
-
-        write!(f, "tested({}), found({}), pruned({}), continued({}) cache({}:{})",
-               tested, found, pruned, continued, cache_hits, cache_puts)
+        write!(f, "tested({}), found({}), failed({}), pruned({}), continued({})",
+               tested, found, failed, pruned, continued)
     }
 }
 
@@ -111,7 +103,7 @@ type States<'d, 'l> = SmallVec<[Option<&'l ProgState<'d>>; 4]>;
 // Invariant: any level with pruning enabled has a corresponding pruning matrix available
 fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
               expected_syms: &[DomRef],
-              cache: &ResultMap<'d>, tracker: &SearchLevelStats) -> bool {
+              _cache: &ResultMap<'d>, tracker: &SearchLevelStats) -> bool {
     let mut did_lookup = false;
     for a in expected_syms.iter().copied() {
         for b in expected_syms.iter().copied() {
@@ -122,10 +114,10 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
                         v
                     });
                 if !result {
-                    if did_lookup {
-                        cache.write().unwrap().insert(current.clone(), false);
-                        tracker.cache_set();
-                    }
+                    // if did_lookup {
+                    //     cache.write().unwrap().insert(current.clone(), false);
+                    // }
+                    tracker.pruned();
                     return false;
                 }
             }
@@ -165,16 +157,19 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                       stats: &'f [SearchLevelStats], mode: Mode,
                       caches: &'f [SearchResultCache<'d>]) -> bool {
     let tracker = &stats[current_level];
-    tracker.checking();
 
     if current_level == levels.len() {
+        tracker.checking();
         let current = curr_states[0].unwrap();
         if current == target {
             tracker.success();
             println!("soln:{}", &current.name);
             return true;
         }
-        return false;
+        else {
+            tracker.failed();
+            return false;
+        }
     }
 
     let level = &levels[current_level];
@@ -182,16 +177,30 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
     let current: &ProgState<'d> = curr_states[lane].unwrap();
     // println!("[{} - {}] {}", current_level, level.ops.name, current);
     let cache = caches[current_level].clone();
-    if level.prune {
-        if !viable(current, target,
-                   level.matrix.as_ref().unwrap(),
-                   &expected_syms[level.expected_syms],
-                   cache.as_ref(), &tracker) {
-            //println!("{}", current);
-            tracker.pruned();
-            return false;
+    let proceed = |c: Option<&ProgState<'d>>| {
+        tracker.checking();
+        match c {
+            Some(r) => {
+                if level.prune {
+                    if !viable(r, target,
+                               level.matrix.as_ref().unwrap(),
+                               &expected_syms[level.expected_syms],
+                               cache.as_ref(), &tracker) {
+                        return false;
+                    }
+                }
+                let new_states = copy_replacing(&curr_states,
+                                                lane, c);
+                search(new_states, target, levels, expected_syms,
+                       current_level + 1, stats, mode, caches)
+            },
+            None => {
+                tracker.failed();
+                false
+            }
         }
-    }
+    };
+
     let ops = &level.ops.ops; // Get at the actual vector of gathers
     let ret =
         match ops {
@@ -202,24 +211,16 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                             gathers.iter().map(
                                 |o| {
                                     let res = current.gather_fold_by(o);
-                                    if res.is_some() {
-                                        let new_states = copy_replacing(&curr_states,
-                                                                        lane, res.as_ref());
-                                        search(new_states, target, levels, expected_syms,
-                                               current_level + 1, stats, mode, caches)
-                                    } else { false }})
+                                    proceed(res.as_ref())
+                                })
                                 .fold(false, |acc, new| new || acc)
                         }
                         Mode::First => {
                             gathers.iter().any(
                                 |o| {
                                     let res = current.gather_fold_by(o);
-                                    if res.is_some()  {
-                                        let new_states = copy_replacing(&curr_states,
-                                                                        lane, res.as_ref());
-                                        search(new_states, target, levels, expected_syms,
-                                               current_level + 1, stats, mode, caches)
-                                    } else { false }})
+                                    proceed(res.as_ref())
+                                })
                         }
                     }
                 }
@@ -230,10 +231,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                             gathers.iter().map(
                                 |o| {
                                     let res = Some(current.gather_by(o));
-                                    let new_states = copy_replacing(&curr_states,
-                                                                    lane, res.as_ref());
-                                    search(new_states, target, levels, expected_syms,
-                                           current_level + 1, stats, mode, caches)
+                                    proceed(res.as_ref())
                                 })
                                 .fold(false, |acc, new| new || acc)
                         }
@@ -241,16 +239,14 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                             gathers.iter().any(
                                 |o| {
                                     let res = Some(current.gather_by(o));
-                                    let new_states = copy_replacing(&curr_states,
-                                                                    lane, res.as_ref());
-                                    search(new_states, target, levels, expected_syms,
-                                           current_level + 1, stats, mode, caches)
+                                    proceed(res.as_ref())
                                 })
                         }
                     }
                 }
             },
             OpSetKind::Merge(from, to) => {
+                tracker.checking();
                 let to = *to;
                 let to_merge: SmallVec<[&ProgState; 6]> =
                     from.iter().copied().map(
@@ -269,11 +265,22 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                             new_states[i] = None
                         }
                     }
+
+                    if level.prune {
+                        if !viable(current, target,
+                                   level.matrix.as_ref().unwrap(),
+                                   &expected_syms[level.expected_syms],
+                                   cache.as_ref(), &tracker) {
+                            return false;
+                        }
+                    }
+
                     search(new_states, target, levels, expected_syms,
                            current_level + 1, stats, mode, caches)
-                } else { false }
+                } else { tracker.failed(); false }
             }
             OpSetKind::Split(into, copies) => {
+                tracker.checking();
                 let mut new_states = curr_states.clone();
                 let to_copy = curr_states[*into];
                 for i in copies.iter().copied() {
@@ -283,8 +290,6 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                        current_level + 1, stats, mode, caches)
             }
         };
-    cache.write().unwrap().insert(current.clone(), ret);
-    tracker.cache_set();
     ret
 }
 

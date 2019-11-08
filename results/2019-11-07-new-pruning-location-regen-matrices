@@ -1,0 +1,199 @@
+spec:specs/1d-conv-16x3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/16-sRc-16,3 [0.001011068]
+load:matrices/16-sRc-16,3_16,3-sFc-16,3 [0.000830172]
+soln:id;load_trunc;select(0 >= 1);id;rot(-15,3,0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (regSelNC) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:2 (sFc) tested(255), found(0), failed(0), pruned(112), continued(143)
+stats:3 (sRc) tested(36608), found(0), failed(36480), pruned(0), continued(128)
+stats:4 ([last]) tested(128), found(1), failed(127), pruned(0), continued(0)
+search:conv shape([16]) true mode(All) [0.024440445]
+spec:specs/1d-conv-32x3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32-sRc-32,3 [0.005393858]
+load:matrices/32-sRc-32,3_32,3-sFc-32,3 [0.005132852]
+soln:id;load_trunc;select(0 >= 1);id;rot(-31,3,0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (regSelNC) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:2 (sFc) tested(1023), found(0), failed(0), pruned(480), continued(543)
+stats:3 (sRc) tested(556032), found(0), failed(555520), pruned(0), continued(512)
+stats:4 ([last]) tested(512), found(1), failed(511), pruned(0), continued(0)
+search:conv shape([32]) true mode(All) [0.260317837]
+spec:specs/1d-conv-32x5.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32-sRc-32,5 [0.013813621]
+load:matrices/32-sRc-32,5_32,5-sFc-32,5 [0.013556269]
+soln:id;load_trunc;select(0 >= 1);id;rot(-31,5,0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (regSelNC) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:2 (sFc) tested(1023), found(0), failed(0), pruned(608), continued(415)
+stats:3 (sRc) tested(424960), found(0), failed(424704), pruned(0), continued(256)
+stats:4 ([last]) tested(256), found(1), failed(255), pruned(0), continued(0)
+search:conv shape([32]) true mode(All) [0.398762912]
+spec:specs/1d-conv-dealg-16x3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/16,3-sRc-16,3 [0.002118145]
+load:matrices/16,3-sRc-16,3_16,3-sFc-16,3 [0.002801164]
+soln:id;load_trunc;select(0 >= 1);id;rot(-15,3,0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (regSelNC) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:2 (sFc) tested(255), found(0), failed(0), pruned(254), continued(1)
+stats:3 (sRc) tested(256), found(0), failed(0), pruned(0), continued(256)
+stats:4 ([last]) tested(256), found(1), failed(255), pruned(0), continued(0)
+search:conv_dealg shape([16, 3]) true mode(All) [0.002091085]
+spec:specs/1d-conv-dealg-32x3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32,3-sRc-32,3 [0.032385919]
+load:matrices/32,3-sRc-32,3_32,3-sFc-32,3 [0.03766482]
+soln:id;load_trunc;select(0 >= 1);id;rot(-31,3,0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (regSelNC) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:2 (sFc) tested(1023), found(0), failed(0), pruned(1022), continued(1)
+stats:3 (sRc) tested(1024), found(0), failed(0), pruned(0), continued(1024)
+stats:4 ([last]) tested(1024), found(1), failed(1023), pruned(0), continued(0)
+search:conv_dealg shape([32, 3]) true mode(All) [0.017588603]
+spec:specs/1d-conv-dealg-32x5.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32,5-sRc-32,5 [0.283862872]
+load:matrices/32,5-sRc-32,5_32,5-sFc-32,5 [0.253063815]
+soln:id;load_trunc;select(0 >= 1);id;rot(-31,5,0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (regSelNC) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:2 (sFc) tested(1023), found(0), failed(0), pruned(1022), continued(1)
+stats:3 (sRc) tested(1024), found(0), failed(0), pruned(0), continued(1024)
+stats:4 ([last]) tested(1024), found(1), failed(1023), pruned(0), continued(0)
+search:conv_dealg shape([32, 5]) true mode(All) [0.043905697]
+spec:specs/1d-wconv-16x3-e-first.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/16-identity-16,3 [0.000257605]
+load:matrices/16-identity-16,3_16,3-sRr-16,3 [0.000214641]
+load:matrices/16-identity-16,3_16,3-sRc-16,3 [0.000210306]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3 [0.000209513]
+soln:merge_fold[id;load_trunc;select(0 >= 1);id;rot(-15,3,0),id;broadcast;id;id];id
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (regSelNC) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:3 (sFc) tested(255), found(0), failed(0), pruned(112), continued(143)
+stats:4 (sRc) tested(36608), found(0), failed(0), pruned(36607), continued(1)
+stats:5 (sFr) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:6 (sRr) tested(180), found(0), failed(0), pruned(0), continued(180)
+stats:7 (merge_folding) tested(180), found(0), failed(170), pruned(0), continued(10)
+stats:8 (identity) tested(10), found(0), failed(9), pruned(0), continued(1)
+stats:9 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:weight_conv shape([16]) true mode(All) [0.788732504]
+spec:specs/1d-wconv-16x3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/16-identity-16,3 [0.000199929]
+load:matrices/16-identity-16,3_16,3-sRr-16,3 [0.000191926]
+load:matrices/16-identity-16,3_16,3-sRc-16,3 [0.000187029]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3 [0.000186594]
+soln:merge_fold[id;load_trunc;select(0 >= 1);id;rot(-15,3,0),id;broadcast;id;id];id
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (regSelNC) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:3 (sFc) tested(255), found(0), failed(0), pruned(112), continued(143)
+stats:4 (sFr) tested(715), found(0), failed(0), pruned(0), continued(715)
+stats:5 (sRc) tested(183040), found(0), failed(0), pruned(183035), continued(5)
+stats:6 (sRr) tested(180), found(0), failed(0), pruned(0), continued(180)
+stats:7 (merge_folding) tested(180), found(0), failed(170), pruned(0), continued(10)
+stats:8 (identity) tested(10), found(0), failed(9), pruned(0), continued(1)
+stats:9 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:weight_conv shape([16]) true mode(All) [3.982385755]
+spec:specs/1d-wconv-16x3-w-first.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/16-identity-16,3 [0.00020367]
+load:matrices/16-identity-16,3_16,3-sRc-16,3 [0.000198014]
+load:matrices/16-identity-16,3_16,3-sRc-16,3_16,3-sFc-16,3 [0.000312751]
+load:matrices/16-identity-16,3_16,3-sRr-16,3 [0.000195201]
+soln:merge_fold[id;load_trunc;select(0 >= 1);id;rot(-15,3,0),id;broadcast;id;id];id
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (sFr) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:3 (sRr) tested(180), found(0), failed(0), pruned(0), continued(180)
+stats:4 (regSelNC) tested(1440), found(0), failed(0), pruned(1260), continued(180)
+stats:5 (sFc) tested(45900), found(0), failed(0), pruned(20160), continued(25740)
+stats:6 (sRc) tested(6589440), found(0), failed(0), pruned(6589260), continued(180)
+stats:7 (merge_folding) tested(180), found(0), failed(170), pruned(0), continued(10)
+stats:8 (identity) tested(10), found(0), failed(9), pruned(0), continued(1)
+stats:9 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:weight_conv shape([16]) true mode(All) [41.652049785]
+spec:specs/1d-wconv-6x3-rescheduled.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/6-identity-6,3 [0.000033975]
+load:matrices/6-identity-6,3_6,3-sRc-6,3 [0.000013896]
+load:matrices/6-identity-6,3_6,3-sRc-6,3_6,3-sFc-6,3 [0.00001262]
+load:matrices/6-identity-6,3_6,3-sRr-6,3 [0.000019634]
+soln:merge_fold[id;load_trunc;select(0 >= 1);id;rot(-5,3,0),id;broadcast;id;id];id
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (sFr) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:3 (sRr) tested(135), found(0), failed(0), pruned(0), continued(135)
+stats:4 (regSelNC) tested(1080), found(0), failed(0), pruned(945), continued(135)
+stats:5 (sFc) tested(4725), found(0), failed(0), pruned(810), continued(3915)
+stats:6 (sRc) tested(140940), found(0), failed(0), pruned(140805), continued(135)
+stats:7 (merge_folding) tested(135), found(0), failed(132), pruned(0), continued(3)
+stats:8 (identity) tested(3), found(0), failed(2), pruned(0), continued(1)
+stats:9 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:weight_conv shape([6]) true mode(All) [0.326679983]
+spec:specs/trove-32x3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32,3-sRr-32,3 [0.033503524]
+load:matrices/32,3-sRr-32,3_32,3-sFr-32,3 [0.040060326]
+load:matrices/32,3-sRr-32,3_32,3-sFr-32,3_32,3-sRc-32,3 [0.038068365]
+load:matrices/32,3-sRr-32,3_32,3-sFr-32,3_32,3-sRc-32,3_32,3-sFc-32,3 [0.037726517]
+load:matrices/32,3-sRr-32,3_32,3-sFr-32,3_32,3-sRc-32,3_32,3-sFc-32,3_32,3-sRr-32,3 [0.040225214]
+soln:id;load_rep;id;rot(-29,32,-2);fan(0,3);rot(-11,3,-10);fan(0,2);rot(-30,32,-2)
+soln:id;load_rep;fan(0,2);rot(-31,32,0);fan(0,3);rot(-21,3,0);id;id
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (sFr) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:2 (sRr) tested(225), found(0), failed(0), pruned(223), continued(2)
+stats:3 (sFc) tested(2046), found(0), failed(0), pruned(2044), continued(2)
+stats:4 (sRc) tested(2048), found(0), failed(0), pruned(2046), continued(2)
+stats:5 (sFr) tested(10), found(0), failed(0), pruned(8), continued(2)
+stats:6 (sRr) tested(90), found(0), failed(0), pruned(0), continued(90)
+stats:7 ([last]) tested(90), found(2), failed(88), pruned(0), continued(0)
+search:trove shape([32, 3]) true mode(All) [0.049572778]
+spec:specs/trove-32x4-flipped-rot.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32,4-sRr-32,4 [0.116379502]
+load:matrices/32,4-sRr-32,4_32,4-sFr-32,4 [0.115141875]
+load:matrices/32,4-sRr-32,4_32,4-sFr-32,4_32,4-sFc-32,4 [0.126329556]
+load:matrices/32,4-sRr-32,4_32,4-sFr-32,4_32,4-sFc-32,4_32,4-sRc-32,4 [0.122598343]
+load:matrices/32,4-sRr-32,4_32,4-sFr-32,4_32,4-sFc-32,4_32,4-sRc-32,4_32,4-sRr-32,4 [0.120534654]
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (sFr) tested(15), found(0), failed(0), pruned(0), continued(15)
+stats:2 (sRr) tested(1200), found(0), failed(0), pruned(1200), continued(0)
+stats:3 (sRc) tested(0), found(0), failed(0), pruned(0), continued(0)
+stats:4 (sFc) tested(0), found(0), failed(0), pruned(0), continued(0)
+stats:5 (sFr) tested(0), found(0), failed(0), pruned(0), continued(0)
+stats:6 (sRr) tested(0), found(0), failed(0), pruned(0), continued(0)
+stats:7 ([last]) tested(0), found(0), failed(0), pruned(0), continued(0)
+search:trove shape([32, 4]) false mode(All) [0.026721721]
+spec:specs/trove-4x3-noprune.json
+soln:id;load_rep;id;rot(-1,4,0);fan(0,3);rot(-1,3,0)
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (sFr) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:2 (sRr) tested(90), found(0), failed(0), pruned(0), continued(90)
+stats:3 (sFc) tested(1350), found(0), failed(0), pruned(0), continued(1350)
+stats:4 (sRc) tested(21600), found(0), failed(0), pruned(0), continued(21600)
+stats:5 ([last]) tested(21600), found(1), failed(21599), pruned(0), continued(0)
+search:trove shape([4, 3]) true mode(All) [0.027882998]
+spec:specs/trove-8x3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/8,3-sRr-8,3 [0.000154884]
+load:matrices/8,3-sRr-8,3_8,3-sFr-8,3 [0.000140912]
+load:matrices/8,3-sRr-8,3_8,3-sFr-8,3_8,3-sRc-8,3 [0.000138571]
+load:matrices/8,3-sRr-8,3_8,3-sFr-8,3_8,3-sRc-8,3_8,3-sFc-8,3 [0.000139175]
+load:matrices/8,3-sRr-8,3_8,3-sFr-8,3_8,3-sRc-8,3_8,3-sFc-8,3_8,3-sRr-8,3 [0.000154133]
+soln:id;load_rep;fan(0,2);rot(-7,8,0);fan(0,3);rot(-5,3,0);id;id
+soln:id;load_rep;id;rot(-5,8,-2);fan(0,3);rot(-3,3,-2);fan(0,2);rot(-6,8,-2)
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (sFr) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:2 (sRr) tested(135), found(0), failed(0), pruned(133), continued(2)
+stats:3 (sFc) tested(126), found(0), failed(0), pruned(124), continued(2)
+stats:4 (sRc) tested(128), found(0), failed(0), pruned(126), continued(2)
+stats:5 (sFr) tested(10), found(0), failed(0), pruned(8), continued(2)
+stats:6 (sRr) tested(54), found(0), failed(0), pruned(0), continued(54)
+stats:7 ([last]) tested(54), found(2), failed(52), pruned(0), continued(0)
+search:trove shape([8, 3]) true mode(All) [0.00116467]

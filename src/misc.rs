@@ -41,13 +41,6 @@ pub fn extending_set<T: Default>(vec: &mut Vec<T>, idx: usize, item: T) {
     vec[idx] = item
 }
 
-pub fn extending_set_def<T: Clone>(vec: &mut Vec<T>, idx: usize, item: T, default: T) {
-    for _ in vec.len()..=idx {
-        vec.push(default.clone());
-    }
-    vec[idx] = item
-}
-
 use ndarray::Ix;
 pub fn in_bounds(index: &[Ix], bounds: &[Ix]) -> bool {
     index.iter().zip(bounds.iter()).all(move |(i, v)| i < v)

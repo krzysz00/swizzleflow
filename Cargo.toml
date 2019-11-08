@@ -1,12 +1,12 @@
 [package]
 name = "swizzleflow"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Krzysztof Drewniak <krzysdrewniak@gmail.com>"]
 edition = "2018"
 
 [dependencies]
 intel-mkl-src = { version = "0.4.0" }
-ndarray = { version = "0.12", features = ["blas"] }
+ndarray = { version = "0.13", features = ["blas"] }
 
 smallvec = "0.6.9"
 bit-vec = "0.6.1"

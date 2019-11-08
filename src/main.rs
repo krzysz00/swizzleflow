@@ -69,10 +69,6 @@ pub mod errors {
                 description("incorrect number of merge arguments")
                 display("incorrect number of merge arguments: expected {}, got {}", expected, got)
             }
-            ConsecutiveMerges(lane: usize) {
-                description("consecutive foldless merges")
-                display("consecutive foldless merges on lane {}. Add an id?", lane)
-            }
             InvalidArrayData(shape: Vec<usize>) {
                 description("invalid array data"),
                 display("invalid array data for shape: {:?}", shape)
@@ -94,8 +90,16 @@ pub mod errors {
                 display("symbols not in spec")
             }
             NoSplitFolds {
-                description("folds on splits is forbidden")
-                display("fold on splits is forbidden")
+                description("can't fold after splits")
+                display("can't fold after splits")
+            }
+            NoSplitPrune {
+                description("can't prune after splits")
+                display("can't prune after splits")
+            }
+            FinalLane(lane: usize) {
+                description("lane of last step must be 0")
+                display("lane of last step must be 0 but is {}", lane)
             }
             MatrixLoad(p: std::path::PathBuf) {
                 description("couldn't read matrix file")
@@ -134,20 +138,23 @@ fn run() -> Result<()> {
     let synthesis_mode = if args.is_present("all") { Mode::All } else { Mode::First };
 
     let matrix_dir = Path::new(args.value_of_os("matrix_dir").unwrap()); // We have a default
-    let specs: Vec<ProblemDesc> = match args.values_of_os("specs") {
+    let specs: Vec<(ProblemDesc, String)> = match args.values_of_os("specs") {
         Some(iter) => {
             iter.map(
                 |path| {
-                    println!("spec:{}", path.to_string_lossy());
+                    let name = path.to_string_lossy().into_owned();
                     let file = open_file(path)?;
                     serde_json::from_reader(BufReader::new(file))
                         .chain_err(|| ErrorKind::ParseError(path.into()))
+                        .map(|v| (v, name))
                 }).collect::<Result<Vec<_>>>()?
         },
-        None => vec![serde_json::from_reader(BufReader::new(std::io::stdin().lock()))?]
+        None => vec![(serde_json::from_reader(BufReader::new(std::io::stdin().lock()))?,
+                      "stdin".into())]
     };
 
-    for desc in specs {
+    for (desc, name) in specs {
+        println!("spec:{}", name);
         let spec = desc.get_spec().chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
         let domain = desc.make_domain(spec.view());
         let mut levels = desc.get_levels()
