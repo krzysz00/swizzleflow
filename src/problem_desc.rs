@@ -17,7 +17,8 @@ use crate::errors::*;
 use crate::operators::{SynthesisLevel,OpSet,OpSetKind,identity};
 use crate::state::{ProgState,Domain,Value,Symbolic,DomRef,Gather,to_opt_ix};
 use crate::operators::swizzle::{simple_fans, simple_rotations, OpAxis};
-use crate::operators::reg_select::{reg_select_no_const};
+use crate::operators::select::{reg_select_no_const, reg_select,
+                               cond_keep_no_consts, cond_keep};
 use crate::operators::load::{load_rep, load_trunc, broadcast};
 use crate::expected_syms_util::fold_expected;
 use crate::misc::{ShapeVec, extending_set};
@@ -89,6 +90,29 @@ impl GathersDesc {
                         }
                         reg_select_no_const(out_shape)
                     },
+                    "select_item" => {
+                        if out_shape[0..out_shape.len()-1] != in_shape[0..in_shape.len()-1] {
+                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
+                        }
+                        if in_shape[in_shape.len()-1] != 2 {
+                            let mut correct_shape = in_shape.to_vec();
+                            correct_shape[in_shape.len()-1] = 2;
+                            return Err(ErrorKind::ShapeMismatch(correct_shape, in_shape.to_vec()).into());
+                        }
+                        reg_select(out_shape)
+                    },
+                    "cond_keep_no_consts" => {
+                        if out_shape != in_shape {
+                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
+                        }
+                        cond_keep_no_consts(out_shape)
+                    },
+                    "cond_keep" => {
+                        if out_shape != in_shape {
+                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
+                        }
+                        cond_keep(out_shape)
+                    }
                     other => {
                         return Err(ErrorKind::UnknownBasisType(other.to_owned()).into())
                     }
