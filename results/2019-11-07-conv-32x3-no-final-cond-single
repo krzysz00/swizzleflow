@@ -1,0 +1,17 @@
+spec:specs/1d-wconv-32x3-no-accum-cond.json
+load:matrices/32-identity-32,3 [0.004020695]
+load:matrices/32-identity-32,3_32,3-sRr-32,3 [0.003919811]
+load:matrices/32-identity-32,3_32,3-sRc-32,3 [0.003701929]
+load:matrices/32-identity-32,3_32,3-sRc-32,3_32,3-sFc-32,3 [0.00483345]
+soln:merge_fold[id;load_trunc;select(0 >= 1);id;rot(-31,3,0),id;broadcast;id;id];id
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (regSelNC) tested(3), found(0), failed(0), pruned(2), continued(1)
+stats:3 (sFc) tested(135), found(0), failed(0), pruned(64), continued(71)
+stats:4 (sRc) tested(72304), found(0), failed(0), pruned(72303), continued(1)
+stats:5 (sFr) tested(3), found(0), failed(0), pruned(0), continued(3)
+stats:6 (sRr) tested(107), found(0), failed(0), pruned(0), continued(107)
+stats:7 (merge_folding) tested(107), found(0), failed(106), pruned(0), continued(1)
+stats:8 (identity) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:9 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:weight_conv shape([32]) true mode(First) [6.621131691]
