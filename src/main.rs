@@ -164,6 +164,7 @@ fn run() -> Result<()> {
             .chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
         let max_lanes = initial.len();
         matrix_load::add_matrices(matrix_dir, &mut levels, max_lanes)?;
+        println!("Begin search");
         synthesize(initial, &target, &levels, &expected_syms, synthesis_mode);
         matrix_load::remove_matrices(&mut levels);
     }

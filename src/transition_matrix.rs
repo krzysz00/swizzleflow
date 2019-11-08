@@ -372,7 +372,7 @@ mod tests {
     #[test]
     fn correct_length_trove_rows() {
         let small_fans = simple_fans(&[3, 4], OpAxis::Rows).unwrap();
-        let opset = OpSet::new("sFr", small_fans, smallvec![3, 4],
+        let opset = OpSet::new("row_fans_no_group", small_fans, smallvec![3, 4],
                                smallvec![3, 4], false);
         let matrix: DenseTransitionMatrix = build_mat(&opset);
         assert_eq!(matrix.n_ones(), 488);
@@ -383,7 +383,7 @@ mod tests {
     fn correct_length_big_matrix() {
         use crate::operators::swizzle::simple_rotations;
         let big_rots = simple_rotations(&[4, 32], OpAxis::Columns).unwrap();
-        let opset = OpSet::new("sRr", big_rots, smallvec![4, 32],
+        let opset = OpSet::new("row_rots_no_group", big_rots, smallvec![4, 32],
                                smallvec![4, 32], false);
         let big_matrix: DenseTransitionMatrix = build_mat(&opset, None);
         assert_eq!(big_matrix.n_ones(), 246272);

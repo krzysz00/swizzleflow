@@ -1,0 +1,267 @@
+spec:specs/1d-conv-16x3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/16-col_rots_no_group-16,3 density(0.5763888888888888) [0.041483689]
+Using newly-built matrices/16-col_rots_no_group-16,3
+build:matrices/16,3-col_fans_no_group-16,3 density(0.020845012900270063) [0.042314659]
+mul:16-col_rots_no_group-16,3_16,3-col_fans_no_group-16,3 density(0.8477105034722222) [0.032114862]
+Begin search
+soln:id;load_trunc;select(0 >= 1);id;rot(-15,3,0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (select_item_no_consts) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:2 (col_fans_no_group) tested(255), found(0), failed(0), pruned(112), continued(143)
+stats:3 (col_rots_no_group) tested(36608), found(0), failed(36480), pruned(0), continued(128)
+stats:4 ([last]) tested(128), found(1), failed(127), pruned(0), continued(0)
+search:conv shape([16]) true mode(All) [0.019677667]
+spec:specs/1d-conv-32x3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/32-col_rots_no_group-32,3 density(0.5659722222222222) [0.511481886]
+Using newly-built matrices/32-col_rots_no_group-32,3
+build:matrices/32,3-col_fans_no_group-32,3 density(0.01984057014371142) [1.127039175]
+mul:32-col_rots_no_group-32,3_32,3-col_fans_no_group-32,3 density(0.8503960503472222) [0.712978656]
+Begin search
+soln:id;load_trunc;select(0 >= 1);id;rot(-31,3,0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (select_item_no_consts) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:2 (col_fans_no_group) tested(1023), found(0), failed(0), pruned(480), continued(543)
+stats:3 (col_rots_no_group) tested(556032), found(0), failed(555520), pruned(0), continued(512)
+stats:4 ([last]) tested(512), found(1), failed(511), pruned(0), continued(0)
+search:conv shape([32]) true mode(All) [0.25365884]
+spec:specs/1d-conv-32x5.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/32-col_rots_no_group-32,5 density(0.62625) [1.40693067]
+Using newly-built matrices/32-col_rots_no_group-32,5
+build:matrices/32,5-col_fans_no_group-32,5 density(0.007907958984375) [6.014609447]
+mul:32-col_rots_no_group-32,5_32,5-col_fans_no_group-32,5 density(0.909267578125) [5.598874487]
+Begin search
+soln:id;load_trunc;select(0 >= 1);id;rot(-31,5,0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (select_item_no_consts) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:2 (col_fans_no_group) tested(1023), found(0), failed(0), pruned(608), continued(415)
+stats:3 (col_rots_no_group) tested(424960), found(0), failed(424704), pruned(0), continued(256)
+stats:4 ([last]) tested(256), found(1), failed(255), pruned(0), continued(0)
+search:conv shape([32]) true mode(All) [0.370794002]
+spec:specs/1d-conv-dealg-16x3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/16,3-col_rots_no_group-16,3 density(0.06404320987654322) [0.042330936]
+Using newly-built matrices/16,3-col_rots_no_group-16,3
+load:matrices/16,3-col_fans_no_group-16,3 [0.001650955]
+mul:16,3-col_rots_no_group-16,3_16,3-col_fans_no_group-16,3 density(0.09419005594135803) [0.07514694]
+Begin search
+soln:id;load_trunc;select(0 >= 1);id;rot(-15,3,0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (select_item_no_consts) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:2 (col_fans_no_group) tested(255), found(0), failed(0), pruned(254), continued(1)
+stats:3 (col_rots_no_group) tested(256), found(0), failed(0), pruned(0), continued(256)
+stats:4 ([last]) tested(256), found(1), failed(255), pruned(0), continued(0)
+search:conv_dealg shape([16, 3]) true mode(All) [0.002610467]
+spec:specs/1d-conv-dealg-32x3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/32,3-col_rots_no_group-32,3 density(0.0628858024691358) [1.201356327]
+Using newly-built matrices/32,3-col_rots_no_group-32,3
+load:matrices/32,3-col_fans_no_group-32,3 [0.030481186]
+mul:32,3-col_rots_no_group-32,3_32,3-col_fans_no_group-32,3 density(0.09448845003858025) [4.8108028659999995]
+Begin search
+soln:id;load_trunc;select(0 >= 1);id;rot(-31,3,0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (select_item_no_consts) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:2 (col_fans_no_group) tested(1023), found(0), failed(0), pruned(1022), continued(1)
+stats:3 (col_rots_no_group) tested(1024), found(0), failed(0), pruned(0), continued(1024)
+stats:4 ([last]) tested(1024), found(1), failed(1023), pruned(0), continued(0)
+search:conv_dealg shape([32, 3]) true mode(All) [0.020827361]
+spec:specs/1d-conv-dealg-32x5.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/32,5-col_rots_no_group-32,5 density(0.02505) [6.21791578]
+Using newly-built matrices/32,5-col_rots_no_group-32,5
+load:matrices/32,5-col_fans_no_group-32,5 [0.265777167]
+mul:32,5-col_rots_no_group-32,5_32,5-col_fans_no_group-32,5 density(0.036370703125) [124.007443223]
+Begin search
+soln:id;load_trunc;select(0 >= 1);id;rot(-31,5,0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (select_item_no_consts) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:2 (col_fans_no_group) tested(1023), found(0), failed(0), pruned(1022), continued(1)
+stats:3 (col_rots_no_group) tested(1024), found(0), failed(0), pruned(0), continued(1024)
+stats:4 ([last]) tested(1024), found(1), failed(1023), pruned(0), continued(0)
+search:conv_dealg shape([32, 5]) true mode(All) [0.049317182]
+spec:specs/1d-wconv-16x3-e-first.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/16-identity-16,3 density(0.00390625) [0.001407532]
+Using newly-built matrices/16-identity-16,3
+build:matrices/16,3-row_rots_no_group-16,3 density(0.0035603841145833335) [0.01586316]
+mul:16-identity-16,3_16,3-row_rots_no_group-16,3 density(0.00390625) [0.013814415]
+load:matrices/16,3-col_rots_no_group-16,3 [0.003090044]
+mul:16-identity-16,3_16,3-col_rots_no_group-16,3 density(0.5763888888888888) [0.013868479]
+load:matrices/16,3-col_fans_no_group-16,3 [0.003374264]
+mul:16-identity-16,3_16,3-col_rots_no_group-16,3_16,3-col_fans_no_group-16,3 density(0.8477105034722222) [0.014736589]
+Begin search
+soln:merge_fold[id;load_trunc;select(0 >= 1);id;rot(-15,3,0),id;broadcast;id;id];id
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (select_item_no_consts) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:3 (col_fans_no_group) tested(255), found(0), failed(0), pruned(112), continued(143)
+stats:4 (col_rots_no_group) tested(36608), found(0), failed(0), pruned(36607), continued(1)
+stats:5 (row_fans_no_group) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:6 (row_rots_no_group) tested(180), found(0), failed(0), pruned(0), continued(180)
+stats:7 (merge_folding) tested(180), found(0), failed(170), pruned(0), continued(10)
+stats:8 (identity) tested(10), found(0), failed(9), pruned(0), continued(1)
+stats:9 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:weight_conv shape([16]) true mode(All) [0.879224901]
+spec:specs/1d-wconv-16x3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/16-identity-16,3 [0.000193251]
+load:matrices/16-identity-16,3_16,3-row_rots_no_group-16,3 [0.000189581]
+load:matrices/16-identity-16,3_16,3-col_rots_no_group-16,3 [0.000186336]
+load:matrices/16-identity-16,3_16,3-col_rots_no_group-16,3_16,3-col_fans_no_group-16,3 [0.000185821]
+Begin search
+soln:merge_fold[id;load_trunc;select(0 >= 1);id;rot(-15,3,0),id;broadcast;id;id];id
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (select_item_no_consts) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:3 (col_fans_no_group) tested(255), found(0), failed(0), pruned(112), continued(143)
+stats:4 (row_fans_no_group) tested(715), found(0), failed(0), pruned(0), continued(715)
+stats:5 (col_rots_no_group) tested(183040), found(0), failed(0), pruned(183035), continued(5)
+stats:6 (row_rots_no_group) tested(180), found(0), failed(0), pruned(0), continued(180)
+stats:7 (merge_folding) tested(180), found(0), failed(170), pruned(0), continued(10)
+stats:8 (identity) tested(10), found(0), failed(9), pruned(0), continued(1)
+stats:9 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:weight_conv shape([16]) true mode(All) [4.202945698]
+spec:specs/1d-wconv-16x3-w-first.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/16-identity-16,3 [0.000205897]
+load:matrices/16-identity-16,3_16,3-col_rots_no_group-16,3 [0.000199752]
+load:matrices/16-identity-16,3_16,3-col_rots_no_group-16,3_16,3-col_fans_no_group-16,3 [0.000240281]
+load:matrices/16-identity-16,3_16,3-row_rots_no_group-16,3 [0.000235934]
+Begin search
+soln:merge_fold[id;load_trunc;select(0 >= 1);id;rot(-15,3,0),id;broadcast;id;id];id
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (row_fans_no_group) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:3 (row_rots_no_group) tested(180), found(0), failed(0), pruned(0), continued(180)
+stats:4 (select_item_no_consts) tested(1440), found(0), failed(0), pruned(1260), continued(180)
+stats:5 (col_fans_no_group) tested(45900), found(0), failed(0), pruned(20160), continued(25740)
+stats:6 (col_rots_no_group) tested(6589440), found(0), failed(0), pruned(6589260), continued(180)
+stats:7 (merge_folding) tested(180), found(0), failed(170), pruned(0), continued(10)
+stats:8 (identity) tested(10), found(0), failed(9), pruned(0), continued(1)
+stats:9 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:weight_conv shape([16]) true mode(All) [51.282556854]
+spec:specs/1d-wconv-32x3-no-accum-cond.json
+build:matrices/32-identity-32,3 density(0.0009765625) [0.014658969]
+Using newly-built matrices/32-identity-32,3
+build:matrices/32,3-row_rots_no_group-32,3 density(0.0009199778238932291) [0.15164604]
+mul:32-identity-32,3_32,3-row_rots_no_group-32,3 density(0.0009765625) [0.711913469]
+load:matrices/32,3-col_rots_no_group-32,3 [0.03279609]
+mul:32-identity-32,3_32,3-col_rots_no_group-32,3 density(0.5659722222222222) [0.715578764]
+load:matrices/32,3-col_fans_no_group-32,3 [0.032393664]
+mul:32-identity-32,3_32,3-col_rots_no_group-32,3_32,3-col_fans_no_group-32,3 density(0.8503960503472222) [0.707743101]
+Begin search
+soln:merge_fold[id;load_trunc;select(0 >= 1);id;rot(-31,3,0),id;broadcast;id;id];id
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (select_item_no_consts) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:3 (col_fans_no_group) tested(1023), found(0), failed(0), pruned(480), continued(543)
+stats:4 (col_rots_no_group) tested(556032), found(0), failed(0), pruned(556031), continued(1)
+stats:5 (row_fans_no_group) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:6 (row_rots_no_group) tested(225), found(0), failed(0), pruned(0), continued(225)
+stats:7 (merge_folding) tested(225), found(0), failed(219), pruned(0), continued(6)
+stats:8 (identity) tested(6), found(0), failed(5), pruned(0), continued(1)
+stats:9 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:weight_conv shape([32]) true mode(All) [19.716843635]
+spec:specs/1d-wconv-6x3-rescheduled.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/6-identity-6,3 density(0.027777777777777776) [0.000083249]
+Using newly-built matrices/6-identity-6,3
+build:matrices/6,3-col_rots_no_group-6,3 density(0.06790123456790123) [0.000874411]
+mul:6-identity-6,3_6,3-col_rots_no_group-6,3 density(0.6111111111111112) [0.002076662]
+build:matrices/6,3-col_fans_no_group-6,3 density(0.023691129401005945) [0.000895757]
+mul:6-identity-6,3_6,3-col_rots_no_group-6,3_6,3-col_fans_no_group-6,3 density(0.8487654320987654) [0.000081695]
+build:matrices/6,3-row_rots_no_group-6,3 density(0.023662551440329218) [0.000759608]
+mul:6-identity-6,3_6,3-row_rots_no_group-6,3 density(0.027777777777777776) [0.000086461]
+Begin search
+soln:merge_fold[id;load_trunc;select(0 >= 1);id;rot(-5,3,0),id;broadcast;id;id];id
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (row_fans_no_group) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:3 (row_rots_no_group) tested(135), found(0), failed(0), pruned(0), continued(135)
+stats:4 (select_item_no_consts) tested(1080), found(0), failed(0), pruned(945), continued(135)
+stats:5 (col_fans_no_group) tested(4725), found(0), failed(0), pruned(810), continued(3915)
+stats:6 (col_rots_no_group) tested(140940), found(0), failed(0), pruned(140805), continued(135)
+stats:7 (merge_folding) tested(135), found(0), failed(132), pruned(0), continued(3)
+stats:8 (identity) tested(3), found(0), failed(2), pruned(0), continued(1)
+stats:9 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:weight_conv shape([6]) true mode(All) [0.375602998]
+spec:specs/trove-32x3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32,3-row_rots_no_group-32,3 [0.027690283]
+build:matrices/32,3-row_fans_no_group-32,3 density(0.0002691951798804012) [0.138259077]
+mul:32,3-row_rots_no_group-32,3_32,3-row_fans_no_group-32,3 density(0.0009509192572699653) [4.614362384]
+load:matrices/32,3-col_rots_no_group-32,3 [0.03567063]
+mul:32,3-row_rots_no_group-32,3_32,3-row_fans_no_group-32,3_32,3-col_rots_no_group-32,3 density(0.5595816153067129) [5.567916175]
+load:matrices/32,3-col_fans_no_group-32,3 [0.033114476]
+mul:32,3-row_rots_no_group-32,3_32,3-row_fans_no_group-32,3_32,3-col_rots_no_group-32,3_32,3-col_fans_no_group-32,3 density(0.8365303322120949) [5.22791189]
+load:matrices/32,3-row_rots_no_group-32,3 [0.033672405]
+mul:32,3-row_rots_no_group-32,3_32,3-row_fans_no_group-32,3_32,3-col_rots_no_group-32,3_32,3-col_fans_no_group-32,3_32,3-row_rots_no_group-32,3 density(0.9793836805555556) [5.255926917]
+Begin search
+soln:id;load_rep;fan(0,2);rot(-31,32,0);fan(0,3);rot(-21,3,0);id;id
+soln:id;load_rep;id;rot(-29,32,-2);fan(0,3);rot(-11,3,-10);fan(0,2);rot(-30,32,-2)
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans_no_group) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:2 (row_rots_no_group) tested(225), found(0), failed(0), pruned(223), continued(2)
+stats:3 (col_fans_no_group) tested(2046), found(0), failed(0), pruned(2044), continued(2)
+stats:4 (col_rots_no_group) tested(2048), found(0), failed(0), pruned(2046), continued(2)
+stats:5 (row_fans_no_group) tested(10), found(0), failed(0), pruned(8), continued(2)
+stats:6 (row_rots_no_group) tested(90), found(0), failed(0), pruned(0), continued(90)
+stats:7 ([last]) tested(90), found(2), failed(88), pruned(0), continued(0)
+search:trove shape([32, 3]) true mode(All) [0.04769828]
+spec:specs/trove-32x4-flipped-rot.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/32,4-row_rots_no_group-32,4 density(0.0009174346923828125) [0.540875677]
+Using newly-built matrices/32,4-row_rots_no_group-32,4
+build:matrices/32,4-row_fans_no_group-32,4 density(0.000213623046875) [0.450278429]
+mul:32,4-row_rots_no_group-32,4_32,4-row_fans_no_group-32,4 density(0.0009522438049316406) [30.518603853]
+build:matrices/32,4-col_fans_no_group-32,4 density(0.012354612350463867) [3.156898033]
+mul:32,4-row_rots_no_group-32,4_32,4-row_fans_no_group-32,4_32,4-col_fans_no_group-32,4 density(0.19446945190429688) [30.229172069]
+build:matrices/32,4-col_rots_no_group-32,4 density(0.04736328125) [6.734326101]
+mul:32,4-row_rots_no_group-32,4_32,4-row_fans_no_group-32,4_32,4-col_fans_no_group-32,4_32,4-col_rots_no_group-32,4 density(0.8706207275390625) [30.240342062]
+mul:32,4-row_rots_no_group-32,4_32,4-row_fans_no_group-32,4_32,4-col_fans_no_group-32,4_32,4-col_rots_no_group-32,4_32,4-row_rots_no_group-32,4 density(0.9844970703125) [32.221717936]
+Begin search
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans_no_group) tested(15), found(0), failed(0), pruned(0), continued(15)
+stats:2 (row_rots_no_group) tested(1200), found(0), failed(0), pruned(1200), continued(0)
+stats:3 (col_rots_no_group) tested(0), found(0), failed(0), pruned(0), continued(0)
+stats:4 (col_fans_no_group) tested(0), found(0), failed(0), pruned(0), continued(0)
+stats:5 (row_fans_no_group) tested(0), found(0), failed(0), pruned(0), continued(0)
+stats:6 (row_rots_no_group) tested(0), found(0), failed(0), pruned(0), continued(0)
+stats:7 ([last]) tested(0), found(0), failed(0), pruned(0), continued(0)
+search:trove shape([32, 4]) false mode(All) [0.025533864]
+spec:specs/trove-4x3-noprune.json
+Begin search
+soln:id;load_rep;id;rot(-1,4,0);fan(0,3);rot(-1,3,0)
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans_no_group) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:2 (row_rots_no_group) tested(90), found(0), failed(0), pruned(0), continued(90)
+stats:3 (col_fans_no_group) tested(1350), found(0), failed(0), pruned(0), continued(1350)
+stats:4 (col_rots_no_group) tested(21600), found(0), failed(0), pruned(0), continued(21600)
+stats:5 ([last]) tested(21600), found(1), failed(21599), pruned(0), continued(0)
+search:trove shape([4, 3]) true mode(All) [0.025904749]
+spec:specs/trove-8x3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/8,3-row_rots_no_group-8,3 density(0.013509114583333334) [0.00144168]
+Using newly-built matrices/8,3-row_rots_no_group-8,3
+build:matrices/8,3-row_fans_no_group-8,3 density(0.0042920524691358024) [0.000707949]
+mul:8,3-row_rots_no_group-8,3_8,3-row_fans_no_group-8,3 density(0.014485677083333334) [0.001755402]
+build:matrices/8,3-col_rots_no_group-8,3 density(0.06635802469135803) [0.002652294]
+mul:8,3-row_rots_no_group-8,3_8,3-row_fans_no_group-8,3_8,3-col_rots_no_group-8,3 density(0.5684317129629629) [0.001760174]
+build:matrices/8,3-col_fans_no_group-8,3 density(0.022858796296296297) [0.002570406]
+mul:8,3-row_rots_no_group-8,3_8,3-row_fans_no_group-8,3_8,3-col_rots_no_group-8,3_8,3-col_fans_no_group-8,3 density(0.8006365740740741) [0.001800559]
+mul:8,3-row_rots_no_group-8,3_8,3-row_fans_no_group-8,3_8,3-col_rots_no_group-8,3_8,3-col_fans_no_group-8,3_8,3-row_rots_no_group-8,3 density(0.9201388888888888) [0.001958229]
+Begin search
+soln:id;load_rep;fan(0,2);rot(-7,8,0);fan(0,3);rot(-5,3,0);id;id
+soln:id;load_rep;id;rot(-5,8,-2);fan(0,3);rot(-3,3,-2);fan(0,2);rot(-6,8,-2)
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans_no_group) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:2 (row_rots_no_group) tested(135), found(0), failed(0), pruned(133), continued(2)
+stats:3 (col_fans_no_group) tested(126), found(0), failed(0), pruned(124), continued(2)
+stats:4 (col_rots_no_group) tested(128), found(0), failed(0), pruned(126), continued(2)
+stats:5 (row_fans_no_group) tested(10), found(0), failed(0), pruned(8), continued(2)
+stats:6 (row_rots_no_group) tested(54), found(0), failed(0), pruned(0), continued(54)
+stats:7 ([last]) tested(54), found(2), failed(52), pruned(0), continued(0)
+search:trove shape([8, 3]) true mode(All) [0.001133907]

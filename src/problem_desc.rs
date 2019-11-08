@@ -54,31 +54,31 @@ impl GathersDesc {
                     "broadcast" => {
                         broadcast(in_shape, out_shape)
                     }
-                    "sRr" => {
+                    "row_rots_no_group" => {
                         if out_shape != in_shape {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
                         simple_rotations(out_shape, OpAxis::Rows)
                     },
-                    "sRc" => {
+                    "col_rots_no_group" => {
                         if out_shape != in_shape {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
                         simple_rotations(out_shape, OpAxis::Columns)
                     },
-                    "sFr" => {
+                    "row_fans_no_group" => {
                         if out_shape != in_shape {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
                         simple_fans(out_shape, OpAxis::Rows)
                     },
-                    "sFc" => {
+                    "col_fans_no_group" => {
                         if out_shape != in_shape {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
                         simple_fans(out_shape, OpAxis::Columns)
                     },
-                    "regSelNC" => {
+                    "select_item_no_consts" => {
                         if out_shape[0..out_shape.len()-1] != in_shape[0..in_shape.len()-1] {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
                         }
@@ -615,7 +615,7 @@ mod tests {
                 SynthesisLevelDesc { step: SynthesisLevelKind::Initial(InitialDesc::From(0)),
                                      out_shape: vec![3, 4], lane: 0, name: None,
                                      prune: false, then_fold: false},
-                SynthesisLevelDesc { step: SynthesisLevelKind::Gather(GathersDesc::Builtin("sRr".to_owned())),
+                SynthesisLevelDesc { step: SynthesisLevelKind::Gather(GathersDesc::Builtin("row_rots_no_group".to_owned())),
                                      out_shape: vec![3, 4], lane: 0, name: None,
                                      prune: false, then_fold: false},
             ]

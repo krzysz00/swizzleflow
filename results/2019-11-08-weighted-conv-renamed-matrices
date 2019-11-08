@@ -1,0 +1,21 @@
+spec:specs/1d-wconv-32x3-no-accum-cond.json
+load:matrices/32-identity-32,3 [0.005336173]
+build:matrices/32,3-row_rots_no_group-32,3 density(0.0009199778238932291) [0.157156654]
+mul:32-identity-32,3_32,3-row_rots_no_group-32,3 density(0.0009765625) [0.733316927]
+build:matrices/32,3-col_rots_no_group-32,3 density(0.0628858024691358) [1.237187726]
+mul:32-identity-32,3_32,3-col_rots_no_group-32,3 density(0.5659722222222222) [0.707206451]
+build:matrices/32,3-col_fans_no_group-32,3 density(0.01984057014371142) [1.050987445]
+mul:32-identity-32,3_32,3-col_rots_no_group-32,3_32,3-col_fans_no_group-32,3 density(0.8503960503472222) [0.712263025]
+soln:merge_fold[id;load_trunc;select(0 >= 1);id;rot(-31,3,0),id;broadcast;id;id];id
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (select_item_no_consts) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:3 (col_fans_no_group) tested(1023), found(0), failed(0), pruned(480), continued(543)
+stats:4 (col_rots_no_group) tested(556032), found(0), failed(0), pruned(556031), continued(1)
+stats:5 (row_fans_no_group) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:6 (row_rots_no_group) tested(225), found(0), failed(0), pruned(0), continued(225)
+stats:7 (merge_folding) tested(225), found(0), failed(219), pruned(0), continued(6)
+stats:8 (identity) tested(6), found(0), failed(5), pruned(0), continued(1)
+stats:9 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:weight_conv shape([32]) true mode(All) [19.059903182]
+

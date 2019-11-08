@@ -17,21 +17,21 @@
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "regSelNC"}},
+      "step": { "Gather": { "Builtin": "select_item_no_consts"}},
       "lane": 0,
       "out_shape": [32, 3],
       "prune": true,
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "sFc"}},
+      "step": { "Gather": { "Builtin": "col_fans_no_group"}},
       "lane": 0,
       "out_shape": [32, 3],
       "prune": true,
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "sRc"}},
+      "step": { "Gather": { "Builtin": "col_rots_no_group"}},
       "lane": 0,
       "out_shape": [32, 3],
       "prune": true,
