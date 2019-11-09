@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::misc::in_bounds;
 
-use ndarray::{Array,ArrayViewD,ArrayD,Ix,Axis,IxDyn};
+use ndarray::{Array,ArrayViewD,ArrayD,Ix,Axis};
 use ndarray::Dimension;
 
 use std::fmt;
@@ -206,8 +206,8 @@ impl Domain {
 pub struct ProgState<'d> {
     pub domain: &'d Domain,
     pub(crate) state: ArrayD<DomRef>,
-    // Note: IxDyn is basically SmallVec, though that's not obvious anywhere
-    pub(crate) inv_state: Vec<Vec<IxDyn>>,
+    // We store row-major indices into matrix dimensions for effeciency
+    pub(crate) inv_state: Vec<Vec<Ix>>,
     pub name: String
 }
 
@@ -236,10 +236,11 @@ impl Hash for ProgState<'_> {
 impl<'d> ProgState<'d> {
     fn making_inverse(domain: &'d Domain, state: ArrayD<DomRef>,
                       name: String) -> Self {
-        let mut inverse: Vec<Vec<IxDyn>> = (0..domain.size()).map(|_| Vec::with_capacity(1)).collect();
-        for (idx, elem) in state.indexed_iter() {
-            for s in domain.subterms_of(*elem) {
-                inverse[*s].push(idx.clone())
+        let mut inverse: Vec<Vec<Ix>> = (0..domain.size()).map(|_| Vec::with_capacity(16)).collect();
+        let slice = state.as_slice().unwrap();
+        for (idx, elem) in slice.iter().copied().enumerate() {
+            for s in domain.subterms_of(elem) {
+                inverse[*s].push(idx)
             }
         }
         Self { domain, state, name, inv_state: inverse }

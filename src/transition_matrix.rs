@@ -58,6 +58,10 @@ fn to_index(i1: &[Ix], i2: &[Ix], ishape: &[Ix], j1: &[Ix], j2: &[Ix], jshape: &
     ret
 }
 
+fn to_raw_index(i1: Ix, i2: Ix, ishape: Ix, j1: Ix, j2: Ix, jshape: Ix) -> Ix {
+    j2 + (jshape * (j1 + jshape * (i2 + (ishape * i1))))
+}
+
 fn write_length_tagged_idxs<T: Write>(io: &mut T, data: &[Ix]) -> io::Result<()> {
     io.write_u64::<LittleEndian>(data.len() as u64)?;
     for i in data {
@@ -104,8 +108,8 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
     }
 
     fn get_idxs(&self, current1: Ix, current2: Ix, target1: Ix, target2: Ix) -> bool {
-        self.data[to_index(&[target1], &[target2], &[self.target_len],
-                           &[current1], &[current2], &[self.current_len])]
+        self.data[to_raw_index(target1, target2, self.target_len,
+                               current1, current2, self.current_len)]
     }
 
     fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool) {
@@ -121,8 +125,8 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
     }
 
     fn set_idxs(&mut self, current1: Ix, current2: Ix, target1: Ix, target2: Ix, value: bool) {
-        let index = to_index(&[target1], &[target2], &[self.target_len],
-                             &[current1], &[current2], &[self.current_len]);
+        let index = to_raw_index(target1, target2, self.target_len,
+                                 current1, current2, self.current_len);
         self.data.set(index, value);
     }
 

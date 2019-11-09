@@ -35,6 +35,13 @@
       "lane": 0,
       "out_shape": [32, 3],
       "prune": true,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "cond_keep"}},
+      "lane": 0,
+      "out_shape": [32, 3],
+      "prune": false,
       "then_fold": true
     }
   ]

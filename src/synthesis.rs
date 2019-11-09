@@ -19,8 +19,6 @@ use crate::operators::OpSetKind;
 
 use crate::misc::{time_since};
 
-use ndarray::Dimension;
-
 use std::collections::HashMap;
 
 use std::time::Instant;
@@ -107,10 +105,12 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
     let mut did_lookup = false;
     for a in expected_syms.iter().copied() {
         for b in expected_syms.iter().copied() {
-            for (t1, t2) in iproduct!(target.inv_state[a].iter(), target.inv_state[b].iter()) {
-                let result = iproduct!(current.inv_state[a].iter(), current.inv_state[b].iter())
+            for (t1, t2) in iproduct!(target.inv_state[a].iter().copied(),
+                                      target.inv_state[b].iter().copied()) {
+                let result = iproduct!(current.inv_state[a].iter().copied(),
+                                       current.inv_state[b].iter().copied())
                     .any(|(c1, c2)| {
-                        let v = matrix.get(c1.slice(), c2.slice(), t1.slice(), t2.slice());
+                        let v = matrix.get_idxs(c1, c2, t1, t2);
                         v
                     });
                 if !result {
