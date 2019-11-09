@@ -1,0 +1,10 @@
+pruned 0, 33, 0, 31
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (identity) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:3 (select_item) tested(16), found(0), failed(0), pruned(15), continued(1)
+stats:4 (col_fans_no_group) tested(1023), found(0), failed(0), pruned(480), continued(543)
+stats:5 (col_rots_no_group) tested(556032), found(0), failed(0), pruned(556031), continued(1)
+stats:6 (merge_folding) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:7 (cond_keep) tested(16), found(0), failed(15), pruned(0), continued(1)
+stats:8 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
