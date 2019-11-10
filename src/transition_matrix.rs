@@ -389,7 +389,7 @@ mod tests {
         let big_rots = simple_rotations(&[4, 32], OpAxis::Columns).unwrap();
         let opset = OpSet::new("row_rots_no_group", big_rots, smallvec![4, 32],
                                smallvec![4, 32], false);
-        let big_matrix: DenseTransitionMatrix = build_mat(&opset, None);
+        let big_matrix: DenseTransitionMatrix = build_mat(&opset);
         assert_eq!(big_matrix.n_ones(), 246272);
     }
 

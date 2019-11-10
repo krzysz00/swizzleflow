@@ -165,7 +165,7 @@ impl InitialDesc {
             match name {
                 Some(n) => n.to_owned(),
                 None => match self {
-                    InitialDesc::From(_) => "id".to_owned(),
+                    InitialDesc::From(_) => "init".to_owned(),
                     InitialDesc::Data(_) => "custom_start".to_owned(),
                 }
             };
@@ -651,7 +651,7 @@ mod tests {
         let (start, end, expected_syms)
             = desc.build_problem(&domain, &levels, spec).unwrap();
         assert_eq!(start, vec![Some(
-            crate::state::ProgState::linear(&domain, 0, &[3, 4]))]);
+            crate::state::ProgState::linear(&domain, 1, &[3, 4]))]);
         assert_eq!(end, trove_state);
         assert_eq!(levels.len(), 1);
         assert_eq!(levels[0].prune, false);

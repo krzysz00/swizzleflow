@@ -190,13 +190,13 @@ mod tests {
     use crate::state::{ProgState, Domain, Value};
 
     fn fixed_solution_from_scalar_8x3<'d>(d: &'d Domain) -> ProgState<'d> {
-        let initial = ProgState::linear(d, 0, &[24]);
+        let initial = ProgState::linear(d, 1, &[24]);
         let s0 = initial.gather_by(&load_rep(&[24], &[8, 3]).unwrap()
                                    .gathers().unwrap()[0]);
-        let s1 = s0.gather_by(&fan(8, 3, OpAxis::Rows, 0, 2));
-        let s2 = s1.gather_by(&rotate(8, 3, OpAxis::Rows, -7, 8, 0));
-        let s3 = s2.gather_by(&fan(8, 3, OpAxis::Columns, 0, 3));
-        let s4 = s3.gather_by(&rotate(8, 3, OpAxis::Columns, -5, 3, 0));
+        let s1 = s0.gather_by(&fan(8, 3, OpAxis::Rows, 0, 2, None));
+        let s2 = s1.gather_by(&rotate(8, 3, OpAxis::Rows, -7, 8, 0, None));
+        let s3 = s2.gather_by(&fan(8, 3, OpAxis::Columns, 0, 3, None));
+        let s4 = s3.gather_by(&rotate(8, 3, OpAxis::Columns, -5, 3, 0, None));
         s4
     }
 

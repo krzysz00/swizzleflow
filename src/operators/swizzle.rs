@@ -29,35 +29,49 @@ use itertools::iproduct;
 pub enum OpAxis { Rows, Columns }
 use OpAxis::*;
 
-pub fn fan(m: Ix, n: Ix, perm_within: OpAxis, stable_scale: Ix, cf: Ix) -> Gather {
+pub fn fan(m: Ix, n: Ix, perm_within: OpAxis, stable_scale: Ix, cf: Ix, group: Option<Ix>) -> Gather {
     let len_of_stable = match perm_within { Rows => n, Columns => m };
-    let name = format!("fan({},{})", stable_scale, cf);
+    let group = group.unwrap_or(len_of_stable);
+    let name = if group != len_of_stable {
+        format!("grouped(fan({},{}),{})", stable_scale, cf, group)
+    }
+    else {
+        format!("fan({},{})", stable_scale, cf)
+    };
     let shape = [m, n];
     match perm_within {
         Rows => Gather::new(&shape,
                             move |idxs: &[Ix]| {
                                 let i = idxs[0];
                                 let j = idxs[1];
+                                let jg = j.mod_floor(&group);
                                 let cf = stable_scale * i + cf;
                                 let df = len_of_stable / len_of_stable.gcd(&cf);
-                                let get_from = (cf * j + j / df).mod_floor(&len_of_stable);
+                                let get_from = (cf * jg + jg / df).mod_floor(&group) + ((j / group) * group);
                                 to_opt_ix(&[i, get_from], &shape)
                             }, name),
         Columns => Gather::new(&shape,
                                move |idxs: &[Ix]| {
                                    let i = idxs[0];
+                                   let ig = i.mod_floor(&group);
                                    let j = idxs[1];
                                    let cf = stable_scale * j + cf;
                                    let df = len_of_stable / len_of_stable.gcd(&cf);
-                                   let get_from = (cf * i + i / df).mod_floor(&len_of_stable);
+                                   let get_from = (cf * ig + ig / df).mod_floor(&group) + ((i / group) * group);
                                    to_opt_ix(&[get_from, j], &shape)
                                }, name),
     }
 }
 
-pub fn rotate(m: Ix, n: Ix, perm_within: OpAxis, stable_scale: Ixs, div: Ix, shift: Ixs) -> Gather {
+pub fn rotate(m: Ix, n: Ix, perm_within: OpAxis, stable_scale: Ixs, div: Ix,
+              shift: Ixs, group: Option<Ix>) -> Gather {
     let len_of_stable = match perm_within { Rows => n, Columns => m };
-    let name = format!("rot({},{},{})", stable_scale, div, shift);
+    let group = group.unwrap_or(len_of_stable);
+    let name = if group != len_of_stable {
+        format!("grouped(rot({},{},{}),{})", stable_scale, div, shift, group)
+    } else {
+        format!("rot({},{},{})", stable_scale, div, shift)
+    };
     let shape = [m, n];
     match perm_within {
         Rows => Gather::new(&shape,
@@ -65,19 +79,21 @@ pub fn rotate(m: Ix, n: Ix, perm_within: OpAxis, stable_scale: Ixs, div: Ix, shi
                                 let i = idxs[0];
                                 let is = i as isize;
                                 let j = idxs[1];
-                                let js = j as isize;
+                                let jg = j.mod_floor(&group);
+                                let js = jg as isize;
                                 let loc = stable_scale * is + i.div_floor(&div) as isize + shift + js;
-                                let get_from = loc.mod_floor(&(len_of_stable as isize)) as usize;
+                                let get_from = loc.mod_floor(&(len_of_stable as isize)) as usize + ((j / group) * group);
                                 to_opt_ix(&[i, get_from], &shape)
                             }, name),
         Columns => Gather::new(&shape,
                                move |idxs: &[Ix]| {
                                    let i = idxs[0];
-                                   let is = i as isize;
+                                   let ig = i.mod_floor(&group);
+                                   let is = ig as isize;
                                    let j = idxs[1];
                                    let js = j as isize;
                                    let loc = stable_scale * js + j.div_floor(&div) as isize + shift + is;
-                                   let get_from = loc.mod_floor(&(len_of_stable as isize)) as usize;
+                                   let get_from = loc.mod_floor(&(len_of_stable as isize)) as usize + ((i / group) * group);
                                    to_opt_ix(&[get_from, j], &shape)
                                }, name),
     }
@@ -95,7 +111,7 @@ pub fn simple_fans(shape: &[Ix], perm_within: OpAxis) -> Result<OpSetKind> {
     ret.insert(identity_gather(shape));
     let k_bound = cmp::max(m, n);
     let c_bound = match perm_within { Rows => n, Columns => m };
-    ret.extend(iproduct!((0..k_bound), (0..c_bound)).map(|(k, c)| fan(m, n, perm_within, k, c)));
+    ret.extend(iproduct!((0..k_bound), (0..c_bound)).map(|(k, c)| fan(m, n, perm_within, k, c, None)));
     Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 
@@ -112,10 +128,10 @@ pub fn simple_rotations(shape: &[Ix], perm_within: OpAxis) -> Result<OpSetKind> 
     let k_bound = cmp::max(m, n) as isize;
     let c_bound = match perm_within { Rows => n, Columns => m } as isize;
     let d_bound = match perm_within { Rows => m, Columns => n};
-    ret.extend(iproduct!((-k_bound+1..k_bound),
+    ret.extend(iproduct!((0..k_bound).chain(-k_bound+1..0),
                          (2..=d_bound).filter(|i| d_bound % i == 0),
-                         (-c_bound+1..c_bound))
-               .map(|(k, d, c)| rotate(m, n, perm_within, k, d, c)));
+                         (-1..c_bound))
+               .map(|(k, d, c)| rotate(m, n, perm_within, k, d, c, None)));
     Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 

@@ -113,10 +113,10 @@ pub fn reg_select(shape: &[Ix]) -> Result<OpSetKind> {
 
     let op_len = shape.len();
     let n = shape[0] as isize;
-    ret.extend(iproduct!(0..op_len, 0..op_len,
-                         &[Op::Eq, Op::Neq, Op::Lt, Op::Leq, Op::Gt, Op::Geq],
-                         &[0, 1, -1, n, -n])
-               .map(move |(idx1, idx2, op, c)|
+    ret.extend(iproduct!(&[0, 1, -1, n, -n],
+                         0..op_len, 0..op_len,
+                         &[Op::Eq, Op::Neq, Op::Lt, Op::Leq, Op::Gt, Op::Geq])
+               .map(move |(c, idx1, idx2, op)|
                     reg_select_gather(shape, idx1, idx2, *c, *op)));
 
     Ok(ret.into_iter().collect::<Vec<_>>().into())
@@ -139,10 +139,10 @@ pub fn cond_keep(shape: &[Ix]) -> Result<OpSetKind> {
 
     let op_len = shape.len();
     let n = shape[0] as isize;
-    ret.extend(iproduct!(0..op_len, 0..op_len,
-                         &[Op::Eq, Op::Neq, Op::Lt, Op::Leq, Op::Gt, Op::Geq],
-                         &[0, 1, -1, n, -n])
-               .map(move |(idx1, idx2, op, c)|
+    ret.extend(iproduct!(&[0, 1, -1, n, -n],
+                         0..op_len, 0..op_len,
+                         &[Op::Eq, Op::Neq, Op::Lt, Op::Leq, Op::Gt, Op::Geq])
+               .map(move |(c, idx1, idx2, op)|
                     cond_keep_gather(shape, idx1, idx2, *c, *op)));
 
     Ok(ret.into_iter().collect::<Vec<_>>().into())
