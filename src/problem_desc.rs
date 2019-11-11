@@ -349,6 +349,14 @@ pub fn trove(m: Ix, n: Ix) -> ArrayD<Value> {
         .into_dyn()
 }
 
+pub fn trove_sum(m: Ix, n: Ix) -> ArrayD<Value> {
+    let arr: ndarray::Array1<Value> =
+        (0..m).map(|i|
+                   (0..n).map(|j| Value::Symbol((j + i * n) as Symbolic)).collect())
+        .map(Value::fold).collect();
+    arr.into_dyn()
+}
+
 fn convolve_dealg(width: Ix, k: Ix) -> ArrayD<Value> {
     Array::from_shape_fn((width, k),
                          move |(i, j)| Value::Symbol((i + j)  as Symbolic))
@@ -504,6 +512,12 @@ impl ProblemDesc {
                     "trove" => {
                         match target_info.as_slice() {
                             &[m, n] => Ok(trove(m, n)),
+                            other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
+                        }
+                    }
+                    "trove_sum" => {
+                        match target_info.as_slice() {
+                            &[m, n] => Ok(trove_sum(m, n)),
                             other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
                         }
                     }

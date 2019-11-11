@@ -1,0 +1,176 @@
+spec:specs/swinv_like/l1/trove-cr_sum-1.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32-col_rots_no_group-32,1 [0.001919259]
+load:matrices/32-col_rots_no_group-32,1_32,1-col_fans_no_group-32,1 [0.001533848]
+load:matrices/32-col_rots_no_group-32,1_32,1-col_fans_no_group-32,1_32,1-row_rots_no_group-32,1 [0.001408529]
+Begin search
+soln:init;load_rep;id;id;id;id
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans_no_group) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (row_rots_no_group) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:3 (col_fans_no_group) tested(31), found(0), failed(0), pruned(30), continued(1)
+stats:4 (col_rots_no_group) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:5 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:trove_sum shape([32]) true mode(All) [0.000250993]
+spec:specs/swinv_like/l1/trove-cr_sum-2.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32-col_rots_no_group-32,2 [0.003211602]
+load:matrices/32-col_rots_no_group-32,2_32,2-col_fans_no_group-32,2 [0.002903691]
+load:matrices/32-col_rots_no_group-32,2_32,2-col_fans_no_group-32,2_32,2-row_rots_no_group-32,2 [0.003193069]
+Begin search
+soln:init;load_rep;id;rot(1,32,0);fan(0,2);rot(16,2,0)
+soln:init;load_rep;id;rot(1,32,-1);fan(0,2);rot(16,2,16)
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans_no_group) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (row_rots_no_group) tested(20), found(0), failed(0), pruned(18), continued(2)
+stats:3 (col_fans_no_group) tested(1922), found(0), failed(0), pruned(1920), continued(2)
+stats:4 (col_rots_no_group) tested(2048), found(0), failed(1984), pruned(0), continued(64)
+stats:5 ([last]) tested(64), found(2), failed(62), pruned(0), continued(0)
+search:trove_sum shape([32]) true mode(All) [0.009438752]
+spec:specs/swinv_like/l1/trove-cr_sum-3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32-col_rots_no_group-32,3 [0.005344365]
+load:matrices/32-col_rots_no_group-32,3_32,3-col_fans_no_group-32,3 [0.00535286]
+load:matrices/32-col_rots_no_group-32,3_32,3-col_fans_no_group-32,3_32,3-row_rots_no_group-32,3 [0.005256717]
+Begin search
+soln:init;load_rep;id;rot(1,32,1);fan(0,3);rot(21,3,22)
+soln:init;load_rep;fan(0,2);rot(2,32,0);fan(0,3);rot(11,3,0)
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans_no_group) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:2 (row_rots_no_group) tested(225), found(0), failed(0), pruned(223), continued(2)
+stats:3 (col_fans_no_group) tested(2046), found(0), failed(0), pruned(2044), continued(2)
+stats:4 (col_rots_no_group) tested(2048), found(0), failed(1984), pruned(0), continued(64)
+stats:5 ([last]) tested(64), found(2), failed(62), pruned(0), continued(0)
+search:trove_sum shape([32]) true mode(All) [0.012976259]
+spec:specs/swinv_like/l1/trove-cr_sum-4.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32-col_rots_no_group-32,4 [0.008835312]
+load:matrices/32-col_rots_no_group-32,4_32,4-col_fans_no_group-32,4 [0.009665723]
+load:matrices/32-col_rots_no_group-32,4_32,4-col_fans_no_group-32,4_32,4-row_rots_no_group-32,4 [0.009704379]
+Begin search
+soln:init;load_rep;fan(0,3);rot(3,32,2);fan(0,4);rot(8,4,16)
+soln:init;load_rep;fan(0,3);rot(3,32,1);fan(0,4);rot(8,4,8)
+soln:init;load_rep;fan(0,3);rot(3,32,-1);fan(0,4);rot(8,4,24)
+soln:init;load_rep;fan(0,3);rot(3,32,0);fan(0,4);rot(8,4,0)
+soln:init;load_rep;id;rot(1,32,1);fan(0,4);rot(24,4,24)
+soln:init;load_rep;id;rot(1,32,0);fan(0,4);rot(24,4,0)
+soln:init;load_rep;id;rot(1,32,-1);fan(0,4);rot(24,4,8)
+soln:init;load_rep;id;rot(1,32,2);fan(0,4);rot(24,4,16)
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans_no_group) tested(15), found(0), failed(0), pruned(0), continued(15)
+stats:2 (row_rots_no_group) tested(1200), found(0), failed(0), pruned(1192), continued(8)
+stats:3 (col_fans_no_group) tested(8184), found(0), failed(0), pruned(8176), continued(8)
+stats:4 (col_rots_no_group) tested(16384), found(0), failed(16128), pruned(0), continued(256)
+stats:5 ([last]) tested(256), found(8), failed(248), pruned(0), continued(0)
+search:trove_sum shape([32]) true mode(All) [0.068921143]
+spec:specs/swinv_like/l1/trove-cr_sum-5.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32-col_rots_no_group-32,5 [0.01232021]
+load:matrices/32-col_rots_no_group-32,5_32,5-col_fans_no_group-32,5 [0.013058491]
+load:matrices/32-col_rots_no_group-32,5_32,5-col_fans_no_group-32,5_32,5-row_rots_no_group-32,5 [0.014207233]
+Begin search
+soln:init;load_rep;fan(0,2);rot(1,32,1);fan(0,5);rot(19,5,20)
+soln:init;load_rep;fan(0,3);rot(4,32,0);fan(0,5);rot(13,5,0)
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans_no_group) tested(24), found(0), failed(0), pruned(0), continued(24)
+stats:2 (row_rots_no_group) tested(3000), found(0), failed(0), pruned(2998), continued(2)
+stats:3 (col_fans_no_group) tested(2046), found(0), failed(0), pruned(2044), continued(2)
+stats:4 (col_rots_no_group) tested(2048), found(0), failed(1984), pruned(0), continued(64)
+stats:5 ([last]) tested(64), found(2), failed(62), pruned(0), continued(0)
+search:trove_sum shape([32]) true mode(All) [0.043619831]
+spec:specs/swinv_like/l1/trove-cr_sum-7.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32-col_rots_no_group-32,7 [0.024211337]
+load:matrices/32-col_rots_no_group-32,7_32,7-col_fans_no_group-32,7 [0.024234812]
+load:matrices/32,7-row_rots_no_group-32,7 [1.098549492]
+mul:32-col_rots_no_group-32,7_32,7-col_fans_no_group-32,7_32,7-row_rots_no_group-32,7 density(0.9956752232142857) [22.72357255]
+Begin search
+soln:init;load_rep;fan(0,5);rot(1,32,1);fan(0,7);rot(9,7,10)
+soln:init;load_rep;fan(0,2);rot(6,32,0);fan(0,7);rot(23,7,0)
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans_no_group) tested(48), found(0), failed(0), pruned(0), continued(48)
+stats:2 (row_rots_no_group) tested(11760), found(0), failed(0), pruned(11758), continued(2)
+stats:3 (col_fans_no_group) tested(2046), found(0), failed(0), pruned(2044), continued(2)
+stats:4 (col_rots_no_group) tested(2048), found(0), failed(1984), pruned(0), continued(64)
+stats:5 ([last]) tested(64), found(2), failed(62), pruned(0), continued(0)
+search:trove_sum shape([32]) true mode(All) [0.210919632]
+spec:specs/swinv_like/l3/trove-cr_sum-1.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32-col_rots-32,1 [0.000419512]
+load:matrices/32-col_rots-32,1_32,1-col_fans-32,1 [0.000406467]
+load:matrices/32-col_rots-32,1_32,1-col_fans-32,1_32,1-row_rots-32,1 [0.000382938]
+Begin search
+soln:init;load_rep;id;id;id;id
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (row_rots) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:3 (col_fans) tested(53), found(0), failed(0), pruned(52), continued(1)
+stats:4 (col_rots) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:5 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:trove_sum shape([32]) true mode(All) [0.000169772]
+spec:specs/swinv_like/l3/trove-cr_sum-2.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32-col_rots-32,2 [0.001533798]
+load:matrices/32-col_rots-32,2_32,2-col_fans-32,2 [0.001554267]
+load:matrices/32-col_rots-32,2_32,2-col_fans-32,2_32,2-row_rots-32,2 [0.001417374]
+Begin search
+soln:init;load_rep;id;rot(1,32,0);fan(0,2);rot(16,2,0)
+soln:init;load_rep;id;rot(1,32,-1);fan(0,2);rot(16,2,16)
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (row_rots) tested(20), found(0), failed(0), pruned(18), continued(2)
+stats:3 (col_fans) tested(2554), found(0), failed(0), pruned(2552), continued(2)
+stats:4 (col_rots) tested(3634), found(0), failed(3570), pruned(0), continued(64)
+stats:5 ([last]) tested(64), found(2), failed(62), pruned(0), continued(0)
+search:trove_sum shape([32]) true mode(All) [0.009190045]
+spec:specs/swinv_like/l3/trove-cr_sum-3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32-col_rots-32,3 [0.00342586]
+load:matrices/32-col_rots-32,3_32,3-col_fans-32,3 [0.003432773]
+load:matrices/32-col_rots-32,3_32,3-col_fans-32,3_32,3-row_rots-32,3 [0.003445729]
+Begin search
+soln:init;load_rep;fan(0,2);rot(2,32,0);fan(0,3);rot(11,3,0)
+soln:init;load_rep;id;rot(1,32,1);fan(0,3);rot(21,3,22)
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:2 (row_rots) tested(225), found(0), failed(0), pruned(223), continued(2)
+stats:3 (col_fans) tested(2804), found(0), failed(0), pruned(2802), continued(2)
+stats:4 (col_rots) tested(3812), found(0), failed(3748), pruned(0), continued(64)
+stats:5 ([last]) tested(64), found(2), failed(62), pruned(0), continued(0)
+search:trove_sum shape([32]) true mode(All) [0.016048186]
+spec:specs/swinv_like/l3/trove-cr_sum-4.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32-col_rots-32,4 [0.006118048]
+load:matrices/32-col_rots-32,4_32,4-col_fans-32,4 [0.006439207]
+load:matrices/32-col_rots-32,4_32,4-col_fans-32,4_32,4-row_rots-32,4 [0.00604427]
+Begin search
+soln:init;load_rep;fan(0,3);rot(3,32,2);fan(0,4);rot(8,4,16)
+soln:init;load_rep;fan(0,3);rot(3,32,1);fan(0,4);rot(8,4,8)
+soln:init;load_rep;fan(0,3);rot(3,32,0);fan(0,4);rot(8,4,0)
+soln:init;load_rep;fan(0,3);rot(3,32,-1);fan(0,4);rot(8,4,24)
+soln:init;load_rep;id;rot(1,32,1);fan(0,4);rot(24,4,24)
+soln:init;load_rep;id;rot(1,32,-1);fan(0,4);rot(24,4,8)
+soln:init;load_rep;id;rot(1,32,2);fan(0,4);rot(24,4,16)
+soln:init;load_rep;id;rot(1,32,0);fan(0,4);rot(24,4,0)
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans) tested(19), found(0), failed(0), pruned(4), continued(15)
+stats:2 (row_rots) tested(2085), found(0), failed(0), pruned(2077), continued(8)
+stats:3 (col_fans) tested(11496), found(0), failed(0), pruned(11488), continued(8)
+stats:4 (col_rots) tested(31240), found(0), failed(30984), pruned(0), continued(256)
+stats:5 ([last]) tested(256), found(8), failed(248), pruned(0), continued(0)
+search:trove_sum shape([32]) true mode(All) [0.085611014]
+spec:specs/swinv_like/l3/trove-cr_sum-5.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+load:matrices/32-col_rots-32,5 [0.009652524]
+load:matrices/32-col_rots-32,5_32,5-col_fans-32,5 [0.009593837]
+load:matrices/32-col_rots-32,5_32,5-col_fans-32,5_32,5-row_rots-32,5 [0.009396852]
+Begin search
+soln:init;load_rep;fan(0,3);rot(4,32,0);fan(0,5);rot(13,5,0)
+soln:init;load_rep;fan(0,2);rot(1,32,1);fan(0,5);rot(19,5,20)
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans) tested(24), found(0), failed(0), pruned(0), continued(24)
+stats:2 (row_rots) tested(3000), found(0), failed(0), pruned(2998), continued(2)
+stats:3 (col_fans) tested(2876), found(0), failed(0), pruned(2874), continued(2)
+stats:4 (col_rots) tested(3960), found(0), failed(3896), pruned(0), continued(64)
+stats:5 ([last]) tested(64), found(2), failed(62), pruned(0), continued(0)
+search:trove_sum shape([32]) true mode(All) [0.043779338]
