@@ -1,0 +1,48 @@
+{
+  "target": {"Builtin": "conv"},
+  "target_info": [32, 3],
+  "steps": [
+    {
+      "step": {"Initial": {"From": 0}},
+      "out_shape": [34],
+      "lane": 0,
+      "prune": false,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "load_trunc"}},
+      "lane": 0,
+      "out_shape": [32, 2],
+      "prune": false,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "select_item_no_consts"}},
+      "lane": 0,
+      "out_shape": [32, 3],
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "col_fans_no_group"}},
+      "lane": 0,
+      "out_shape": [32, 3],
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "col_rots_no_group"}},
+      "lane": 0,
+      "out_shape": [32, 3],
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "cond_keep_no_consts"}},
+      "lane": 0,
+      "out_shape": [32, 3],
+      "prune": false,
+      "then_fold": true
+    }
+  ]
+}

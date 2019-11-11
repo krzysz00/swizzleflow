@@ -1,0 +1,39 @@
+spec:specs/swinv_like/l1/1d-stencil.json
+load:matrices/32-cond_keep_no_consts-32,3 [0.004115119]
+load:matrices/32-cond_keep_no_consts-32,3_32,3-col_rots_no_group-32,3 [0.004121079]
+load:matrices/32-cond_keep_no_consts-32,3_32,3-col_rots_no_group-32,3_32,3-col_fans_no_group-32,3 [0.003874101]
+Begin search
+soln:init;load_trunc;select(0 >= 1 + 0);id;rot(1,3,0);keep_if(0 = 0 + 0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (select_item_no_consts) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:2 (col_fans_no_group) tested(1023), found(0), failed(0), pruned(480), continued(543)
+stats:3 (col_rots_no_group) tested(556032), found(0), failed(0), pruned(556031), continued(1)
+stats:4 (cond_keep_no_consts) tested(8), found(0), failed(7), pruned(0), continued(1)
+stats:5 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:conv shape([32]) true mode(All) [1.3191275949999999]
+spec:specs/swinv_like/l2/1d-stencil.json
+load:matrices/32-cond_keep-32,3 [0.003211089]
+load:matrices/32-cond_keep-32,3_32,3-col_rots_no_group-32,3 [0.003990076]
+load:matrices/32-cond_keep-32,3_32,3-col_rots_no_group-32,3_32,3-col_fans_no_group-32,3 [0.003403821]
+Begin search
+soln:init;load_trunc;select(0 >= 1 + 0);id;rot(1,3,0);keep_if(0 = 0 + 0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (select_item) tested(16), found(0), failed(0), pruned(15), continued(1)
+stats:2 (col_fans_no_group) tested(1023), found(0), failed(0), pruned(480), continued(543)
+stats:3 (col_rots_no_group) tested(556032), found(0), failed(0), pruned(556031), continued(1)
+stats:4 (cond_keep) tested(16), found(0), failed(15), pruned(0), continued(1)
+stats:5 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:conv shape([32]) true mode(All) [1.320965694]
+spec:specs/swinv_like/l3/1d-stencil.json
+load:matrices/32-cond_keep-32,3 [0.003441689]
+load:matrices/32-cond_keep-32,3_32,3-col_rots-32,3 [0.003447975]
+load:matrices/32-cond_keep-32,3_32,3-col_rots-32,3_32,3-col_fans-32,3 [0.003168915]
+Begin search
+soln:init;load_trunc;select(0 >= 1 + 0);id;rot(1,3,0);keep_if(0 = 0 + 0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (select_item) tested(16), found(0), failed(0), pruned(14), continued(2)
+stats:2 (col_fans) tested(2804), found(0), failed(0), pruned(2166), continued(638)
+stats:3 (col_rots) tested(1216028), found(0), failed(0), pruned(1216027), continued(1)
+stats:4 (cond_keep) tested(16), found(0), failed(15), pruned(0), continued(1)
+stats:5 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:conv shape([32]) true mode(All) [3.006602767]
