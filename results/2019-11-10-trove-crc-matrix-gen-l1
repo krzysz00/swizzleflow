@@ -1,0 +1,93 @@
+spec:specs/swinv_like/l1/trove-crc-1.json
+build:matrices/32,1-row_rots_no_group-32,1 density(0.0009765625) [0.003522681]
+Using newly-built matrices/32,1-row_rots_no_group-32,1
+build:matrices/32,1-row_fans_no_group-32,1 density(0.0009765625) [0.002618934]
+mul:32,1-row_rots_no_group-32,1_32,1-row_fans_no_group-32,1 density(0.0009765625) [0.038224029]
+build:matrices/32,1-col_rots_no_group-32,1 density(0.0009765625) [0.002100408]
+mul:32,1-row_rots_no_group-32,1_32,1-row_fans_no_group-32,1_32,1-col_rots_no_group-32,1 density(0.0009765625) [0.013169784]
+build:matrices/32,1-col_fans_no_group-32,1 density(0.02569580078125) [0.004706449]
+mul:32,1-row_rots_no_group-32,1_32,1-row_fans_no_group-32,1_32,1-col_rots_no_group-32,1_32,1-col_fans_no_group-32,1 density(0.02569580078125) [0.00857583]
+mul:32,1-row_rots_no_group-32,1_32,1-row_fans_no_group-32,1_32,1-col_rots_no_group-32,1_32,1-col_fans_no_group-32,1_32,1-row_rots_no_group-32,1 density(0.02569580078125) [0.008876324]
+Begin search
+soln:init;load_rep;id;id;id;id;id;id
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans_no_group) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (row_rots_no_group) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:3 (col_fans_no_group) tested(31), found(0), failed(0), pruned(30), continued(1)
+stats:4 (col_rots_no_group) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:5 (row_fans_no_group) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:6 (row_rots_no_group) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:7 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:trove shape([32, 1]) true mode(All) [0.000306207]
+spec:specs/swinv_like/l1/trove-crc-2.json
+build:matrices/32,2-row_rots_no_group-32,2 density(0.0009613037109375) [0.03047498]
+Using newly-built matrices/32,2-row_rots_no_group-32,2
+build:matrices/32,2-row_fans_no_group-32,2 density(0.000244140625) [0.028066822]
+mul:32,2-row_rots_no_group-32,2_32,2-row_fans_no_group-32,2 density(0.0009613037109375) [0.465882866]
+build:matrices/32,2-col_rots_no_group-32,2 density(0.12890625) [0.247069459]
+mul:32,2-row_rots_no_group-32,2_32,2-row_fans_no_group-32,2_32,2-col_rots_no_group-32,2 density(0.507568359375) [0.467478521]
+build:matrices/32,2-col_fans_no_group-32,2 density(0.03849029541015625) [0.232751891]
+mul:32,2-row_rots_no_group-32,2_32,2-row_fans_no_group-32,2_32,2-col_rots_no_group-32,2_32,2-col_fans_no_group-32,2 density(0.7681884765625) [0.461352833]
+mul:32,2-row_rots_no_group-32,2_32,2-row_fans_no_group-32,2_32,2-col_rots_no_group-32,2_32,2-col_fans_no_group-32,2_32,2-row_rots_no_group-32,2 density(0.96923828125) [0.449176568]
+Begin search
+soln:init;load_rep;id;rot(1,32,-1);fan(0,2);rot(16,2,16);id;rot(0,16,-1)
+soln:init;load_rep;id;rot(1,32,0);fan(0,2);rot(16,2,0);id;rot(0,16,0)
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans_no_group) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (row_rots_no_group) tested(20), found(0), failed(0), pruned(18), continued(2)
+stats:3 (col_fans_no_group) tested(1922), found(0), failed(0), pruned(1920), continued(2)
+stats:4 (col_rots_no_group) tested(2048), found(0), failed(0), pruned(2046), continued(2)
+stats:5 (row_fans_no_group) tested(2), found(0), failed(0), pruned(0), continued(2)
+stats:6 (row_rots_no_group) tested(40), found(0), failed(0), pruned(0), continued(40)
+stats:7 ([last]) tested(40), found(2), failed(38), pruned(0), continued(0)
+search:trove shape([32, 2]) true mode(All) [0.01612099]
+spec:specs/swinv_like/l1/trove-crc-3.json
+build:matrices/32,3-row_rots_no_group-32,3 density(0.0009199778238932291) [0.15902813]
+Using newly-built matrices/32,3-row_rots_no_group-32,3
+build:matrices/32,3-row_fans_no_group-32,3 density(0.0002691951798804012) [0.138308778]
+mul:32,3-row_rots_no_group-32,3_32,3-row_fans_no_group-32,3 density(0.0009509192572699653) [4.798015183]
+load:matrices/32,3-col_rots_no_group-32,3 [0.030704302]
+mul:32,3-row_rots_no_group-32,3_32,3-row_fans_no_group-32,3_32,3-col_rots_no_group-32,3 density(0.5595816153067129) [5.377652559]
+load:matrices/32,3-col_fans_no_group-32,3 [0.030427675]
+mul:32,3-row_rots_no_group-32,3_32,3-row_fans_no_group-32,3_32,3-col_rots_no_group-32,3_32,3-col_fans_no_group-32,3 density(0.8365303322120949) [5.500390152]
+mul:32,3-row_rots_no_group-32,3_32,3-row_fans_no_group-32,3_32,3-col_rots_no_group-32,3_32,3-col_fans_no_group-32,3_32,3-row_rots_no_group-32,3 density(0.9793836805555556) [5.42610416]
+Begin search
+soln:init;load_rep;id;rot(1,32,1);fan(0,3);rot(21,3,22);fan(0,2);rot(0,32,1)
+soln:init;load_rep;fan(0,2);rot(2,32,0);fan(0,3);rot(11,3,0);id;id
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans_no_group) tested(5), found(0), failed(0), pruned(0), continued(5)
+stats:2 (row_rots_no_group) tested(225), found(0), failed(0), pruned(223), continued(2)
+stats:3 (col_fans_no_group) tested(2046), found(0), failed(0), pruned(2044), continued(2)
+stats:4 (col_rots_no_group) tested(2048), found(0), failed(0), pruned(2046), continued(2)
+stats:5 (row_fans_no_group) tested(10), found(0), failed(0), pruned(8), continued(2)
+stats:6 (row_rots_no_group) tested(90), found(0), failed(0), pruned(0), continued(90)
+stats:7 ([last]) tested(90), found(2), failed(88), pruned(0), continued(0)
+search:trove shape([32, 3]) true mode(All) [0.030331066]
+spec:specs/swinv_like/l1/trove-crc-4.json
+build:matrices/32,4-row_rots_no_group-32,4 density(0.0009174346923828125) [0.537727422]
+Using newly-built matrices/32,4-row_rots_no_group-32,4
+build:matrices/32,4-row_fans_no_group-32,4 density(0.000213623046875) [0.448151918]
+mul:32,4-row_rots_no_group-32,4_32,4-row_fans_no_group-32,4 density(0.0009522438049316406) [31.516779173]
+build:matrices/32,4-col_rots_no_group-32,4 density(0.04736328125) [5.879665828]
+mul:32,4-row_rots_no_group-32,4_32,4-row_fans_no_group-32,4_32,4-col_rots_no_group-32,4 density(0.7475738525390625) [29.19701487]
+build:matrices/32,4-col_fans_no_group-32,4 density(0.012354612350463867) [2.740655291]
+mul:32,4-row_rots_no_group-32,4_32,4-row_fans_no_group-32,4_32,4-col_rots_no_group-32,4_32,4-col_fans_no_group-32,4 density(0.8757286071777344) [29.905263137]
+mul:32,4-row_rots_no_group-32,4_32,4-row_fans_no_group-32,4_32,4-col_rots_no_group-32,4_32,4-col_fans_no_group-32,4_32,4-row_rots_no_group-32,4 density(0.9844970703125) [30.237604292]
+Begin search
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (row_fans_no_group) tested(15), found(0), failed(0), pruned(0), continued(15)
+stats:2 (row_rots_no_group) tested(1200), found(0), failed(0), pruned(1200), continued(0)
+stats:3 (col_fans_no_group) tested(0), found(0), failed(0), pruned(0), continued(0)
+stats:4 (col_rots_no_group) tested(0), found(0), failed(0), pruned(0), continued(0)
+stats:5 (row_fans_no_group) tested(0), found(0), failed(0), pruned(0), continued(0)
+stats:6 (row_rots_no_group) tested(0), found(0), failed(0), pruned(0), continued(0)
+stats:7 ([last]) tested(0), found(0), failed(0), pruned(0), continued(0)
+search:trove shape([32, 4]) false mode(All) [0.012532702]
+spec:specs/swinv_like/l1/trove-crc-5.json
+build:matrices/32,5-row_rots_no_group-32,5 density(0.00090179443359375) [1.212834729]
+Using newly-built matrices/32,5-row_rots_no_group-32,5
+build:matrices/32,5-row_fans_no_group-32,5 density(0.0003912109375) [1.067186353]
+mul:32,5-row_rots_no_group-32,5_32,5-row_fans_no_group-32,5 density(0.00095672607421875) [127.887346494]
+build:matrices/32,5-col_rots_no_group-32,5 density(0.02505) [5.868019266]
+mul:32,5-row_rots_no_group-32,5_32,5-row_fans_no_group-32,5_32,5-col_rots_no_group-32,5 density(0.621896484375) [121.94572862]
+build:matrices/32,5-col_fans_no_group-32,5 density(0.007907958984375) [5.631980071]
