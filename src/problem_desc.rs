@@ -16,7 +16,9 @@ use crate::errors::*;
 
 use crate::operators::{SynthesisLevel,OpSet,OpSetKind,identity};
 use crate::state::{ProgState,Domain,Value,Symbolic,DomRef,Gather,to_opt_ix};
-use crate::operators::swizzle::{simple_fans, simple_rotations, OpAxis};
+use crate::operators::swizzle::{simple_fans, simple_rotations,
+                                all_fans, all_rotations,
+                                OpAxis};
 use crate::operators::select::{reg_select_no_const, reg_select,
                                cond_keep_no_consts, cond_keep};
 use crate::operators::load::{load_rep, load_trunc, broadcast};
@@ -78,6 +80,30 @@ impl GathersDesc {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
                         simple_fans(out_shape, OpAxis::Columns)
+                    },
+                    "row_rots" => {
+                        if out_shape != in_shape {
+                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
+                        }
+                        all_rotations(out_shape, OpAxis::Rows)
+                    },
+                    "col_rots" => {
+                        if out_shape != in_shape {
+                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
+                        }
+                        all_rotations(out_shape, OpAxis::Columns)
+                    },
+                    "row_fans" => {
+                        if out_shape != in_shape {
+                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
+                        }
+                        all_fans(out_shape, OpAxis::Rows)
+                    },
+                    "col_fans" => {
+                        if out_shape != in_shape {
+                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
+                        }
+                        all_fans(out_shape, OpAxis::Columns)
                     },
                     "select_item_no_consts" => {
                         if out_shape[0..out_shape.len()-1] != in_shape[0..in_shape.len()-1] {

@@ -129,9 +129,49 @@ pub fn simple_rotations(shape: &[Ix], perm_within: OpAxis) -> Result<OpSetKind> 
     let c_bound = match perm_within { Rows => n, Columns => m } as isize;
     let d_bound = match perm_within { Rows => m, Columns => n};
     ret.extend(iproduct!((0..k_bound).chain(-k_bound+1..0),
-                         (2..=d_bound).filter(|i| d_bound % i == 0),
+                         (2..=d_bound).rev().filter(|i| d_bound % i == 0),
                          (-1..c_bound))
                .map(|(k, d, c)| rotate(m, n, perm_within, k, d, c, None)));
+    Ok(ret.into_iter().collect::<Vec<_>>().into())
+}
+
+pub fn all_fans(shape: &[Ix], perm_within: OpAxis) -> Result<OpSetKind> {
+    let mut ret = HashSet::new();
+
+    if shape.len() != 2 {
+        return Err(ErrorKind::InvalidShapeDim(shape.to_owned(), 2).into());
+    }
+    let m = shape[0];
+    let n = shape[1];
+
+    ret.insert(identity_gather(shape));
+    let k_bound = cmp::max(m, n);
+    let stable_len = match perm_within { Rows => n, Columns => m };
+    for g in (2..=stable_len).rev().filter(|i| stable_len % i == 0) {
+        ret.extend(iproduct!((0..k_bound), (0..g)).map(|(k, c)| fan(m, n, perm_within, k, c, Some(g))));
+    }
+    Ok(ret.into_iter().collect::<Vec<_>>().into())
+}
+
+pub fn all_rotations(shape: &[Ix], perm_within: OpAxis) -> Result<OpSetKind> {
+    let mut ret = HashSet::new();
+
+    if shape.len() != 2 {
+        return Err(ErrorKind::InvalidShapeDim(shape.to_owned(), 2).into());
+    }
+    let m = shape[0];
+    let n = shape[1];
+
+    ret.insert(identity_gather(shape));
+    let k_bound = cmp::max(m, n) as isize;
+    let stable_len = match perm_within { Rows => n, Columns => m } as isize;
+    let other_len = match perm_within { Rows => m, Columns => n};
+    for g in (2..=stable_len).rev().filter(|i| stable_len % i == 0) {
+        ret.extend(iproduct!((0..k_bound).chain(-k_bound+1..0),
+                             (2..=other_len).rev().filter(|i| other_len % i == 0),
+                             (-1..g))
+                   .map(|(k, d, c)| rotate(m, n, perm_within, k, d, c, Some(g as usize))));
+    }
     Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 

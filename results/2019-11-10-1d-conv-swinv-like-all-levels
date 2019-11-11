@@ -1,0 +1,59 @@
+spec:specs/swinv_like/l1/1d-conv.json
+build:matrices/32-cond_keep_no_consts-32,3 density(0.0009765625) [0.017962172]
+Using newly-built matrices/32-cond_keep_no_consts-32,3
+build:matrices/32,3-col_rots_no_group-32,3 density(0.0628858024691358) [1.191720533]
+mul:32-cond_keep_no_consts-32,3_32,3-col_rots_no_group-32,3 density(0.5659722222222222) [0.725095284]
+build:matrices/32,3-col_fans_no_group-32,3 density(0.01984057014371142) [0.940520994]
+mul:32-cond_keep_no_consts-32,3_32,3-col_rots_no_group-32,3_32,3-col_fans_no_group-32,3 density(0.8503960503472222) [0.708708206]
+Number of paths in all matrices: 13375744
+Begin search
+soln:merge_fold[init;load_trunc;select(0 >= 1 + 0);id;rot(1,3,0),init;broadcast;id];keep_if(0 = 0 + 0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (identity) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:3 (select_item_no_consts) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:4 (col_fans_no_group) tested(1023), found(0), failed(0), pruned(480), continued(543)
+stats:5 (col_rots_no_group) tested(556032), found(0), failed(0), pruned(556031), continued(1)
+stats:6 (merge_folding) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:7 (cond_keep_no_consts) tested(8), found(0), failed(7), pruned(0), continued(1)
+stats:8 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:weight_conv shape([32]) true mode(All) [4.774507104]
+spec:specs/swinv_like/l2/1d-conv.json
+build:matrices/32-cond_keep-32,3 density(0.0009765625) [0.017756617]
+Using newly-built matrices/32-cond_keep-32,3
+load:matrices/32,3-col_rots_no_group-32,3 [0.031702943]
+mul:32-cond_keep-32,3_32,3-col_rots_no_group-32,3 density(0.5659722222222222) [0.698955114]
+load:matrices/32,3-col_fans_no_group-32,3 [0.03228814]
+mul:32-cond_keep-32,3_32,3-col_rots_no_group-32,3_32,3-col_fans_no_group-32,3 density(0.8503960503472222) [0.698041535]
+Number of paths in all matrices: 13375744
+Begin search
+soln:merge_fold[init;load_trunc;select(0 >= 1 + 0);id;rot(1,3,0),init;broadcast;id];keep_if(0 = 0 + 0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (identity) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:3 (select_item) tested(16), found(0), failed(0), pruned(15), continued(1)
+stats:4 (col_fans_no_group) tested(1023), found(0), failed(0), pruned(480), continued(543)
+stats:5 (col_rots_no_group) tested(556032), found(0), failed(0), pruned(556031), continued(1)
+stats:6 (merge_folding) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:7 (cond_keep) tested(16), found(0), failed(15), pruned(0), continued(1)
+stats:8 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:weight_conv shape([32]) true mode(All) [4.724496086]
+spec:specs/swinv_like/l3/1d-conv.json
+load:matrices/32-cond_keep-32,3 [0.002914378]
+build:matrices/32,3-col_rots-32,3 density(0.0628858024691358) [1.551715455]
+mul:32-cond_keep-32,3_32,3-col_rots-32,3 density(0.5659722222222222) [0.704780068]
+build:matrices/32,3-col_fans-32,3 density(0.022878234769091194) [1.252197224]
+mul:32-cond_keep-32,3_32,3-col_rots-32,3_32,3-col_fans-32,3 density(0.8724297417534722) [0.705718147]
+Number of paths in all matrices: 13583680
+Begin search
+soln:merge_fold[init;load_trunc;select(0 >= 1 + 0);id;rot(1,3,0),init;broadcast;id];keep_if(0 = 0 + 0)
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (identity) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:3 (select_item) tested(16), found(0), failed(0), pruned(14), continued(2)
+stats:4 (col_fans) tested(2804), found(0), failed(0), pruned(2166), continued(638)
+stats:5 (col_rots) tested(1216028), found(0), failed(0), pruned(1216027), continued(1)
+stats:6 (merge_folding) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:7 (cond_keep) tested(16), found(0), failed(15), pruned(0), continued(1)
+stats:8 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:weight_conv shape([32]) true mode(All) [10.453417278]

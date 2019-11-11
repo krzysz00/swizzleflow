@@ -45,14 +45,14 @@
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "col_fans_no_group"}},
+      "step": { "Gather": { "Builtin": "col_fans"}},
       "lane": 0,
       "out_shape": [32, 3],
       "prune": true,
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "col_rots_no_group"}},
+      "step": { "Gather": { "Builtin": "col_rots"}},
       "lane": 0,
       "out_shape": [32, 3],
       "prune": true,
