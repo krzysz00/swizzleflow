@@ -1,0 +1,19 @@
+spec:specs/swinv_like/l3/trove-rcr-5.json
+load:matrices/32,5-col_rots-32,5 [0.282253299]
+load:matrices/32,5-col_rots-32,5_32,5-col_fans-32,5 [0.281881649]
+load:matrices/32,5-col_rots-32,5_32,5-col_fans-32,5_32,5-row_rots-32,5 [0.294544954]
+load:matrices/32,5-col_rots-32,5_32,5-col_fans-32,5_32,5-row_rots-32,5_32,5-row_fans-32,5 [0.283745282]
+load:matrices/32,5-col_rots-32,5 [0.249725529]
+mul:32,5-col_rots-32,5_32,5-col_fans-32,5_32,5-row_rots-32,5_32,5-row_fans-32,5_32,5-col_rots-32,5 density(0.98215625) [125.192969082]
+Begin search
+soln:init;load_rep;fan(0,31);rot(0,5,1);fan(0,3);rot(1,32,-1);fan(0,27);rot(13,5,13)
+soln:init;load_rep;id;id;fan(0,3);rot(4,32,0);fan(0,5);rot(13,5,0)
+stats:0 (load_rep) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (col_fans) tested(1438), found(0), failed(0), pruned(1078), continued(360)
+stats:2 (col_rots) tested(712800), found(0), failed(0), pruned(712796), continued(4)
+stats:3 (row_fans) tested(96), found(0), failed(0), pruned(92), continued(4)
+stats:4 (row_rots) tested(500), found(0), failed(0), pruned(498), continued(2)
+stats:5 (col_fans) tested(2876), found(0), failed(0), pruned(2874), continued(2)
+stats:6 (col_rots) tested(3960), found(0), failed(0), pruned(0), continued(3960)
+stats:7 ([last]) tested(3960), found(2), failed(3958), pruned(0), continued(0)
+search:trove shape([32, 5]) true mode(All) [7.355714189]
