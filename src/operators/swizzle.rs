@@ -12,6 +12,7 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+use crate::misc::ShapeVec;
 use crate::state::{Gather, to_opt_ix};
 use super::OpSetKind;
 use super::identity_gather;
@@ -21,156 +22,145 @@ use ndarray::{Ix,Ixs};
 use num_integer::Integer;
 
 use std::collections::HashSet;
-use std::cmp;
 
 use itertools::iproduct;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum OpAxis { Rows, Columns }
-use OpAxis::*;
-
-pub fn fan(m: Ix, n: Ix, perm_within: OpAxis, stable_scale: Ix, cf: Ix, group: Option<Ix>) -> Gather {
-    let len_of_stable = match perm_within { Rows => n, Columns => m };
+pub fn xform(shape: &[Ix], main_axis: Ix, second_axis: Ix, swizzle_axis: Ix,
+           cf: Ixs, cr: Ixs, dr: Ix, group: Option<Ix>, wrap: bool) -> Gather {
+    let len_of_stable = shape[main_axis];
     let group = group.unwrap_or(len_of_stable);
+    let wrap_name = if wrap { "_wrap" } else { "" };
     let name = if group != len_of_stable {
-        format!("grouped(fan({},{}),{})", stable_scale, cf, group)
+        format!("grouped(xform{}({},{},{}),{})", wrap_name, cf, cr, dr, group)
     }
     else {
-        format!("fan({},{})", stable_scale, cf)
+        format!("xform{}({},{},{})", wrap_name, cf, cr, dr)
     };
-    let shape = [m, n];
-    match perm_within {
-        Rows => Gather::new(&shape,
-                            move |idxs: &[Ix]| {
-                                let i = idxs[0];
-                                let j = idxs[1];
-                                let jg = j.mod_floor(&group);
-                                let cf = stable_scale * i + cf;
-                                let df = len_of_stable / len_of_stable.gcd(&cf);
-                                let get_from = (cf * jg + jg / df).mod_floor(&group) + ((j / group) * group);
-                                to_opt_ix(&[i, get_from], &shape)
-                            }, name),
-        Columns => Gather::new(&shape,
-                               move |idxs: &[Ix]| {
-                                   let i = idxs[0];
-                                   let ig = i.mod_floor(&group);
-                                   let j = idxs[1];
-                                   let cf = stable_scale * j + cf;
-                                   let df = len_of_stable / len_of_stable.gcd(&cf);
-                                   let get_from = (cf * ig + ig / df).mod_floor(&group) + ((i / group) * group);
-                                   to_opt_ix(&[get_from, j], &shape)
-                               }, name),
-    }
+    let gcd = group.gcd(&(cf.abs() as usize));
+    let df = group / gcd;
+    Gather::new(&shape,
+                move |idxs: &[Ix]| {
+                    let mut out = ShapeVec::from_slice(idxs);
+                    let i = idxs[main_axis];
+                    let ig = i.mod_floor(&group);
+                    let is = ig as isize;
+                    let k = idxs[second_axis];
+                    let ks = k as isize;
+                    let fan_loc = cf * is + (ig / df) as isize;
+                    let raw_rot_loc = cr * ks + k.div_floor(&dr) as isize;
+                    let rot_loc =
+                        if wrap { raw_rot_loc.mod_floor(&(gcd as isize)) }
+                        else { raw_rot_loc };
+                    let get_from = (fan_loc + rot_loc).mod_floor(&(group as isize))
+                        as usize + ((i / group) * group);
+                    out[swizzle_axis] = get_from;
+                    to_opt_ix(out.as_slice(), &shape)
+                }, name)
 }
 
-pub fn rotate(m: Ix, n: Ix, perm_within: OpAxis, stable_scale: Ixs, div: Ix,
+pub fn rotate(shape: &[Ix], main_axis: Ix, _second_axis: Ix, swizzle_axis: Ix,
               shift: Ixs, group: Option<Ix>) -> Gather {
-    let len_of_stable = match perm_within { Rows => n, Columns => m };
+    let len_of_stable = shape[main_axis];
     let group = group.unwrap_or(len_of_stable);
     let name = if group != len_of_stable {
-        format!("grouped(rot({},{},{}),{})", stable_scale, div, shift, group)
+        format!("grouped(rot({}),{})", shift, group)
     } else {
-        format!("rot({},{},{})", stable_scale, div, shift)
+        format!("rot({})", shift)
     };
-    let shape = [m, n];
-    match perm_within {
-        Rows => Gather::new(&shape,
-                            move |idxs: &[Ix]| {
-                                let i = idxs[0];
-                                let is = i as isize;
-                                let j = idxs[1];
-                                let jg = j.mod_floor(&group);
-                                let js = jg as isize;
-                                let loc = stable_scale * is + i.div_floor(&div) as isize + shift + js;
-                                let get_from = loc.mod_floor(&(len_of_stable as isize)) as usize + ((j / group) * group);
-                                to_opt_ix(&[i, get_from], &shape)
-                            }, name),
-        Columns => Gather::new(&shape,
-                               move |idxs: &[Ix]| {
-                                   let i = idxs[0];
-                                   let ig = i.mod_floor(&group);
-                                   let is = ig as isize;
-                                   let j = idxs[1];
-                                   let js = j as isize;
-                                   let loc = stable_scale * js + j.div_floor(&div) as isize + shift + is;
-                                   let get_from = loc.mod_floor(&(len_of_stable as isize)) as usize + ((i / group) * group);
-                                   to_opt_ix(&[get_from, j], &shape)
-                               }, name),
-    }
+    Gather::new(shape,
+                move |idxs: &[Ix]| {
+                    let mut out = ShapeVec::from_slice(idxs);
+                    let i = idxs[main_axis];
+                    let is = i as isize;
+                    let loc = shift + is;
+                    let get_from = loc.mod_floor(&(group as isize)) as usize
+                        + ((i / group) * group);
+                    out[swizzle_axis] = get_from;
+                    to_opt_ix(out.as_slice(), shape)
+                }, name)
 }
 
-pub fn simple_fans(shape: &[Ix], perm_within: OpAxis) -> Result<OpSetKind> {
+pub fn simple_xforms(shape: &[Ix], main_axis: Ix, second_axis: Ix,
+                     swizzle_axis: Ix) -> Result<OpSetKind> {
     let mut ret = HashSet::new();
 
-    if shape.len() != 2 {
-        return Err(ErrorKind::InvalidShapeDim(shape.to_owned(), 2).into());
+    if shape[main_axis] != shape[swizzle_axis] {
+        return Err(ErrorKind::AxisLengthMismatch(main_axis, shape[main_axis],
+                                                 swizzle_axis, shape[swizzle_axis]).into());
     }
-    let m = shape[0];
-    let n = shape[1];
 
     ret.insert(identity_gather(shape));
-    let k_bound = cmp::max(m, n);
-    let c_bound = match perm_within { Rows => n, Columns => m };
-    ret.extend(iproduct!((0..k_bound), (0..c_bound)).map(|(k, c)| fan(m, n, perm_within, k, c, None)));
+    let cf_bound = shape[main_axis] as isize;
+    let cr_bound = cf_bound;
+    let dr_bound = shape[second_axis];
+    ret.extend(iproduct!((2..=dr_bound).filter(|i| dr_bound % i == 0).rev(),
+                         (0..cr_bound).chain(-1..0),
+                         (0..cf_bound).chain(-1..0))
+               .map(|(dr, cr, cf)| xform(shape, main_axis, second_axis, swizzle_axis,
+                                         cf, cr, dr, None, false)));
     Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 
-pub fn simple_rotations(shape: &[Ix], perm_within: OpAxis) -> Result<OpSetKind> {
+pub fn simple_rotations(shape: &[Ix], main_axis: Ix, second_axis: Ix,
+                        swizzle_axis: Ix) -> Result<OpSetKind> {
     let mut ret = HashSet::new();
 
-    if shape.len() != 2 {
-        return Err(ErrorKind::InvalidShapeDim(shape.to_owned(), 2).into());
+    let stable_len = shape[main_axis];
+    if stable_len != shape[swizzle_axis] {
+        return Err(ErrorKind::AxisLengthMismatch(main_axis, stable_len,
+                                                 swizzle_axis, shape[swizzle_axis]).into());
     }
-    let m = shape[0];
-    let n = shape[1];
 
     ret.insert(identity_gather(shape));
-    let k_bound = cmp::max(m, n) as isize;
-    let c_bound = match perm_within { Rows => n, Columns => m } as isize;
-    let d_bound = match perm_within { Rows => m, Columns => n};
-    ret.extend(iproduct!((0..k_bound).chain(-k_bound+1..0),
-                         (2..=d_bound).rev().filter(|i| d_bound % i == 0),
-                         (-1..c_bound))
-               .map(|(k, d, c)| rotate(m, n, perm_within, k, d, c, None)));
+    let shift_bound = stable_len as isize;
+    ret.extend((0..=shift_bound).chain(-shift_bound+1..0)
+               .map(|c| rotate(shape, main_axis, second_axis, swizzle_axis,
+                               c, None)));
     Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 
-pub fn all_fans(shape: &[Ix], perm_within: OpAxis) -> Result<OpSetKind> {
+pub fn all_xforms(shape: &[Ix], main_axis: Ix, second_axis: Ix,
+                  swizzle_axis: Ix) -> Result<OpSetKind> {
     let mut ret = HashSet::new();
 
-    if shape.len() != 2 {
-        return Err(ErrorKind::InvalidShapeDim(shape.to_owned(), 2).into());
+    let stable_len = shape[main_axis];
+    if shape[main_axis] != shape[swizzle_axis] {
+        return Err(ErrorKind::AxisLengthMismatch(main_axis, stable_len,
+                                                 swizzle_axis, shape[swizzle_axis]).into());
     }
-    let m = shape[0];
-    let n = shape[1];
 
+    let dr_bound = shape[second_axis];
     ret.insert(identity_gather(shape));
-    let k_bound = cmp::max(m, n);
-    let stable_len = match perm_within { Rows => n, Columns => m };
     for g in (2..=stable_len).rev().filter(|i| stable_len % i == 0) {
-        ret.extend(iproduct!((0..k_bound), (0..g)).map(|(k, c)| fan(m, n, perm_within, k, c, Some(g))));
+        let gs = g as isize;
+        let cf_bound = gs;
+        let cr_bound = gs;
+        ret.extend(iproduct!([false, true].iter(),
+                             (2..=dr_bound).filter(|i| dr_bound % i == 0).rev(),
+                             (0..cr_bound).chain(-1..0),
+                             (0..cf_bound).chain(-1..0))
+                   .map(|(wrap, dr, cr, cf)|
+                        xform(shape, main_axis, second_axis, swizzle_axis,
+                              cf, cr, dr, Some(g), *wrap)));
     }
     Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 
-pub fn all_rotations(shape: &[Ix], perm_within: OpAxis) -> Result<OpSetKind> {
+pub fn all_rotations(shape: &[Ix], main_axis: Ix, second_axis: Ix,
+                     swizzle_axis: Ix) -> Result<OpSetKind> {
     let mut ret = HashSet::new();
-
-    if shape.len() != 2 {
-        return Err(ErrorKind::InvalidShapeDim(shape.to_owned(), 2).into());
+    let stable_len = shape[main_axis];
+    if stable_len != shape[swizzle_axis] {
+        return Err(ErrorKind::AxisLengthMismatch(main_axis, stable_len,
+                                                 swizzle_axis, shape[swizzle_axis]).into());
     }
-    let m = shape[0];
-    let n = shape[1];
 
     ret.insert(identity_gather(shape));
-    let k_bound = cmp::max(m, n) as isize;
-    let stable_len = match perm_within { Rows => n, Columns => m } as isize;
-    let other_len = match perm_within { Rows => m, Columns => n};
     for g in (2..=stable_len).rev().filter(|i| stable_len % i == 0) {
-        ret.extend(iproduct!((0..k_bound).chain(-k_bound+1..0),
-                             (2..=other_len).rev().filter(|i| other_len % i == 0),
-                             (-1..g))
-                   .map(|(k, d, c)| rotate(m, n, perm_within, k, d, c, Some(g as usize))));
+        let gs = g as isize;
+        ret.extend((0..gs).chain(-gs+1..0)
+                   .map(|c| rotate(shape, main_axis, second_axis, swizzle_axis,
+                                   c, Some(g))));
     }
     Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
@@ -181,19 +171,13 @@ mod tests {
 
     #[test]
     fn scala_3x16_basis_sizes() {
-        assert_eq!(simple_fans(&[3, 16], OpAxis::Columns).unwrap()
+        assert_eq!(simple_xforms(&[3, 16], 0, 1, 0).unwrap()
                    .gathers().unwrap().len(), 5);
-        assert_eq!(simple_rotations(&[3, 16], OpAxis::Columns).unwrap()
+        assert_eq!(simple_rotations(&[3, 16], 0, 1, 0).unwrap()
                    .gathers().unwrap().len(), 36);
-        assert_eq!(simple_fans(&[3, 16], OpAxis::Rows).unwrap()
+        assert_eq!(simple_xforms(&[3, 16], 1, 0, 1).unwrap()
                    .gathers().unwrap().len(), 255);
-        assert_eq!(simple_rotations(&[3, 16], OpAxis::Rows).unwrap()
+        assert_eq!(simple_rotations(&[3, 16], 1, 0, 1).unwrap()
                    .gathers().unwrap().len(), 256);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_shape_interface() {
-        simple_fans(&[3], OpAxis::Columns).unwrap();
     }
 }

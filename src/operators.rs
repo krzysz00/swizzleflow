@@ -88,6 +88,13 @@ pub fn identity_gather(shape: &[Ix]) -> Gather {
     Gather::new(shape, |idxs| to_opt_ix(idxs, shape), "id")
 }
 
+pub fn transpose_gather(out_shape: &[Ix], in_shape: &[Ix]) -> Gather {
+    Gather::new(out_shape, |idxs| {
+        let rev = idxs.iter().copied().rev().collect::<Vec<_>>();
+        to_opt_ix(&rev, in_shape)
+    }, "tr")
+}
+
 pub fn merge_adapter_gather(out_shape: &[Ix], index: Ix) -> Gather {
     let last = out_shape.len() - 1;
     let in_shape = &out_shape[0..last];
@@ -99,6 +106,10 @@ pub fn merge_adapter_gather(out_shape: &[Ix], index: Ix) -> Gather {
 
 pub fn identity(shape: &[Ix]) -> Result<OpSetKind> {
     Ok(OpSetKind::Gathers(vec![identity_gather(shape)]))
+}
+
+pub fn transpose(out_shape: &[Ix], in_shape: &[Ix]) -> Result<OpSetKind> {
+    Ok(OpSetKind::Gathers(vec![transpose_gather(out_shape, in_shape)]))
 }
 
 #[derive(Debug)]

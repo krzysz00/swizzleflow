@@ -17,7 +17,7 @@
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "row_fans_no_group"}},
+      "step": { "Gather": { "Builtin": "row_xforms_no_group"}},
       "lane": 0,
       "out_shape": [32, 1],
       "prune": true,
@@ -31,7 +31,7 @@
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "col_fans_no_group"}},
+      "step": { "Gather": { "Builtin": "col_xforms_no_group"}},
       "lane": 0,
       "out_shape": [32, 1],
       "prune": true,
@@ -45,7 +45,7 @@
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "row_fans_no_group"}},
+      "step": { "Gather": { "Builtin": "row_xforms_no_group"}},
       "lane": 0,
       "out_shape": [32, 1],
       "prune": true,

@@ -69,18 +69,21 @@ pub fn load_trunc(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSetKind> {
     load(in_shape, out_shape, Mode::Trunc)
 }
 
-pub fn broadcast(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSetKind> {
+pub fn broadcast(in_shape: &[Ix], out_shape: &[Ix], group: Ix) -> Result<OpSetKind> {
     let name = "broadcast";
+    println!("in = {:?}, out = {:?}", in_shape, out_shape);
+    let out_split = out_shape.len() - in_shape.len() + group;
 
-    let out_split = out_shape.len() - in_shape.len();
-
-    if in_shape != &out_shape[out_split..] {
+    if &in_shape[group..] != &out_shape[out_split..] {
         return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
     }
     let gather =
         Gather::new(out_shape,
                     move |out_idxs: &[Ix]| {
-                        to_opt_ix(&out_idxs[out_split..], in_shape)
+                        let mut idxs = Vec::with_capacity(8);
+                        idxs.extend_from_slice(&out_idxs[..group]);
+                        idxs.extend_from_slice(&out_idxs[out_split..]);
+                        to_opt_ix(&idxs, in_shape)
                     }, name);
     Ok(vec![gather].into())
 }

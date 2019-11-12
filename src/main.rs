@@ -65,6 +65,10 @@ pub mod errors {
                 description("shapes don't match")
                 display("{:?} should match up with {:?}", shape1, shape2)
             }
+            AxisLengthMismatch(ax1: usize, len1: usize, ax2: usize, len2: usize) {
+                description("axis lengths don't match")
+                display("axis lengths don't match: d{} (length {}) != d{} (length {})", ax1, len1, ax2, len2)
+            }
             WrongMergeArgs(expected: usize, got: usize) {
                 description("incorrect number of merge arguments")
                 display("incorrect number of merge arguments: expected {}, got {}", expected, got)
@@ -89,6 +93,10 @@ pub mod errors {
                 description("symbols not in spec")
                 display("symbols not in spec")
             }
+            MissingOption(key: String) {
+                description("missing options")
+                display("missing options: {}", key)
+            }
             NoSplitFolds {
                 description("can't fold after splits")
                 display("can't fold after splits")
@@ -112,7 +120,7 @@ pub mod errors {
             }
             BadSpec(spec: crate::problem_desc::ProblemDesc) {
                 description("bad specification")
-                display("bad specification: {:?}", spec)
+                display("bad specification: {:#?}", spec)
             }
         }
     }
@@ -168,6 +176,55 @@ fn run() -> Result<()> {
         synthesize(initial, &target, &levels, &expected_syms, synthesis_mode);
         matrix_load::remove_matrices(&mut levels);
     }
+    // The goal: (t, i) -> (t, i) merged with (t, i) -> (t, t - i)
+    // Except that that second one isn't a swizzle inventor xform
+    // We can fix it by adding k back though, at the cost of equivalence issues
+    // Then, merge these, transpose
+    // use ndarray::ArrayD;
+    // use itertools::iproduct;
+    // let f1 = crate::operators::swizzle::xform(&[4, 4], 1, 0, 1, 1, 0, 4, None, false);
+    // let r1 = crate::operators::swizzle::rotate(&[4, 4], 1, 0, 1, 0, None);
+    // let f2 = crate::operators::swizzle::xform(&[4, 4], 1, 0, 1, 1, -1, 4, None, false);
+    // let r2 = crate::operators::swizzle::rotate(&[4, 4], 1, 0, 1, 0, None);
+    // let broadcast = crate::operators::load::broadcast(&[4, 4], &[4, 2, 4], 1).unwrap().gathers().unwrap()[0].clone();
+    // println!("{}", f1);
+    // println!("{}", r1);
+    // println!("{}", f2);
+    // println!("{}", r2);
+    // println!("{}", broadcast);
+    // let spec = crate::problem_desc::poly_mult(4);
+    // let domain = crate::state::Domain::new(spec.view());
+    // let arr1 = iproduct!(0..4, 0..4).map(|(_i, j)| crate::state::Value::Symbol(j)).collect();
+    // let arr1 = ArrayD::from_shape_vec(vec![4, 4], arr1).unwrap();
+    // let state = crate::state::ProgState::new_from_spec(&domain, arr1, "init").unwrap();
+    // let s1 = state.gather_by(&f1);
+    // let s2 = s1.gather_by(&r1);
+
+    // let arr2 = iproduct!(0..4, 0..4).map(|(_i, j)| crate::state::Value::Symbol(4 + j)).collect();
+    // let arr2 = ArrayD::from_shape_vec(vec![4, 4], arr2).unwrap();
+    // let state2 = crate::state::ProgState::new_from_spec(&domain, arr2, "init").unwrap();
+    // let s3 = state2.gather_by(&f2);
+    // let s4 = s3.gather_by(&r2);
+    // println!("{}\n{}\n{}", state, s1, s2);
+    // println!("\n{}\n{}\n{}", state2, s3, s4);
+
+    // let m = crate::state::ProgState::merge_folding(&[&s2, &s4]).unwrap();
+    // // let tr = crate::operators::transpose_gather(&[4, 4], &[4, 4]);
+    // // let transpose = m.gather_by(&tr);
+    // let b = m.gather_by(&broadcast);
+    // println!("\n{}\n{}", m, b);
+
+    // let mut retain = std::collections::BTreeMap::new();
+    // retain.insert(1, 0);
+    // let c1 = crate::operators::select::cond_keep_gather(&[4, 2, 4], 2, 0, 0,
+    //                                                     crate::operators::select::Op::Leq, &retain);
+    // let d1 = b.gather_by(&c1);
+    // println!("\n{}\n{}", c1, d1);
+    // retain.insert(1, 1);
+    // let c2 = crate::operators::select::cond_keep_gather(&[4, 2, 4], 2, 0, 0,
+    //                                                     crate::operators::select::Op::Gt, &retain);
+    // let d2 = d1.gather_by(&c2);
+    // println!("\n{}", d2);
     Ok(())
 }
 
@@ -185,18 +242,19 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use crate::problem_desc::{trove};
-    use crate::operators::swizzle::{fan,rotate,OpAxis};
+    use crate::operators::swizzle::{xform,rotate};
     use crate::operators::load::load_rep;
     use crate::state::{ProgState, Domain, Value};
 
     fn fixed_solution_from_scalar_8x3<'d>(d: &'d Domain) -> ProgState<'d> {
         let initial = ProgState::linear(d, 1, &[24]);
+        let shape = [8, 3];
         let s0 = initial.gather_by(&load_rep(&[24], &[8, 3]).unwrap()
                                    .gathers().unwrap()[0]);
-        let s1 = s0.gather_by(&fan(8, 3, OpAxis::Rows, 0, 2, None));
-        let s2 = s1.gather_by(&rotate(8, 3, OpAxis::Rows, -7, 8, 0, None));
-        let s3 = s2.gather_by(&fan(8, 3, OpAxis::Columns, 0, 3, None));
-        let s4 = s3.gather_by(&rotate(8, 3, OpAxis::Columns, -5, 3, 0, None));
+        let s1 = s0.gather_by(&xform(&shape, 1, 1, 2, None));
+        let s2 = s1.gather_by(&rotate(&shape, 1, 0, 1, -7, 8, 0, None));
+        let s3 = s2.gather_by(&xform(&shape, 0, 0, 3, None));
+        let s4 = s3.gather_by(&rotate(&shape, 0, 1, 0, -5, 3, 0, None));
         s4
     }
 

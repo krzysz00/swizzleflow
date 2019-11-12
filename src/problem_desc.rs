@@ -14,24 +14,27 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::errors::*;
 
-use crate::operators::{SynthesisLevel,OpSet,OpSetKind,identity};
-use crate::state::{ProgState,Domain,Value,Symbolic,DomRef,Gather,to_opt_ix};
-use crate::operators::swizzle::{simple_fans, simple_rotations,
-                                all_fans, all_rotations,
-                                OpAxis};
+use crate::operators::{SynthesisLevel,OpSet, OpSetKind,
+                       identity, transpose};
+use crate::state::{ProgState, Domain, Value, Symbolic, DomRef,
+                   Gather, to_opt_ix};
+use crate::operators::swizzle::{simple_xforms, simple_rotations,
+                                all_xforms, all_rotations};
 use crate::operators::select::{reg_select_no_const, reg_select,
-                               cond_keep_no_consts, cond_keep};
+                               cond_keep};
 use crate::operators::load::{load_rep, load_trunc, broadcast};
 use crate::expected_syms_util::fold_expected;
 use crate::misc::{ShapeVec, extending_set};
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, BTreeMap, HashMap};
 
 use serde::{Serialize, Deserialize};
 
 use ndarray::{Array, ArrayD, Ix};
 
 use smallvec::SmallVec;
+
+type OptionMap = BTreeMap<String, Vec<isize>>;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum GathersDesc {
@@ -40,14 +43,28 @@ pub enum GathersDesc {
 }
 
 impl GathersDesc {
-    pub fn to_opset_kind(&self, in_shape: &[usize], out_shape: &[usize]) -> Result<OpSetKind> {
+    pub fn to_opset_kind(&self, in_shape: &[usize], out_shape: &[usize],
+                         options: Option<&OptionMap>) -> Result<OpSetKind> {
         use GathersDesc::*;
         match self {
             Builtin(s) => {
                 match s.as_ref() {
-                    "identity" => {
+                    "identity" | "reshape" => {
+                        let out_prod: usize = out_shape.iter().product();
+                        let in_prod: usize = in_shape.iter().product();
+                        if out_prod != in_prod {
+                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
+                        }
                         identity(out_shape)
-                    }
+                    },
+                    "transpose" => {
+                        let out_prod: usize = out_shape.iter().product();
+                        let in_prod: usize = in_shape.iter().product();
+                        if out_prod != in_prod {
+                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
+                        }
+                        transpose(out_shape, in_shape)
+                    },
                     "load_rep" => {
                         load_rep(in_shape, out_shape)
                     },
@@ -55,55 +72,109 @@ impl GathersDesc {
                         load_trunc(in_shape, out_shape)
                     },
                     "broadcast" => {
-                        broadcast(in_shape, out_shape)
-                    }
+                        let group = options
+                            .and_then(|m| m.get("group"))
+                            .and_then(|o| o.get(0).copied()).unwrap_or(0);
+                        broadcast(in_shape, out_shape, group as usize)
+                    },
+                    "rots_no_group" | "rots" => {
+                        if out_shape != in_shape {
+                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
+                        }
+                        if let Some(m) = options {
+                            let main_idx = m.get("main").and_then(|v| v.get(0).copied())
+                                .ok_or_else(|| ErrorKind::MissingOption("main".to_string()))?
+                                as usize;
+                            let second_idx = m.get("second").and_then(|v| v.get(0).copied())
+                                .ok_or_else(|| ErrorKind::MissingOption("second".to_string()))?
+                                as usize;
+                            let out_idx = m.get("out").and_then(|v| v.get(0).copied())
+                                .ok_or_else(|| ErrorKind::MissingOption("out".to_string()))?
+                                as usize;
+                            if s == "rots_no_group" {
+                                simple_rotations(out_shape, main_idx, second_idx, out_idx)
+                            }
+                            else {
+                                all_rotations(out_shape, main_idx, second_idx, out_idx)
+                            }
+                        }
+                        else {
+                            Err(ErrorKind::MissingOption("main".to_string()).into())
+                        }
+                    },
+                   "xforms_no_group" | "xforms" => {
+                        if out_shape != in_shape {
+                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
+                        }
+                        if let Some(m) = options {
+                            let main_idx = m.get("main").and_then(|v| v.get(0).copied())
+                                .ok_or_else(|| ErrorKind::MissingOption("main".to_string()))?
+                                as usize;
+                            let second_idx = m.get("second").and_then(|v| v.get(0).copied())
+                                .ok_or_else(|| ErrorKind::MissingOption("second".to_string()))?
+                                as usize;
+                            let out_idx = m.get("out").and_then(|v| v.get(0).copied())
+                                .ok_or_else(|| ErrorKind::MissingOption("out".to_string()))?
+                                as usize;
+                            if s == "rots_no_group" {
+                                simple_xforms(out_shape, main_idx, second_idx, out_idx)
+                            }
+                            else {
+                                all_xforms(out_shape, main_idx, second_idx, out_idx)
+                            }
+                        }
+                        else {
+                            Err(ErrorKind::MissingOption("main".to_string()).into())
+                        }
+                    },
                     "row_rots_no_group" => {
                         if out_shape != in_shape {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
-                        simple_rotations(out_shape, OpAxis::Rows)
+                        // This is a compatibility alias
+                        simple_rotations(out_shape, 1, 0, 1)
                     },
                     "col_rots_no_group" => {
                         if out_shape != in_shape {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
-                        simple_rotations(out_shape, OpAxis::Columns)
+                        simple_rotations(out_shape, 0, 1, 0)
                     },
-                    "row_fans_no_group" => {
+                    "row_xforms_no_group" => {
                         if out_shape != in_shape {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
-                        simple_fans(out_shape, OpAxis::Rows)
+                        simple_xforms(out_shape, 1, 0, 1)
                     },
-                    "col_fans_no_group" => {
+                    "col_xforms_no_group" => {
                         if out_shape != in_shape {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
-                        simple_fans(out_shape, OpAxis::Columns)
+                        simple_xforms(out_shape, 0, 1, 0)
                     },
                     "row_rots" => {
                         if out_shape != in_shape {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
-                        all_rotations(out_shape, OpAxis::Rows)
+                        all_rotations(out_shape, 1, 0, 1)
                     },
                     "col_rots" => {
                         if out_shape != in_shape {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
-                        all_rotations(out_shape, OpAxis::Columns)
+                        all_rotations(out_shape, 0, 1, 0)
                     },
-                    "row_fans" => {
+                    "row_xforms" => {
                         if out_shape != in_shape {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
-                        all_fans(out_shape, OpAxis::Rows)
+                        all_xforms(out_shape, 1, 0, 1)
                     },
-                    "col_fans" => {
+                    "col_xforms" => {
                         if out_shape != in_shape {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
-                        all_fans(out_shape, OpAxis::Columns)
+                        all_xforms(out_shape, 0, 1, 0)
                     },
                     "select_item_no_consts" => {
                         if out_shape[0..out_shape.len()-1] != in_shape[0..in_shape.len()-1] {
@@ -127,18 +198,26 @@ impl GathersDesc {
                         }
                         reg_select(out_shape)
                     },
-                    "cond_keep_no_consts" => {
+                    "cond_keep_no_consts" | "cond_keep" => {
                         if out_shape != in_shape {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
-                        cond_keep_no_consts(out_shape)
+                        let n = out_shape[0] as isize;
+                        let default_consts = [0, 1, -1, n, -n];
+                        let consts = if s == "cond_keep_no_consts" {
+                            &[0]
+                        } else {
+                            options.and_then(|m| m.get("consts").map(|v| v.as_slice()))
+                                .unwrap_or(&default_consts)
+                        };
+                        let mut restrict = std::collections::BTreeMap::new();
+                        if let Some(v) = options.and_then(|m| m.get("restrict")) {
+                            for s in v.chunks(2) {
+                                restrict.insert(s[0] as usize, s[1] as usize);
+                            }
+                        }
+                        cond_keep(out_shape, consts, &restrict)
                     },
-                    "cond_keep" => {
-                        if out_shape != in_shape {
-                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
-                        }
-                        cond_keep(out_shape)
-                    }
                     other => {
                         return Err(ErrorKind::UnknownBasisType(other.to_owned()).into())
                     }
@@ -219,10 +298,11 @@ impl SynthesisLevelKind {
     }
 
     pub fn to_opset_kind(&self, in_shape: &[usize], out_shape: &[usize],
+                         options: Option<&OptionMap>,
                          lane: usize) -> Result<OpSetKind> {
         use SynthesisLevelKind::*;
         match self {
-            Gather(desc) => desc.to_opset_kind(in_shape, out_shape),
+            Gather(desc) => desc.to_opset_kind(in_shape, out_shape, options),
             Merge(from) => Ok(OpSetKind::Merge(from.iter().copied()
                                                .map(|x| x as usize).collect(),
                                                lane)),
@@ -240,6 +320,7 @@ pub struct SynthesisLevelDesc {
     pub lane: u64,
     pub step: SynthesisLevelKind,
     pub out_shape: Vec<u64>,
+    pub options: Option<HashMap<String, Vec<i64>>>,
     pub prune: bool,
     pub then_fold: bool,
 }
@@ -260,6 +341,10 @@ impl SynthesisLevelDesc {
                 -> Result<OpSet> {
         let lane = self.lane as usize;
         let mut out_shape: ShapeVec = self.out_shape.iter().copied().map(|x| x as usize).collect();
+        let options: Option<OptionMap> = self.options.as_ref()
+            .map(|o| o.iter().map(
+                |(k, v)| (k.clone(), v.iter().copied().map(
+                    |x| x as isize).collect())).collect());
         let in_shape: ShapeVec = if self.step.is_initial() {
             panic!("You shouldn't've called this with an initial state")
         } else if let Some(Some(s)) = in_shapes.get(lane) {
@@ -269,7 +354,9 @@ impl SynthesisLevelDesc {
         };
 
         let opset = self.step.to_opset_kind(in_shape.as_slice(),
-                                            out_shape.as_slice(), lane)?;
+                                            out_shape.as_slice(),
+                                            options.as_ref(),
+                                            lane)?;
 
         // Post-processing
         match &opset {
@@ -308,7 +395,7 @@ impl SynthesisLevelDesc {
                 }
             }
         }
-        let name: std::borrow::Cow<'static, str> =
+        let mut name: std::borrow::Cow<'static, str> =
             match &self.name {
                 Some(n) => n.to_owned().into(),
                 None =>
@@ -326,6 +413,21 @@ impl SynthesisLevelDesc {
                         SynthesisLevelKind::Initial(_) => "inital??".into(),
                     }
             };
+        if let Some(m) = options {
+            let mut temp = name.into_owned();
+            temp.push('{');
+            for (k, v) in &m {
+                temp.push_str(k);
+                temp.push('[');
+                for i in v {
+                    temp.push_str(&i.to_string());
+                    temp.push('|');
+                }
+                temp.push_str("]|");
+            }
+            temp.push('}');
+            name = temp.into();
+        }
         Ok(OpSet::new(name, opset, in_shape.clone(), out_shape, self.then_fold))
     }
 
@@ -385,6 +487,21 @@ fn weighted_convolve(width: Ix, k: Ix) -> ArrayD<Value> {
                                                        Value::Symbol(weight_min + i)]))
                        .collect())
         .map(Value::fold).collect();
+    arr.into_dyn()
+}
+
+pub fn poly_mult(n: Ix) -> ArrayD<Value> {
+    let ns = n as Symbolic;
+    let arr: ndarray::Array1<Value> =
+        (0..ns).map(|i| Value::fold(
+            (0..=i).map(
+                |j| Value::fold(vec![Value::Symbol(j), Value::Symbol(ns + i - j)]))
+                .collect()))
+        .chain((0..ns).map(|i| Value::fold(
+            ((i + 1)..ns).map(
+                |j| Value::fold(vec![Value::Symbol(j), Value::Symbol(ns + ns + i - j)]))
+                .collect())))
+        .collect();
     arr.into_dyn()
 }
 
@@ -541,6 +658,12 @@ impl ProblemDesc {
                         }
 
                     }
+                    "poly_mult" => {
+                        match target_info.as_slice() {
+                            &[n] => Ok(poly_mult(n)),
+                            other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 1).into())
+                        }
+                    }
                     other => Err(ErrorKind::UnknownProblem(other.to_owned()).into())
                 },
                 TargetDesc::Custom { data, n_folds } => {
@@ -677,10 +800,10 @@ mod tests {
             target_info: vec![3, 4],
             steps: vec![
                 SynthesisLevelDesc { step: SynthesisLevelKind::Initial(InitialDesc::From(0)),
-                                     out_shape: vec![3, 4], lane: 0, name: None,
+                                     out_shape: vec![3, 4], lane: 0, name: None, options: None,
                                      prune: false, then_fold: false},
                 SynthesisLevelDesc { step: SynthesisLevelKind::Gather(GathersDesc::Builtin("row_rots_no_group".to_owned())),
-                                     out_shape: vec![3, 4], lane: 0, name: None,
+                                     out_shape: vec![3, 4], lane: 0, name: None, options: None,
                                      prune: false, then_fold: false},
             ]
         };
@@ -703,7 +826,7 @@ mod tests {
         assert_eq!(ops.in_shape, trove_shape);
         assert_eq!(ops.out_shape, trove_shape);
         assert_eq!(ops.ops.gathers().unwrap().iter().collect::<HashSet<_>>(),
-                   swizzle::simple_rotations(&[3, 4], swizzle::OpAxis::Rows).unwrap()
+                   swizzle::simple_rotations(&[3, 4], 1, 0, 1).unwrap()
                    .gathers().unwrap()
                    .iter().collect::<HashSet<_>>());
     }

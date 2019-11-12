@@ -19,7 +19,7 @@ use crate::errors::*;
 
 use ndarray::Ix;
 
-use std::collections::HashSet;
+use std::collections::{HashSet,BTreeMap};
 
 use smallvec::SmallVec;
 
@@ -82,11 +82,14 @@ pub fn reg_select_gather(shape: &[Ix], operand1: usize, operand2: usize, c: isiz
 }
 
 pub fn cond_keep_gather(shape: &[Ix], operand1: usize, operand2: usize, c: isize,
-                        op: Op) -> Gather {
+                        op: Op, restrict: &BTreeMap<usize, Ix>) -> Gather {
     let name = format!("keep_if({} {} {} + {})", operand1, op.name(), operand2, c);
     Gather::new(shape,
                 |idxs: &[Ix]| {
-                    if op.perform(idxs[operand1] as isize,
+                    if restrict.iter().any(|(&d, &n)| idxs[d] != n) {
+                        to_opt_ix(idxs, shape)
+                    }
+                    else if op.perform(idxs[operand1] as isize,
                                   idxs[operand2] as isize + c) {
                         to_opt_ix(idxs, shape)
                     }
@@ -122,28 +125,17 @@ pub fn reg_select(shape: &[Ix]) -> Result<OpSetKind> {
     Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 
-pub fn cond_keep_no_consts(shape: &[Ix]) -> Result<OpSetKind> {
+pub fn cond_keep(shape: &[Ix], consts: &[isize],
+                 restrict: &BTreeMap<usize, usize>) -> Result<OpSetKind> {
     let mut ret = HashSet::new();
 
     let op_len = shape.len();
-    ret.extend(iproduct!(0..op_len, 0..op_len,
-                         &[Op::Eq, Op::Neq, Op::Lt, Op::Leq, Op::Gt, Op::Geq])
-               .map(move |(idx1, idx2, op)|
-                    cond_keep_gather(shape, idx1, idx2, 0, *op)));
-
-    Ok(ret.into_iter().collect::<Vec<_>>().into())
-}
-
-pub fn cond_keep(shape: &[Ix]) -> Result<OpSetKind> {
-    let mut ret = HashSet::new();
-
-    let op_len = shape.len();
-    let n = shape[0] as isize;
-    ret.extend(iproduct!(&[0, 1, -1, n, -n],
-                         0..op_len, 0..op_len,
+    ret.extend(iproduct!(consts.iter(),
+                         (0..op_len).filter(|d| !restrict.contains_key(d)),
+                         (0..op_len).filter(|d| !restrict.contains_key(d)),
                          &[Op::Eq, Op::Neq, Op::Lt, Op::Leq, Op::Gt, Op::Geq])
                .map(move |(c, idx1, idx2, op)|
-                    cond_keep_gather(shape, idx1, idx2, *c, *op)));
+                    cond_keep_gather(shape, idx1, idx2, *c, *op, restrict)));
 
     Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
