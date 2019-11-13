@@ -435,13 +435,15 @@ impl SynthesisLevelDesc {
             // These are conveniently in sorted order, so we can fix our name length issues
             let mut temp = name.into_owned();
             temp.push('{');
-            for (_k, v) in &m {
+            for (k, v) in &m {
+                temp.push_str(k);
                 temp.push('[');
                 for i in v {
                     temp.push_str(&i.to_string());
                     temp.push('|');
                 }
-                temp.push_str("]|");
+                temp.pop();
+                temp.push_str("]");
             }
             temp.push('}');
             name = temp.into();

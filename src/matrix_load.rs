@@ -72,6 +72,8 @@ fn add_matrix(ops: &OpSet, lane: usize,
     let name = ops.to_name();
 
     if !names[lane].is_empty() {
+        // Drop redundant indexing
+        names[lane].truncate(names[lane].rfind('-').expect("dash separating input length"));
         names[lane].push('_');
     }
     names[lane].push_str(&name);
