@@ -86,3 +86,23 @@ pub fn broadcast(in_shape: &[Ix], out_shape: &[Ix], group: Ix) -> Result<OpSetKi
                     }, name);
     Ok(vec![gather].into())
 }
+
+pub fn load_grid_2d(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSetKind> {
+    if in_shape.len() != 2 {
+        return Err(ErrorKind::InvalidShapeDim(in_shape.to_vec(), 2).into());
+    }
+    if out_shape.len() != 4 {
+        return Err(ErrorKind::InvalidShapeDim(out_shape.to_vec(), 4).into());
+    }
+    let ni = out_shape[0];
+    let nj = out_shape[1];
+    let gather =
+        Gather::new(out_shape,
+                    move |idxs: &[Ix]| {
+                        let j = idxs[1] + nj * idxs[3];
+                        let i = idxs[0] + ni * idxs[2];
+                        to_opt_ix(&[i, j], in_shape)
+                    },
+        "load_grid_2d");
+    Ok(vec![gather].into())
+}

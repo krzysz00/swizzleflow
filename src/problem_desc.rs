@@ -20,9 +20,8 @@ use crate::state::{ProgState, Domain, Value, Symbolic, DomRef,
                    Gather, to_opt_ix};
 use crate::operators::swizzle::{simple_xforms, simple_rotations,
                                 all_xforms, all_rotations};
-use crate::operators::select::{reg_select_no_const, reg_select,
-                               cond_keep};
-use crate::operators::load::{load_rep, load_trunc, broadcast};
+use crate::operators::select::{reg_select, cond_keep, general_select};
+use crate::operators::load::{load_rep, load_trunc, load_grid_2d, broadcast};
 use crate::expected_syms_util::fold_expected;
 use crate::misc::{ShapeVec, extending_set};
 
@@ -69,6 +68,9 @@ impl GathersDesc {
                     "load_trunc" => {
                         load_trunc(in_shape, out_shape)
                     },
+                    "load_grid_2d" => {
+                        load_grid_2d(in_shape, out_shape)
+                    }
                     "broadcast" => {
                         let group = options
                             .and_then(|m| m.get("group"))
@@ -174,7 +176,7 @@ impl GathersDesc {
                         }
                         all_xforms(out_shape, 0, 1, 0)
                     },
-                    "select_item_no_consts" => {
+                    "reg_select_no_consts" | "reg_select" => {
                         if out_shape[0..out_shape.len()-1] != in_shape[0..in_shape.len()-1] {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
                         }
@@ -183,18 +185,15 @@ impl GathersDesc {
                             correct_shape[in_shape.len()-1] = 2;
                             return Err(ErrorKind::ShapeMismatch(correct_shape, in_shape.to_vec()).into());
                         }
-                        reg_select_no_const(out_shape)
-                    },
-                    "select_item" => {
-                        if out_shape[0..out_shape.len()-1] != in_shape[0..in_shape.len()-1] {
-                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
-                        }
-                        if in_shape[in_shape.len()-1] != 2 {
-                            let mut correct_shape = in_shape.to_vec();
-                            correct_shape[in_shape.len()-1] = 2;
-                            return Err(ErrorKind::ShapeMismatch(correct_shape, in_shape.to_vec()).into());
-                        }
-                        reg_select(out_shape)
+                        let n = out_shape[0] as isize;
+                        let default_consts = [0, 1, -1, n, -n];
+                        let consts = if s == "reg_select_no_consts" {
+                            &[0]
+                        } else {
+                            options.and_then(|m| m.get("consts").map(|v| v.as_slice()))
+                                .unwrap_or(&default_consts)
+                        };
+                        reg_select(out_shape, consts)
                     },
                     "cond_keep_no_consts" | "cond_keep" => {
                         if out_shape != in_shape {
@@ -215,6 +214,27 @@ impl GathersDesc {
                             }
                         }
                         cond_keep(out_shape, consts, &restrict)
+                    },
+                    "general_select_no_consts" | "general_select" => {
+                        let axis = options.and_then(|m| m.get("axis"))
+                            .and_then(|v| v.get(0).copied())
+                            .ok_or_else(|| ErrorKind::MissingOption("axis".to_string()))?
+                            as usize;
+                        let n = out_shape[axis] as isize;
+                        let default_consts = [0, 1, -1, n, -n];
+                        let consts = if s == "general_select_no_consts" {
+                            &[0]
+                        } else {
+                            options.and_then(|m| m.get("consts").map(|v| v.as_slice()))
+                                .unwrap_or(&default_consts)
+                        };
+                        let dims: Vec<usize> =
+                            options.and_then(|m| m.get("dims")
+                                             .map(|v| v.iter().copied()
+                                                  .map(|i| i as usize).collect()))
+                            .unwrap_or_else(|| (0..out_shape.len()).collect());
+                        general_select(out_shape, in_shape, axis,
+                                       consts, &dims)
                     },
                     other => {
                         return Err(ErrorKind::UnknownBasisType(other.to_owned()).into())
@@ -412,10 +432,10 @@ impl SynthesisLevelDesc {
                     }
             };
         if let Some(m) = options {
+            // These are conveniently in sorted order, so we can fix our name length issues
             let mut temp = name.into_owned();
             temp.push('{');
-            for (k, v) in &m {
-                temp.push_str(k);
+            for (_k, v) in &m {
                 temp.push('[');
                 for i in v {
                     temp.push_str(&i.to_string());
@@ -485,6 +505,20 @@ fn weighted_convolve(width: Ix, k: Ix) -> ArrayD<Value> {
                                                        Value::Symbol(weight_min + i)]))
                        .collect())
         .map(Value::fold).collect();
+    arr.into_dyn()
+}
+
+fn stencil_2d(width: Ix, k: Ix) -> ArrayD<Value> {
+    use itertools::iproduct;
+    let n = width + k - 1;
+    let source: Vec<Value> =
+        (0..(n * n)).map(|i| Value::Symbol(i as Symbolic)).collect();
+    let arr =
+        ndarray::Array2::from_shape_fn(
+            (width, width),
+            |(i, j)| Value::fold(
+                iproduct!(0..k, 0..k).map(|(ii, jj)| source[j + jj + n * (i + ii)].clone())
+                    .collect()));
     arr.into_dyn()
 }
 
@@ -652,6 +686,13 @@ impl ProblemDesc {
                     "weight_conv" => {
                         match target_info.as_slice() {
                             &[width, k] => Ok(weighted_convolve(width, k)),
+                            other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
+                        }
+
+                    }
+                    "stencil_2d" => {
+                        match target_info.as_slice() {
+                            &[width, k] => Ok(stencil_2d(width, k)),
                             other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
                         }
 

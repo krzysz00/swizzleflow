@@ -182,8 +182,8 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
     let level = &levels[current_level];
     let lane = level.lane;
     let current: &ProgState<'d> = curr_states[lane].unwrap();
-    // if current_level == 6 {
-    //     println!("{}", curr_states[1].unwrap());
+    // if current_level == 2 || current_level == 3 {
+    //     println!("{}", curr_states[0].unwrap());
     // }
     // println!("[{} - {}] {}", current_level, level.ops.name, current);
     let cache = caches[current_level].clone();

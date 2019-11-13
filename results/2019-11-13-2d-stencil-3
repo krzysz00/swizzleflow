@@ -1,0 +1,72 @@
+spec:specs/swinv_like/l1/2d-stencil-3.json
+build:matrices/4,4-identity-4,4,3,3 density(0.00390625) [0.01292242]
+Using newly-built matrices/4,4-identity-4,4,3,3
+build:matrices/4,4,3,3-2s-rnc{[1|]|[1|]|[3|]|}-4,4,3,3 density(0.00019290123456790122) [0.723704014]
+mul:4,4-identity-4,4,3,3_4,4,3,3-2s-rnc{[1|]|[1|]|[3|]|}-4,4,3,3 density(0.015625) [0.817203709]
+build:matrices/4,4,3,3-2s-xfnc{[1|]|[1|]|[3|]|}-4,4,3,3 density(0.0003154738940329218) [0.731703821]
+mul:4,4-identity-4,4,3,3_4,4,3,3-2s-rnc{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-xfnc{[1|]|[1|]|[3|]|}-4,4,3,3 density(0.04991319444444445) [0.791816082]
+build:matrices/4,4,3,3-2s-rnc{[0|]|[0|]|[2|]|}-4,4,3,3 density(0.00019290123456790122) [0.708220027]
+mul:4,4-identity-4,4,3,3_4,4,3,3-2s-rnc{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-xfnc{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-rnc{[0|]|[0|]|[2|]|}-4,4,3,3 density(0.1996527777777778) [0.768437634]
+build:matrices/4,4,3,3-2s-xfnc{[0|]|[0|]|[2|]|}-4,4,3,3 density(0.0003154738940329218) [0.732533267]
+mul:4,4-identity-4,4,3,3_4,4,3,3-2s-rnc{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-xfnc{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-rnc{[0|]|[0|]|[2|]|}-4,4,3,3_4,4,3,3-2s-xfnc{[0|]|[0|]|[2|]|}-4,4,3,3 density(0.6377797067901234) [0.79218244]
+build:matrices/4,4,3,3-2s-gnc{[3|]|[1|3|]|}-4,4,3,2 density(0.00035264756944444444) [0.3301624]
+mul:4,4-identity-4,4,3,3_4,4,3,3-2s-rnc{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-xfnc{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-rnc{[0|]|[0|]|[2|]|}-4,4,3,3_4,4,3,3-2s-xfnc{[0|]|[0|]|[2|]|}-4,4,3,3_4,4,3,3-2s-gnc{[3|]|[1|3|]|}-4,4,3,2 density(0.7736545138888888) [0.347614114]
+Begin search
+soln:init;id;load_grid_2d;select(d0 >= d2 + 0, );select(d1 >= d3 + 0, );xform(0,1,3);id;xform(0,1,3);id;id
+stats:0 (reshape) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (load_grid_2d) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (2s-gnc{[2|]|[0|2|]|}) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:3 (2s-gnc{[3|]|[1|3|]|}) tested(8), found(0), failed(0), pruned(7), continued(1)
+stats:4 (2s-xfnc{[0|]|[0|]|[2|]|}) tested(14), found(0), failed(0), pruned(13), continued(1)
+stats:5 (2s-rnc{[0|]|[0|]|[2|]|}) tested(4), found(0), failed(0), pruned(3), continued(1)
+stats:6 (2s-xfnc{[1|]|[1|]|[3|]|}) tested(14), found(0), failed(0), pruned(13), continued(1)
+stats:7 (2s-rnc{[1|]|[1|]|[3|]|}) tested(4), found(0), failed(0), pruned(3), continued(1)
+stats:8 (identity) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:9 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:stencil_2d shape([4, 4]) true mode(All) [0.003800857]
+spec:specs/swinv_like/l2/2d-stencil-3.json
+load:matrices/4,4-identity-4,4,3,3 [0.002237748]
+load:matrices/4,4-identity-4,4,3,3_4,4,3,3-2s-rnc{[1|]|[1|]|[3|]|}-4,4,3,3 [0.00246453]
+load:matrices/4,4-identity-4,4,3,3_4,4,3,3-2s-rnc{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-xfnc{[1|]|[1|]|[3|]|}-4,4,3,3 [0.002792]
+load:matrices/4,4-identity-4,4,3,3_4,4,3,3-2s-rnc{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-xfnc{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-rnc{[0|]|[0|]|[2|]|}-4,4,3,3 [0.002287758]
+load:matrices/4,4-identity-4,4,3,3_4,4,3,3-2s-rnc{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-xfnc{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-rnc{[0|]|[0|]|[2|]|}-4,4,3,3_4,4,3,3-2s-xfnc{[0|]|[0|]|[2|]|}-4,4,3,3 [0.0027632]
+build:matrices/4,4,3,3-2s-g{[3|]|[1|3|]|}-4,4,3,2 density(0.0003918306327160494) [0.344511105]
+mul:4,4-identity-4,4,3,3_4,4,3,3-2s-rnc{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-xfnc{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-rnc{[0|]|[0|]|[2|]|}-4,4,3,3_4,4,3,3-2s-xfnc{[0|]|[0|]|[2|]|}-4,4,3,3_4,4,3,3-2s-g{[3|]|[1|3|]|}-4,4,3,2 density(0.7986111111111112) [0.344495814]
+Begin search
+soln:init;id;load_grid_2d;select(d0 >= d2 + 0, );select(d1 >= d3 + 0, );xform(0,1,3);id;xform(0,1,3);id;id
+stats:0 (reshape) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (load_grid_2d) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (2s-g{[2|]|[0|2|]|}) tested(18), found(0), failed(0), pruned(17), continued(1)
+stats:3 (2s-g{[3|]|[1|3|]|}) tested(18), found(0), failed(0), pruned(17), continued(1)
+stats:4 (2s-xfnc{[0|]|[0|]|[2|]|}) tested(14), found(0), failed(0), pruned(13), continued(1)
+stats:5 (2s-rnc{[0|]|[0|]|[2|]|}) tested(4), found(0), failed(0), pruned(3), continued(1)
+stats:6 (2s-xfnc{[1|]|[1|]|[3|]|}) tested(14), found(0), failed(0), pruned(13), continued(1)
+stats:7 (2s-rnc{[1|]|[1|]|[3|]|}) tested(4), found(0), failed(0), pruned(3), continued(1)
+stats:8 (identity) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:9 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:stencil_2d shape([4, 4]) true mode(All) [0.0035403]
+spec:specs/swinv_like/l3/2d-stencil-3.json
+load:matrices/4,4-identity-4,4,3,3 [0.001887622]
+build:matrices/4,4,3,3-2s-r{[1|]|[1|]|[3|]|}-4,4,3,3 density(0.00021701388888888888) [0.717267673]
+mul:4,4-identity-4,4,3,3_4,4,3,3-2s-r{[1|]|[1|]|[3|]|}-4,4,3,3 density(0.017578125) [0.780198498]
+build:matrices/4,4,3,3-2s-xf{[1|]|[1|]|[3|]|}-4,4,3,3 density(0.0003154738940329218) [0.738613214]
+mul:4,4-identity-4,4,3,3_4,4,3,3-2s-r{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-xf{[1|]|[1|]|[3|]|}-4,4,3,3 density(0.050455729166666664) [0.810344255]
+build:matrices/4,4,3,3-2s-r{[0|]|[0|]|[2|]|}-4,4,3,3 density(0.00021701388888888888) [0.71825656]
+mul:4,4-identity-4,4,3,3_4,4,3,3-2s-r{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-xf{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-r{[0|]|[0|]|[2|]|}-4,4,3,3 density(0.22705078125) [0.80151046]
+build:matrices/4,4,3,3-2s-xf{[0|]|[0|]|[2|]|}-4,4,3,3 density(0.0003154738940329218) [0.732240677]
+mul:4,4-identity-4,4,3,3_4,4,3,3-2s-r{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-xf{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-r{[0|]|[0|]|[2|]|}-4,4,3,3_4,4,3,3-2s-xf{[0|]|[0|]|[2|]|}-4,4,3,3 density(0.6517198350694444) [0.770276959]
+load:matrices/4,4,3,3-2s-g{[3|]|[1|3|]|}-4,4,3,2 [0.067887071]
+mul:4,4-identity-4,4,3,3_4,4,3,3-2s-r{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-xf{[1|]|[1|]|[3|]|}-4,4,3,3_4,4,3,3-2s-r{[0|]|[0|]|[2|]|}-4,4,3,3_4,4,3,3-2s-xf{[0|]|[0|]|[2|]|}-4,4,3,3_4,4,3,3-2s-g{[3|]|[1|3|]|}-4,4,3,2 density(0.8072916666666666) [0.378859325]
+Begin search
+soln:init;id;load_grid_2d;select(d0 >= d2 + 0, );select(d1 >= d3 + 0, );xform(0,1,3);id;xform(0,1,3);id;id
+stats:0 (reshape) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (load_grid_2d) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (2s-g{[2|]|[0|2|]|}) tested(18), found(0), failed(0), pruned(17), continued(1)
+stats:3 (2s-g{[3|]|[1|3|]|}) tested(18), found(0), failed(0), pruned(17), continued(1)
+stats:4 (2s-xf{[0|]|[0|]|[2|]|}) tested(14), found(0), failed(0), pruned(13), continued(1)
+stats:5 (2s-r{[0|]|[0|]|[2|]|}) tested(5), found(0), failed(0), pruned(4), continued(1)
+stats:6 (2s-xf{[1|]|[1|]|[3|]|}) tested(14), found(0), failed(0), pruned(13), continued(1)
+stats:7 (2s-r{[1|]|[1|]|[3|]|}) tested(5), found(0), failed(0), pruned(4), continued(1)
+stats:8 (identity) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:9 ([last]) tested(1), found(1), failed(0), pruned(0), continued(0)
+search:stencil_2d shape([4, 4]) true mode(All) [0.003210322]
