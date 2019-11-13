@@ -180,51 +180,6 @@ fn run() -> Result<()> {
     // Except that that second one isn't a swizzle inventor xform
     // We can fix it by adding k back though, at the cost of equivalence issues
     // Then, merge these, transpose
-    // use ndarray::ArrayD;
-    // use itertools::iproduct;
-    // let f1 = crate::operators::swizzle::xform(&[4, 4], 1, 0, 1, 1, 0, 4, None, false);
-    // let r1 = crate::operators::swizzle::rotate(&[4, 4], 1, 0, 1, 0, None);
-    // let f2 = crate::operators::swizzle::xform(&[4, 4], 1, 0, 1, 1, -1, 4, None, false);
-    // let r2 = crate::operators::swizzle::rotate(&[4, 4], 1, 0, 1, 0, None);
-    // let broadcast = crate::operators::load::broadcast(&[4, 4], &[4, 2, 4], 1).unwrap().gathers().unwrap()[0].clone();
-    // println!("{}", f1);
-    // println!("{}", r1);
-    // println!("{}", f2);
-    // println!("{}", r2);
-    // println!("{}", broadcast);
-    // let spec = crate::problem_desc::poly_mult(4);
-    // let domain = crate::state::Domain::new(spec.view());
-    // let arr1 = iproduct!(0..4, 0..4).map(|(_i, j)| crate::state::Value::Symbol(j)).collect();
-    // let arr1 = ArrayD::from_shape_vec(vec![4, 4], arr1).unwrap();
-    // let state = crate::state::ProgState::new_from_spec(&domain, arr1, "init").unwrap();
-    // let s1 = state.gather_by(&f1);
-    // let s2 = s1.gather_by(&r1);
-
-    // let arr2 = iproduct!(0..4, 0..4).map(|(_i, j)| crate::state::Value::Symbol(4 + j)).collect();
-    // let arr2 = ArrayD::from_shape_vec(vec![4, 4], arr2).unwrap();
-    // let state2 = crate::state::ProgState::new_from_spec(&domain, arr2, "init").unwrap();
-    // let s3 = state2.gather_by(&f2);
-    // let s4 = s3.gather_by(&r2);
-    // println!("{}\n{}\n{}", state, s1, s2);
-    // println!("\n{}\n{}\n{}", state2, s3, s4);
-
-    // let m = crate::state::ProgState::merge_folding(&[&s2, &s4]).unwrap();
-    // // let tr = crate::operators::transpose_gather(&[4, 4], &[4, 4]);
-    // // let transpose = m.gather_by(&tr);
-    // let b = m.gather_by(&broadcast);
-    // println!("\n{}\n{}", m, b);
-
-    // let mut retain = std::collections::BTreeMap::new();
-    // retain.insert(1, 0);
-    // let c1 = crate::operators::select::cond_keep_gather(&[4, 2, 4], 2, 0, 0,
-    //                                                     crate::operators::select::Op::Leq, &retain);
-    // let d1 = b.gather_by(&c1);
-    // println!("\n{}\n{}", c1, d1);
-    // retain.insert(1, 1);
-    // let c2 = crate::operators::select::cond_keep_gather(&[4, 2, 4], 2, 0, 0,
-    //                                                     crate::operators::select::Op::Gt, &retain);
-    // let d2 = d1.gather_by(&c2);
-    // println!("\n{}", d2);
     Ok(())
 }
 
@@ -241,9 +196,10 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use crate::problem_desc::{trove};
+    use crate::problem_desc::{trove, poly_mult};
     use crate::operators::swizzle::{xform,rotate};
-    use crate::operators::load::load_rep;
+    use crate::operators::load::{load_rep,broadcast};
+    use crate::operators::{identity_gather, transpose_gather};
     use crate::state::{ProgState, Domain, Value};
 
     fn fixed_solution_from_scalar_8x3<'d>(d: &'d Domain) -> ProgState<'d> {
@@ -251,10 +207,10 @@ mod tests {
         let shape = [8, 3];
         let s0 = initial.gather_by(&load_rep(&[24], &[8, 3]).unwrap()
                                    .gathers().unwrap()[0]);
-        let s1 = s0.gather_by(&xform(&shape, 1, 1, 2, None));
-        let s2 = s1.gather_by(&rotate(&shape, 1, 0, 1, -7, 8, 0, None));
-        let s3 = s2.gather_by(&xform(&shape, 0, 0, 3, None));
-        let s4 = s3.gather_by(&rotate(&shape, 0, 1, 0, -5, 3, 0, None));
+        let s1 = s0.gather_by(&xform(&shape, 1, 0, 1, 2, 1, 8, None, false));
+        let s2 = s1.gather_by(&rotate(&shape, 1, 0, 1, 0, None));
+        let s3 = s2.gather_by(&xform(&shape, 0, 1, 0, 3, 1, 3, None, false));
+        let s4 = s3.gather_by(&rotate(&shape, 0, 1, 0, 0, None));
         s4
     }
 
@@ -267,5 +223,51 @@ mod tests {
         let solution = fixed_solution_from_scalar_8x3(&domain);
         println!("spec {}\n solution {}", spec, solution);
         assert_eq!(spec, solution);
+    }
+
+    #[test]
+    fn poly_mult_works() {
+        use ndarray::ArrayD;
+        use itertools::iproduct;
+        use crate::operators::select::{cond_keep_gather,Op};
+        let f1 = xform(&[4, 4], 1, 0, 1, 1, 0, 4, None, false);
+        let r1 = rotate(&[4, 4], 1, 0, 1, 0, None);
+        let f2 = xform(&[4, 4], 0, 1, 1, 1, -1, 4, None, false);
+        let r2 = rotate(&[4, 4], 1, 0, 1, 0, None);
+        let broadcast = broadcast(&[4, 4], &[4, 2, 4], 1).unwrap().gathers().unwrap()[0].clone();
+        let spec = poly_mult(4);
+        let domain = Domain::new(spec.view());
+        let arr1 = iproduct!(0..4, 0..4).map(|(_i, j)| crate::state::Value::Symbol(j)).collect();
+        let arr1 = ArrayD::from_shape_vec(vec![4, 4], arr1).unwrap();
+        let state = ProgState::new_from_spec(&domain, arr1, "init").unwrap();
+        let s1 = state.gather_by(&f1);
+        let s2 = s1.gather_by(&r1);
+
+        let arr2 = iproduct!(0..4, 0..4).map(|(_i, j)| crate::state::Value::Symbol(4 + j)).collect();
+        let arr2 = ArrayD::from_shape_vec(vec![4, 4], arr2).unwrap();
+        let state2 = ProgState::new_from_spec(&domain, arr2, "init").unwrap();
+        let s3 = state2.gather_by(&f2);
+        let s4 = s3.gather_by(&r2);
+
+        let m = ProgState::merge_folding(&[&s2, &s4]).unwrap();
+        let b = m.gather_by(&broadcast);
+
+        let mut retain = std::collections::BTreeMap::new();
+        retain.insert(1, 0);
+        let c1 = cond_keep_gather(&[4, 2, 4], 2, 0, 0,
+                                  Op::Leq, &retain);
+        let d1 = b.gather_by(&c1);
+
+        retain.insert(1, 1);
+        let c2 = cond_keep_gather(&[4, 2, 4], 2, 0, 0,
+                                  Op::Gt, &retain);
+        let d2 = d1.gather_fold_by(&c2).unwrap();
+
+        let tr = transpose_gather(&[2, 4], &[4, 2]);
+        let transposed = d2.gather_by(&tr);
+        let reshape = identity_gather(&[8]);
+        let result = transposed.gather_by(&reshape);
+        let spec_state = ProgState::new_from_spec(&domain, spec, "spec").unwrap();
+        assert_eq!(result, spec_state);
     }
 }

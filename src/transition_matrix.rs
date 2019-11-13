@@ -369,29 +369,7 @@ pub fn density<T: TransitionMatrixOps>(matrix: &T) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::operators::swizzle::{simple_xforms};
-    use smallvec::smallvec;
     use tempfile::tempfile;
-
-    #[test]
-    fn correct_length_trove_rows() {
-        let small_xforms = simple_xforms(&[3, 4], 1, 1).unwrap();
-        let opset = OpSet::new("row_xforms_no_group", small_xforms, smallvec![3, 4],
-                               smallvec![3, 4], false);
-        let matrix: DenseTransitionMatrix = build_mat(&opset);
-        assert_eq!(matrix.n_ones(), 488);
-    }
-
-    #[cfg(not(debug_assertions))]
-    #[test]
-    fn correct_length_big_matrix() {
-        use crate::operators::swizzle::simple_rotations;
-        let big_rots = simple_rotations(&[4, 32], 0, 1, 0).unwrap();
-        let opset = OpSet::new("row_rots_no_group", big_rots, smallvec![4, 32],
-                               smallvec![4, 32], false);
-        let big_matrix: DenseTransitionMatrix = build_mat(&opset);
-        assert_eq!(big_matrix.n_ones(), 246272);
-    }
 
     #[test]
     fn test_write_round_trip() {

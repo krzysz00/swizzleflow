@@ -71,7 +71,6 @@ pub fn load_trunc(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSetKind> {
 
 pub fn broadcast(in_shape: &[Ix], out_shape: &[Ix], group: Ix) -> Result<OpSetKind> {
     let name = "broadcast";
-    println!("in = {:?}, out = {:?}", in_shape, out_shape);
     let out_split = out_shape.len() - in_shape.len() + group;
 
     if &in_shape[group..] != &out_shape[out_split..] {

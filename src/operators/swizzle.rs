@@ -164,20 +164,3 @@ pub fn all_rotations(shape: &[Ix], main_axis: Ix, second_axis: Ix,
     }
     Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn scala_3x16_basis_sizes() {
-        assert_eq!(simple_xforms(&[3, 16], 0, 1, 0).unwrap()
-                   .gathers().unwrap().len(), 5);
-        assert_eq!(simple_rotations(&[3, 16], 0, 1, 0).unwrap()
-                   .gathers().unwrap().len(), 36);
-        assert_eq!(simple_xforms(&[3, 16], 1, 0, 1).unwrap()
-                   .gathers().unwrap().len(), 255);
-        assert_eq!(simple_rotations(&[3, 16], 1, 0, 1).unwrap()
-                   .gathers().unwrap().len(), 256);
-    }
-}

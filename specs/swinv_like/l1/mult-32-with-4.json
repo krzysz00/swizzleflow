@@ -35,7 +35,7 @@
       "lane": 0,
       "options": { "main": [0], "second": [1], "out": [1] },
       "out_shape": [4, 4],
-      "prune": false,
+      "prune": true,
       "then_fold": false
     },
     {
@@ -43,7 +43,7 @@
       "lane": 0,
       "options": { "main": [0], "second": [1], "out": [1] },
       "out_shape": [4, 4],
-      "prune": false,
+      "prune": true,
       "then_fold": false
     },
     {
@@ -51,7 +51,7 @@
       "lane": 1,
       "options": { "main": [0], "second": [1], "out": [1] },
       "out_shape": [4, 4],
-      "prune": false,
+      "prune": true,
       "then_fold": false
     },
     {
@@ -59,7 +59,7 @@
       "lane": 1,
       "options": { "main": [0], "second": [1], "out": [1] },
       "out_shape": [4, 4],
-      "prune": false,
+      "prune": true,
       "then_fold": false
     },
     {
@@ -68,13 +68,6 @@
       "out_shape": [4, 4],
       "prune": false,
       "then_fold": true
-    },
-    {
-      "step": { "Gather": { "Builtin": "transpose"}},
-      "lane": 0,
-      "out_shape": [4, 4],
-      "prune": false,
-      "then_fold": false
     },
     {
       "step": { "Gather": { "Builtin": "broadcast"}},
@@ -102,6 +95,13 @@
     },
     {
       "step": { "Gather": { "Builtin": "transpose"}},
+      "lane": 0,
+      "out_shape": [2, 4],
+      "prune": false,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "reshape"}},
       "lane": 0,
       "out_shape": [8],
       "prune": false,

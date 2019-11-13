@@ -173,9 +173,6 @@ impl Domain {
     }
 
     pub fn find_value(&self, value: &Value) -> Option<DomRef> {
-        if !self.element_map.contains_key(value) {
-            println!("Couldn't find {:?}", value);
-        }
         self.element_map.get(value).copied()
     }
 

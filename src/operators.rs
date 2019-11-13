@@ -90,8 +90,11 @@ pub fn identity_gather(shape: &[Ix]) -> Gather {
 
 pub fn transpose_gather(out_shape: &[Ix], in_shape: &[Ix]) -> Gather {
     Gather::new(out_shape, |idxs| {
-        let rev = idxs.iter().copied().rev().collect::<Vec<_>>();
-        to_opt_ix(&rev, in_shape)
+        let mut ret = 0;
+        for (idx, scale) in idxs.iter().rev().zip(in_shape.iter()) {
+            ret = ret * scale + idx;
+        }
+        ret as isize
     }, "tr")
 }
 

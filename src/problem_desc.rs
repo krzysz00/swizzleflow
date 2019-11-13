@@ -58,9 +58,7 @@ impl GathersDesc {
                         identity(out_shape)
                     },
                     "transpose" => {
-                        let out_prod: usize = out_shape.iter().product();
-                        let in_prod: usize = in_shape.iter().product();
-                        if out_prod != in_prod {
+                        if out_shape.iter().rev().zip(in_shape.iter()).any(|(a, b)| a != b) {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
                         }
                         transpose(out_shape, in_shape)
