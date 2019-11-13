@@ -31,7 +31,7 @@
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "xforms_no_group"}},
+      "step": { "Gather": { "Builtin": "xforms"}},
       "lane": 0,
       "options": { "main": [0], "second": [1], "out": [1] },
       "out_shape": [4, 4],
@@ -39,7 +39,7 @@
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "rots_no_group"}},
+      "step": { "Gather": { "Builtin": "rots"}},
       "lane": 0,
       "options": { "main": [0], "second": [1], "out": [1] },
       "out_shape": [4, 4],
@@ -47,7 +47,7 @@
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "xforms_no_group"}},
+      "step": { "Gather": { "Builtin": "xforms"}},
       "lane": 1,
       "options": { "main": [0], "second": [1], "out": [1] },
       "out_shape": [4, 4],
@@ -55,7 +55,7 @@
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "rots_no_group"}},
+      "step": { "Gather": { "Builtin": "rots"}},
       "lane": 1,
       "options": { "main": [0], "second": [1], "out": [1] },
       "out_shape": [4, 4],
@@ -78,7 +78,7 @@
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "cond_keep_no_consts"}},
+      "step": { "Gather": { "Builtin": "cond_keep"}},
       "lane": 0,
       "out_shape": [4, 2, 4],
       "options": {"restrict": [1, 0]},
@@ -86,7 +86,7 @@
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "cond_keep_no_consts"}},
+      "step": { "Gather": { "Builtin": "cond_keep"}},
       "lane": 0,
       "options": {"restrict": [1, 1]},
       "out_shape": [4, 2, 4],

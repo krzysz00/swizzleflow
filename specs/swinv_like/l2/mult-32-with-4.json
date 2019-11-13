@@ -78,7 +78,7 @@
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "cond_keep_no_consts"}},
+      "step": { "Gather": { "Builtin": "cond_keep"}},
       "lane": 0,
       "out_shape": [4, 2, 4],
       "options": {"restrict": [1, 0]},
@@ -86,7 +86,7 @@
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "cond_keep_no_consts"}},
+      "step": { "Gather": { "Builtin": "cond_keep"}},
       "lane": 0,
       "options": {"restrict": [1, 1]},
       "out_shape": [4, 2, 4],

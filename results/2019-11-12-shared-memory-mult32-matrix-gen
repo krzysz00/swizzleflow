@@ -1,0 +1,86 @@
+spec:specs/swinv_like/l1/mult-32-with-4.json
+build:matrices/8-reshape-2,4 density(0.015625) [0.000079246]
+Using newly-built matrices/8-reshape-2,4
+load:matrices/2,4-transpose-4,2 [0.000023593]
+mul:8-reshape-2,4_2,4-transpose-4,2 density(0.015625) [0.025744313]
+build:matrices/4,2-cond_keep_no_consts{restrict[1|1|]|}-4,2,4 density(0.015625) [0.000761396]
+mul:8-reshape-2,4_2,4-transpose-4,2_4,2-cond_keep_no_consts{restrict[1|1|]|}-4,2,4 density(0.015625) [0.000140989]
+build:matrices/4,2,4-cond_keep_no_consts{restrict[1|0|]|}-4,2,4 density(0.0009765625) [0.002855424]
+mul:8-reshape-2,4_2,4-transpose-4,2_4,2-cond_keep_no_consts{restrict[1|1|]|}-4,2,4_4,2,4-cond_keep_no_consts{restrict[1|0|]|}-4,2,4 density(0.015625) [0.000704076]
+build:matrices/4,2,4-broadcast{group[1|]|}-4,4 density(0.00390625) [0.000683175]
+mul:8-reshape-2,4_2,4-transpose-4,2_4,2-cond_keep_no_consts{restrict[1|1|]|}-4,2,4_4,2,4-cond_keep_no_consts{restrict[1|0|]|}-4,2,4_4,2,4-broadcast{group[1|]|}-4,4 density(0.0625) [0.00016948]
+build:matrices/4,4-rots_no_group{main[0|]|out[1|]|second[1|]|}-4,4 density(0.0185546875) [0.000280047]
+mul:8-reshape-2,4_2,4-transpose-4,2_4,2-cond_keep_no_consts{restrict[1|1|]|}-4,2,4_4,2,4-cond_keep_no_consts{restrict[1|0|]|}-4,2,4_4,2,4-broadcast{group[1|]|}-4,4_4,4-rots_no_group{main[0|]|out[1|]|second[1|]|}-4,4 density(0.0625) [0.000058244]
+load:matrices/8-reshape-2,4_2,4-transpose-4,2_4,2-cond_keep_no_consts{restrict[1|1|]|}-4,2,4_4,2,4-cond_keep_no_consts{restrict[1|0|]|}-4,2,4_4,2,4-broadcast{group[1|]|}-4,4_4,4-rots_no_group{main[0|]|out[1|]|second[1|]|}-4,4 [0.000019076]
+Begin search
+soln:merge_fold[init;broadcast;id;id,init;broadcast;xform(0,3,4);id];broadcast;keep_if(0 >= 2 + 0);keep_if(0 < 2 + 0);tr;id
+soln:merge_fold[init;broadcast;xform(0,3,4);id,init;broadcast;id;id];broadcast;keep_if(0 >= 2 + 0);keep_if(0 < 2 + 0);tr;id
+stats:0 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (xforms_no_group{main[0|]|out[1|]|second[1|]|}) tested(30), found(0), failed(0), pruned(20), continued(10)
+stats:3 (rots_no_group{main[0|]|out[1|]|second[1|]|}) tested(50), found(0), failed(0), pruned(40), continued(10)
+stats:4 (xforms_no_group{main[0|]|out[1|]|second[1|]|}) tested(300), found(0), failed(0), pruned(200), continued(100)
+stats:5 (rots_no_group{main[0|]|out[1|]|second[1|]|}) tested(500), found(0), failed(0), pruned(400), continued(100)
+stats:6 (merge_folding) tested(100), found(0), failed(0), pruned(98), continued(2)
+stats:7 (broadcast{group[1|]|}) tested(2), found(0), failed(0), pruned(0), continued(2)
+stats:8 (cond_keep_no_consts{restrict[1|0|]|}) tested(16), found(0), failed(0), pruned(12), continued(4)
+stats:9 (cond_keep_no_consts{restrict[1|1|]|}) tested(32), found(0), failed(26), pruned(4), continued(2)
+stats:10 (transpose) tested(2), found(0), failed(0), pruned(0), continued(2)
+stats:11 (reshape) tested(2), found(0), failed(0), pruned(0), continued(2)
+stats:12 ([last]) tested(2), found(2), failed(0), pruned(0), continued(0)
+search:poly_mult shape([8]) true mode(All) [0.003984283]
+spec:specs/swinv_like/l2/mult-32-with-4.json
+load:matrices/8-reshape-2,4 [0.000017312]
+load:matrices/8-reshape-2,4_2,4-transpose-4,2 [0.000012245]
+build:matrices/4,2-cond_keep{restrict[1|1|]|}-4,2,4 density(0.015625) [0.001054035]
+mul:8-reshape-2,4_2,4-transpose-4,2_4,2-cond_keep{restrict[1|1|]|}-4,2,4 density(0.015625) [0.000104813]
+build:matrices/4,2,4-cond_keep{restrict[1|0|]|}-4,2,4 density(0.0009765625) [0.003785881]
+mul:8-reshape-2,4_2,4-transpose-4,2_4,2-cond_keep{restrict[1|1|]|}-4,2,4_4,2,4-cond_keep{restrict[1|0|]|}-4,2,4 density(0.015625) [0.001999449]
+load:matrices/4,2,4-broadcast{group[1|]|}-4,4 [0.000115629]
+mul:8-reshape-2,4_2,4-transpose-4,2_4,2-cond_keep{restrict[1|1|]|}-4,2,4_4,2,4-cond_keep{restrict[1|0|]|}-4,2,4_4,2,4-broadcast{group[1|]|}-4,4 density(0.0625) [0.000184323]
+load:matrices/4,4-rots_no_group{main[0|]|out[1|]|second[1|]|}-4,4 [0.00003632]
+mul:8-reshape-2,4_2,4-transpose-4,2_4,2-cond_keep{restrict[1|1|]|}-4,2,4_4,2,4-cond_keep{restrict[1|0|]|}-4,2,4_4,2,4-broadcast{group[1|]|}-4,4_4,4-rots_no_group{main[0|]|out[1|]|second[1|]|}-4,4 density(0.0625) [0.000037186]
+load:matrices/8-reshape-2,4_2,4-transpose-4,2_4,2-cond_keep{restrict[1|1|]|}-4,2,4_4,2,4-cond_keep{restrict[1|0|]|}-4,2,4_4,2,4-broadcast{group[1|]|}-4,4_4,4-rots_no_group{main[0|]|out[1|]|second[1|]|}-4,4 [0.000015822]
+Begin search
+soln:merge_fold[init;broadcast;id;id,init;broadcast;xform(0,3,4);id];broadcast;keep_if(0 >= 2 + 0);keep_if(0 < 2 + 0);tr;id
+soln:merge_fold[init;broadcast;xform(0,3,4);id,init;broadcast;id;id];broadcast;keep_if(0 >= 2 + 0);keep_if(0 < 2 + 0);tr;id
+stats:0 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (xforms_no_group{main[0|]|out[1|]|second[1|]|}) tested(30), found(0), failed(0), pruned(20), continued(10)
+stats:3 (rots_no_group{main[0|]|out[1|]|second[1|]|}) tested(50), found(0), failed(0), pruned(40), continued(10)
+stats:4 (xforms_no_group{main[0|]|out[1|]|second[1|]|}) tested(300), found(0), failed(0), pruned(200), continued(100)
+stats:5 (rots_no_group{main[0|]|out[1|]|second[1|]|}) tested(500), found(0), failed(0), pruned(400), continued(100)
+stats:6 (merge_folding) tested(100), found(0), failed(0), pruned(98), continued(2)
+stats:7 (broadcast{group[1|]|}) tested(2), found(0), failed(0), pruned(0), continued(2)
+stats:8 (cond_keep{restrict[1|0|]|}) tested(32), found(0), failed(0), pruned(24), continued(8)
+stats:9 (cond_keep{restrict[1|1|]|}) tested(128), found(0), failed(122), pruned(4), continued(2)
+stats:10 (transpose) tested(2), found(0), failed(0), pruned(0), continued(2)
+stats:11 (reshape) tested(2), found(0), failed(0), pruned(0), continued(2)
+stats:12 ([last]) tested(2), found(2), failed(0), pruned(0), continued(0)
+search:poly_mult shape([8]) true mode(All) [0.003671792]
+spec:specs/swinv_like/l3/mult-32-with-4.json
+load:matrices/8-reshape-2,4 [0.000016133]
+load:matrices/8-reshape-2,4_2,4-transpose-4,2 [0.000014445]
+load:matrices/8-reshape-2,4_2,4-transpose-4,2_4,2-cond_keep{restrict[1|1|]|}-4,2,4 [0.000047606]
+load:matrices/8-reshape-2,4_2,4-transpose-4,2_4,2-cond_keep{restrict[1|1|]|}-4,2,4_4,2,4-cond_keep{restrict[1|0|]|}-4,2,4 [0.000046989]
+load:matrices/8-reshape-2,4_2,4-transpose-4,2_4,2-cond_keep{restrict[1|1|]|}-4,2,4_4,2,4-cond_keep{restrict[1|0|]|}-4,2,4_4,2,4-broadcast{group[1|]|}-4,4 [0.000023537]
+build:matrices/4,4-rots{main[0|]|out[1|]|second[1|]|}-4,4 density(0.0203857421875) [0.000318754]
+mul:8-reshape-2,4_2,4-transpose-4,2_4,2-cond_keep{restrict[1|1|]|}-4,2,4_4,2,4-cond_keep{restrict[1|0|]|}-4,2,4_4,2,4-broadcast{group[1|]|}-4,4_4,4-rots{main[0|]|out[1|]|second[1|]|}-4,4 density(0.0625) [0.000045003]
+load:matrices/8-reshape-2,4_2,4-transpose-4,2_4,2-cond_keep{restrict[1|1|]|}-4,2,4_4,2,4-cond_keep{restrict[1|0|]|}-4,2,4_4,2,4-broadcast{group[1|]|}-4,4_4,4-rots{main[0|]|out[1|]|second[1|]|}-4,4 [0.000015671]
+Begin search
+soln:merge_fold[init;broadcast;xform(0,3,4);id,init;broadcast;id;id];broadcast;keep_if(0 >= 2 + 0);keep_if(0 < 2 + 0);tr;id
+soln:merge_fold[init;broadcast;id;id,init;broadcast;xform(0,3,4);id];broadcast;keep_if(0 >= 2 + 0);keep_if(0 < 2 + 0);tr;id
+stats:0 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (broadcast) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:2 (xforms{main[0|]|out[1|]|second[1|]|}) tested(30), found(0), failed(0), pruned(20), continued(10)
+stats:3 (rots{main[0|]|out[1|]|second[1|]|}) tested(60), found(0), failed(0), pruned(50), continued(10)
+stats:4 (xforms{main[0|]|out[1|]|second[1|]|}) tested(300), found(0), failed(0), pruned(200), continued(100)
+stats:5 (rots{main[0|]|out[1|]|second[1|]|}) tested(600), found(0), failed(0), pruned(500), continued(100)
+stats:6 (merge_folding) tested(100), found(0), failed(0), pruned(98), continued(2)
+stats:7 (broadcast{group[1|]|}) tested(2), found(0), failed(0), pruned(0), continued(2)
+stats:8 (cond_keep{restrict[1|0|]|}) tested(32), found(0), failed(0), pruned(24), continued(8)
+stats:9 (cond_keep{restrict[1|1|]|}) tested(128), found(0), failed(122), pruned(4), continued(2)
+stats:10 (transpose) tested(2), found(0), failed(0), pruned(0), continued(2)
+stats:11 (reshape) tested(2), found(0), failed(0), pruned(0), continued(2)
+stats:12 ([last]) tested(2), found(2), failed(0), pruned(0), continued(0)
+search:poly_mult shape([8]) true mode(All) [0.003882741]

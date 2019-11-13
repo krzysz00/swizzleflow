@@ -101,7 +101,7 @@ type States<'d, 'l> = SmallVec<[Option<&'l ProgState<'d>>; 4]>;
 // Invariant: any level with pruning enabled has a corresponding pruning matrix available
 fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
               expected_syms: &[DomRef],
-              _cache: &ResultMap<'d>, tracker: &SearchLevelStats) -> bool {
+              _cache: &ResultMap<'d>, tracker: &SearchLevelStats, print: bool) -> bool {
     let mut did_lookup = false;
     for a in expected_syms.iter().copied() {
         for b in expected_syms.iter().copied() {
@@ -117,7 +117,13 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
                     // if did_lookup {
                     //     cache.write().unwrap().insert(current.clone(), false);
                     // }
-                    // println!("pruned candidate with ({}, {}) @ ({}, {})", a, b, t1, t2);
+                    if print {
+                        println!("{}", current.name);
+                        println!("pruned candidate with ({}, {})=({}, {}) @ ({}, {})",
+                                 a, b, target.domain.get_value(a), target.domain.get_value(b),
+                                 t1, t2);
+                        println!("options: {:?} {:?}", current.inv_state[a], current.inv_state[b]);
+                    }
                     tracker.pruned();
                     return false;
                 }
@@ -189,7 +195,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                     if !viable(r, target,
                                level.matrix.as_ref().unwrap(),
                                &expected_syms[level.expected_syms],
-                               cache.as_ref(), &tracker) {
+                               cache.as_ref(), &tracker, false) {
                         return false;
                     }
                 }
@@ -261,7 +267,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                     } else {
                         Some(ProgState::merge(&to_merge))
                     };
-                if next.is_some() {
+                if let Some(ref state) = next {
                     let mut new_states = copy_replacing(&curr_states,
                                                         to, next.as_ref());
                     for i in from.iter().copied() {
@@ -271,10 +277,10 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                     }
 
                     if level.prune {
-                        if !viable(current, target,
+                        if !viable(state, target,
                                    level.matrix.as_ref().unwrap(),
                                    &expected_syms[level.expected_syms],
-                                   cache.as_ref(), &tracker) {
+                                   cache.as_ref(), &tracker, false) {
                             return false;
                         }
                     }
