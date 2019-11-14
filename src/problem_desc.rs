@@ -186,6 +186,7 @@ impl GathersDesc {
                             return Err(ErrorKind::ShapeMismatch(correct_shape, in_shape.to_vec()).into());
                         }
                         let n = out_shape[0] as isize;
+                        // As in Swizzle Inventor
                         let default_consts = [0, 1, -1, n, -n];
                         let consts = if s == "reg_select_no_consts" {
                             &[0]
@@ -200,6 +201,7 @@ impl GathersDesc {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
                         let n = out_shape[0] as isize;
+                        // As is Swizzle Inventor
                         let default_consts = [0, 1, -1, n, -n];
                         let consts = if s == "cond_keep_no_consts" {
                             &[0]
@@ -221,6 +223,7 @@ impl GathersDesc {
                             .ok_or_else(|| ErrorKind::MissingOption("axis".to_string()))?
                             as usize;
                         let n = out_shape[axis] as isize;
+                        // As in Swizzle Inventor
                         let default_consts = [0, 1, -1, n, -n];
                         let consts = if s == "general_select_no_consts" {
                             &[0]

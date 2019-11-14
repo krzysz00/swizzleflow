@@ -20,6 +20,7 @@ use crate::errors::*;
 use ndarray::Ix;
 
 use std::collections::{HashSet,BTreeMap};
+use std::ops::{Add, Sub};
 
 use smallvec::SmallVec;
 
@@ -58,9 +59,33 @@ impl Op {
     }
 }
 
-pub fn reg_select_gather(shape: &[Ix], operand1: usize, operand2: usize, c: isize,
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum BinOp {
+    Plus,
+    Minus,
+}
+
+impl BinOp {
+    fn name(self) -> &'static str {
+        use BinOp::*;
+        match self {
+            Plus => "+", Minus => "-"
+        }
+    }
+
+    fn perform<U: Copy, T: Copy + Add<Output = U>
+               + Sub<Output = U>>(self, v1: T, v2: T) -> U {
+        use BinOp::*;
+        match self {
+            Plus => v1 + v2,
+            Minus => v1 - v2,
+        }
+    }
+}
+
+pub fn reg_select_gather(shape: &[Ix], operand1: usize, operand2: usize, c: isize, combine: BinOp,
                          op: Op) -> Gather {
-    let name = format!("select(d{} {} d{} + {})", operand1, op.name(), operand2, c);
+    let name = format!("select(d{} {} {} {} d{})", operand1, op.name(), c, combine.name(), operand2);
     let copy_idx = shape.len() - 1;
 
     let mut in_shape = shape.to_vec();
@@ -70,7 +95,7 @@ pub fn reg_select_gather(shape: &[Ix], operand1: usize, operand2: usize, c: isiz
                     let mut storage: SmallVec<[usize; 4]> =
                         SmallVec::from_slice(&idxs[0..copy_idx]);
                     let op1 = idxs[operand1] as isize;
-                    let op2 = idxs[operand2] as isize + c;
+                    let op2 = combine.perform(c, idxs[operand2] as isize);
                     if op.perform(op1, op2) {
                         storage.push(0);
                     }
@@ -81,16 +106,16 @@ pub fn reg_select_gather(shape: &[Ix], operand1: usize, operand2: usize, c: isiz
                 }, name)
 }
 
-pub fn cond_keep_gather(shape: &[Ix], operand1: usize, operand2: usize, c: isize,
+pub fn cond_keep_gather(shape: &[Ix], operand1: usize, operand2: usize, c: isize, combine: BinOp,
                         op: Op, restrict: &BTreeMap<usize, Ix>) -> Gather {
-    let name = format!("keep_if(d{} {} d{} + {})", operand1, op.name(), operand2, c);
+    let name = format!("keep_if(d{} {} {} {} d{})", operand1, op.name(), c, combine.name(), operand2);
     Gather::new(shape,
                 |idxs: &[Ix]| {
+                    let v2 = combine.perform(c, idxs[operand2] as isize);
                     if restrict.iter().any(|(&d, &n)| idxs[d] != n) {
                         to_opt_ix(idxs, shape)
                     }
-                    else if op.perform(idxs[operand1] as isize,
-                                  idxs[operand2] as isize + c) {
+                    else if op.perform(idxs[operand1] as isize, v2) {
                         to_opt_ix(idxs, shape)
                     }
                     else {
@@ -104,10 +129,11 @@ pub fn reg_select(shape: &[Ix], consts: &[isize]) -> Result<OpSetKind> {
 
     let op_len = shape.len();
     ret.extend(iproduct!(consts.iter(),
+                         &[BinOp::Plus, BinOp::Minus],
                          0..op_len, 0..op_len,
                          &[Op::Eq, Op::Neq, Op::Lt, Op::Leq, Op::Gt, Op::Geq])
-               .map(move |(c, idx1, idx2, op)|
-                    reg_select_gather(shape, idx1, idx2, *c, *op)));
+               .map(move |(c, binop, idx1, idx2, op)|
+                    reg_select_gather(shape, idx1, idx2, *c, *binop, *op)));
 
     Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
@@ -118,21 +144,22 @@ pub fn cond_keep(shape: &[Ix], consts: &[isize],
 
     let op_len = shape.len();
     ret.extend(iproduct!(consts.iter(),
+                         &[BinOp::Plus, BinOp::Minus],
                          (0..op_len).filter(|d| !restrict.contains_key(d)),
                          (0..op_len).filter(|d| !restrict.contains_key(d)),
                          &[Op::Eq, Op::Neq, Op::Lt, Op::Leq, Op::Gt, Op::Geq])
-               .map(move |(c, idx1, idx2, op)|
-                    cond_keep_gather(shape, idx1, idx2, *c, *op, restrict)));
+               .map(move |(c, binop, idx1, idx2, op)|
+                    cond_keep_gather(shape, idx1, idx2, *c, *binop, *op, restrict)));
 
     Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 
-pub type Operator = (usize, usize, isize, Op);
+pub type Operator = (usize, usize, isize, BinOp, Op);
 pub fn general_select_gather(out_shape: &[Ix], in_shape: &[Ix],
                              conds: &[Operator], axis: usize) -> Gather {
     let mut name = "select(".to_owned();
-    for (a, b, c, op) in conds {
-        let name_part = format!("d{} {} d{} + {}, ", a, op.name(), b, c);
+    for (a, b, c, binop, op) in conds {
+        let name_part = format!("d{} {} {} {} d{}, ", a, op.name(), c, binop.name(), b);
         name.push_str(&name_part);
     }
     name.push(')');
@@ -141,9 +168,9 @@ pub fn general_select_gather(out_shape: &[Ix], in_shape: &[Ix],
                 |idxs: &[Ix]| {
                     let mut storage: SmallVec<[usize; 4]> = SmallVec::from_slice(&idxs);
                     storage[axis] = conds.len(); // fail through
-                    for (i, (a, b, c, op)) in conds.iter().enumerate() {
+                    for (i, (a, b, c, binop, op)) in conds.iter().enumerate() {
                         let op1 = idxs[*a] as isize;
-                        let op2 = idxs[*b] as isize + *c;
+                        let op2 = binop.perform(*c, idxs[*b] as isize);
                         if op.perform(op1, op2) {
                             storage[axis] = i;
                             return to_opt_ix(&storage, in_shape);
@@ -182,9 +209,10 @@ pub fn general_select(out_shape: &[Ix], in_shape: &[Ix], axis: usize,
 
     let n = in_shape[axis] - 1;
     let operators: Vec<Operator> =
-        iproduct!(consts.iter(), dims.iter(), dims.iter(),
+        iproduct!(consts.iter(), &[BinOp::Plus, BinOp::Minus],
+                  dims.iter(), dims.iter(),
                   &[Op::Eq, Op::Neq, Op::Lt, Op::Leq, Op::Gt, Op::Geq])
-        .map(|(c, a, b, op)| (*a, *b, *c, *op)).collect();
+        .map(|(c, binop, a, b, op)| (*a, *b, *c, *binop, *op)).collect();
     let indexes = combinations(n, operators.len());
     let mut storage = Vec::new();
 

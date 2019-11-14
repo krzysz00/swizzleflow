@@ -229,7 +229,7 @@ mod tests {
     fn poly_mult_works() {
         use ndarray::ArrayD;
         use itertools::iproduct;
-        use crate::operators::select::{cond_keep_gather,Op};
+        use crate::operators::select::{cond_keep_gather,Op, BinOp};
         let f1 = xform(&[4, 4], 1, 0, 1, 1, 0, 4, None, false);
         let r1 = rotate(&[4, 4], 1, 0, 1, 0, None);
         let f2 = xform(&[4, 4], 0, 1, 1, 1, -1, 4, None, false);
@@ -255,12 +255,12 @@ mod tests {
         let mut retain = std::collections::BTreeMap::new();
         retain.insert(1, 0);
         let c1 = cond_keep_gather(&[4, 2, 4], 2, 0, 0,
-                                  Op::Leq, &retain);
+                                  BinOp::Plus, Op::Leq, &retain);
         let d1 = b.gather_by(&c1);
 
         retain.insert(1, 1);
         let c2 = cond_keep_gather(&[4, 2, 4], 2, 0, 0,
-                                  Op::Gt, &retain);
+                                  BinOp::Plus, Op::Gt, &retain);
         let d2 = d1.gather_fold_by(&c2).unwrap();
 
         let tr = transpose_gather(&[2, 4], &[4, 2]);
