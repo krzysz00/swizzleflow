@@ -34,7 +34,7 @@ while (<>) {
         }
         else {
             unless ($pruned == 0 && $continued == 1) {
-                my $stat = 1.0 - ($continued * 1.0)/$tested;
+                my $stat = 1.0 - (($continued - $soln_count) * 1.0)/$tested;
                 print ",$stat";
             }
         }
