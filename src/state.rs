@@ -56,8 +56,13 @@ impl Display for Value {
 
 impl Value {
     pub fn fold(mut terms: Vec<Value>) -> Self {
-        terms.sort();
-        Value::Fold(terms)
+        if terms.is_empty() {
+            Value::Garbage
+        }
+        else {
+            terms.sort();
+            Value::Fold(terms)
+        }
     }
 
     pub fn collect_subterms(&self, store: &mut Vec<BTreeSet<Value>>) -> usize {
@@ -160,7 +165,7 @@ impl Domain {
         let subterms_of = subterm_sets.into_iter().map(|v| v.into_iter().collect()).collect();
         let imm_superterms = immediate_superterms.into_iter().map(|v| v.into_iter().collect()).collect();
 
-        let fold_ref_map =
+        let mut fold_ref_map =
             elements.iter().enumerate()
             .filter_map(|(i, e)| {
                 if let Value::Fold(v) = e {
@@ -168,6 +173,8 @@ impl Domain {
                           .collect::<Vec<_>>(), i))
                 } else { None }
             }).collect::<HashMap<Vec<DomRef>, DomRef>>();
+        // Semantics of empty fold
+        fold_ref_map.insert(vec![], *element_map.get(&Value::Garbage).unwrap());
         Domain { elements, element_map, subterms_of, fold_ref_map,
                  imm_subterms, imm_superterms }
     }
