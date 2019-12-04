@@ -1,0 +1,10 @@
+spec:specs/1d-stencil-small-l1-for-presentation-no-prune.json
+Begin search
+soln:init;load_trunc;select(d0 != 0 - d1);xform(0,2,2);rot(1)
+soln:init;load_trunc;select(d0 >= 0 + d1);xform(0,1,2);id
+stats:0 (load_trunc) tested(1), found(0), failed(0), pruned(0), continued(1)
+stats:1 (reg_select_no_consts) tested(14), found(0), failed(0), pruned(0), continued(14)
+stats:2 (col_xforms_no_group) tested(84), found(0), failed(0), pruned(0), continued(84)
+stats:3 (col_rots_no_group) tested(252), found(0), failed(240), pruned(0), continued(12)
+stats:4 ([last]) tested(12), found(2), failed(10), pruned(0), continued(0)
+search:conv shape([3]) true mode(All) [0.000271301]
