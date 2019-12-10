@@ -4,8 +4,11 @@ version = "0.2.1"
 authors = ["Krzysztof Drewniak <krzysdrewniak@gmail.com>"]
 edition = "2018"
 
+build = "build.rs"
+
 [dependencies]
-intel-mkl-src = { version = "0.4.0" }
+# intel-mkl-src = { version = "0.4.0" }
+openmp-sys = { version = "0.1.6", features = ["static"] }
 ndarray = { version = "0.13", features = ["blas"] }
 
 smallvec = "0.6.9"

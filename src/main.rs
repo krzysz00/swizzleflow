@@ -12,7 +12,8 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-extern crate intel_mkl_src;
+//extern crate intel_mkl_src;
+extern crate openmp_sys;
 
 mod misc;
 mod state;
