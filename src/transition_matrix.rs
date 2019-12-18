@@ -37,12 +37,20 @@ pub trait TransitionMatrixOps: Sized + std::fmt::Debug + std::clone::Clone {
     fn set_idxs(&mut self, current1: Ix, current2: Ix, target1: Ix, target2: Ix, value: bool);
     fn write<T: Write>(&self, io: &mut T) -> Result<()>;
     fn read<T: Read>(io: &mut T) -> Result<Self>;
-    fn empty(len: usize, out_shape: &[Ix], in_shape: &[Ix]) -> Self;
+    fn empty(target_shape: &[Ix], current_shape: &[Ix]) -> Self;
     // The shape is [target1, target2, current1, current2]
     fn to_f32_mat(&self) -> Array2<f32>;
-    fn from_f32_mat(mat: &Array2<f32>, out_shape: &[Ix], in_shape: &[Ix]) -> Self;
+    fn from_f32_mat(mat: &Array2<f32>, target_shape: &[Ix], current_shape: &[Ix]) -> Self;
+
+    fn get_target_shape(&self) -> &[Ix];
+    fn get_current_shape(&self) -> &[Ix];
 
     fn slots(&self) -> (usize, usize);
+    fn matrix_dims(&self) -> (usize, usize) {
+        let (current_slots, target_slots) = self.slots();
+        (target_slots.pow(2), current_slots.pow(2))
+    }
+
     fn n_ones(&self) -> usize;
     fn n_elements(&self) -> usize;
 }
@@ -155,21 +163,31 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
         Ok(Self::new(bits, target_shape, current_shape))
     }
 
-    fn empty(len: usize, out_shape: &[Ix], in_shape: &[Ix]) -> Self {
+    fn empty(target_shape: &[Ix], current_shape: &[Ix]) -> Self {
+        let out_slots: usize = target_shape.iter().copied().product();
+        let in_slots: usize = current_shape.iter().copied().product();
+        let len = out_slots.pow(2) * in_slots.pow(2);
         let bits = BitVec::from_elem(len, false);
-        Self::new(bits, ShapeVec::from_slice(out_shape), ShapeVec::from_slice(in_shape))
+        Self::new(bits, ShapeVec::from_slice(target_shape), ShapeVec::from_slice(current_shape))
     }
 
     fn to_f32_mat(&self) -> Array2<f32> {
         let floats = self.data.iter().map(|b| if b { 1.0 } else { 0.0 }).collect();
-        let target_slots: Ix = self.target_shape.iter().product();
-        let current_slots: Ix = self.current_shape.iter().product();
-        Array2::from_shape_vec((target_slots.pow(2), current_slots.pow(2)), floats).unwrap()
+        let dims = self.matrix_dims();
+        Array2::from_shape_vec(dims, floats).unwrap()
     }
 
-    fn from_f32_mat(mat: &Array2<f32>, out_shape: &[Ix], in_shape: &[Ix]) -> Self {
+    fn from_f32_mat(mat: &Array2<f32>, target_shape: &[Ix], current_shape: &[Ix]) -> Self {
         let bits = mat.as_slice().unwrap().iter().map(|f| !(f.abs() < EPSILON)).collect();
-        Self::new(bits, ShapeVec::from_slice(out_shape), ShapeVec::from_slice(in_shape))
+        Self::new(bits, ShapeVec::from_slice(target_shape), ShapeVec::from_slice(current_shape))
+    }
+
+    fn get_target_shape(&self) -> &[Ix] {
+        self.target_shape.as_slice()
+    }
+
+    fn get_current_shape(&self) -> &[Ix] {
+        self.current_shape.as_slice()
     }
 
     fn slots(&self) -> (usize, usize) {
@@ -188,14 +206,12 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
 pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet) -> T {
     let out_shape = ops.out_shape.to_owned();
 
-    let out_slots: usize = out_shape.iter().product();
     let in_slots: usize = ops.in_shape.iter().product();
     let in_bound = in_slots as isize;
-    let len = (out_slots.pow(2)) * (in_slots.pow(2));
     let fold = ops.fused_fold;
 
     // empty takes out, in, unlike set and their friends
-    let mut ret = T::empty(len, &out_shape, &ops.in_shape);
+    let mut ret = T::empty(&out_shape, &ops.in_shape);
     let gathers = ops.ops.gathers().unwrap();
     for op in gathers {
         let output_shape = op.data.shape();
@@ -291,8 +307,8 @@ impl TransitionMatrixOps for TransitionMatrix {
         }
     }
 
-    fn empty(len: usize, out_shape: &[Ix], in_shape: &[Ix]) -> Self {
-        TransitionMatrix::Dense(DenseTransitionMatrix::empty(len, out_shape, in_shape))
+    fn empty(target_shape: &[Ix], current_shape: &[Ix]) -> Self {
+        TransitionMatrix::Dense(DenseTransitionMatrix::empty(target_shape, current_shape))
     }
 
     fn to_f32_mat(&self) -> Array2<f32> {
@@ -301,8 +317,20 @@ impl TransitionMatrixOps for TransitionMatrix {
         }
     }
 
-    fn from_f32_mat(mat: &Array2<f32>, out_shape: &[Ix], in_shape: &[Ix]) -> Self {
-       TransitionMatrix::Dense(DenseTransitionMatrix::from_f32_mat(mat, out_shape, in_shape))
+    fn from_f32_mat(mat: &Array2<f32>, target_shape: &[Ix], current_shape: &[Ix]) -> Self {
+       TransitionMatrix::Dense(DenseTransitionMatrix::from_f32_mat(mat, target_shape, current_shape))
+    }
+
+    fn get_target_shape(&self) -> &[Ix] {
+        match self {
+            TransitionMatrix::Dense(d) => d.get_target_shape()
+        }
+    }
+
+    fn get_current_shape(&self) -> &[Ix] {
+        match self {
+            TransitionMatrix::Dense(d) => d.get_current_shape()
+        }
     }
 
     fn slots(&self) -> (usize, usize) {

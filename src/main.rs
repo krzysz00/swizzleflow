@@ -12,11 +12,10 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-extern crate intel_mkl_src;
-
 mod misc;
 mod state;
 mod transition_matrix;
+mod multiply;
 mod matrix_load;
 mod operators;
 mod expected_syms_util;
@@ -133,7 +132,7 @@ const DEFAULT_MATRIX_DIR: &str = "matrices/";
 fn run() -> Result<()> {
     let args =
         clap_app!(swizzleflow =>
-                  (version: "0.1")
+                  (version: "0.3.0")
                   (author: "Krzysztof Drewniak <krzysd@cs.washington.edu> et al.")
                   (about: "Tool for synthesizing high-performance kernels from dataflow graph sketches")
                   (@arg matrix_dir: -m --("matrix-dir") +takes_value value_name("MATRIX_DIR")

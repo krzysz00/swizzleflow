@@ -17,6 +17,11 @@ use crate::errors::*;
 pub(crate) const EPSILON: f32 = 1e-5;
 pub type ShapeVec = smallvec::SmallVec<[usize; 3]>;
 
+#[cfg(feature = "stats")]
+pub const COLLECT_STATS: bool = true;
+#[cfg(not(feature = "stats"))]
+pub const COLLECT_STATS: bool = false;
+
 pub fn time_since(start: std::time::Instant) -> f64 {
     let dur = start.elapsed();
     dur.as_secs() as f64 + (f64::from(dur.subsec_nanos()) / 1.0e9)
