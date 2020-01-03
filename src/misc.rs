@@ -50,3 +50,15 @@ use ndarray::Ix;
 pub fn in_bounds(index: &[Ix], bounds: &[Ix]) -> bool {
     index.iter().zip(bounds.iter()).all(move |(i, v)| i < v)
 }
+
+pub fn loghist(n: usize) -> usize {
+    if n < 10 {
+        n
+    }
+    else if n < 100 {
+        (n / 10) * 10
+    }
+    else {
+        (n / 100) * 100
+    }
+}

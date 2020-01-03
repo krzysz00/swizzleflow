@@ -17,18 +17,19 @@ use crate::transition_matrix::{TransitionMatrix,TransitionMatrixOps};
 use crate::operators::SynthesisLevel;
 use crate::operators::OpSetKind;
 
-use crate::misc::{time_since};
+use crate::misc::{time_since, COLLECT_STATS};
 
-use std::collections::HashMap;
+use std::collections::{HashMap,BTreeMap};
 
 use std::time::Instant;
 
 use std::fmt;
 use std::fmt::{Display,Formatter};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, RwLock, Mutex};
 use std::iter::FromIterator;
 
+use itertools::Itertools;
 use itertools::iproduct;
 
 use smallvec::SmallVec;
@@ -45,11 +46,19 @@ struct SearchLevelStats {
     pruned: AtomicUsize,
     failed: AtomicUsize,
     succeeded: AtomicUsize,
+    target_checks: Option<Arc<Mutex<BTreeMap<usize, usize>>>>,
 }
 
 impl SearchLevelStats {
     pub fn new() -> Self {
-        Self::default()
+        if COLLECT_STATS {
+            let mut ret = Self::default();
+            ret.target_checks = Some(Arc::new(Mutex::new(BTreeMap::new())));
+            ret
+        }
+        else {
+            Self::default()
+        }
     }
 
     pub fn success(&self) {
@@ -67,6 +76,18 @@ impl SearchLevelStats {
     pub fn failed(&self) {
         self.failed.fetch_add(1, Ordering::Relaxed);
     }
+
+    #[cfg(not(feature = "stats"))]
+    pub fn record_target_checks(&self, _count: usize) {}
+
+    #[cfg(feature = "stats")]
+    pub fn record_target_checks(&self, count: usize) {
+        use crate::misc::loghist;
+        if let Some(ref lock) = self.target_checks {
+            let mut map = lock.lock().unwrap();
+            *map.entry(loghist(count)).or_insert(0) += 1;
+        }
+    }
 }
 
 impl Clone for SearchLevelStats {
@@ -75,6 +96,7 @@ impl Clone for SearchLevelStats {
                pruned: AtomicUsize::new(self.pruned.load(Ordering::SeqCst)),
                succeeded: AtomicUsize::new(self.succeeded.load(Ordering::SeqCst)),
                failed: AtomicUsize::new(self.failed.load(Ordering::SeqCst)),
+               target_checks: self.target_checks.clone(),
         }
     }
 }
@@ -90,7 +112,16 @@ impl Display for SearchLevelStats {
         let continued = tested - found - pruned - failed;
 
         write!(f, "tested({}), found({}), failed({}), pruned({}), continued({})",
-               tested, found, failed, pruned, continued)
+               tested, found, failed, pruned, continued)?;
+
+        if COLLECT_STATS {
+            if let Some(ref lock) = self.target_checks {
+                let map = lock.lock().unwrap();
+                write!(f, ", target_checks({:?})",
+                       map.iter().format(" "))?;
+            }
+        }
+        Ok(())
     }
 }
 
@@ -103,10 +134,12 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
               expected_syms: &[DomRef],
               _cache: &ResultMap<'d>, tracker: &SearchLevelStats, print: bool) -> bool {
     let mut did_lookup = false;
+    let mut target_checks = 0;
     for a in expected_syms.iter().copied() {
         for b in expected_syms.iter().copied() {
             for (t1, t2) in iproduct!(target.inv_state[a].iter().copied(),
                                       target.inv_state[b].iter().copied()) {
+                target_checks += 1;
                 let result = iproduct!(current.inv_state[a].iter().copied(),
                                        current.inv_state[b].iter().copied())
                     .any(|(c1, c2)| {
@@ -125,6 +158,7 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
                         println!("options: {:?} {:?}", current.inv_state[a], current.inv_state[b]);
                     }
                     tracker.pruned();
+                    tracker.record_target_checks(target_checks);
                     return false;
                 }
             }
@@ -309,7 +343,7 @@ pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
                   mode: Mode) -> bool {
 
     let n_levels = levels.len();
-    let stats = vec![SearchLevelStats::new(); n_levels + 1];
+    let stats = (0..n_levels+1).map(|_| SearchLevelStats::new()).collect::<Vec<_>>();
     let caches: Vec<SearchResultCache>
         = (0..n_levels).map(|_| Arc::new(RwLock::new(HashMap::new()))).collect();
 

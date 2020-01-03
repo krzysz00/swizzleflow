@@ -15,7 +15,7 @@
 use std::collections::BTreeMap;
 
 use crate::transition_matrix::{TransitionMatrixOps, TransitionMatrix};
-use crate::misc::{COLLECT_STATS};
+use crate::misc::{COLLECT_STATS, loghist};
 
 use itertools::Itertools;
 use itertools::iproduct;
@@ -48,23 +48,23 @@ fn sparsify_mul_no_trans(a: &TransitionMatrix, b: &TransitionMatrix,
                 if b.get_idxs(j1, j2, kidx1, kidx2) {
                     c.set_idxs(j1, j2, i1, i2, true);
                     if COLLECT_STATS {
-                        *probes_success.entry(p + 1).or_insert(0) += 1;
+                        *probes_success.entry(loghist(p + 1)).or_insert(0) += 1;
                     }
                     break;
                 }
                 p += 1;
             }
             if COLLECT_STATS && p == k_idxs.len() {
-                *probes_failure.entry(p).or_insert(0) += 1;
+                *probes_failure.entry(loghist(p)).or_insert(0) += 1;
             }
         }
         k_idxs.clear();
     }
 
     if COLLECT_STATS {
-        println!("probes_success = {:?}",
+        println!("mul_stats:probes_success = {:?}",
                  probes_success.iter().format(" "));
-        println!("probes_failure = {:?}",
+        println!("mul_stats:probes_failure = {:?}",
                  probes_failure.iter().format(" "));
     }
 }
@@ -108,9 +108,9 @@ fn sparsify_mul_with_trans(a: &TransitionMatrix, b: &TransitionMatrix,
     }
 
     if COLLECT_STATS {
-        println!("probes_success = {:?}",
+        println!("mul_stats:probes_success = {:?}",
                  probes_success.iter().format(" "));
-        println!("probes_failure = {:?}",
+        println!("mul_stats:probes_failure = {:?}",
                  probes_failure.iter().format(" "));
     }
 }
