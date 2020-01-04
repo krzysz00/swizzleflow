@@ -62,10 +62,9 @@ fn sparsify_mul_no_trans(a: &TransitionMatrix, b: &TransitionMatrix,
     }
 
     if COLLECT_STATS {
-        println!("mul_stats:probes_success = {:?}",
-                 probes_success.iter().format(" "));
-        println!("mul_stats:probes_failure = {:?}",
-                 probes_failure.iter().format(" "));
+        println!("mul_stats:: probes_success=[{:?}]; probes_failure=[{:?}];",
+                 probes_success.iter().format(", "),
+                 probes_failure.iter().format(", "));
     }
 }
 
@@ -108,10 +107,9 @@ fn sparsify_mul_with_trans(a: &TransitionMatrix, b: &TransitionMatrix,
     }
 
     if COLLECT_STATS {
-        println!("mul_stats:probes_success = {:?}",
-                 probes_success.iter().format(" "));
-        println!("mul_stats:probes_failure = {:?}",
-                 probes_failure.iter().format(" "));
+        println!("mul_stats:: probes_success=[{:?}]; probes_failure=[{:?}];",
+                 probes_success.iter().format(", "),
+                 probes_failure.iter().format(", "));
     }
 }
 

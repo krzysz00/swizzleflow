@@ -111,14 +111,14 @@ impl Display for SearchLevelStats {
 
         let continued = tested - found - pruned - failed;
 
-        write!(f, "tested({}), found({}), failed({}), pruned({}), continued({})",
+        write!(f, "tested={}; found={}; failed={}; pruned={}; continued={};",
                tested, found, failed, pruned, continued)?;
 
         if COLLECT_STATS {
             if let Some(ref lock) = self.target_checks {
                 let map = lock.lock().unwrap();
-                write!(f, ", target_checks({:?})",
-                       map.iter().format(" "))?;
+                write!(f, " target_checks=[{:?}];",
+                       map.iter().format(", "))?;
             }
         }
         Ok(())
@@ -155,7 +155,7 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
                         println!("pruned candidate with ({}, {})=({}, {}) @ ({}, {})",
                                  a, b, target.domain.get_value(a), target.domain.get_value(b),
                                  t1, t2);
-                        println!("options: {:?} {:?}", current.inv_state[a], current.inv_state[b]);
+                        println!("options {:?} {:?}", current.inv_state[a], current.inv_state[b]);
                     }
                     tracker.pruned();
                     tracker.record_target_checks(target_checks);
@@ -204,7 +204,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
         let current = curr_states[0].unwrap();
         if current == target {
             tracker.success();
-            println!("soln:{}", &current.name);
+            println!("solution:{}", &current.name);
             return true;
         }
         else {
@@ -340,7 +340,8 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
 pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
                   levels: &[SynthesisLevel],
                   expected_syms: &[Vec<DomRef>],
-                  mode: Mode) -> bool {
+                  mode: Mode,
+                  spec_name: &str) -> bool {
 
     let n_levels = levels.len();
     let stats = (0..n_levels+1).map(|_| SearchLevelStats::new()).collect::<Vec<_>>();
@@ -353,8 +354,8 @@ pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
     let dur = time_since(start_time);
 
     for (idx, stats) in (&stats).iter().enumerate() {
-        println!("stats:{} ({}) {}", idx, levels.get(idx).map_or(&"[last]".into(), |x| &x.ops.name), stats);
+        println!("stats:{} name={}; {}", idx, levels.get(idx).map_or(&"(last)".into(), |x| &x.ops.name), stats);
     }
-    println!("search:{} shape({:?}) {} mode({:?}) [{}]", target.name, target.state.shape(), ret, mode, dur);
+    println!("search:{} success={}; mode={:?}; time={};", spec_name, ret, mode, dur);
     ret
 }

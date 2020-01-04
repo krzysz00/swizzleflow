@@ -172,7 +172,7 @@ fn run() -> Result<()> {
         let max_lanes = initial.len();
         matrix_load::add_matrices(matrix_dir, &mut levels, max_lanes)?;
         println!("Begin search");
-        synthesize(initial, &target, &levels, &expected_syms, synthesis_mode);
+        synthesize(initial, &target, &levels, &expected_syms, synthesis_mode, &name);
         matrix_load::remove_matrices(&mut levels);
     }
     // The goal: (t, i) -> (t, i) merged with (t, i) -> (t, t - i)

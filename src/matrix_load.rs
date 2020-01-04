@@ -59,7 +59,7 @@ fn load_matrix(path: &Path) -> Result<TransitionMatrix> {
     let start = Instant::now();
     let mat = TransitionMatrix::load_matrix(path)?;
     let load_time = time_since(start);
-    println!("load:{} [{}]", path.display(), load_time);
+    println!("load:{} density={}; time={};", path.display(), density(&mat), load_time);
     Ok(mat)
 }
 
@@ -94,7 +94,7 @@ fn add_matrix(ops: &OpSet, lane: usize,
                 sparsifying_mul(prev, basis_matrix, &mut output);
                 let time = time_since(start);
 
-                println!("mul:{} density({}) [{}]", names[lane], density(&output), time);
+                println!("mul:{} density={}; time={};", names[lane], density(&output), time);
                 output.store_matrix(&path)?;
                 std::mem::swap(&mut output, prev);
             },
@@ -177,7 +177,7 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel],
                     let start = Instant::now();
                     let ret = TransitionMatrix::load_matrix(our_path.as_path())?;
                     let load_time = time_since(start);
-                    println!("load:{} [{}]", our_path.display(), load_time);
+                    println!("load:{} density={}; time={};", our_path.display(), density(&ret), load_time);
                     ret
                 }
                 else {
@@ -187,7 +187,7 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel],
                         union_matrices(&mut gather, prev_mats[idx].as_ref().unwrap());
                     }
                     let union_time = time_since(start);
-                    println!("union:{} density({}) [{}]", our_path.display(),
+                    println!("union:{} density={}; time={};", our_path.display(),
                              density(&gather), union_time);
                     gather.store_matrix(&our_path)?;
                     gather

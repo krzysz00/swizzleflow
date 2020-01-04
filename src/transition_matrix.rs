@@ -375,17 +375,17 @@ pub fn build_or_load_matrix(ops: &OpSet, path: impl AsRef<Path>) -> Result<Trans
     let path = path.as_ref();
     if path.exists() {
         let start = Instant::now();
-        let ret = TransitionMatrix::load_matrix(path);
+        let ret = TransitionMatrix::load_matrix(path)?;
         let dur = time_since(start);
-        println!("load:{} [{}]", path.display(), dur);
-        ret
+        println!("load:{} density={}; time={};", path.display(), density(&ret), dur);
+        Ok(ret)
     }
     else {
         let start = Instant::now();
         let matrix = TransitionMatrix::Dense(build_mat(ops));
-        matrix.store_matrix(path)?;
         let dur = time_since(start);
-        println!("build:{} density({}) [{}]", path.display(), density(&matrix), dur);
+        matrix.store_matrix(path)?;
+        println!("build:{} density={}; time={};", path.display(), density(&matrix), dur);
         Ok(matrix)
     }
 }
