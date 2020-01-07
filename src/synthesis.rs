@@ -136,7 +136,7 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
     let mut did_lookup = false;
     let mut target_checks = 0;
     for (i, a) in expected_syms.iter().copied().enumerate() {
-        for b in (&expected_syms[i..]).iter().copied() {
+        for b in (&expected_syms[(i+1)..]).iter().copied().chain(std::iter::once(a)) {
             for (t1, t2) in iproduct!(target.inv_state[a].iter().copied(),
                                       target.inv_state[b].iter().copied()) {
                 target_checks += 1;
