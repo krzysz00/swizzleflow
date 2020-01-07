@@ -354,7 +354,10 @@ pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
     let dur = time_since(start_time);
 
     for (idx, stats) in (&stats).iter().enumerate() {
-        println!("stats:{} name={}; {}", idx, levels.get(idx).map_or(&"(last)".into(), |x| &x.ops.name), stats);
+        println!("stats:{} name={}; lane={}; {}", idx,
+                 levels.get(idx).map_or(&"(last)".into(), |x| &x.ops.name),
+                 levels.get(idx).map_or(0, |x| x.lane),
+                 stats);
     }
     println!("search:{} success={}; mode={:?}; time={};", spec_name, ret, mode, dur);
     ret
