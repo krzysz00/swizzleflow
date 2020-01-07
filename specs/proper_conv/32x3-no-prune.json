@@ -1,0 +1,83 @@
+{
+  "target": {"Builtin": "weight_conv"},
+  "target_info": [32, 3],
+  "steps": [
+    {
+      "step": {"Initial": {"From": 0}},
+      "out_shape": [34],
+      "lane": 0,
+      "prune": false,
+      "then_fold": false
+    },
+    {
+      "step": {"Initial": {"From": 34}},
+      "out_shape": [3],
+      "lane": 1,
+      "prune": false,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "load_trunc"}},
+      "lane": 0,
+      "out_shape": [32, 2],
+      "prune": false,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "broadcast"}},
+      "lane": 1,
+      "out_shape": [32, 3],
+      "prune": false,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "reg_select_no_consts"}},
+      "lane": 0,
+      "out_shape": [32, 3],
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "col_xforms_no_group"}},
+      "lane": 0,
+      "out_shape": [32, 3],
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "row_xforms_no_group"}},
+      "lane": 1,
+      "out_shape": [32, 3],
+      "prune": false,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "col_rots_no_group"}},
+      "lane": 0,
+      "out_shape": [32, 3],
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "row_rots_no_group"}},
+      "lane": 1,
+      "out_shape": [32, 3],
+      "prune": false,
+      "then_fold": false
+    },
+    {
+      "step": { "Merge": [0, 1] },
+      "lane": 0,
+      "out_shape": [32, 3],
+      "prune": true,
+      "then_fold": true
+    },
+    {
+      "step": { "Gather": { "Builtin": "cond_keep_no_consts"}},
+      "lane": 0,
+      "out_shape": [32, 3],
+      "prune": false,
+      "then_fold": true
+    }
+  ]
+}
