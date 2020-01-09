@@ -15,11 +15,12 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import parsing
+import extraction
 import pandas as pd
 
 def process(results):
-    matrix_info = parsing.matrix_stats(results)
-    search_info = parsing.select_categories(results, ["search"])
+    matrix_info = extraction.matrix_stats(results)
+    search_info = extraction.select_categories(results, ["search"])
     output = {}
     for spec, m in matrix_info.items():
         matrix_time = m["time"].sum() if len(m) > 0 else 0.0

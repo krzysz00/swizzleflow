@@ -15,14 +15,12 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import parsing
+import extraction
 import pandas as pd
 
 def process(results):
-    search_stats = parsing.search_stats(results)
-    for spec, df in search_stats.items():
-        df["spec"] = spec
-    df = pd.concat(search_stats.values())
-    return df
+    search_stats = extraction.search_stats(results)
+    return extraction.pull_spec_in(search_stats)
 
 if __name__ == '__main__':
     results = parsing.get_results()

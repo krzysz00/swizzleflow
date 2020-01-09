@@ -15,7 +15,6 @@
 
 import ast
 import fileinput
-import pandas as pd
 import re
 
 def parse_value(string):
@@ -64,23 +63,3 @@ def parse_file(path):
 
 def get_results():
     return parse_results(fileinput.input())
-
-def select_categories(results, categories=None):
-    if isinstance(results, dict):
-        return {k: select_categories(v, categories) for k, v in results.items()}
-    elif isinstance(results, list):
-        if categories is not None:
-            results = [x for x in results if x["category"] in categories]
-        frame = pd.DataFrame(results)
-        return frame
-    else:
-        raise ValueError("Unexpected results format")
-
-def matrix_stats(results):
-    return select_categories(results, ["build", "load", "mul", "union"])
-
-def search_stats(results):
-    ret = select_categories(results, ["stats"])
-    for v in ret.values():
-        v.drop(columns=["category", "key"], inplace=True)
-    return ret
