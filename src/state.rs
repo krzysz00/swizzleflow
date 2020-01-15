@@ -15,7 +15,7 @@
 use crate::misc::in_bounds;
 
 use ndarray::{Array,ArrayViewD,ArrayD,Ix,Axis};
-use ndarray::Dimension;
+use ndarray::{Dimension,Zip,FoldWhile};
 
 use std::fmt;
 use std::fmt::{Display,Formatter};
@@ -405,6 +405,26 @@ impl Gather {
 
     pub fn new_raw(data: ArrayD<OptIx>, name: String) -> Self {
         Self { data, name }
+    }
+
+    pub fn merge(&mut self, other: &Gather) -> bool {
+        let ret =
+            Zip::from(self.data.view_mut()).and(other.data.view())
+            .fold_while((), |_, s, o| {
+                if *s >= 0 {
+                    if s == o {
+                        FoldWhile::Continue(())
+                    }
+                    else {
+                        FoldWhile::Done(())
+                    }
+                }
+                else {
+                    *s = *o;
+                    FoldWhile::Continue(())
+                }
+            });
+        !ret.is_done() // No early return -> successful merge
     }
 }
 
