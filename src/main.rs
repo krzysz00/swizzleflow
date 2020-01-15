@@ -139,10 +139,12 @@ fn run() -> Result<()> {
                    default_value_os(DEFAULT_MATRIX_DIR.as_ref())
                    "Directory to store matrices in")
                   (@arg all: -a --all "Find all solutions")
+                  (@arg print: -p --print "Print trace of valid salutions")
                   (@arg specs: ... value_name("SPEC") "Specification files (stdin if none specified)")
         ).setting(clap::AppSettings::TrailingVarArg).get_matches();
 
     let synthesis_mode = if args.is_present("all") { Mode::All } else { Mode::First };
+    let print = args.is_present("print");
 
     let matrix_dir = Path::new(args.value_of_os("matrix_dir").unwrap()); // We have a default
     let specs: Vec<(ProblemDesc, String)> = match args.values_of_os("specs") {
@@ -172,7 +174,7 @@ fn run() -> Result<()> {
         let max_lanes = initial.len();
         matrix_load::add_matrices(matrix_dir, &mut levels, max_lanes)?;
         println!("Begin search");
-        synthesize(initial, &target, &levels, &expected_syms, synthesis_mode, &name);
+        synthesize(initial, &target, &levels, &expected_syms, synthesis_mode, print, &name);
         matrix_load::remove_matrices(&mut levels);
     }
     // The goal: (t, i) -> (t, i) merged with (t, i) -> (t, t - i)

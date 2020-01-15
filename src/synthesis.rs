@@ -132,7 +132,7 @@ type States<'d, 'l> = SmallVec<[Option<&'l ProgState<'d>>; 4]>;
 // Invariant: any level with pruning enabled has a corresponding pruning matrix available
 fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
               expected_syms: &[DomRef],
-              _cache: &ResultMap<'d>, tracker: &SearchLevelStats, print: bool) -> bool {
+              _cache: &ResultMap<'d>, tracker: &SearchLevelStats) -> bool {
     let mut did_lookup = false;
     let mut target_checks = 0;
     for (i, a) in expected_syms.iter().copied().enumerate() {
@@ -150,13 +150,6 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
                     // if did_lookup {
                     //     cache.write().unwrap().insert(current.clone(), false);
                     // }
-                    if print {
-                        println!("{}", current.name);
-                        println!("pruned candidate with ({}, {})=({}, {}) @ ({}, {})",
-                                 a, b, target.domain.get_value(a), target.domain.get_value(b),
-                                 t1, t2);
-                        println!("options {:?} {:?}", current.inv_state[a], current.inv_state[b]);
-                    }
                     tracker.pruned();
                     tracker.record_target_checks(target_checks);
                     return false;
@@ -196,7 +189,8 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                       levels: &'f [SynthesisLevel], expected_syms: &'f [Vec<DomRef>],
                       current_level: usize,
                       stats: &'f [SearchLevelStats], mode: Mode,
-                      caches: &'f [SearchResultCache<'d>]) -> bool {
+                      caches: &'f [SearchResultCache<'d>],
+                      print: bool) -> bool {
     let tracker = &stats[current_level];
 
     if current_level == levels.len() {
@@ -205,6 +199,9 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
         if current == target {
             tracker.success();
             println!("solution:{}", &current.name);
+            if print {
+                println!("success_path [level {} @ lane 0]\n{}", current_level, current);
+            }
             return true;
         }
         else {
@@ -216,10 +213,6 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
     let level = &levels[current_level];
     let lane = level.lane;
     let current: &ProgState<'d> = curr_states[lane].unwrap();
-    // if current_level == 2 || current_level == 3 {
-    //     println!("{}", curr_states[0].unwrap());
-    // }
-    // println!("[{} - {}] {}", current_level, level.ops.name, current);
     let cache = caches[current_level].clone();
     let proceed = |c: Option<&ProgState<'d>>| {
         tracker.checking();
@@ -229,14 +222,18 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                     if !viable(r, target,
                                level.matrix.as_ref().unwrap(),
                                &expected_syms[level.expected_syms],
-                               cache.as_ref(), &tracker, false) {
+                               cache.as_ref(), &tracker) {
                         return false;
                     }
                 }
                 let new_states = copy_replacing(&curr_states,
                                                 lane, c);
-                search(new_states, target, levels, expected_syms,
-                       current_level + 1, stats, mode, caches)
+                let ret = search(new_states, target, levels, expected_syms,
+                                 current_level + 1, stats, mode, caches, print);
+                if print && ret {
+                    println!("success_path [level {} @ lane {}]\n{}", current_level, lane, c.unwrap())
+                }
+                ret
             },
             None => {
                 tracker.failed();
@@ -314,13 +311,17 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                         if !viable(state, target,
                                    level.matrix.as_ref().unwrap(),
                                    &expected_syms[level.expected_syms],
-                                   cache.as_ref(), &tracker, false) {
+                                   cache.as_ref(), &tracker) {
                             return false;
                         }
                     }
 
-                    search(new_states, target, levels, expected_syms,
-                           current_level + 1, stats, mode, caches)
+                    let ret = search(new_states, target, levels, expected_syms,
+                                     current_level + 1, stats, mode, caches, print);
+                    if print && ret {
+                        println!("success_path [level {} @ lane {}]\n{}", current_level, lane, state)
+                    }
+                    ret
                 } else { tracker.failed(); false }
             }
             OpSetKind::Split(into, copies) => {
@@ -331,7 +332,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                     new_states[i] = to_copy;
                 }
                 search(new_states, target, levels, expected_syms,
-                       current_level + 1, stats, mode, caches)
+                       current_level + 1, stats, mode, caches, print)
             }
         };
     ret
@@ -341,6 +342,7 @@ pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
                   levels: &[SynthesisLevel],
                   expected_syms: &[Vec<DomRef>],
                   mode: Mode,
+                  print: bool,
                   spec_name: &str) -> bool {
 
     let n_levels = levels.len();
@@ -350,7 +352,7 @@ pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
 
     let states: States = SmallVec::from_iter(start.iter().map(|e| e.as_ref()));
     let start_time = Instant::now();
-    let ret = search(states, target, levels, expected_syms, 0, &stats, mode, &caches);
+    let ret = search(states, target, levels, expected_syms, 0, &stats, mode, &caches, print);
     let dur = time_since(start_time);
 
     for (idx, stats) in (&stats).iter().enumerate() {
