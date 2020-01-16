@@ -16,10 +16,9 @@ use ndarray::{Ix,Array2,Dimension};
 use std::io::{Write,Read};
 use std::io;
 use std::path::Path;
-use std::time::Instant;
 
 use crate::operators::OpSet;
-use crate::misc::{EPSILON,ShapeVec,time_since,open_file,create_file};
+use crate::misc::{EPSILON,ShapeVec,open_file,create_file};
 use crate::errors::*;
 
 use bit_vec::BitVec;
@@ -368,25 +367,6 @@ impl TransitionMatrix {
 impl From<DenseTransitionMatrix> for TransitionMatrix {
     fn from(d: DenseTransitionMatrix) -> Self {
         TransitionMatrix::Dense(d)
-    }
-}
-
-pub fn build_or_load_matrix(ops: &OpSet, path: impl AsRef<Path>) -> Result<TransitionMatrix> {
-    let path = path.as_ref();
-    if path.exists() {
-        let start = Instant::now();
-        let ret = TransitionMatrix::load_matrix(path)?;
-        let dur = time_since(start);
-        println!("load:{} density={}; time={};", path.display(), density(&ret), dur);
-        Ok(ret)
-    }
-    else {
-        let start = Instant::now();
-        let matrix = TransitionMatrix::Dense(build_mat(ops));
-        let dur = time_since(start);
-        matrix.store_matrix(path)?;
-        println!("build:{} density={}; time={};", path.display(), density(&matrix), dur);
-        Ok(matrix)
     }
 }
 

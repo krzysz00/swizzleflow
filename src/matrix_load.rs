@@ -16,10 +16,10 @@
 use crate::errors::*;
 
 use crate::operators::{OpSet, OpSetKind, SynthesisLevel, merge_adapter_gather};
-use crate::transition_matrix::{TransitionMatrix, build_or_load_matrix,
+use crate::transition_matrix::{TransitionMatrix, build_mat,
                                TransitionMatrixOps, density};
 use crate::multiply::sparsifying_mul;
-use crate::misc::{time_since};
+use crate::misc::{time_since,COLLECT_STATS};
 
 use std::collections::HashMap;
 use std::path::{Path,PathBuf};
@@ -27,6 +27,20 @@ use std::time::Instant;
 
 use itertools::Itertools;
 use itertools::iproduct;
+
+fn stats(tag: &str, path: &Path, matrix: &TransitionMatrix, dur: f64) {
+    if COLLECT_STATS {
+        println!("{}:{} n_ones={}; n_elems={}; density={}; time={};",
+                 tag, path.display(),
+                 matrix.n_ones(), matrix.n_elements(), density(matrix),
+                 dur);
+    }
+    else {
+        println!("{}:{} density={}; time={};",
+                 tag, path.display(),
+                 density(matrix), dur);
+    }
+}
 
 fn union_matrices(a: &mut TransitionMatrix, b: &TransitionMatrix) {
     let slots = a.slots();
@@ -43,13 +57,32 @@ fn union_matrices(a: &mut TransitionMatrix, b: &TransitionMatrix) {
     }
 }
 
+fn build_or_load_basis_mat(ops: &OpSet, path: impl AsRef<Path>) -> Result<TransitionMatrix> {
+    let path = path.as_ref();
+    if path.exists() {
+        let start = Instant::now();
+        let ret = TransitionMatrix::load_matrix(path)?;
+        let dur = time_since(start);
+        stats("load", path, &ret, dur);
+        Ok(ret)
+    }
+    else {
+        let start = Instant::now();
+        let matrix = TransitionMatrix::Dense(build_mat(ops));
+        let dur = time_since(start);
+        matrix.store_matrix(path)?;
+        stats("build", path, &matrix, dur);
+        Ok(matrix)
+    }
+}
+
 fn get_basis_mat<'a>(bases: &'a mut HashMap<String, TransitionMatrix>,
-                 directory: &Path, name: &str,
-                 ops: &OpSet) -> Result<&'a TransitionMatrix> {
+                     directory: &Path, name: &str,
+                     ops: &OpSet) -> Result<&'a TransitionMatrix> {
     if !bases.contains_key(name) {
         let mut basis_path = directory.to_path_buf();
         basis_path.push(name);
-        let ret = build_or_load_matrix(ops, &basis_path)?;
+        let ret = build_or_load_basis_mat(ops, &basis_path)?;
         bases.insert(name.to_owned(), ret);
     }
     Ok(bases.get(name).unwrap())
@@ -59,7 +92,7 @@ fn load_matrix(path: &Path) -> Result<TransitionMatrix> {
     let start = Instant::now();
     let mat = TransitionMatrix::load_matrix(path)?;
     let load_time = time_since(start);
-    println!("load:{} density={}; time={};", path.display(), density(&mat), load_time);
+    stats("load", path, &mat, load_time);
     Ok(mat)
 }
 
@@ -94,7 +127,7 @@ fn add_matrix(ops: &OpSet, lane: usize,
                 sparsifying_mul(prev, basis_matrix, &mut output);
                 let time = time_since(start);
 
-                println!("mul:{} density={}; time={};", names[lane], density(&output), time);
+                stats("mul", path.as_ref(), &output, time);
                 output.store_matrix(&path)?;
                 std::mem::swap(&mut output, prev);
             },
@@ -177,7 +210,7 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel],
                     let start = Instant::now();
                     let ret = TransitionMatrix::load_matrix(our_path.as_path())?;
                     let load_time = time_since(start);
-                    println!("load:{} density={}; time={};", our_path.display(), density(&ret), load_time);
+                    stats("load", our_path.as_ref(), &ret, load_time);
                     ret
                 }
                 else {
@@ -187,8 +220,8 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel],
                         union_matrices(&mut gather, prev_mats[idx].as_ref().unwrap());
                     }
                     let union_time = time_since(start);
-                    println!("union:{} density={}; time={};", our_path.display(),
-                             density(&gather), union_time);
+                    stats("union", our_path.as_ref(),
+                          &gather, union_time);
                     gather.store_matrix(&our_path)?;
                     gather
                 };
