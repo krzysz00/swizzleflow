@@ -4,9 +4,30 @@ We don't actually have any README content yet, but what this code will
 do is located in [the designdocument](https://www.overleaf.com/read/twvwgqfbxmyx).
 
 ## Build
-`cargo build` or `cargo build --release`
+`cargo build --release`
+To include more statistics about the operation of the algorithm at the cost of performance, use `cargo build --features stats --release`
 
-To run, execute `./target/{debug,release}/swizzleflow` or `cargo run`
+To run, execute `./target/release/swizzleflow` or `cargo run`
+The tool's arguments are
+```
+Krzysztof Drewniak <krzysd@cs.washington.edu> et al.
+Tool for synthesizing high-performance kernels from dataflow graph sketches
+
+USAGE:
+    swizzleflow [FLAGS] [OPTIONS] [SPEC]...
+
+FLAGS:
+    -a, --all        Find all solutions
+    -h, --help       Prints help information
+    -p, --print      Print trace of valid salutions
+    -V, --version    Prints version information
+
+OPTIONS:
+    -m, --matrix-dir <MATRIX_DIR>    Directory to store matrices in [default: matrices/]
+
+ARGS:
+    <SPEC>...    Specification files (stdin if none specified)
+```
 ## Licensing
 Copyright (C) 2019 Krzysztof Drewniak et al.
 
@@ -22,3 +43,4 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
+<
