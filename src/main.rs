@@ -68,9 +68,9 @@ pub mod errors {
                 description("axis lengths don't match")
                 display("axis lengths don't match: d{} (length {}) != d{} (length {})", ax1, len1, ax2, len2)
             }
-            WrongMergeArgs(expected: usize, got: usize) {
-                description("incorrect number of merge arguments")
-                display("incorrect number of merge arguments: expected {}, got {}", expected, got)
+            WrongStackArgs(expected: usize, got: usize) {
+                description("incorrect number of stack arguments")
+                display("incorrect number of stack arguments: expected {}, got {}", expected, got)
             }
             InvalidArrayData(shape: Vec<usize>) {
                 description("invalid array data"),
@@ -177,10 +177,6 @@ fn run() -> Result<()> {
         synthesize(initial, &target, &levels, &expected_syms, synthesis_mode, print, &name);
         matrix_load::remove_matrices(&mut levels);
     }
-    // The goal: (t, i) -> (t, i) merged with (t, i) -> (t, t - i)
-    // Except that that second one isn't a swizzle inventor xform
-    // We can fix it by adding k back though, at the cost of equivalence issues
-    // Then, merge these, transpose
     Ok(())
 }
 
@@ -250,7 +246,7 @@ mod tests {
         let s3 = state2.gather_by(&f2);
         let s4 = s3.gather_by(&r2);
 
-        let m = ProgState::merge_folding(&[&s2, &s4]).unwrap();
+        let m = ProgState::stack_folding(&[&s2, &s4]).unwrap();
         let b = m.gather_by(&broadcast);
 
         let mut retain = std::collections::BTreeMap::new();

@@ -15,7 +15,7 @@
 
 use crate::errors::*;
 
-use crate::operators::{OpSet, OpSetKind, SynthesisLevel, merge_adapter_gather};
+use crate::operators::{OpSet, OpSetKind, SynthesisLevel, stack_adapter_gather};
 use crate::transition_matrix::{TransitionMatrix, build_mat,
                                TransitionMatrixOps, density};
 use crate::multiply::sparsifying_mul;
@@ -175,7 +175,7 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel],
                 add_matrix(&level.ops, lane, &mut our_path, &mut names, &mut prev_mats,
                            &mut bases)?;
             },
-            OpSetKind::Merge(ref from, to) => {
+            OpSetKind::Stack(ref from, to) => {
                 if level.ops.fused_fold {
                     for lane in from.iter().copied() {
                         if lane != to {
@@ -188,7 +188,7 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel],
                     let out_shape = &level.ops.out_shape;
                     let in_shape = &level.ops.in_shape;
                     for lane in from.iter().copied() {
-                        let gather = vec![merge_adapter_gather(out_shape, lane)];
+                        let gather = vec![stack_adapter_gather(out_shape, lane)];
                         let name = gather[0].name.clone();
                         let opset = OpSetKind::Gathers(gather);
                         let ops = OpSet::new(name, opset,

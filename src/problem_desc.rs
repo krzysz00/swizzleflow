@@ -302,7 +302,7 @@ impl InitialDesc {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum SynthesisLevelKind {
     Gather(GathersDesc),
-    Merge(Vec<u64>),
+    Stack(Vec<u64>),
     Split(Vec<u64>),
     Initial(InitialDesc),
 }
@@ -312,7 +312,7 @@ impl SynthesisLevelKind {
         use SynthesisLevelKind::*;
         match self {
             Gather(_) => false,
-            Merge(_) => false,
+            Stack(_) => false,
             Split(_) => false,
             Initial(_) => true,
         }
@@ -324,7 +324,7 @@ impl SynthesisLevelKind {
         use SynthesisLevelKind::*;
         match self {
             Gather(desc) => desc.to_opset_kind(in_shape, out_shape, options),
-            Merge(from) => Ok(OpSetKind::Merge(from.iter().copied()
+            Stack(from) => Ok(OpSetKind::Stack(from.iter().copied()
                                                .map(|x| x as usize).collect(),
                                                lane)),
             Split(to) => Ok(OpSetKind::Split(lane,
@@ -386,7 +386,7 @@ impl SynthesisLevelDesc {
                     out_shape.pop();
                 }
             },
-            OpSetKind::Merge(from, _to) => {
+            OpSetKind::Stack(from, _to) => {
                 for idx in from.iter().copied() {
                     if let Some(Some(s)) = in_shapes.get(idx) {
                         if self.then_fold && s.as_slice() != out_shape.as_ref() {
@@ -403,7 +403,7 @@ impl SynthesisLevelDesc {
                     }
                 }
                 if !self.then_fold && out_shape[out_shape.len()-1] != from.len() {
-                    return Err(ErrorKind::WrongMergeArgs(out_shape[out_shape.len()-1],
+                    return Err(ErrorKind::WrongStackArgs(out_shape[out_shape.len()-1],
                                                          from.len()).into());
                 }
             }
@@ -424,11 +424,11 @@ impl SynthesisLevelDesc {
                         SynthesisLevelKind::Gather(GathersDesc::Builtin(s)) =>
                             s.to_owned().into(),
                         SynthesisLevelKind::Gather(_) => "custom_gathers".into(),
-                        SynthesisLevelKind::Merge(_) =>
+                        SynthesisLevelKind::Stack(_) =>
                             if self.then_fold {
-                                "merge_folding".into()
+                                "stack_folding".into()
                             } else {
-                                "merge".into()
+                                "stack".into()
                             },
                         SynthesisLevelKind::Split(_) => "split".into(),
                         SynthesisLevelKind::Initial(_) => "inital??".into(),
@@ -574,7 +574,7 @@ fn update_shape_info(level: &SynthesisLevel, shapes: &mut Vec<Option<Vec<usize>>
         OpSetKind::Gathers(_) => {
             extending_set(shapes, lane, Some(level.ops.out_shape.to_vec()));
         },
-        OpSetKind::Merge(from, to) => {
+        OpSetKind::Stack(from, to) => {
             for idx in from {
                 shapes[*idx] = None;
             }
@@ -602,7 +602,7 @@ fn update_expected_syms_idxs(ops: &OpSet, lane: usize,
                 *count += 1;
             }
         }
-        Merge(ref from, to) => {
+        Stack(ref from, to) => {
             for idx in from.iter().copied() {
                 expected_syms_idxs[idx] = None;
             }
@@ -633,19 +633,19 @@ fn update_expected_syms(level: &SynthesisLevel, domain: &Domain,
                 expected_syms_sets.push(new_set);
             }
         }
-        Merge(ref from, to) => {
-            let mut merge_set = BTreeSet::<DomRef>::new();
+        Stack(ref from, to) => {
+            let mut stack_set = BTreeSet::<DomRef>::new();
             for idx in from.iter().copied() {
                 match expected_syms_idxs[idx].take() {
-                    Some(v) => merge_set.extend(expected_syms_sets[v].iter()),
+                    Some(v) => stack_set.extend(expected_syms_sets[v].iter()),
                     None => ()
                 }
             }
             if level.ops.fused_fold {
-                merge_set = fold_expected(domain, &merge_set);
+                stack_set = fold_expected(domain, &stack_set);
             }
             expected_syms_idxs[to] = Some(expected_syms_sets.len());
-            expected_syms_sets.push(merge_set);
+            expected_syms_sets.push(stack_set);
         }
         Split(from, ref to) => {
             let idx = expected_syms_idxs[from].take();

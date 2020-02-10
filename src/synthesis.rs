@@ -286,17 +286,17 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                     }
                 }
             },
-            OpSetKind::Merge(from, to) => {
+            OpSetKind::Stack(from, to) => {
                 tracker.checking();
                 let to = *to;
-                let to_merge: SmallVec<[&ProgState; 6]> =
+                let to_stack: SmallVec<[&ProgState; 6]> =
                     from.iter().copied().map(
                         |idx| curr_states[idx].unwrap()).collect();
                 let next =
                     if level.ops.fused_fold {
-                        ProgState::merge_folding(&to_merge)
+                        ProgState::stack_folding(&to_stack)
                     } else {
-                        Some(ProgState::merge(&to_merge))
+                        Some(ProgState::stack(&to_stack))
                     };
                 if let Some(ref state) = next {
                     let mut new_states = copy_replacing(&curr_states,

@@ -33,7 +33,7 @@ pub type IdxVec = SmallVec<[usize; 3]>;
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum OpSetKind {
     Gathers(Vec<Gather>),
-    Merge(IdxVec, usize),
+    Stack(IdxVec, usize),
     Split(usize, IdxVec),
 }
 
@@ -42,14 +42,14 @@ impl OpSetKind {
         use OpSetKind::*;
         match self {
             Gathers(vec) => Some(vec),
-            Merge(_, _) | Split(_, _) => None,
+            Stack(_, _) | Split(_, _) => None,
         }
     }
 
-    pub fn merge_target(&self) -> Option<usize> {
+    pub fn stack_target(&self) -> Option<usize> {
         use OpSetKind::*;
         match self {
-            Merge(_, to) => Some(*to),
+            Stack(_, to) => Some(*to),
             Gathers(_) | Split(_, _) => None,
         }
     }
@@ -98,13 +98,13 @@ pub fn transpose_gather(out_shape: &[Ix], in_shape: &[Ix]) -> Gather {
     }, "tr")
 }
 
-pub fn merge_adapter_gather(out_shape: &[Ix], index: Ix) -> Gather {
+pub fn stack_adapter_gather(out_shape: &[Ix], index: Ix) -> Gather {
     let last = out_shape.len() - 1;
     let in_shape = &out_shape[0..last];
     Gather::new(out_shape, |idxs|
                 if idxs[last] != index { -1 }
                 else { to_opt_ix(&idxs[0..last], in_shape) },
-                format!("(merge){}", index))
+                format!("(stack){}", index))
 }
 
 pub fn identity(shape: &[Ix]) -> Result<OpSetKind> {

@@ -321,18 +321,18 @@ impl<'d> ProgState<'d> {
         Some(Self::making_inverse(self.domain, array, name))
     }
 
-    pub fn merge(states: &[&ProgState<'d>]) -> Self {
+    pub fn stack(states: &[&ProgState<'d>]) -> Self {
         let axis_number = Axis(states[0].state.ndim());
         let views: SmallVec<[ArrayViewD<DomRef>; 6]> =
             states.into_iter().map(|s| s.state.view().insert_axis(axis_number))
             .collect();
         let array = ndarray::stack(axis_number, &views).unwrap();
-        let name = format!("merge[{}]",
+        let name = format!("stack[{}]",
                                states.iter().map(|s| s.name.clone()).join(","));
         Self::making_inverse(states[0].domain, array, name)
     }
 
-    pub fn merge_folding(states: &[&ProgState<'d>]) -> Option<Self> {
+    pub fn stack_folding(states: &[&ProgState<'d>]) -> Option<Self> {
         let slices: SmallVec<[&[DomRef]; 6]> =
             states.into_iter().map(|s| s.state.as_slice().unwrap())
             .collect();
@@ -350,7 +350,7 @@ impl<'d> ProgState<'d> {
         let result = result?;
         let array = ArrayD::from_shape_vec(states[0].state.shape(),
                                            result).unwrap();
-        let name = format!("merge_fold[{}]",
+        let name = format!("stack_fold[{}]",
                            states.iter().map(|s| s.name.clone()).join(","));
         Some(Self::making_inverse(domain, array, name))
     }
@@ -407,7 +407,7 @@ impl Gather {
         Self { data, name }
     }
 
-    pub fn merge(&mut self, other: &Gather) -> bool {
+    pub fn stack(&mut self, other: &Gather) -> bool {
         let ret =
             Zip::from(self.data.view_mut()).and(other.data.view())
             .fold_while((), |_, s, o| {
@@ -424,7 +424,7 @@ impl Gather {
                     FoldWhile::Continue(())
                 }
             });
-        !ret.is_done() // No early return -> successful merge
+        !ret.is_done() // No early return -> successful stack
     }
 }
 
