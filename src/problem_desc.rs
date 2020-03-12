@@ -381,7 +381,7 @@ impl SynthesisLevelDesc {
 
         // Post-processing
         match &opset {
-            OpSetKind::Gathers(_, summary) => {
+            OpSetKind::Gathers(_, _) => {
                 if self.then_fold {
                     out_shape.pop();
                 }
