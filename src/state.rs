@@ -407,12 +407,17 @@ impl Gather {
         Self { data, name }
     }
 
-    pub fn stack(&mut self, other: &Gather) -> bool {
+    pub fn new_blank(dest_shape: &[Ix], name: Option<String>) -> Self {
+        let array = ArrayD::from_elem(dest_shape, -1);
+        Self { data: array, name: name.unwrap_or("forget".into()) }
+    }
+
+    pub fn merge_with(&mut self, other: &Gather) -> bool {
         let ret =
             Zip::from(self.data.view_mut()).and(other.data.view())
             .fold_while((), |_, s, o| {
                 if *s >= 0 {
-                    if s == o {
+                    if *o < 0 || s == o {
                         FoldWhile::Continue(())
                     }
                     else {
@@ -424,7 +429,7 @@ impl Gather {
                     FoldWhile::Continue(())
                 }
             });
-        !ret.is_done() // No early return -> successful stack
+        !ret.is_done() // No early return -> successful merge
     }
 }
 

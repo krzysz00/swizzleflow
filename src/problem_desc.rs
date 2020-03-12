@@ -381,7 +381,7 @@ impl SynthesisLevelDesc {
 
         // Post-processing
         match &opset {
-            OpSetKind::Gathers(_) => {
+            OpSetKind::Gathers(_, summary) => {
                 if self.then_fold {
                     out_shape.pop();
                 }
@@ -571,7 +571,7 @@ fn update_shape_info(level: &SynthesisLevel, shapes: &mut Vec<Option<Vec<usize>>
     let lane = level.lane;
 
     match &level.ops.ops {
-        OpSetKind::Gathers(_) => {
+        OpSetKind::Gathers(_, _) => {
             extending_set(shapes, lane, Some(level.ops.out_shape.to_vec()));
         },
         OpSetKind::Stack(from, to) => {
@@ -596,7 +596,7 @@ fn update_expected_syms_idxs(ops: &OpSet, lane: usize,
                              count: &mut usize) {
     use OpSetKind::*;
     match ops.ops {
-        Gathers(_) => {
+        Gathers(_, _) => {
             if ops.fused_fold {
                 expected_syms_idxs[lane] = Some(*count);
                 *count += 1;
@@ -624,7 +624,7 @@ fn update_expected_syms(level: &SynthesisLevel, domain: &Domain,
     use OpSetKind::*;
     let lane = level.lane;
     match level.ops.ops {
-        Gathers(_) => {
+        Gathers(_, _) => {
             if level.ops.fused_fold {
                 let new_set = fold_expected(domain,
                                             &expected_syms_sets[

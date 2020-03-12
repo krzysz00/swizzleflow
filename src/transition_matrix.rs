@@ -56,7 +56,7 @@ pub trait TransitionMatrixOps: Sized + std::fmt::Debug + std::clone::Clone {
 
 fn to_index(i1: &[Ix], i2: &[Ix], ishape: &[Ix], j1: &[Ix], j2: &[Ix], jshape: &[Ix]) -> Ix {
     let mut ret = 0;
-    for (is, ss) in [(i1, ishape), (i2, ishape), (j1, jshape), (j2, jshape)].into_iter() {
+    for (is, ss) in [(i1, ishape), (i2, ishape), (j1, jshape), (j2, jshape)].iter() {
         for (v, scale) in is.iter().zip(ss.iter()) {
             // ret starts at 0 so the initial case is fine
             ret = (ret * scale) + v

@@ -171,7 +171,7 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel],
         }
 
         match level.ops.ops {
-            OpSetKind::Gathers(ref _swiz) => {
+            OpSetKind::Gathers(ref _swiz, _) => {
                 add_matrix(&level.ops, lane, &mut our_path, &mut names, &mut prev_mats,
                            &mut bases)?;
             },
@@ -190,7 +190,7 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel],
                     for lane in from.iter().copied() {
                         let gather = vec![stack_adapter_gather(out_shape, lane)];
                         let name = gather[0].name.clone();
-                        let opset = OpSetKind::Gathers(gather);
+                        let opset = OpSetKind::new_gathers(gather);
                         let ops = OpSet::new(name, opset,
                                              in_shape.clone(), out_shape.clone(),
                                              false);

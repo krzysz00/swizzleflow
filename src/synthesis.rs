@@ -245,7 +245,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
     let ops = &level.ops.ops; // Get at the actual vector of gathers
     let ret =
         match ops {
-            OpSetKind::Gathers(gathers) => {
+            OpSetKind::Gathers(gathers, _) => {
                 if level.ops.fused_fold {
                     match mode {
                         Mode::All => {

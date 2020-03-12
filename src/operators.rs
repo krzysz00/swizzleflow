@@ -32,16 +32,47 @@ pub type IdxVec = SmallVec<[usize; 3]>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum OpSetKind {
-    Gathers(Vec<Gather>),
+    // gathers, summary - choose one of the gathers in gathers
+    // Summary is optionally a gather that is a superset of the behavior of all the `gathers`
+    // if one exists (that is, if the gathers in the vector only differ by whether they don't perform
+    // certain reads)
+    Gathers(Vec<Gather>, Option<Gather>),
+    // [from, ...], to - merge the `from` lanes into the `to` lanes,
+    // stacking the tensors on top of each ohter
     Stack(IdxVec, usize),
+    // from, [to ...] - copy lane `from` to the `to` lanes
     Split(usize, IdxVec),
 }
 
 impl OpSetKind {
+    pub fn new_gathers(gathers: Vec<Gather>) -> Self {
+        let summary = if gathers.is_empty() {
+            None
+        }
+        else {
+            let mut all_merged = gathers[0].clone();
+            if (&gathers[1..]).iter().fold(true, |acc, g| acc && all_merged.merge_with(g)) {
+                Some(all_merged)
+            }
+            else {
+                None
+            }
+        };
+        Self::Gathers(gathers, summary)
+    }
+
     pub fn gathers(&self) -> Option<&[Gather]> {
         use OpSetKind::*;
         match self {
-            Gathers(vec) => Some(vec),
+            Gathers(vec, _) => Some(vec),
+            Stack(_, _) | Split(_, _) => None,
+        }
+    }
+
+    pub fn summary(&self) -> Option<&Gather> {
+        use OpSetKind::*;
+        match self {
+            Gathers(_, summary) => summary.as_ref(),
             Stack(_, _) | Split(_, _) => None,
         }
     }
@@ -50,14 +81,14 @@ impl OpSetKind {
         use OpSetKind::*;
         match self {
             Stack(_, to) => Some(*to),
-            Gathers(_) | Split(_, _) => None,
+            Gathers(_, _) | Split(_, _) => None,
         }
     }
 }
 
 impl From<Vec<Gather>> for OpSetKind {
     fn from(gathers: Vec<Gather>) -> OpSetKind {
-        OpSetKind::Gathers(gathers)
+        OpSetKind::new_gathers(gathers)
     }
 }
 
@@ -108,11 +139,11 @@ pub fn stack_adapter_gather(out_shape: &[Ix], index: Ix) -> Gather {
 }
 
 pub fn identity(shape: &[Ix]) -> Result<OpSetKind> {
-    Ok(OpSetKind::Gathers(vec![identity_gather(shape)]))
+    Ok(OpSetKind::new_gathers(vec![identity_gather(shape)]))
 }
 
 pub fn transpose(out_shape: &[Ix], in_shape: &[Ix]) -> Result<OpSetKind> {
-    Ok(OpSetKind::Gathers(vec![transpose_gather(out_shape, in_shape)]))
+    Ok(OpSetKind::new_gathers(vec![transpose_gather(out_shape, in_shape)]))
 }
 
 #[derive(Debug)]
@@ -127,5 +158,32 @@ pub struct SynthesisLevel {
 impl SynthesisLevel {
     pub fn new(ops: OpSet, lane: usize, expected_syms: usize, prune: bool) -> Self {
         Self {ops , matrix: None, lane, expected_syms, prune }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn summary_one() {
+        let gather = super::identity(&[3, 3]).unwrap();
+        assert_eq!(&gather.gathers().unwrap()[0],
+                   gather.summary().unwrap());
+    }
+
+    #[test]
+    fn summary_fails() {
+        let gathers = super::OpSetKind::new_gathers(
+            vec![super::identity_gather(&[2, 3]),
+                 super::transpose_gather(&[2, 3], &[3, 2])]);
+        assert_eq!(gathers.summary(), None)
+    }
+
+    #[test]
+    fn summary_passes() {
+        let map = std::collections::BTreeMap::new();
+        let cond_keep = super::select::cond_keep(&[4, 3], &[0, 1, -1],
+                                                 &map).unwrap();
+        let identity = super::identity_gather(&[4, 3]);
+        assert_eq!(cond_keep.summary(), Some(&identity));
     }
 }
