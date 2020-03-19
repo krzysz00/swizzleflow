@@ -18,10 +18,13 @@ use crate::operators::{SynthesisLevel,OpSet, OpSetKind,
                        identity, transpose};
 use crate::state::{ProgState, Domain, Value, Symbolic, DomRef,
                    Gather, to_opt_ix};
+
 use crate::operators::swizzle::{simple_xforms, simple_rotations,
                                 all_xforms, all_rotations};
 use crate::operators::select::{reg_select, cond_keep, general_select};
 use crate::operators::load::{load_rep, load_trunc, load_grid_2d, broadcast};
+use crate::operators::hvx::{hvx_2x2};
+
 use crate::expected_syms_util::fold_expected;
 use crate::misc::{ShapeVec, extending_set};
 
@@ -34,6 +37,9 @@ use ndarray::{Array, ArrayD, Ix};
 use smallvec::SmallVec;
 
 type OptionMap = BTreeMap<String, Vec<isize>>;
+fn int_option(options: Option<&OptionMap>, key: &str) -> Option<isize> {
+    options.and_then(|m| m.get(key)).and_then(|o| o.get(0).copied())
+}
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum GathersDesc {
@@ -72,23 +78,21 @@ impl GathersDesc {
                         load_grid_2d(in_shape, out_shape)
                     }
                     "broadcast" => {
-                        let group = options
-                            .and_then(|m| m.get("group"))
-                            .and_then(|o| o.get(0).copied()).unwrap_or(0);
+                        let group = int_option(options, "group").unwrap_or(0);
                         broadcast(in_shape, out_shape, group as usize)
                     },
                     "rots_no_group" | "rots" => {
                         if out_shape != in_shape {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
-                        if let Some(m) = options {
-                            let main_idx = m.get("main").and_then(|v| v.get(0).copied())
+                        if options.is_some() {
+                            let main_idx = int_option(options, "main")
                                 .ok_or_else(|| ErrorKind::MissingOption("main".to_string()))?
                                 as usize;
-                            let second_idx = m.get("second").and_then(|v| v.get(0).copied())
+                            let second_idx = int_option(options, "second")
                                 .ok_or_else(|| ErrorKind::MissingOption("second".to_string()))?
                                 as usize;
-                            let out_idx = m.get("out").and_then(|v| v.get(0).copied())
+                            let out_idx = int_option(options, "out")
                                 .ok_or_else(|| ErrorKind::MissingOption("out".to_string()))?
                                 as usize;
                             if s == "rots_no_group" {
@@ -106,14 +110,14 @@ impl GathersDesc {
                         if out_shape != in_shape {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
-                        if let Some(m) = options {
-                            let main_idx = m.get("main").and_then(|v| v.get(0).copied())
+                        if options.is_some() {
+                            let main_idx = int_option(options, "main")
                                 .ok_or_else(|| ErrorKind::MissingOption("main".to_string()))?
                                 as usize;
-                            let second_idx = m.get("second").and_then(|v| v.get(0).copied())
+                            let second_idx = int_option(options, "second")
                                 .ok_or_else(|| ErrorKind::MissingOption("second".to_string()))?
                                 as usize;
-                            let out_idx = m.get("out").and_then(|v| v.get(0).copied())
+                            let out_idx = int_option(options, "out")
                                 .ok_or_else(|| ErrorKind::MissingOption("out".to_string()))?
                                 as usize;
                             if s == "rots_no_group" {
@@ -218,8 +222,7 @@ impl GathersDesc {
                         cond_keep(out_shape, consts, &restrict)
                     },
                     "general_select_no_consts" | "general_select" => {
-                        let axis = options.and_then(|m| m.get("axis"))
-                            .and_then(|v| v.get(0).copied())
+                        let axis = int_option(options, "axis")
                             .ok_or_else(|| ErrorKind::MissingOption("axis".to_string()))?
                             as usize;
                         let n = out_shape[axis] as isize;
@@ -239,6 +242,13 @@ impl GathersDesc {
                         general_select(out_shape, in_shape, axis,
                                        consts, &dims)
                     },
+                    "hvx_2x2" => {
+                        hvx_2x2(out_shape, in_shape,
+                                int_option(options, "u").unwrap_or(0) as usize,
+                                int_option(options, "v").unwrap_or(1) as usize,
+                                int_option(options, "d").unwrap_or(0) as usize,
+                                int_option(options, "dd").unwrap_or(1) as usize)
+                    }
                     other => {
                         return Err(ErrorKind::UnknownBasisType(other.to_owned()).into())
                     }

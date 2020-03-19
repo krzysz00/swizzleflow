@@ -177,6 +177,10 @@ fn run() -> Result<()> {
         synthesize(initial, &target, &levels, &expected_syms, synthesis_mode, print, &name);
         matrix_load::remove_matrices(&mut levels);
     }
+    let ops = crate::operators::hvx::hvx_2x2(&[2, 3], &[2, 3], 0, 1, 0, 1).unwrap();
+    for i in ops.gathers().unwrap() {
+        println!("{}", i);
+    }
     Ok(())
 }
 
