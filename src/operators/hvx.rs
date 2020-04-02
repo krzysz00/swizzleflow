@@ -15,7 +15,7 @@
 use crate::errors::*;
 
 use crate::state::{Gather,to_opt_ix};
-use crate::operators::OpSetKind;
+use crate::operators::{OpSetKind, identity_gather};
 
 use ndarray::Ix;
 
@@ -57,6 +57,33 @@ where T: Fn(Ix, Ix, Ix) -> (Ix, Ix) {
     }, name)
 }
 
+fn swap_regs(u: Ix, v: Ix, d: Ix, dd: Ix,
+             in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
+    generalize_instr(|r, i, _| (if r == 0 { 1 } else { 0 }, i),
+                     u, Some(v), d, Some(dd), in_shape, out_shape, "swap_regs")
+}
+
+fn vshuffo(u: Ix, v: Ix, d: Ix,
+           in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
+    generalize_instr(
+        |_r, i, _| (if i % 2 == 0 { 1} else { 0 }, i / 2 + 1),
+        u, Some(v), d, None, in_shape, out_shape, "vsuffo")
+}
+
+fn vshuffe(u: Ix, v: Ix, d: Ix,
+           in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
+    generalize_instr(
+        |_r, i, _| (if i % 2 == 0 { 1 } else { 0 }, i / 2 ),
+        u, Some(v), d, None, in_shape, out_shape, "vsuffe")
+}
+
+fn vshuffoe(u: Ix, v: Ix, d: Ix, dd: Ix,
+            in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
+    generalize_instr(
+        |r, i, _| (if i % 2 == 0 { 1 } else { 0 }, i / 2 + (if r == 0 { 1 } else { 0 })),
+        u, Some(v), d, Some(dd), in_shape, out_shape, "vshuffoe")
+}
+
 fn vswap(mask: usize, u: Ix, v: Ix, d: Ix, dd: Ix,
          in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
     // If the i-th bit of the mask is 1, register 0 in the destination gets
@@ -67,8 +94,14 @@ fn vswap(mask: usize, u: Ix, v: Ix, d: Ix, dd: Ix,
                      format!("vswap({})", mask))
 }
 
-pub fn hvx_2x2(out_shape: &[Ix], in_shape: &[Ix],
-               u: Ix, v: Ix, d: Ix, dd: Ix) -> Result<OpSetKind> {
+fn vmux(mask: usize, u: Ix, v: Ix, d: Ix,
+        in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
+    generalize_instr(|_r, i, _| ((mask >> i) & 1, i),
+                     u, Some(v), d, None, in_shape, out_shape,
+                     format!("vmux({})", mask))
+}
+
+fn hvx_errs(in_shape: &[Ix], out_shape: &[Ix]) -> Result<()> {
     if out_shape.len() != 2 {
         return Err(ErrorKind::InvalidShapeDim(out_shape.to_owned(), 2).into())
     }
@@ -78,11 +111,36 @@ pub fn hvx_2x2(out_shape: &[Ix], in_shape: &[Ix],
     if out_shape[1] != in_shape[1] {
         return Err(ErrorKind::AxisLengthMismatch(1, out_shape[1], 1, in_shape[1]).into());
     }
+    Ok(())
+}
 
+pub fn hvx_2x2(out_shape: &[Ix], in_shape: &[Ix],
+               u: Ix, v: Ix, d: Ix, dd: Ix) -> Result<OpSetKind> {
+    hvx_errs(in_shape, out_shape)?;
     let n = in_shape[1];
     let mut ret = HashSet::new();
+    ret.insert(identity_gather(in_shape));
+    ret.insert(vshuffoe(u, v, d, dd, in_shape, out_shape));
+    ret.insert(swap_regs(u, v, d, dd, in_shape, out_shape));
 
     ret.extend((0..(1 << n)).map(|i| vswap(i, u, v, d, dd,
                                            in_shape, out_shape)));
     return Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
+
+pub fn hvx_2x1(out_shape: &[Ix], in_shape: &[Ix],
+               u: Ix, v: Ix, d: Ix) -> Result<OpSetKind> {
+    hvx_errs(in_shape, out_shape)?;
+
+    let n = in_shape[1];
+    let mut ret = HashSet::new();
+    ret.insert(identity_gather(in_shape));
+    ret.insert(vshuffo(u, v, d, in_shape, out_shape));
+    ret.insert(vshuffe(u, v, d, in_shape, out_shape));
+
+    ret.extend((0..(1 << n)).map(|i| vmux(i, u, v, d,
+                                          in_shape, out_shape)));
+    return Ok(ret.into_iter().collect::<Vec<_>>().into())
+}
+
+// TODO, get the 1x1 permutation network thing working

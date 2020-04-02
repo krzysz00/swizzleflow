@@ -23,7 +23,7 @@ use crate::operators::swizzle::{simple_xforms, simple_rotations,
                                 all_xforms, all_rotations};
 use crate::operators::select::{reg_select, cond_keep, general_select};
 use crate::operators::load::{load_rep, load_trunc, load_grid_2d, broadcast};
-use crate::operators::hvx::{hvx_2x2};
+use crate::operators::hvx::{hvx_2x2,hvx_2x1};
 
 use crate::expected_syms_util::fold_expected;
 use crate::misc::{ShapeVec, extending_set};
@@ -45,6 +45,30 @@ fn int_option(options: Option<&OptionMap>, key: &str) -> Option<isize> {
 pub enum GathersDesc {
     Builtin(String),
     Custom(Vec<(String, Vec<u64>)>)
+}
+
+fn parse_hvx_opts(options: Option<&OptionMap>) -> (usize, usize, usize, usize) {
+    if let Some(map) = options {
+        let mut u = 0;
+        let mut v = 1;
+        let mut d = 0;
+        let mut dd = 1;
+        if let Some(ref on) = map.get("on") {
+            match on.as_slice() {
+                [v0] => { u = *v0; d = *v0; },
+                [] => (),
+                s => { u = s[0]; v = s[1]; d = s[0]; dd = s[1]; }
+            }
+        }
+        u = int_option(options, "u").unwrap_or(u);
+        v = int_option(options, "v").unwrap_or(v);
+        d = int_option(options, "d").unwrap_or(d);
+        dd = int_option(options, "dd").unwrap_or(dd);
+        (u as usize, v as usize, d as usize, dd as usize)
+    }
+    else {
+        (0, 1, 0, 1)
+    }
 }
 
 impl GathersDesc {
@@ -243,12 +267,14 @@ impl GathersDesc {
                                        consts, &dims)
                     },
                     "hvx_2x2" => {
-                        hvx_2x2(out_shape, in_shape,
-                                int_option(options, "u").unwrap_or(0) as usize,
-                                int_option(options, "v").unwrap_or(1) as usize,
-                                int_option(options, "d").unwrap_or(0) as usize,
-                                int_option(options, "dd").unwrap_or(1) as usize)
+                        let (u, v, d, dd) = parse_hvx_opts(options);
+                        hvx_2x2(out_shape, in_shape, u, v, d, dd)
                     }
+                    "hvx_2x1" => {
+                        let (u, v, d, _) = parse_hvx_opts(options);
+                        hvx_2x1(out_shape, in_shape, u, v, d)
+                    }
+
                     other => {
                         return Err(ErrorKind::UnknownBasisType(other.to_owned()).into())
                     }
