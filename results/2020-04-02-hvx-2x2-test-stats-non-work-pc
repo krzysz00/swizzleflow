@@ -1,0 +1,12 @@
+spec:specs/hvx_test_1.json
+build:matrices/4,8-hvx_2x2{on[1|2]}-4,8 n_ones=2688; n_elems=1048576; density=0.0025634765625; time=0.021908494;
+Using newly-built matrices/4,8-hvx_2x2{on[1|2]}-4,8
+mul_stats:: probes_success=[(1, 2872), (2, 644), (3, 356), (4, 132), (5, 252)]; probes_failure=[(1, 261888), (2, 269544), (3, 285552), (4, 56952), (5, 170384)];
+mul:matrices/4,8-hvx_2x2{on[1|2]}_4,8-hvx_2x2{on[1|2]}-4,8 n_ones=4256; n_elems=1048576; density=0.004058837890625; time=0.016535704;
+Begin search
+solution:init;id;vshuffoe;vswap(223)
+stats:0 name=reshape; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1; target_checks=[];
+stats:1 name=hvx_2x2{on[1|2]}; lane=0; tested=257; found=0; failed=0; pruned=256; continued=1; target_checks=[(8, 128), (10, 128)];
+stats:2 name=hvx_2x2{on[1|2]}; lane=0; tested=257; found=0; failed=0; pruned=0; continued=257; target_checks=[];
+stats:3 name=(last); lane=0; tested=257; found=1; failed=256; pruned=0; continued=0; target_checks=[];
+search:specs/hvx_test_1.json success=true; mode=All; time=0.000732386;

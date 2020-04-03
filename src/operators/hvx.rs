@@ -66,21 +66,21 @@ fn swap_regs(u: Ix, v: Ix, d: Ix, dd: Ix,
 fn vshuffo(u: Ix, v: Ix, d: Ix,
            in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
     generalize_instr(
-        |_r, i, _| (if i % 2 == 0 { 1} else { 0 }, i / 2 + 1),
+        |_r, i, _| (if i % 2 == 0 { 1 } else { 0 }, (i & !1) + 1),
         u, Some(v), d, None, in_shape, out_shape, "vsuffo")
 }
 
 fn vshuffe(u: Ix, v: Ix, d: Ix,
            in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
     generalize_instr(
-        |_r, i, _| (if i % 2 == 0 { 1 } else { 0 }, i / 2 ),
+        |_r, i, _| (if i % 2 == 0 { 1 } else { 0 }, i & !1 ),
         u, Some(v), d, None, in_shape, out_shape, "vsuffe")
 }
 
 fn vshuffoe(u: Ix, v: Ix, d: Ix, dd: Ix,
             in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
     generalize_instr(
-        |r, i, _| (if i % 2 == 0 { 1 } else { 0 }, i / 2 + (if r == 0 { 1 } else { 0 })),
+        |r, i, _| (if i % 2 == 0 { 1 } else { 0 }, (i & !1) + (if r == 0 { 1 } else { 0 })),
         u, Some(v), d, Some(dd), in_shape, out_shape, "vshuffoe")
 }
 
@@ -89,14 +89,14 @@ fn vswap(mask: usize, u: Ix, v: Ix, d: Ix, dd: Ix,
     // If the i-th bit of the mask is 1, register 0 in the destination gets
     // from the 1st source register (v), and register 1 reads from register 0 (u)
     // So we need an xnor
-    generalize_instr(|r, i, _| ((r ^ (mask >> i)) & 1, i),
+    generalize_instr(|r, i, _| (!(r ^ (mask >> i)) & 1, i),
                      u, Some(v), d, Some(dd), in_shape, out_shape,
                      format!("vswap({})", mask))
 }
 
 fn vmux(mask: usize, u: Ix, v: Ix, d: Ix,
         in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
-    generalize_instr(|_r, i, _| ((mask >> i) & 1, i),
+    generalize_instr(|_r, i, _| (!(mask >> i) & 1, i),
                      u, Some(v), d, None, in_shape, out_shape,
                      format!("vmux({})", mask))
 }
