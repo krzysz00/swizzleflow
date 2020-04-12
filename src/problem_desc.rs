@@ -23,7 +23,7 @@ use crate::operators::swizzle::{simple_xforms, simple_rotations,
                                 all_xforms, all_rotations};
 use crate::operators::select::{reg_select, cond_keep, general_select};
 use crate::operators::load::{load_rep, load_trunc, load_grid_2d, broadcast};
-use crate::operators::hvx::{hvx_2x2,hvx_2x1};
+use crate::operators::hvx::{hvx_2x2, hvx_2x1, HvxRegs};
 
 use crate::expected_syms_util::fold_expected;
 use crate::misc::{ShapeVec, extending_set};
@@ -47,28 +47,103 @@ pub enum GathersDesc {
     Custom(Vec<(String, Vec<u64>)>)
 }
 
-fn parse_hvx_opts(options: Option<&OptionMap>) -> (usize, usize, usize, usize) {
-    if let Some(map) = options {
-        let mut u = 0;
-        let mut v = 1;
-        let mut d = 0;
-        let mut dd = 1;
-        if let Some(ref on) = map.get("on") {
-            match on.as_slice() {
-                [v0] => { u = *v0; d = *v0; },
-                [] => (),
-                s => { u = s[0]; v = s[1]; d = s[0]; dd = s[1]; }
+fn parse_hvx_opts(options: Option<&OptionMap>, two_in: bool, two_out: bool,
+                  in_shape: &[Ix], out_shape: &[Ix]) -> Result<(Vec<HvxRegs>, bool)> {
+    let permutations = options.map(|m| m.contains_key("swaps")).unwrap_or(false);
+    let inplace = options.map(|m| m.contains_key("inplace")).unwrap_or(false);
+    let fresh = options.map(|m| m.contains_key("fresh")).unwrap_or(false);
+    let all = !inplace && !fresh;
+
+    let fixed_ins = options.and_then(|m| m.get("in"));
+    let fixed_outs = options.and_then(|m| m.get("out"));
+
+    let n_in = in_shape[0];
+    let n_out = out_shape[0];
+
+    let ins: Vec<(usize, Option<usize>)> =
+        if two_in {
+            if let Some(us) = fixed_ins {
+                if us.len() % 2 != 0 {
+                    return Err(ErrorKind::BadOptionLength("in".into(), us.len() + 1).into());
+                }
+                us.chunks(2).map(|s| (s[0] as usize, Some(s[1] as usize))).collect()
+            }
+            else {
+                if n_in % 2 != 0 {
+                    println!("WARNING: Implicit register {} with 0s in hvx basis with two inputs"
+                             , n_in - 1);
+                }
+                (0..n_in/2).map(|i| (2 * i, Some(2 * i + 1))).collect()
             }
         }
-        u = int_option(options, "u").unwrap_or(u);
-        v = int_option(options, "v").unwrap_or(v);
-        d = int_option(options, "d").unwrap_or(d);
-        dd = int_option(options, "dd").unwrap_or(dd);
-        (u as usize, v as usize, d as usize, dd as usize)
+        else {
+            if let Some(us) = fixed_ins {
+                us.iter().copied().map(|i| (i as usize, None)).collect()
+            }
+            else {
+                (0..n_in).map(|i| (i, None)).collect()
+            }
+        };
+
+    let outs: Vec<(usize, Option<usize>)> =
+        if fresh {
+            if n_out <= n_in {
+                let mut wanted_shape = out_shape.to_vec();
+                wanted_shape[0] = n_in + (if two_out { 2 + n_in % 2 } else { 1 });
+                return Err(ErrorKind::ShapeMismatch(out_shape.to_vec(),
+                                                    wanted_shape).into());
+            }
+            let delta = n_out - n_in;
+            if two_out {
+                if delta % 2 != 0 {
+                    let mut wanted_shape = in_shape.to_vec();
+                    wanted_shape[0] += 1;
+                    return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(),
+                                                        wanted_shape).into());
+                }
+                (0..delta/2).map(|i| (n_in + 2 * i,
+                                      Some(n_in + 2 * i + 1)))
+                    .collect()
+            }
+            else {
+                (0..delta).map(|i| (i, None)).collect()
+            }
+        }
+        else if let Some(ds) = fixed_outs {
+            if two_out {
+                if ds.len() % 2 != 0 {
+                    return Err(ErrorKind::BadOptionLength("out".into(),
+                                                          ds.len() + 1).into());
+                }
+                ds.chunks(2).map(|s| (s[0] as usize, Some(s[1] as usize))).collect()
+            }
+            else {
+                ds.iter().copied().map(|i| (i as usize, None)).collect()
+            }
+        }
+        else if all {
+            if two_out {
+                (0..n_out/2).map(|i| (2 * i, Some(2 * i + 1))).collect()
+            }
+            else {
+                (0..n_out).map(|i| (i, None)).collect()
+            }
+        }
+        else { vec![] };
+
+    // The +1 is for inplace, and is added always just to be safe
+    let mut ret = Vec::with_capacity(ins.len() * (outs.len() + 1));
+    for (u, v) in ins {
+        if inplace {
+            let d = u;
+            let dd = if two_out { Some(u + 1) } else { None };
+            ret.push(HvxRegs { u, v, d, dd });
+        }
+        for &(d, dd) in &outs {
+            ret.push(HvxRegs {u, v, d, dd });
+        }
     }
-    else {
-        (0, 1, 0, 1)
-    }
+    Ok((ret, permutations))
 }
 
 impl GathersDesc {
@@ -267,12 +342,18 @@ impl GathersDesc {
                                        consts, &dims)
                     },
                     "hvx_2x2" => {
-                        let (u, v, d, dd) = parse_hvx_opts(options);
-                        hvx_2x2(out_shape, in_shape, u, v, d, dd)
+                        let (regs, swaps) =
+                            parse_hvx_opts(options,
+                                           true, true,
+                                           in_shape, out_shape)?;
+                        hvx_2x2(out_shape, in_shape, &regs, swaps)
                     }
                     "hvx_2x1" => {
-                        let (u, v, d, _) = parse_hvx_opts(options);
-                        hvx_2x1(out_shape, in_shape, u, v, d)
+                        let (regs, swaps) =
+                            parse_hvx_opts(options,
+                                           true, false,
+                                           in_shape, out_shape)?;
+                        hvx_2x1(out_shape, in_shape, &regs, swaps)
                     }
 
                     other => {

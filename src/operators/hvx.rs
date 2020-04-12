@@ -20,13 +20,36 @@ use crate::operators::{OpSetKind, identity_gather};
 use ndarray::Ix;
 
 use std::collections::HashSet;
+use std::fmt;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct HvxRegs {
+    pub u: usize,
+    pub v: Option<usize>,
+    pub d: usize,
+    pub dd: Option<usize>
+}
+
+impl fmt::Display for HvxRegs {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.d)?;
+        if let Some(dd) = self.dd {
+            write!(f, ",{}", dd)?;
+        }
+        write!(f, "<-{}", self.u)?;
+        if let Some(v) = self.v {
+            write!(f, ",{}", v)?;
+        }
+        Ok(())
+    }
+}
 
 fn opt_eq<T: Eq>(a: Option<T>, b: T) -> bool {
     a.map(|e| e == b).unwrap_or(false)
 }
 
 fn generalize_instr<T>(map: T,
-                       u: Ix, v: Option<Ix>, d: Ix, dd: Option<Ix>,
+                       &HvxRegs {u, v, d, dd}: &HvxRegs,
                        in_shape: &[Ix], out_shape: &[Ix], name: impl Into<String>)
                        -> Gather
 where T: Fn(Ix, Ix, Ix) -> (Ix, Ix) {
@@ -57,48 +80,45 @@ where T: Fn(Ix, Ix, Ix) -> (Ix, Ix) {
     }, name)
 }
 
-fn swap_regs(u: Ix, v: Ix, d: Ix, dd: Ix,
-             in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
+fn swap_regs(regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
     generalize_instr(|r, i, _| (if r == 0 { 1 } else { 0 }, i),
-                     u, Some(v), d, Some(dd), in_shape, out_shape, "swap_regs")
+                     regs, in_shape, out_shape, format!("swap_regs({})", regs))
 }
 
-fn vshuffo(u: Ix, v: Ix, d: Ix,
+fn vshuffo(regs: &HvxRegs,
            in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
     generalize_instr(
         |_r, i, _| (if i % 2 == 0 { 1 } else { 0 }, (i & !1) + 1),
-        u, Some(v), d, None, in_shape, out_shape, "vsuffo")
+        regs, in_shape, out_shape, format!("vsuffo({})", regs))
 }
 
-fn vshuffe(u: Ix, v: Ix, d: Ix,
-           in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
+fn vshuffe(regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
     generalize_instr(
         |_r, i, _| (if i % 2 == 0 { 1 } else { 0 }, i & !1 ),
-        u, Some(v), d, None, in_shape, out_shape, "vsuffe")
+        regs, in_shape, out_shape, format!("vsuffe({})", regs))
 }
 
-fn vshuffoe(u: Ix, v: Ix, d: Ix, dd: Ix,
-            in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
+fn vshuffoe(regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
     generalize_instr(
-        |r, i, _| (if i % 2 == 0 { 1 } else { 0 }, (i & !1) + (if r == 0 { 1 } else { 0 })),
-        u, Some(v), d, Some(dd), in_shape, out_shape, "vshuffoe")
+        |r, i, _| (if i % 2 == 0 { 1 } else { 0 }, (i & !1) + (if r == 0 { 0 } else { 1 })),
+        regs, in_shape, out_shape, format!("vshuffoe({})", regs))
 }
 
-fn vswap(mask: usize, u: Ix, v: Ix, d: Ix, dd: Ix,
+fn vswap(mask: usize, regs: &HvxRegs,
          in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
     // If the i-th bit of the mask is 1, register 0 in the destination gets
     // from the 1st source register (v), and register 1 reads from register 0 (u)
     // So we need an xnor
     generalize_instr(|r, i, _| (!(r ^ (mask >> i)) & 1, i),
-                     u, Some(v), d, Some(dd), in_shape, out_shape,
-                     format!("vswap({})", mask))
+                     regs, in_shape, out_shape,
+                     format!("vswap({}, {})", regs, mask))
 }
 
-fn vmux(mask: usize, u: Ix, v: Ix, d: Ix,
+fn vmux(mask: usize, regs: &HvxRegs,
         in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
     generalize_instr(|_r, i, _| (!(mask >> i) & 1, i),
-                     u, Some(v), d, None, in_shape, out_shape,
-                     format!("vmux({})", mask))
+                     regs, in_shape, out_shape,
+                     format!("vmux({}, {})", regs, mask))
 }
 
 fn hvx_errs(in_shape: &[Ix], out_shape: &[Ix]) -> Result<()> {
@@ -115,31 +135,39 @@ fn hvx_errs(in_shape: &[Ix], out_shape: &[Ix]) -> Result<()> {
 }
 
 pub fn hvx_2x2(out_shape: &[Ix], in_shape: &[Ix],
-               u: Ix, v: Ix, d: Ix, dd: Ix) -> Result<OpSetKind> {
+               regs: &[HvxRegs], swaps: bool) -> Result<OpSetKind> {
     hvx_errs(in_shape, out_shape)?;
     let n = in_shape[1];
     let mut ret = HashSet::new();
     ret.insert(identity_gather(in_shape));
-    ret.insert(vshuffoe(u, v, d, dd, in_shape, out_shape));
-    ret.insert(swap_regs(u, v, d, dd, in_shape, out_shape));
+    for r in regs {
+        ret.insert(vshuffoe(r, in_shape, out_shape));
+        ret.insert(swap_regs(r, in_shape, out_shape));
 
-    ret.extend((0..(1 << n)).map(|i| vswap(i, u, v, d, dd,
-                                           in_shape, out_shape)));
+        if swaps {
+            ret.extend((0..(1 << n)).map(|i| vswap(i, r,
+                                                   in_shape, out_shape)));
+        }
+    }
     return Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 
 pub fn hvx_2x1(out_shape: &[Ix], in_shape: &[Ix],
-               u: Ix, v: Ix, d: Ix) -> Result<OpSetKind> {
+               regs: &[HvxRegs], swaps: bool) -> Result<OpSetKind> {
     hvx_errs(in_shape, out_shape)?;
 
     let n = in_shape[1];
     let mut ret = HashSet::new();
     ret.insert(identity_gather(in_shape));
-    ret.insert(vshuffo(u, v, d, in_shape, out_shape));
-    ret.insert(vshuffe(u, v, d, in_shape, out_shape));
+    for r in regs {
+        ret.insert(vshuffo(r, in_shape, out_shape));
+        ret.insert(vshuffe(r, in_shape, out_shape));
 
-    ret.extend((0..(1 << n)).map(|i| vmux(i, u, v, d,
-                                          in_shape, out_shape)));
+        if swaps {
+            ret.extend((0..(1 << n)).map(|i| vmux(i, r,
+                                                  in_shape, out_shape)));
+        }
+    }
     return Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 

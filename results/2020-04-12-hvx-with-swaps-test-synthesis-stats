@@ -1,0 +1,13 @@
+spec:specs/hvx_test_1.json
+build:matrices/6,8-hvx_2x2{fresh]inplace]swaps]}-4,8 n_ones=11776; n_elems=2359296; density=0.004991319444444444; time=0.117541736;
+Using newly-built matrices/6,8-hvx_2x2{fresh]inplace]swaps]}-4,8
+build:matrices/4,8-hvx_2x2{inplace]swaps]}-4,8 n_ones=4352; n_elems=1048576; density=0.004150390625; time=0.028286219;
+mul_stats:: probes_success=[(1, 11840), (2, 6232), (3, 6264), (4, 3312), (5, 928)]; probes_failure=[(2, 36608), (3, 402112), (4, 839328), (5, 1052672)];
+mul:matrices/6,8-hvx_2x2{fresh]inplace]swaps]}_4,8-hvx_2x2{inplace]swaps]}-4,8 n_ones=28576; n_elems=2359296; density=0.012112087673611112; time=0.040503124;
+Begin search
+solution:init;id;vshuffoe(0,1<-0,1);vswap(4,5<-0,1, 32)
+stats:0 name=reshape; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1; target_checks=[];
+stats:1 name=hvx_2x2{inplace]swaps]}; lane=0; tested=513; found=0; failed=0; pruned=512; continued=1; target_checks=[(1, 192), (2, 320)];
+stats:2 name=hvx_2x2{fresh]inplace]swaps]}; lane=0; tested=1028; found=0; failed=0; pruned=0; continued=1028; target_checks=[];
+stats:3 name=(last); lane=0; tested=1028; found=1; failed=1027; pruned=0; continued=0; target_checks=[];
+search:specs/hvx_test_1.json success=true; mode=All; time=0.003066176;

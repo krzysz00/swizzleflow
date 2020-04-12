@@ -96,6 +96,10 @@ pub mod errors {
                 description("missing options")
                 display("missing options: {}", key)
             }
+            BadOptionLength(key: String, expected: usize) {
+                description("bad option length")
+                display("bad option length for {}, expected {}", key, expected)
+            }
             NoSplitFolds {
                 description("can't fold after splits")
                 display("can't fold after splits")
