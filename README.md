@@ -17,10 +17,11 @@ USAGE:
     swizzleflow [FLAGS] [OPTIONS] [SPEC]...
 
 FLAGS:
-    -a, --all        Find all solutions
-    -h, --help       Prints help information
-    -p, --print      Print trace of valid salutions
-    -V, --version    Prints version information
+    -a, --all             Find all solutions
+    -h, --help            Prints help information
+    -p, --print           Print trace of valid solutions
+    -P, --print-pruned    Print pruned solutions
+    -V, --version         Prints version information
 
 OPTIONS:
     -m, --matrix-dir <MATRIX_DIR>    Directory to store matrices in [default: matrices/]

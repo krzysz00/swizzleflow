@@ -1,0 +1,13 @@
+spec:specs/hvx_test_1.json
+build:matrices/6,8-hvx_2x2{fresh]inplace]swaps]}-4,8 n_ones=28032; n_elems=2359296; density=0.011881510416666666; time=0.474719443;
+Using newly-built matrices/6,8-hvx_2x2{fresh]inplace]swaps]}-4,8
+build:matrices/4,8-hvx_inplace{swaps]}-4,8 n_ones=24784; n_elems=1048576; density=0.0236358642578125; time=0.344225219;
+mul_stats:: probes_success=[(1, 30584), (2, 20986), (3, 14417), (4, 12007), (5, 11031), (6, 10951), (7, 10770), (8, 9870), (9, 9922), (10, 10683), (11, 10763), (12, 10964), (13, 10493), (14, 10697), (15, 10107), (16, 9301), (17, 9379), (18, 7612), (19, 7655), (20, 6385), (21, 6764), (22, 6115), (23, 5680), (24, 4949), (25, 4045), (26, 3653), (27, 3144), (28, 2977), (29, 2662), (30, 2303), (31, 1843), (32, 1462), (33, 1126), (34, 924), (35, 662), (36, 501), (37, 349), (38, 162), (39, 34), (40, 4)]; probes_failure=[(10, 13280), (11, 13282), (12, 4418), (13, 22044), (14, 21796), (15, 82806), (16, 69042), (17, 98902), (18, 93338), (19, 147936), (20, 117642), (21, 150548), (22, 142942), (23, 110612), (24, 115826), (25, 108112), (26, 116516), (27, 110810), (28, 100792), (29, 35630), (30, 48264), (31, 56338), (32, 50816), (33, 59820), (34, 51900), (35, 10954), (36, 29474), (37, 35452), (38, 15810), (39, 28098), (40, 12160)];
+mul:matrices/6,8-hvx_2x2{fresh]inplace]swaps]}_4,8-hvx_inplace{swaps]}-4,8 n_ones=283936; n_elems=2359296; density=0.12034776475694445; time=0.130206323;
+Begin search
+solution:init;id;vshuffoe(0,1<-0,1);vswap(4,5<-0,1, 32)
+stats:0 name=reshape; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1; target_checks=[];
+stats:1 name=hvx_inplace{swaps]}; lane=0; tested=5608; found=0; failed=0; pruned=5607; continued=1; target_checks=[(1, 1201), (2, 4403), (20, 3)];
+stats:2 name=hvx_2x2{fresh]inplace]swaps]}; lane=0; tested=4647; found=0; failed=0; pruned=0; continued=4647; target_checks=[];
+stats:3 name=(last); lane=0; tested=4647; found=1; failed=4646; pruned=0; continued=0; target_checks=[];
+search:specs/hvx_test_1.json success=true; mode=All; time=0.014557754;

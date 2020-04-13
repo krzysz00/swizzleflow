@@ -36,7 +36,7 @@ impl fmt::Display for HvxRegs {
         if let Some(dd) = self.dd {
             write!(f, ",{}", dd)?;
         }
-        write!(f, "<-{}", self.u)?;
+        write!(f, ":={}", self.u)?;
         if let Some(v) = self.v {
             write!(f, ",{}", v)?;
         }
@@ -121,6 +121,19 @@ fn vmux(mask: usize, regs: &HvxRegs,
                      format!("vmux({}, {})", regs, mask))
 }
 
+// These encode rotates by way of align(a <- a, a)
+fn valign(m: usize, regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
+    generalize_instr(|_r, i, n| if i >= n - m { (0, i - (n - m)) } else { (1, i + m) },
+                     regs, in_shape, out_shape,
+                     format!("valign({}, {})", regs, m))
+}
+
+fn vlalign(m: usize, regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
+    generalize_instr(|_r, i, n| if i < m { (1, n - m + i) } else { (0, i - m) },
+                     regs, in_shape, out_shape,
+                     format!("vlalign({}, {})", regs, m))
+}
+
 fn hvx_errs(in_shape: &[Ix], out_shape: &[Ix]) -> Result<()> {
     if out_shape.len() != 2 {
         return Err(ErrorKind::InvalidShapeDim(out_shape.to_owned(), 2).into())
@@ -163,6 +176,10 @@ pub fn hvx_2x1(out_shape: &[Ix], in_shape: &[Ix],
         ret.insert(vshuffo(r, in_shape, out_shape));
         ret.insert(vshuffe(r, in_shape, out_shape));
 
+        for i in 1..n {
+            ret.insert(valign(i, r, in_shape, out_shape));
+            ret.insert(vlalign(i, r, in_shape, out_shape));
+        }
         if swaps {
             ret.extend((0..(1 << n)).map(|i| vmux(i, r,
                                                   in_shape, out_shape)));

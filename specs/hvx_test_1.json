@@ -20,13 +20,12 @@
      "prune": true,
      "then_fold": false
     },
-    {"step": {"Gather": {"Builtin": "hvx_2x2"}},
+    {"step": {"Gather": {"Builtin": "hvx_inplace"}},
      "out_shape": [4, 8],
      "lane": 0,
      "prune": true,
      "then_fold": false,
-     "options": {"inplace": [],
-                 "swaps": []}
+     "options": {"swaps": []}
     },
     {"step": {"Gather": {"Builtin": "hvx_2x2"}},
      "out_shape": [6, 8],

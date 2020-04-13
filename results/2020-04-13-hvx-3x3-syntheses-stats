@@ -1,0 +1,105 @@
+spec:specs/hvx_conv/fixed_regs_fixed_setup.json
+build:matrices/16-reshape-8,2 n_ones=256; n_elems=65536; density=0.00390625; time=0.000137758;
+Using newly-built matrices/16-reshape-8,2
+build:matrices/8,2-rot_idx{r[1]}-2,3,8 n_ones=2304; n_elems=589824; density=0.00390625; time=0.000818687;
+mul_stats:: probes_success=[(1, 2304)]; probes_failure=[(1, 587520)];
+mul:matrices/16-reshape_8,2-rot_idx{r[1]}-2,3,8 n_ones=2304; n_elems=589824; density=0.00390625; time=0.023256068;
+build:matrices/2,3,8-setup_add-4,8 n_ones=2304; n_elems=2359296; density=0.0009765625; time=0.000237387;
+mul_stats:: probes_success=[(1, 256), (2, 256), (3, 256), (4, 256), (5, 256), (6, 256), (7, 256), (8, 256), (9, 256)]; probes_failure=[(9, 259840)];
+mul:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add-4,8 n_ones=2304; n_elems=262144; density=0.0087890625; time=0.013010145;
+build:matrices/4,8-hvx_inplace-4,8 n_ones=62304; n_elems=1048576; density=0.059417724609375; time=0.015388373;
+mul_stats:: probes_success=[(1, 12000), (2, 16576), (3, 7488), (4, 14464), (5, 3744), (7, 6912), (9, 1456)]; probes_failure=[(9, 199504)];
+mul:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add_4,8-hvx_inplace-4,8 n_ones=62640; n_elems=262144; density=0.23895263671875; time=0.010106282;
+Begin search
+solution:init;setup;valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+stats:0 name=hvx_conv_load; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1; target_checks=[];
+stats:1 name=hvx_inplace; lane=0; tested=279; found=0; failed=0; pruned=277; continued=2; target_checks=[(1, 66), (3, 20), (7, 15), (10, 10), (20, 3), (30, 3), (40, 3), (60, 3), (70, 3), (80, 32), (90, 45), (100, 74)];
+stats:2 name=hvx_inplace; lane=0; tested=558; found=0; failed=0; pruned=556; continued=2; target_checks=[(1, 258), (3, 210), (7, 84), (8, 1), (10, 3)];
+stats:3 name=setup_add; lane=0; tested=2; found=0; failed=0; pruned=0; continued=2; target_checks=[];
+stats:4 name=rot_idx{r[1]}; lane=0; tested=2; found=0; failed=0; pruned=0; continued=2; target_checks=[];
+stats:5 name=reshape; lane=0; tested=2; found=0; failed=0; pruned=0; continued=2; target_checks=[];
+stats:6 name=(last); lane=0; tested=2; found=2; failed=0; pruned=0; continued=0; target_checks=[];
+search:specs/hvx_conv/fixed_regs_fixed_setup.json success=true; mode=All; time=0.001468347;
+spec:specs/hvx_conv/fixed_regs_discover_oe.json
+load:matrices/16-reshape-8,2 n_ones=256; n_elems=65536; density=0.00390625; time=0.000028884;
+load:matrices/16-reshape_8,2-rot_idx{r[1]}-2,3,8 n_ones=2304; n_elems=589824; density=0.00390625; time=0.000215438;
+load:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add-4,8 n_ones=2304; n_elems=262144; density=0.0087890625; time=0.000122931;
+load:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add_4,8-hvx_inplace-4,8 n_ones=62640; n_elems=262144; density=0.23895263671875; time=0.000120429;
+load:matrices/4,8-hvx_inplace-4,8 n_ones=62304; n_elems=1048576; density=0.059417724609375; time=0.000419972;
+mul_stats:: probes_success=[(1, 78992), (2, 38828), (3, 37064), (4, 24596), (5, 26356), (6, 15552), (7, 16080), (8, 10316), (9, 5564), (10, 2996), (11, 2984), (12, 1216), (13, 1088), (14, 296), (15, 136), (16, 48), (17, 20), (18, 8), (20, 4)]; probes_failure=[];
+mul:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add_4,8-hvx_inplace_4,8-hvx_inplace-4,8 n_ones=262144; n_elems=262144; density=1; time=0.012443585;
+Begin search
+stats:0 name=hvx_conv_load; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1; target_checks=[];
+stats:1 name=hvx_inplace; lane=0; tested=279; found=0; failed=0; pruned=188; continued=91; target_checks=[(1, 38), (7, 3), (10, 6), (20, 3), (30, 6), (40, 48), (50, 3), (60, 6), (70, 6), (80, 31), (90, 38)];
+stats:2 name=hvx_inplace; lane=0; tested=25389; found=0; failed=0; pruned=25389; continued=0; target_checks=[(1, 7178), (2, 39), (3, 24), (4, 3), (7, 397), (8, 1), (10, 37), (20, 19), (30, 24), (40, 3473), (50, 278), (60, 538), (70, 514), (80, 2399), (90, 9951), (100, 505), (200, 9)];
+stats:3 name=hvx_inplace; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0; target_checks=[];
+stats:4 name=setup_add; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0; target_checks=[];
+stats:5 name=rot_idx{r[1]}; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0; target_checks=[];
+stats:6 name=reshape; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0; target_checks=[];
+stats:7 name=(last); lane=0; tested=0; found=0; failed=0; pruned=0; continued=0; target_checks=[];
+search:specs/hvx_conv/fixed_regs_discover_oe.json success=false; mode=All; time=0.04312306;
+spec:specs/hvx_conv/fixed_regs_fixed_setup_extra_long.json
+load:matrices/16-reshape-8,2 n_ones=256; n_elems=65536; density=0.00390625; time=0.000028543;
+load:matrices/16-reshape_8,2-rot_idx{r[1]}-2,3,8 n_ones=2304; n_elems=589824; density=0.00390625; time=0.000207;
+load:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add-4,8 n_ones=2304; n_elems=262144; density=0.0087890625; time=0.000099166;
+load:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add_4,8-hvx_inplace-4,8 n_ones=62640; n_elems=262144; density=0.23895263671875; time=0.000102099;
+load:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add_4,8-hvx_inplace_4,8-hvx_inplace-4,8 n_ones=262144; n_elems=262144; density=1; time=0.000101556;
+Begin search
+solution:init;setup;vsuffo(2:=2,2);vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffo(2:=2,2);valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffo(2:=2,3);vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffo(2:=2,3);valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffe(3:=1,3);vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffe(3:=1,3);valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;swap_regs(0,1:=0,1);vlalign(2:=0,2, 1);valign(3:=3,1, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;swap_regs(0,1:=0,1);valign(3:=3,1, 1);vlalign(2:=0,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;id;vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;id;valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);vsuffe(3:=3,3);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);vsuffo(1:=1,2);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);vsuffe(3:=1,3);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);vsuffe(3:=2,3);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);id;valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);vsuffe(3:=0,3);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);vsuffe(2:=1,2);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);valign(3:=3,0, 1);vsuffo(1:=1,2);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);valign(3:=3,0, 1);swap_regs(0,1:=0,1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);valign(3:=3,0, 1);id;setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);valign(3:=3,0, 1);vsuffo(3:=3,0);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);valign(3:=3,0, 1);vsuffe(2:=1,2);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);valign(3:=3,0, 1);vsuffe(0:=3,0);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);swap_regs(0,1:=0,1);valign(3:=3,1, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffe(3:=3,3);vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffe(3:=3,3);valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffo(2:=2,1);vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffo(2:=2,1);valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vsuffo(2:=2,0);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vsuffo(2:=2,2);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vlalign(2:=1,2, 1);vsuffo(1:=1,2);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vlalign(2:=1,2, 1);swap_regs(0,1:=0,1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vlalign(2:=1,2, 1);id;setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vlalign(2:=1,2, 1);vsuffo(3:=3,0);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vlalign(2:=1,2, 1);vsuffe(2:=1,2);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vlalign(2:=1,2, 1);vsuffe(0:=3,0);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vsuffo(3:=3,0);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vsuffe(0:=3,0);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);id;vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vsuffo(2:=2,3);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vsuffo(2:=2,1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);swap_regs(0,1:=0,1);vlalign(2:=0,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffe(3:=2,3);vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffe(3:=2,3);valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffe(3:=0,3);vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffe(3:=0,3);valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffo(2:=2,0);vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffo(2:=2,0);valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+stats:0 name=hvx_conv_load; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1; target_checks=[];
+stats:1 name=hvx_inplace; lane=0; tested=279; found=0; failed=0; pruned=188; continued=91; target_checks=[(1, 66), (7, 10), (10, 13), (20, 3), (30, 6), (40, 6), (50, 3), (60, 6), (70, 6), (80, 31), (90, 38)];
+stats:2 name=hvx_inplace; lane=0; tested=25389; found=0; failed=0; pruned=25337; continued=52; target_checks=[(1, 5857), (3, 2443), (7, 1709), (10, 895), (20, 278), (30, 289), (40, 270), (50, 16), (60, 268), (70, 270), (80, 2621), (90, 4151), (100, 6070), (200, 124), (300, 53), (400, 2), (500, 11), (600, 2), (800, 2), (1000, 2), (1100, 4)];
+stats:3 name=hvx_inplace; lane=0; tested=14508; found=0; failed=0; pruned=14460; continued=48; target_checks=[(1, 6689), (3, 5301), (7, 2321), (8, 29), (9, 1), (10, 99), (80, 10), (90, 10)];
+stats:4 name=setup_add; lane=0; tested=48; found=0; failed=0; pruned=0; continued=48; target_checks=[];
+stats:5 name=rot_idx{r[1]}; lane=0; tested=48; found=0; failed=0; pruned=0; continued=48; target_checks=[];
+stats:6 name=reshape; lane=0; tested=48; found=0; failed=0; pruned=0; continued=48; target_checks=[];
+stats:7 name=(last); lane=0; tested=48; found=48; failed=0; pruned=0; continued=0; target_checks=[];
+search:specs/hvx_conv/fixed_regs_fixed_setup_extra_long.json success=true; mode=All; time=0.069001457;

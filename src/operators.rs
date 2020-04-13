@@ -147,6 +147,32 @@ pub fn transpose(out_shape: &[Ix], in_shape: &[Ix]) -> Result<OpSetKind> {
     Ok(OpSetKind::new_gathers(vec![transpose_gather(out_shape, in_shape)]))
 }
 
+
+
+pub fn rot_idx_r(in_shape: &[Ix],
+                 out_shape: &[Ix], rot: Ix) -> Result<OpSetKind> {
+    let gather =
+        Gather::new(out_shape, |idxs| {
+            let mut idxs = ShapeVec::from_slice(idxs);
+            // The shape is rotated right, here we need the inverse
+            // operation to get the original indices
+            idxs.rotate_left(rot);
+            to_opt_ix(&idxs, in_shape)
+        }, format!("rot_idx_r({})", rot));
+    Ok(OpSetKind::new_gathers(vec![gather]))
+}
+
+pub fn rot_idx_l(in_shape: &[Ix],
+                 out_shape: &[Ix], rot: Ix) -> Result<OpSetKind> {
+    let gather =
+        Gather::new(out_shape, |idxs| {
+            let mut idxs = ShapeVec::from_slice(idxs);
+            idxs.rotate_right(rot);
+            to_opt_ix(&idxs, in_shape)
+        }, format!("rot_idx_l({})", rot));
+    Ok(OpSetKind::new_gathers(vec![gather]))
+}
+
 #[derive(Debug)]
 pub struct SynthesisLevel {
     pub ops: OpSet,
