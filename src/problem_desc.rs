@@ -54,9 +54,9 @@ pub enum GathersDesc {
     Custom(Vec<(String, Vec<u64>)>)
 }
 
-fn parse_hvx_opts(options: Option<&OptionMap>, two_in: bool, two_out: bool,
+fn parse_hvx_opts(options: Option<&OptionMap>, inplace: bool, fresh: bool,
                   in_shape: &[Ix], out_shape: &[Ix],
-                  inplace: bool, fresh: bool) -> Result<(Vec<HvxRegs>, bool)> {
+                  two_in: bool, two_out: bool) -> Result<(Vec<HvxRegs>, bool)> {
     let permutations = bool_option(options, "swaps");
     let all = !inplace && !fresh;
 
@@ -175,10 +175,13 @@ impl GathersDesc {
                         if out_shape.iter().rev().zip(in_shape.iter()).any(|(a, b)| a != b) {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
                         }
-                        transpose(out_shape, in_shape)
+                        transpose(in_shape, out_shape)
                     },
                     "rot_idx" => {
                         if let Some(r) = int_option(options, "r") {
+                            if int_option(options, "l").is_some() {
+                                return Err(ErrorKind::BadOptionLength("l".into(), 0).into());
+                            }
                             let r = r as Ix;
                             let split = in_shape.len() - r;
                             if in_shape[split..] != out_shape[..r]
@@ -380,40 +383,40 @@ impl GathersDesc {
                                              .map(|v| v.iter().copied()
                                                   .map(|i| i as usize).collect()))
                             .unwrap_or_else(|| (0..out_shape.len()).collect());
-                        general_select(out_shape, in_shape, axis,
+                        general_select(in_shape, out_shape, axis,
                                        consts, &dims)
                     },
                     "hvx_2x2" => {
                         let (regs, swaps) =
                             parse_hvx_opts(options,
-                                           true, true,
-                                           in_shape, out_shape,
                                            bool_option(options, "inplace"),
-                                           bool_option(options, "fresh"))?;
-                        hvx_2x2(out_shape, in_shape, &regs, swaps)
+                                           bool_option(options, "fresh"),
+                                           in_shape, out_shape,
+                                           true, true)?;
+                        hvx_2x2(in_shape, out_shape, &regs, swaps)
                     },
                     "hvx_2x1" => {
                         let (regs, swaps) =
                             parse_hvx_opts(options,
-                                           true, false,
-                                           in_shape, out_shape,
                                            bool_option(options, "inplace"),
-                                           bool_option(options, "fresh"))?;
-                        hvx_2x1(out_shape, in_shape, &regs, swaps)
+                                           bool_option(options, "fresh"),
+                                           in_shape, out_shape,
+                                           true, false)?;
+                        hvx_2x1(in_shape, out_shape, &regs, swaps)
                     },
                     "hvx_inplace" => {
                         let (regs_2_2, swaps) =
                             parse_hvx_opts(options,
-                                           true, true,
+                                           true, false,
                                            in_shape, out_shape,
-                                           true, false)?;
+                                           true, true)?;
                         let (regs_2_1, _) =
                             parse_hvx_opts(options,
                                            true, false,
                                            in_shape, out_shape,
                                            true, false)?;
-                        let g2_2 = hvx_2x2(out_shape, in_shape, &regs_2_2, swaps)?;
-                        let g2_1 = hvx_2x1(out_shape, in_shape, &regs_2_1, swaps)?;
+                        let g2_2 = hvx_2x2(in_shape, out_shape, &regs_2_2, swaps)?;
+                        let g2_1 = hvx_2x1(in_shape, out_shape, &regs_2_1, swaps)?;
                         if let (OpSetKind::Gathers(v2_2, _),
                                 OpSetKind::Gathers(v2_1, _)) = (g2_2, g2_1) {
                             let mut ret = HashSet::<Gather>::from_iter(v2_2.into_iter());

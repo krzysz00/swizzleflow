@@ -267,7 +267,7 @@ mod tests {
                                   BinOp::Plus, Op::Gt, &retain);
         let d2 = d1.gather_fold_by(&c2).unwrap();
 
-        let tr = transpose_gather(&[2, 4], &[4, 2]);
+        let tr = transpose_gather(&[4, 2], &[2, 4]);
         let transposed = d2.gather_by(&tr);
         let reshape = identity_gather(&[8]);
         let result = transposed.gather_by(&reshape);

@@ -155,7 +155,7 @@ pub fn cond_keep(shape: &[Ix], consts: &[isize],
 }
 
 pub type Operator = (usize, usize, isize, BinOp, Op);
-pub fn general_select_gather(out_shape: &[Ix], in_shape: &[Ix],
+pub fn general_select_gather(in_shape: &[Ix], out_shape: &[Ix],
                              conds: &[Operator], axis: usize) -> Gather {
     let mut name = "select(".to_owned();
     for (a, b, c, binop, op) in conds {
@@ -203,7 +203,7 @@ fn combinations(n: usize, k: usize) -> Vec<Vec<usize>> {
     }
 }
 
-pub fn general_select(out_shape: &[Ix], in_shape: &[Ix], axis: usize,
+pub fn general_select(in_shape: &[Ix], out_shape: &[Ix], axis: usize,
                       consts: &[isize], dims: &[Ix]) -> Result<OpSetKind> {
     let mut ret = HashSet::new();
 
@@ -218,7 +218,7 @@ pub fn general_select(out_shape: &[Ix], in_shape: &[Ix], axis: usize,
 
     ret.extend(indexes.iter().map(|ixs| {
         storage.extend(ixs.iter().copied().map(|i| operators[i]));
-        let ret = general_select_gather(out_shape, in_shape, &storage, axis);
+        let ret = general_select_gather(in_shape, out_shape, &storage, axis);
         storage.clear();
         ret
     }));

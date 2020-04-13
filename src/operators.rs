@@ -120,7 +120,7 @@ pub fn identity_gather(shape: &[Ix]) -> Gather {
     Gather::new(shape, |idxs| to_opt_ix(idxs, shape), "id")
 }
 
-pub fn transpose_gather(out_shape: &[Ix], in_shape: &[Ix]) -> Gather {
+pub fn transpose_gather(in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
     Gather::new(out_shape, |idxs| {
         let mut ret = 0;
         for (idx, scale) in idxs.iter().rev().zip(in_shape.iter()) {
@@ -143,8 +143,8 @@ pub fn identity(shape: &[Ix]) -> Result<OpSetKind> {
     Ok(OpSetKind::new_gathers(vec![identity_gather(shape)]))
 }
 
-pub fn transpose(out_shape: &[Ix], in_shape: &[Ix]) -> Result<OpSetKind> {
-    Ok(OpSetKind::new_gathers(vec![transpose_gather(out_shape, in_shape)]))
+pub fn transpose(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSetKind> {
+    Ok(OpSetKind::new_gathers(vec![transpose_gather(in_shape, out_shape)]))
 }
 
 
@@ -201,7 +201,7 @@ mod test {
     fn summary_fails() {
         let gathers = super::OpSetKind::new_gathers(
             vec![super::identity_gather(&[2, 3]),
-                 super::transpose_gather(&[2, 3], &[3, 2])]);
+                 super::transpose_gather(&[3, 2], &[2, 3])]);
         assert_eq!(gathers.summary(), None)
     }
 

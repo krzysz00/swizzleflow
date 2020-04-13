@@ -85,8 +85,7 @@ fn swap_regs(regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
                      regs, in_shape, out_shape, format!("swap_regs({})", regs))
 }
 
-fn vshuffo(regs: &HvxRegs,
-           in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
+fn vshuffo(regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
     generalize_instr(
         |_r, i, _| (if i % 2 == 0 { 1 } else { 0 }, (i & !1) + 1),
         regs, in_shape, out_shape, format!("vsuffo({})", regs))
@@ -104,8 +103,8 @@ fn vshuffoe(regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
         regs, in_shape, out_shape, format!("vshuffoe({})", regs))
 }
 
-fn vswap(mask: usize, regs: &HvxRegs,
-         in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
+fn vswap(regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix],
+         mask: usize) -> Gather {
     // If the i-th bit of the mask is 1, register 0 in the destination gets
     // from the 1st source register (v), and register 1 reads from register 0 (u)
     // So we need an xnor
@@ -114,21 +113,21 @@ fn vswap(mask: usize, regs: &HvxRegs,
                      format!("vswap({}, {})", regs, mask))
 }
 
-fn vmux(mask: usize, regs: &HvxRegs,
-        in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
+fn vmux(regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix],
+        mask: usize) -> Gather {
     generalize_instr(|_r, i, _| (!(mask >> i) & 1, i),
                      regs, in_shape, out_shape,
                      format!("vmux({}, {})", regs, mask))
 }
 
 // These encode rotates by way of align(a <- a, a)
-fn valign(m: usize, regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
+fn valign(regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix], m: usize) -> Gather {
     generalize_instr(|_r, i, n| if i >= n - m { (0, i - (n - m)) } else { (1, i + m) },
                      regs, in_shape, out_shape,
                      format!("valign({}, {})", regs, m))
 }
 
-fn vlalign(m: usize, regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
+fn vlalign(regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix], m: usize) -> Gather {
     generalize_instr(|_r, i, n| if i < m { (1, n - m + i) } else { (0, i - m) },
                      regs, in_shape, out_shape,
                      format!("vlalign({}, {})", regs, m))
@@ -147,7 +146,7 @@ fn hvx_errs(in_shape: &[Ix], out_shape: &[Ix]) -> Result<()> {
     Ok(())
 }
 
-pub fn hvx_2x2(out_shape: &[Ix], in_shape: &[Ix],
+pub fn hvx_2x2(in_shape: &[Ix], out_shape: &[Ix],
                regs: &[HvxRegs], swaps: bool) -> Result<OpSetKind> {
     hvx_errs(in_shape, out_shape)?;
     let n = in_shape[1];
@@ -158,14 +157,13 @@ pub fn hvx_2x2(out_shape: &[Ix], in_shape: &[Ix],
         ret.insert(swap_regs(r, in_shape, out_shape));
 
         if swaps {
-            ret.extend((0..(1 << n)).map(|i| vswap(i, r,
-                                                   in_shape, out_shape)));
+            ret.extend((0..(1 << n)).map(|i| vswap(r, in_shape, out_shape, i)));
         }
     }
     return Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 
-pub fn hvx_2x1(out_shape: &[Ix], in_shape: &[Ix],
+pub fn hvx_2x1(in_shape: &[Ix], out_shape: &[Ix],
                regs: &[HvxRegs], swaps: bool) -> Result<OpSetKind> {
     hvx_errs(in_shape, out_shape)?;
 
@@ -177,12 +175,11 @@ pub fn hvx_2x1(out_shape: &[Ix], in_shape: &[Ix],
         ret.insert(vshuffe(r, in_shape, out_shape));
 
         for i in 1..n {
-            ret.insert(valign(i, r, in_shape, out_shape));
-            ret.insert(vlalign(i, r, in_shape, out_shape));
+            ret.insert(valign(r, in_shape, out_shape, i));
+            ret.insert(vlalign(r, in_shape, out_shape, i));
         }
         if swaps {
-            ret.extend((0..(1 << n)).map(|i| vmux(i, r,
-                                                  in_shape, out_shape)));
+            ret.extend((0..(1 << n)).map(|i| vmux(r, in_shape, out_shape, i)));
         }
     }
     return Ok(ret.into_iter().collect::<Vec<_>>().into())
