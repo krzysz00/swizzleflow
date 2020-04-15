@@ -1,0 +1,68 @@
+spec:specs/hvx_conv/no_sum_3.json
+build:matrices/16,3-reshape-8,2,3 n_ones=2304; n_elems=5308416; density=0.00043402777777777775; time=0.001438663;
+Using newly-built matrices/16,3-reshape-8,2,3
+load:matrices/8,2,3-rot_idx{r[1]}-2,3,8 n_ones=2304; n_elems=5308416; density=0.00043402777777777775; time=0.001869118;
+mul_stats:: probes_success=[(1, 2304)]; probes_failure=[(1, 5306112)];
+mul:matrices/16,3-reshape_8,2,3-rot_idx{r[1]}-2,3,8 n_ones=2304; n_elems=5308416; density=0.00043402777777777775; time=0.090735846;
+load:matrices/2,3,8-setup_add-4,8 n_ones=2304; n_elems=2359296; density=0.0009765625; time=0.000783652;
+mul_stats:: probes_success=[(1, 2304)]; probes_failure=[(1, 2356992)];
+mul:matrices/16,3-reshape_8,2,3-rot_idx{r[1]}_2,3,8-setup_add-4,8 n_ones=2304; n_elems=2359296; density=0.0009765625; time=0.04874834;
+load:matrices/4,8-hvx_inplace-4,8 n_ones=62304; n_elems=1048576; density=0.059417724609375; time=0.000314356;
+mul_stats:: probes_success=[(1, 139632)]; probes_failure=[(1, 2219664)];
+mul:matrices/16,3-reshape_8,2,3-rot_idx{r[1]}_2,3,8-setup_add_4,8-hvx_inplace-4,8 n_ones=139632; n_elems=2359296; density=0.059183756510416664; time=0.039351784;
+mul_stats:: probes_success=[(1, 168812), (2, 104185), (3, 111497), (4, 88388), (5, 102874), (6, 81323), (7, 95089), (8, 77347), (9, 89473), (10, 63500), (11, 76170), (12, 57259), (13, 66084), (14, 52810), (15, 58515), (16, 48558), (17, 48576), (18, 38836), (19, 43073), (20, 33697), (21, 38061), (22, 31993), (23, 35094), (24, 29831), (25, 31121), (26, 29260), (27, 28555), (28, 26365), (29, 24804), (30, 25791), (31, 24267), (32, 24734), (33, 20784), (34, 22671), (35, 18960), (36, 17015), (37, 16338), (38, 14948), (39, 14852), (40, 12356), (41, 12621), (42, 11465), (43, 11254), (44, 10262), (45, 9763), (46, 9131), (47, 8669), (48, 7623), (49, 7044), (50, 6070), (51, 6059), (52, 4289), (53, 4000), (54, 3285), (55, 3272), (56, 2375), (57, 2060), (58, 1476), (59, 1360), (60, 943), (61, 899), (62, 551), (63, 651), (64, 406), (65, 592), (66, 318), (67, 320), (68, 151), (69, 256), (70, 102), (71, 240), (72, 114), (73, 195), (74, 108), (75, 169), (76, 49), (77, 94), (78, 62), (79, 103), (80, 59), (81, 68), (83, 20)]; probes_failure=[(49, 8784), (51, 36350), (52, 11232), (53, 15504), (54, 3552), (55, 27328), (56, 14688), (57, 12888), (58, 4768), (59, 15648), (60, 10528), (61, 8000), (62, 4448), (63, 6640), (64, 8160), (65, 3624), (66, 2720), (68, 3000), (69, 3820), (70, 4560), (72, 1520), (74, 4720), (75, 4720), (76, 4920), (78, 1640), (80, 5440), (81, 5440), (82, 1680), (84, 560)];
+mul:matrices/16,3-reshape_8,2,3-rot_idx{r[1]}_2,3,8-setup_add_4,8-hvx_inplace_4,8-hvx_inplace-4,8 n_ones=2122414; n_elems=2359296; density=0.8995963202582465; time=0.144118031;
+mul_stats:: probes_success=[(1, 2158494), (2, 41092), (3, 29032), (4, 17606), (5, 13924), (6, 7352), (7, 8594), (8, 1186), (9, 636), (10, 928), (11, 516), (12, 444), (13, 48), (14, 84)]; probes_failure=[(49, 2240), (51, 10240), (52, 3840), (53, 4480), (54, 1280), (55, 8320), (56, 5760), (57, 4160), (58, 1920), (59, 5120), (60, 3840), (61, 2880), (62, 1600), (63, 2240), (64, 2880), (65, 1280), (66, 960), (68, 960), (69, 1280), (70, 1920), (72, 640), (74, 1600), (75, 1600), (76, 2880), (78, 960), (80, 2240), (81, 2240)];
+mul:matrices/16,3-reshape_8,2,3-rot_idx{r[1]}_2,3,8-setup_add_4,8-hvx_inplace_4,8-hvx_inplace_4,8-hvx_inplace-4,8 n_ones=2279936; n_elems=2359296; density=0.9663628472222222; time=0.056722837;
+Begin search
+solution:init;setup;vlalign(2:=1,2, 1);vsuffo(1:=1,2);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);vsuffe(3:=3,3);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);vsuffe(3:=1,3);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);id;valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);vsuffe(3:=0,3);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);valign(3:=3,0, 1);vsuffe(0:=3,0);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);valign(3:=3,0, 1);vsuffe(2:=1,2);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);valign(3:=3,0, 1);vsuffo(1:=1,2);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);valign(3:=3,0, 1);vsuffo(3:=3,0);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);valign(3:=3,0, 1);id;setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);vsuffe(2:=1,2);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);vsuffe(3:=2,3);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffe(3:=2,3);vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffe(3:=2,3);valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffe(3:=3,3);vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffe(3:=3,3);valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffo(2:=2,0);vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffo(2:=2,0);valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;id;vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;id;valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffo(2:=2,3);vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffo(2:=2,3);valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffo(2:=2,2);vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffo(2:=2,2);valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vsuffo(2:=2,0);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vlalign(2:=1,2, 1);vsuffe(0:=3,0);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vlalign(2:=1,2, 1);vsuffe(2:=1,2);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vlalign(2:=1,2, 1);vsuffo(1:=1,2);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vlalign(2:=1,2, 1);vsuffo(3:=3,0);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vlalign(2:=1,2, 1);id;setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vsuffo(2:=2,1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vsuffe(0:=3,0);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vsuffo(2:=2,3);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);id;vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vsuffo(3:=3,0);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(3:=3,0, 1);vsuffo(2:=2,2);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffe(3:=0,3);vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffe(3:=0,3);valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffe(3:=1,3);vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffe(3:=1,3);valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffo(2:=2,1);vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vsuffo(2:=2,1);valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+stats:0 name=hvx_conv_load; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1; target_checks=[];
+stats:1 name=hvx_inplace; lane=0; tested=279; found=0; failed=0; pruned=188; continued=91; target_checks=[(1, 66), (7, 10), (10, 13), (20, 3), (30, 6), (40, 6), (50, 3), (60, 6), (70, 6), (80, 31), (90, 38)];
+stats:2 name=hvx_inplace; lane=0; tested=25389; found=0; failed=0; pruned=25355; continued=34; target_checks=[(1, 6242), (3, 3947), (7, 388), (8, 34), (10, 819), (20, 272), (30, 277), (40, 264), (50, 13), (60, 259), (70, 261), (80, 2362), (90, 4236), (100, 5796), (200, 99), (300, 62), (400, 8), (500, 6), (600, 2), (800, 2), (1000, 2), (1100, 4)];
+stats:3 name=hvx_inplace; lane=0; tested=9486; found=0; failed=0; pruned=9444; continued=42; target_checks=[(1, 4410), (3, 3504), (7, 1462), (8, 6), (10, 56), (80, 4), (90, 2)];
+stats:4 name=setup_add; lane=0; tested=42; found=0; failed=0; pruned=0; continued=42; target_checks=[];
+stats:5 name=rot_idx{r[1]}; lane=0; tested=42; found=0; failed=0; pruned=0; continued=42; target_checks=[];
+stats:6 name=reshape; lane=0; tested=42; found=0; failed=0; pruned=0; continued=42; target_checks=[];
+stats:7 name=(last); lane=0; tested=42; found=42; failed=0; pruned=0; continued=0; target_checks=[];
+search:specs/hvx_conv/no_sum_3.json success=true; mode=All; time=0.050395852;
