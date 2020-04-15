@@ -1,0 +1,23 @@
+spec:specs/hvx_conv/fixed_regs_fixed_setup.json
+build:matrices/16-reshape-8,2 n_ones=256; n_elems=65536; density=0.00390625; time=0.00008855;
+Using newly-built matrices/16-reshape-8,2
+build:matrices/8,2-rot_idx{r[1]}-2,3,8 n_ones=2304; n_elems=589824; density=0.00390625; time=0.000720677;
+mul_stats:: probes_success=[(1, 2304)]; probes_failure=[(1, 587520)];
+mul:matrices/16-reshape_8,2-rot_idx{r[1]}-2,3,8 n_ones=2304; n_elems=589824; density=0.00390625; time=0.018435897;
+build:matrices/2,3,8-setup_add-4,8 n_ones=2304; n_elems=2359296; density=0.0009765625; time=0.000291453;
+mul_stats:: probes_success=[(1, 256), (2, 256), (3, 256), (4, 256), (5, 256), (6, 256), (7, 256), (8, 256), (9, 256)]; probes_failure=[(9, 259840)];
+mul:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add-4,8 n_ones=2304; n_elems=262144; density=0.0087890625; time=0.011813263;
+build:matrices/4,8-hvx_inplace-4,8 n_ones=61344; n_elems=1048576; density=0.058502197265625; time=0.015629915;
+mul_stats:: probes_success=[(1, 11616), (2, 16128), (3, 7616), (4, 15040), (5, 3744), (7, 6976), (9, 1360)]; probes_failure=[(9, 199664)];
+mul:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add_4,8-hvx_inplace-4,8 n_ones=62480; n_elems=262144; density=0.23834228515625; time=0.009817873;
+Begin search
+solution:init;setup;valign(3:=3,0, 1);vlalign(2:=1,2, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;vlalign(2:=1,2, 1);valign(3:=3,0, 1);setup_add;rot_idx_r(1);id
+stats:0 name=hvx_conv_load; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1; target_checks=[];
+stats:1 name=hvx_inplace; lane=0; tested=267; found=0; failed=0; pruned=265; continued=2; target_checks=[(1, 61), (3, 20), (7, 15), (10, 10), (20, 3), (30, 3), (40, 3), (60, 3), (70, 3), (80, 32), (90, 40), (100, 72)];
+stats:2 name=hvx_inplace; lane=0; tested=534; found=0; failed=0; pruned=532; continued=2; target_checks=[(1, 248), (3, 200), (7, 80), (8, 1), (10, 3)];
+stats:3 name=setup_add; lane=0; tested=2; found=0; failed=0; pruned=0; continued=2; target_checks=[];
+stats:4 name=rot_idx{r[1]}; lane=0; tested=2; found=0; failed=0; pruned=0; continued=2; target_checks=[];
+stats:5 name=reshape; lane=0; tested=2; found=0; failed=0; pruned=0; continued=2; target_checks=[];
+stats:6 name=(last); lane=0; tested=2; found=2; failed=0; pruned=0; continued=0; target_checks=[];
+search:specs/hvx_conv/fixed_regs_fixed_setup.json success=true; mode=All; time=0.001444311;

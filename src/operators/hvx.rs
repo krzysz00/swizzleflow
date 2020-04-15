@@ -154,7 +154,9 @@ pub fn hvx_2x2(in_shape: &[Ix], out_shape: &[Ix],
     ret.insert(identity_gather(in_shape));
     for r in regs {
         ret.insert(vshuffoe(r, in_shape, out_shape));
-        ret.insert(swap_regs(r, in_shape, out_shape));
+        if Some(r.u) == r.dd && r.v == Some(r.d) {
+            ret.insert(swap_regs(r, in_shape, out_shape));
+        }
 
         if swaps {
             ret.extend((0..(1 << n)).map(|i| vswap(r, in_shape, out_shape, i)));
