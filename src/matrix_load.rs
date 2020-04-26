@@ -100,41 +100,48 @@ fn add_matrix(ops: &OpSet, lane: usize,
               path: &mut PathBuf,
               names: &mut [String], prev_mats: &mut [Option<TransitionMatrix>],
               bases: &mut HashMap<String, TransitionMatrix>) -> Result<()> {
-    let name = ops.to_name();
-
-    if !names[lane].is_empty() {
-        // Drop redundant indexing
-        names[lane].truncate(names[lane].rfind('-').expect("dash separating input length"));
-        names[lane].push('_');
-    }
-    names[lane].push_str(&name);
-
-    path.set_file_name(names[lane].clone());
-
-    if path.exists() {
-        let mat = load_matrix(path.as_path())?;
-        prev_mats[lane] = Some(mat);
+    // TODO: actually propagate forward the true target shape
+    if ops.prunes_like_identity() && prev_mats[lane].is_some() {
+        prev_mats[lane] = Some(prev_mats[lane].as_ref().unwrap()
+                               .reinterpret_current_shape(ops.in_shape.clone()))
     }
     else {
-        let basis_matrix = get_basis_mat(bases,
-                                         path.parent().unwrap(), &name,
-                                         ops)?;
-        match prev_mats[lane] {
-            Some(ref mut prev) => {
-                let start = Instant::now();
-                let mut output = TransitionMatrix::empty(prev.get_target_shape(),
-                                                         basis_matrix.get_current_shape());
-                sparsifying_mul(prev, basis_matrix, &mut output);
-                let time = time_since(start);
+        let name = ops.to_name();
 
-                stats("mul", path.as_ref(), &output, time);
-                output.store_matrix(&path)?;
-                std::mem::swap(&mut output, prev);
-            },
-            None => {
-                // Here, we've just generated the basis matrix
-                println!("Using newly-built {}", path.display());
-                prev_mats[lane] = Some(basis_matrix.clone());
+        if !names[lane].is_empty() {
+            // Drop redundant indexing
+            names[lane].truncate(names[lane].rfind('-').expect("dash separating input length"));
+            names[lane].push('_');
+        }
+        names[lane].push_str(&name);
+
+        path.set_file_name(names[lane].clone());
+
+        if path.exists() {
+            let mat = load_matrix(path.as_path())?;
+            prev_mats[lane] = Some(mat);
+        }
+        else {
+            let basis_matrix = get_basis_mat(bases,
+                                             path.parent().unwrap(), &name,
+                                             ops)?;
+            match prev_mats[lane] {
+                Some(ref mut prev) => {
+                    let start = Instant::now();
+                    let mut output = TransitionMatrix::empty(prev.get_target_shape(),
+                                                             basis_matrix.get_current_shape());
+                    sparsifying_mul(prev, basis_matrix, &mut output);
+                    let time = time_since(start);
+
+                    stats("mul", path.as_ref(), &output, time);
+                    output.store_matrix(&path)?;
+                    std::mem::swap(&mut output, prev);
+                },
+                None => {
+                    // Here, we've just generated the basis matrix
+                    println!("Using newly-built {}", path.display());
+                    prev_mats[lane] = Some(basis_matrix.clone());
+                }
             }
         }
     }

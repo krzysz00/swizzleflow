@@ -431,6 +431,12 @@ impl Gather {
             });
         !ret.is_done() // No early return -> successful merge
     }
+
+    pub fn is_identity(&self) -> bool {
+        self.data.as_slice().unwrap()
+            .iter().copied().enumerate()
+            .all(|(i, v)| i as isize == v)
+    }
 }
 
 impl fmt::Display for Gather {

@@ -50,6 +50,8 @@ pub trait TransitionMatrixOps: Sized + std::fmt::Debug + std::clone::Clone {
         (target_slots.pow(2), current_slots.pow(2))
     }
 
+    fn reinterpret_current_shape(&self, new_shape: ShapeVec) -> Self;
+
     fn n_ones(&self) -> usize;
     fn n_elements(&self) -> usize;
 }
@@ -187,6 +189,16 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
 
     fn get_current_shape(&self) -> &[Ix] {
         self.current_shape.as_slice()
+    }
+
+    fn reinterpret_current_shape(&self, new_shape: ShapeVec) -> Self {
+        let ret = Self::new(self.data.clone(), self.target_shape.clone(),
+                            new_shape);
+        if ret.current_len != self.current_len {
+            panic!("Incompatible input lengths in reinterpret: {} -> {}",
+                   self.current_len, ret.current_len);
+        }
+        ret
     }
 
     fn slots(&self) -> (usize, usize) {
@@ -329,6 +341,13 @@ impl TransitionMatrixOps for TransitionMatrix {
     fn get_current_shape(&self) -> &[Ix] {
         match self {
             TransitionMatrix::Dense(d) => d.get_current_shape()
+        }
+    }
+
+    fn reinterpret_current_shape(&self, new_shape: ShapeVec) -> Self {
+        match self {
+            TransitionMatrix::Dense(d) =>
+                TransitionMatrix::Dense(d.reinterpret_current_shape(new_shape)),
         }
     }
 

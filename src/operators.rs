@@ -109,6 +109,18 @@ impl OpSet {
         Self { name: name.into(), ops, in_shape, out_shape, fused_fold }
     }
 
+    pub fn prunes_like_identity(&self) -> bool {
+        use OpSetKind::*;
+        if self.fused_fold { return false; }
+
+        match &self.ops {
+            Gathers(_, summary) => summary.as_ref()
+                .map(|g| g.is_identity()).unwrap_or(false),
+            Stack(from, to) => from.len() == 1 && from[0] == *to,
+            Split(from, to) => to.len() == 1 && *from == to[0],
+        }
+    }
+
     pub fn to_name(&self) -> String {
         let in_strings: SmallVec<[String; 4]> = self.in_shape.iter().map(|v| v.to_string()).collect();
         let out_strings: SmallVec<[String; 4]> = self.out_shape.iter().map(|v| v.to_string()).collect();
