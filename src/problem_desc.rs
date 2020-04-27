@@ -264,7 +264,7 @@ impl GathersDesc {
                             let out_idx = int_option(options, "out")
                                 .ok_or_else(|| ErrorKind::MissingOption("out".to_string()))?
                                 as usize;
-                            if s == "rots_no_group" {
+                            if s == "xforms_no_group" {
                                 simple_xforms(out_shape, main_idx, second_idx, out_idx)
                             }
                             else {

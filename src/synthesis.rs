@@ -155,6 +155,9 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
                     tracker.record_target_checks(target_checks);
                     if print_pruned {
                         println!("pruned @ {}\n{}", level, current);
+                        println!("v1 = {}, v2 = {}, t1 = {}, t2 = {}",
+                                 target.domain.get_value(a), target.domain.get_value(b),
+                                 t1, t2);
                     }
                     return false;
                 }
@@ -354,7 +357,6 @@ pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
                   print: bool,
                   print_pruned: bool,
                   spec_name: &str) -> bool {
-
     let n_levels = levels.len();
     let stats = (0..n_levels+1).map(|_| SearchLevelStats::new()).collect::<Vec<_>>();
     let caches: Vec<SearchResultCache>

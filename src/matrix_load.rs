@@ -183,19 +183,17 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel],
                            &mut bases)?;
             },
             OpSetKind::Stack(ref from, to) => {
-                if level.ops.fused_fold {
-                    for lane in from.iter().copied() {
-                        if lane != to {
-                            names[lane] = names[to].clone();
-                            prev_mats[lane] = prev_mats[to].clone();
-                        }
+                for lane in from.iter().copied() {
+                    if lane != to {
+                        names[lane] = names[to].clone();
+                        prev_mats[lane] = prev_mats[to].clone();
                     }
                 }
-                else {
+                if !level.ops.fused_fold {
                     let out_shape = &level.ops.out_shape;
                     let in_shape = &level.ops.in_shape;
-                    for lane in from.iter().copied() {
-                        let gather = vec![stack_adapter_gather(out_shape, lane)];
+                    for (column, lane) in from.iter().copied().enumerate() {
+                        let gather = vec![stack_adapter_gather(out_shape, column)];
                         let name = gather[0].name.clone();
                         let opset = OpSetKind::new_gathers(gather);
                         let ops = OpSet::new(name, opset,
