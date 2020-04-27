@@ -19,7 +19,7 @@
     {
       "step": { "Gather": { "Builtin": "load_grid_2d"}},
       "lane": 0,
-      "out_shape": [4, 4, 3, 3],
+      "out_shape": [4, 4, 2, 2],
       "prune": false,
       "then_fold": false
     },
@@ -27,7 +27,7 @@
       "name": "2s-gnc",
       "step": { "Gather": { "Builtin": "general_select_no_consts"}},
       "lane": 0,
-      "out_shape": [4, 4, 7, 3],
+      "out_shape": [4, 4, 5, 2],
       "options": { "axis": [2], "dims": [0, 2] },
       "prune": true,
       "then_fold": false
