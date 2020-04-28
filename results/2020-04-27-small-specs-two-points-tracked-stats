@@ -1,0 +1,42 @@
+spec:./specs/1d-conv-16x3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/16-col_rots_no_group-16,3 n_ones=36864; n_elems=589824; density=0.0625; time=0.011493939;
+Using newly-built matrices/16-col_rots_no_group-16,3
+build:matrices/16,3-col_xforms_no_group-16,3 n_ones=233610; n_elems=5308416; density=0.044007477936921294; time=0.03878904;
+mul_stats:: probes_success=[(1, 2176), (2, 4096), (3, 3840), (4, 34816), (5, 34816), (6, 34816), (7, 17408), (8, 19968), (9, 17408), (10, 213008), (20, 28896), (30, 19408), (40, 14640), (50, 11024), (60, 10352), (70, 10912), (80, 11584), (90, 5584), (100, 20928)]; probes_failure=[(100, 74144)];
+mul:matrices/16-col_rots_no_group_16,3-col_xforms_no_group-16,3 n_ones=515680; n_elems=589824; density=0.8742947048611112; time=0.066390744;
+Begin search
+solution:init;load_trunc;select(d0 >= 0 + d1);xform(0,1,3);id
+stats:0 name=load_trunc; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1; target_checks=[];
+stats:1 name=reg_select_no_consts; lane=0; tested=14; found=0; failed=0; pruned=13; continued=1; target_checks=[(1, 6), (3, 1), (6, 2), (40, 2), (1200, 2)];
+stats:2 name=col_xforms_no_group; lane=0; tested=240; found=0; failed=0; pruned=239; continued=1; target_checks=[(1, 225), (2, 14)];
+stats:3 name=col_rots_no_group; lane=0; tested=16; found=0; failed=0; pruned=0; continued=16; target_checks=[];
+stats:4 name=(last); lane=0; tested=16; found=1; failed=15; pruned=0; continued=0; target_checks=[];
+search:./specs/1d-conv-16x3.json success=true; mode=All; time=0.000593012;
+spec:./specs/trove-8x3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/8,3-row_rots_no_group-8,3 n_ones=1728; n_elems=331776; density=0.005208333333333333; time=0.0001001;
+Using newly-built matrices/8,3-row_rots_no_group-8,3
+build:matrices/8,3-row_xforms_no_group-8,3 n_ones=3908; n_elems=331776; density=0.011779031635802469; time=0.000549001;
+mul_stats:: probes_success=[(1, 3600), (2, 1083), (3, 123)]; probes_failure=[(3, 326970)];
+mul:matrices/8,3-row_rots_no_group_8,3-row_xforms_no_group-8,3 n_ones=4806; n_elems=331776; density=0.014485677083333334; time=0.005967727;
+build:matrices/8,3-col_rots_no_group-8,3 n_ones=4608; n_elems=331776; density=0.013888888888888888; time=0.000278229;
+mul_stats:: probes_success=[(1, 4752), (2, 4824), (3, 4824), (4, 4824), (5, 4824), (6, 4824), (7, 4824), (8, 4752)]; probes_failure=[(8, 293328)];
+mul:matrices/8,3-row_rots_no_group_8,3-row_xforms_no_group_8,3-col_rots_no_group-8,3 n_ones=38448; n_elems=331776; density=0.11588541666666667; time=0.00903996;
+build:matrices/8,3-col_xforms_no_group-8,3 n_ones=14824; n_elems=331776; density=0.044680748456790126; time=0.001713582;
+mul_stats:: probes_success=[(1, 38520), (2, 36384), (3, 38040), (4, 36756), (5, 29976), (6, 24696), (7, 19200), (8, 13920), (9, 7512), (10, 5328), (11, 3720), (12, 2208), (13, 3972), (14, 792), (15, 576), (16, 3060), (17, 576), (18, 576), (19, 576), (20, 288), (21, 864), (22, 252), (29, 576)]; probes_failure=[(1, 552), (3, 1272), (4, 1128), (5, 5376), (6, 2280), (7, 12480), (8, 5040), (12, 3312), (20, 3672), (21, 1008), (22, 5088), (23, 1728), (24, 6600), (28, 1248), (32, 624), (34, 624), (38, 2304), (39, 1248), (40, 4896), (42, 2304), (48, 624)];
+mul:matrices/8,3-row_rots_no_group_8,3-row_xforms_no_group_8,3-col_rots_no_group_8,3-col_xforms_no_group-8,3 n_ones=268368; n_elems=331776; density=0.8088831018518519; time=0.011208638;
+mul_stats:: probes_success=[(1, 255960), (2, 25128)]; probes_failure=[(3, 50688)];
+mul:matrices/8,3-row_rots_no_group_8,3-row_xforms_no_group_8,3-col_rots_no_group_8,3-col_xforms_no_group_8,3-row_rots_no_group-8,3 n_ones=281088; n_elems=331776; density=0.8472222222222222; time=0.005365569;
+Begin search
+solution:init;load_rep;xform(0,1,8);rot(1);xform(3,7,3);rot(6);xform(2,0,8);rot(1)
+solution:init;load_rep;xform(2,1,8);id;xform(3,1,3);id;id;id
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1; target_checks=[];
+stats:1 name=row_xforms_no_group; lane=0; tested=18; found=0; failed=0; pruned=16; continued=2; target_checks=[(1, 6), (2, 2), (7, 2), (9, 2), (10, 1), (20, 1), (30, 2)];
+stats:2 name=row_rots_no_group; lane=0; tested=6; found=0; failed=0; pruned=4; continued=2; target_checks=[(1, 2), (20, 2)];
+stats:3 name=col_xforms_no_group; lane=0; tested=112; found=0; failed=0; pruned=110; continued=2; target_checks=[(1, 98), (3, 12)];
+stats:4 name=col_rots_no_group; lane=0; tested=16; found=0; failed=0; pruned=14; continued=2; target_checks=[(1, 14)];
+stats:5 name=row_xforms_no_group; lane=0; tested=36; found=0; failed=0; pruned=34; continued=2; target_checks=[(1, 18), (3, 12), (6, 2), (10, 2)];
+stats:6 name=row_rots_no_group; lane=0; tested=6; found=0; failed=0; pruned=0; continued=6; target_checks=[];
+stats:7 name=(last); lane=0; tested=6; found=2; failed=4; pruned=0; continued=0; target_checks=[];
+search:./specs/trove-8x3.json success=true; mode=All; time=0.000266183;
