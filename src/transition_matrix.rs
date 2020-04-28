@@ -28,12 +28,12 @@ use byteorder::{LittleEndian,WriteBytesExt,ReadBytesExt};
 use smallvec::SmallVec;
 
 pub trait TransitionMatrixOps: Sized + std::fmt::Debug + std::clone::Clone {
-    fn get(&self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix]) -> bool;
-    fn get_cur_pos(&self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix]) -> bool;
-    fn get_idxs(&self, current1: Ix, current2: Ix, target1: Ix, target2: Ix) -> bool;
-    fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool);
-    fn set_cur_pos(&mut self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix], value: bool);
-    fn set_idxs(&mut self, current1: Ix, current2: Ix, target1: Ix, target2: Ix, value: bool);
+    fn get(&self, current1: &[Ix], target1: &[Ix]) -> bool;
+    fn get_cur_pos(&self, current1: Ix, target1: &[Ix]) -> bool;
+    fn get_idxs(&self, current1: Ix, target1: Ix) -> bool;
+    fn set(&mut self, current1: &[Ix], target1: &[Ix], value: bool);
+    fn set_cur_pos(&mut self, current1: Ix, target1: &[Ix], value: bool);
+    fn set_idxs(&mut self, current1: Ix, target1: Ix, value: bool);
     fn write<T: Write>(&self, io: &mut T) -> Result<()>;
     fn read<T: Read>(io: &mut T) -> Result<Self>;
     fn empty(target_shape: &[Ix], current_shape: &[Ix]) -> Self;
@@ -47,7 +47,7 @@ pub trait TransitionMatrixOps: Sized + std::fmt::Debug + std::clone::Clone {
     fn slots(&self) -> (usize, usize);
     fn matrix_dims(&self) -> (usize, usize) {
         let (current_slots, target_slots) = self.slots();
-        (target_slots.pow(2), current_slots.pow(2))
+        (target_slots, current_slots)
     }
 
     fn reinterpret_current_shape(&self, new_shape: ShapeVec) -> Self;
@@ -56,9 +56,9 @@ pub trait TransitionMatrixOps: Sized + std::fmt::Debug + std::clone::Clone {
     fn n_elements(&self) -> usize;
 }
 
-fn to_index(i1: &[Ix], i2: &[Ix], ishape: &[Ix], j1: &[Ix], j2: &[Ix], jshape: &[Ix]) -> Ix {
+fn to_index(i1: &[Ix], ishape: &[Ix], j1: &[Ix], jshape: &[Ix]) -> Ix {
     let mut ret = 0;
-    for (is, ss) in [(i1, ishape), (i2, ishape), (j1, jshape), (j2, jshape)].iter() {
+    for (is, ss) in [(i1, ishape), (j1, jshape)].iter() {
         for (v, scale) in is.iter().zip(ss.iter()) {
             // ret starts at 0 so the initial case is fine
             ret = (ret * scale) + v
@@ -67,8 +67,8 @@ fn to_index(i1: &[Ix], i2: &[Ix], ishape: &[Ix], j1: &[Ix], j2: &[Ix], jshape: &
     ret
 }
 
-fn to_raw_index(i1: Ix, i2: Ix, ishape: Ix, j1: Ix, j2: Ix, jshape: Ix) -> Ix {
-    j2 + (jshape * (j1 + jshape * (i2 + (ishape * i1))))
+fn to_raw_index(i1: Ix, _ishape: Ix, j1: Ix, jshape: Ix) -> Ix {
+    j1 + (jshape * i1)
 }
 
 fn write_length_tagged_idxs<T: Write>(io: &mut T, data: &[Ix]) -> io::Result<()> {
@@ -106,36 +106,36 @@ impl DenseTransitionMatrix {
 }
 
 impl TransitionMatrixOps for DenseTransitionMatrix {
-    fn get(&self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix]) -> bool {
-        self.data[to_index(target1, target2, &self.target_shape,
-                           current1, current2, &self.current_shape)]
+    fn get(&self, current1: &[Ix], target1: &[Ix]) -> bool {
+        self.data[to_index(target1, &self.target_shape,
+                           current1, &self.current_shape)]
     }
 
-    fn get_cur_pos(&self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix]) -> bool {
-        self.data[to_index(target1, target2, &self.target_shape,
-                           &[current1], &[current2], &[self.current_len])]
+    fn get_cur_pos(&self, current1: Ix, target1: &[Ix]) -> bool {
+        self.data[to_index(target1, &self.target_shape,
+                           &[current1], &[self.current_len])]
     }
 
-    fn get_idxs(&self, current1: Ix, current2: Ix, target1: Ix, target2: Ix) -> bool {
-        self.data[to_raw_index(target1, target2, self.target_len,
-                               current1, current2, self.current_len)]
+    fn get_idxs(&self, current1: Ix, target1: Ix) -> bool {
+        self.data[to_raw_index(target1, self.target_len,
+                               current1, self.current_len)]
     }
 
-    fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool) {
-        let index = to_index(target1, target2, &self.target_shape,
-                             current1, current2, &self.current_shape);
+    fn set(&mut self, current1: &[Ix], target1: &[Ix], value: bool) {
+        let index = to_index(target1, &self.target_shape,
+                             current1, &self.current_shape);
         self.data.set(index, value);
     }
 
-    fn set_cur_pos(&mut self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix], value: bool) {
-        let index = to_index(target1, target2, &self.target_shape,
-                             &[current1], &[current2], &[self.current_len]);
+    fn set_cur_pos(&mut self, current1: Ix, target1: &[Ix], value: bool) {
+        let index = to_index(target1, &self.target_shape,
+                             &[current1], &[self.current_len]);
         self.data.set(index, value);
     }
 
-    fn set_idxs(&mut self, current1: Ix, current2: Ix, target1: Ix, target2: Ix, value: bool) {
-        let index = to_raw_index(target1, target2, self.target_len,
-                                 current1, current2, self.current_len);
+    fn set_idxs(&mut self, current1: Ix, target1: Ix, value: bool) {
+        let index = to_raw_index(target1, self.target_len,
+                                 current1, self.current_len);
         self.data.set(index, value);
     }
 
@@ -167,7 +167,7 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
     fn empty(target_shape: &[Ix], current_shape: &[Ix]) -> Self {
         let out_slots: usize = target_shape.iter().copied().product();
         let in_slots: usize = current_shape.iter().copied().product();
-        let len = out_slots.pow(2) * in_slots.pow(2);
+        let len = out_slots * in_slots;
         let bits = BitVec::from_elem(len, false);
         Self::new(bits, ShapeVec::from_slice(target_shape), ShapeVec::from_slice(current_shape))
     }
@@ -228,22 +228,16 @@ pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet) -> T {
         let output_shape = op.data.shape();
         for (input1, output1) in op.data.into_iter().copied()
             .zip(ndarray::indices(output_shape)).filter(|&(i, _)| i >= 0 && i < in_bound) {
-                for (input2, output2) in op.data.into_iter().copied()
-                    .zip(ndarray::indices(output_shape)).filter(|&(i, _)| i >= 0 && i < in_bound) {
                         let mut out1: SmallVec<[usize; 6]> =
                             SmallVec::from_slice(output1.slice());
-                        let mut out2: SmallVec<[usize; 6]> =
-                            SmallVec::from_slice(output2.slice());
                         if fold {
                             out1.pop();
-                            out2.pop();
                         }
-                        ret.set_cur_pos(input1 as usize, input2 as usize,
-                                        &out1, &out2,
+                        ret.set_cur_pos(input1 as usize,
+                                        &out1,
                                         true);
                     }
             }
-    }
     ret
 }
 
@@ -256,39 +250,39 @@ const DENSE_MATRIX_TAG: u8 = 1;
 const FILE_MARKER: &[u8; 8] = b"SWIZFLOW";
 
 impl TransitionMatrixOps for TransitionMatrix {
-    fn get(&self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix]) -> bool {
+    fn get(&self, current1: &[Ix], target1: &[Ix]) -> bool {
         match self {
-            TransitionMatrix::Dense(d) => d.get(current1, current2, target1, target2)
+            TransitionMatrix::Dense(d) => d.get(current1, target1)
         }
     }
 
-    fn get_cur_pos(&self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix]) -> bool {
+    fn get_cur_pos(&self, current1: Ix, target1: &[Ix]) -> bool {
         match self {
-            TransitionMatrix::Dense(d) => d.get_cur_pos(current1, current2, target1, target2)
+            TransitionMatrix::Dense(d) => d.get_cur_pos(current1, target1)
         }
     }
 
-    fn get_idxs(&self, current1: Ix, current2: Ix, target1: Ix, target2: Ix) -> bool {
+    fn get_idxs(&self, current1: Ix, target1: Ix) -> bool {
         match self {
-            TransitionMatrix::Dense(d) => d.get_idxs(current1, current2, target1, target2)
+            TransitionMatrix::Dense(d) => d.get_idxs(current1, target1)
         }
     }
 
-    fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool) {
+    fn set(&mut self, current1: &[Ix], target1: &[Ix], value: bool) {
         match self {
-            TransitionMatrix::Dense(d) => d.set(current1, current2, target1, target2, value)
+            TransitionMatrix::Dense(d) => d.set(current1, target1, value)
         }
     }
 
-    fn set_cur_pos(&mut self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix], value: bool) {
+    fn set_cur_pos(&mut self, current1: Ix, target1: &[Ix], value: bool) {
         match self {
-            TransitionMatrix::Dense(d) => d.set_cur_pos(current1, current2, target1, target2, value)
+            TransitionMatrix::Dense(d) => d.set_cur_pos(current1, target1, value)
         }
     }
 
-    fn set_idxs(&mut self, current1: Ix, current2: Ix, target1: Ix, target2: Ix, value: bool) {
+    fn set_idxs(&mut self, current1: Ix, target1: Ix, value: bool) {
         match self {
-            TransitionMatrix::Dense(d) => d.set_idxs(current1, current2, target1, target2, value)
+            TransitionMatrix::Dense(d) => d.set_idxs(current1, target1, value)
         }
     }
 

@@ -137,14 +137,11 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
     let mut did_lookup = false;
     let mut target_checks = 0;
     for (i, a) in expected_syms.iter().copied().enumerate() {
-        for b in (&expected_syms[(i+1)..]).iter().copied().chain(std::iter::once(a)) {
-            for (t1, t2) in iproduct!(target.inv_state[a].iter().copied(),
-                                      target.inv_state[b].iter().copied()) {
+            for t1 in target.inv_state[a].iter().copied() {
                 target_checks += 1;
-                let result = iproduct!(current.inv_state[a].iter().copied(),
-                                       current.inv_state[b].iter().copied())
-                    .any(|(c1, c2)| {
-                        let v = matrix.get_idxs(c1, c2, t1, t2);
+                let result = current.inv_state[a].iter().copied()
+                    .any(|c1| {
+                        let v = matrix.get_idxs(c1, t1);
                         v
                     });
                 if !result {
@@ -155,9 +152,9 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
                     tracker.record_target_checks(target_checks);
                     if print_pruned {
                         println!("pruned @ {}\n{}", level, current);
-                        println!("v1 = {}, v2 = {}, t1 = {}, t2 = {}",
-                                 target.domain.get_value(a), target.domain.get_value(b),
-                                 t1, t2);
+                        println!("v1 = {}, t1 = {}",
+                                 target.domain.get_value(a),
+                                 t1);
                     }
                     return false;
                 }
@@ -180,7 +177,6 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
             //     return v;
             // }
             did_lookup = true;
-        }
     }
     true
 }

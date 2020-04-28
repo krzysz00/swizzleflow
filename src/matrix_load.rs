@@ -49,10 +49,10 @@ fn union_matrices(a: &mut TransitionMatrix, b: &TransitionMatrix) {
     }
     let current = slots.0;
     let target = slots.1;
-    for (c1, c2, t1, t2) in iproduct![(0..current), (0..current),
-                                      (0..target), (0..target)] {
-        if b.get_idxs(c1, c2, t1, t2) {
-            a.set_idxs(c1, c2, t1, t2, true);
+    for (c1, t1) in iproduct![(0..current),
+                              (0..target)] {
+        if b.get_idxs(c1, t1) {
+            a.set_idxs(c1, t1, true);
         }
     }
 }
