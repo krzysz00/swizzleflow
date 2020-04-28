@@ -1,0 +1,1374 @@
+spec:specs/swinv_like/l1/1d-conv.json
+build:matrices/32-cond_keep_no_consts-32,3 density=0.0009765625; time=0.004034429;
+Using newly-built matrices/32-cond_keep_no_consts-32,3
+build:matrices/32,3-col_rots_no_group-32,3 density=0.003472222222222222; time=0.032919924;
+mul:matrices/32-cond_keep_no_consts_32,3-col_rots_no_group-32,3 density=0.03125; time=0.309537564;
+build:matrices/32,3-col_xforms_no_group-32,3 density=0.043589650848765434; time=0.923191603;
+mul:matrices/32-cond_keep_no_consts_32,3-col_rots_no_group_32,3-col_xforms_no_group-32,3 density=0.8824598524305556; time=1.304066495;
+Begin search
+solution:stack_fold[init;load_trunc;select(d0 >= 0 + d1);xform(0,1,3);id,init;broadcast;id];keep_if(d0 = 0 + d0)
+stats:0 name=load_trunc; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=broadcast; lane=1; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:2 name=identity; lane=1; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:3 name=reg_select_no_consts; lane=0; tested=14; found=0; failed=0; pruned=13; continued=1;
+stats:4 name=col_xforms_no_group; lane=0; tested=992; found=0; failed=0; pruned=991; continued=1;
+stats:5 name=col_rots_no_group; lane=0; tested=32; found=0; failed=0; pruned=31; continued=1;
+stats:6 name=stack_folding; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:7 name=cond_keep_no_consts; lane=0; tested=14; found=0; failed=10; pruned=0; continued=4;
+stats:8 name=(last); lane=0; tested=4; found=1; failed=3; pruned=0; continued=0;
+search:specs/swinv_like/l1/1d-conv.json success=true; mode=All; time=0.007135015;
+spec:specs/swinv_like/l1/1d-stencil.json
+load:matrices/32-cond_keep_no_consts-32,3 density=0.0009765625; time=0.003254852;
+load:matrices/32-cond_keep_no_consts_32,3-col_rots_no_group-32,3 density=0.03125; time=0.003206542;
+load:matrices/32-cond_keep_no_consts_32,3-col_rots_no_group_32,3-col_xforms_no_group-32,3 density=0.8824598524305556; time=0.003301863;
+Begin search
+solution:init;load_trunc;select(d0 >= 0 + d1);xform(0,1,3);id;keep_if(d0 = 0 + d0)
+stats:0 name=load_trunc; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=reg_select_no_consts; lane=0; tested=14; found=0; failed=0; pruned=13; continued=1;
+stats:2 name=col_xforms_no_group; lane=0; tested=992; found=0; failed=0; pruned=991; continued=1;
+stats:3 name=col_rots_no_group; lane=0; tested=32; found=0; failed=0; pruned=31; continued=1;
+stats:4 name=cond_keep_no_consts; lane=0; tested=14; found=0; failed=10; pruned=0; continued=4;
+stats:5 name=(last); lane=0; tested=4; found=1; failed=3; pruned=0; continued=0;
+search:specs/swinv_like/l1/1d-stencil.json success=true; mode=All; time=0.003000271;
+spec:specs/swinv_like/l1/2d-stencil-3.json
+build:matrices/4,4-identity-4,4,3,3 density=0.00390625; time=0.001458584;
+Using newly-built matrices/4,4-identity-4,4,3,3
+build:matrices/4,4,3,3-2s-rnc{main[1]out[1]second[3]}-4,4,3,3 density=0.00019290123456790122; time=0.021901817;
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}-4,4,3,3 density=0.015625; time=1.325818696;
+build:matrices/4,4,3,3-2s-xfnc{main[1]out[1]second[3]}-4,4,3,3 density=0.0003054269547325103; time=0.040441327;
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}-4,4,3,3 density=0.04991319444444445; time=3.384261221;
+build:matrices/4,4,3,3-2s-rnc{main[0]out[0]second[2]}-4,4,3,3 density=0.00019290123456790122; time=0.022427002;
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}_4,4,3,3-2s-rnc{main[0]out[0]second[2]}-4,4,3,3 density=0.1996527777777778; time=1.821971561;
+build:matrices/4,4,3,3-2s-xfnc{main[0]out[0]second[2]}-4,4,3,3 density=0.0003054269547325103; time=0.035299258;
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}_4,4,3,3-2s-rnc{main[0]out[0]second[2]}_4,4,3,3-2s-xfnc{main[0]out[0]second[2]}-4,4,3,3 density=0.6377797067901234; time=1.8377644389999999;
+build:matrices/4,4,3,3-2s-gnc{axis[3]dims[1|3]}-4,4,3,2 density=0.0003918306327160494; time=0.025862092;
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}_4,4,3,3-2s-rnc{main[0]out[0]second[2]}_4,4,3,3-2s-xfnc{main[0]out[0]second[2]}_4,4,3,3-2s-gnc{axis[3]dims[1|3]}-4,4,3,2 density=0.7986111111111112; time=0.7945533;
+Begin search
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, );select(d1 >= 0 + d3, );xform(0,1,3);id;xform(0,1,3);id;id
+stats:0 name=reshape; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=load_grid_2d; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:2 name=2s-gnc{axis[2]dims[0|2]}; lane=0; tested=14; found=0; failed=0; pruned=13; continued=1;
+stats:3 name=2s-gnc{axis[3]dims[1|3]}; lane=0; tested=14; found=0; failed=0; pruned=13; continued=1;
+stats:4 name=2s-xfnc{main[0]out[0]second[2]}; lane=0; tested=12; found=0; failed=0; pruned=11; continued=1;
+stats:5 name=2s-rnc{main[0]out[0]second[2]}; lane=0; tested=4; found=0; failed=0; pruned=3; continued=1;
+stats:6 name=2s-xfnc{main[1]out[1]second[3]}; lane=0; tested=12; found=0; failed=0; pruned=11; continued=1;
+stats:7 name=2s-rnc{main[1]out[1]second[3]}; lane=0; tested=4; found=0; failed=0; pruned=3; continued=1;
+stats:8 name=identity; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:9 name=(last); lane=0; tested=1; found=1; failed=0; pruned=0; continued=0;
+search:specs/swinv_like/l1/2d-stencil-3.json success=true; mode=All; time=0.002135102;
+spec:specs/swinv_like/l1/mult-32-with-4.json
+build:matrices/8-reshape-2,4 density=0.015625; time=0.000006091;
+Using newly-built matrices/8-reshape-2,4
+build:matrices/2,4-transpose-4,2 density=0.015625; time=0.000005034;
+mul:matrices/8-reshape_2,4-transpose-4,2 density=0.015625; time=0.00003761;
+build:matrices/4,2-cond_keep_no_consts{restrict[1|1]}-4,2,4 density=0.015625; time=0.000592816;
+mul:matrices/8-reshape_2,4-transpose_4,2-cond_keep_no_consts{restrict[1|1]}-4,2,4 density=0.015625; time=0.000356359;
+build:matrices/4,2,4-broadcast{group[1]}-4,4 density=0.00390625; time=0.000075657;
+mul:matrices/8-reshape_2,4-transpose_4,2-cond_keep_no_consts{restrict[1|1]}_4,2,4-broadcast{group[1]}-4,4 density=0.0625; time=0.001142056;
+build:matrices/4,4-rots_no_group{main[0]out[1]second[1]}-4,4 density=0.0185546875; time=0.000072243;
+mul:matrices/8-reshape_2,4-transpose_4,2-cond_keep_no_consts{restrict[1|1]}_4,2,4-broadcast{group[1]}_4,4-rots_no_group{main[0]out[1]second[1]}-4,4 density=0.0625; time=0.000630244;
+load:matrices/8-reshape_2,4-transpose_4,2-cond_keep_no_consts{restrict[1|1]}_4,2,4-broadcast{group[1]}_4,4-rots_no_group{main[0]out[1]second[1]}-4,4 density=0.0625; time=0.000011507;
+Begin search
+solution:stack_fold[init;broadcast;xform(0,3,4);id,init;broadcast;id;id];broadcast;keep_if(d0 >= 0 + d2);keep_if(d0 < 0 + d2);tr;id
+solution:stack_fold[init;broadcast;id;id,init;broadcast;xform(0,3,4);id];broadcast;keep_if(d0 >= 0 + d2);keep_if(d0 < 0 + d2);tr;id
+stats:0 name=broadcast; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=broadcast; lane=1; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:2 name=xforms_no_group{main[0]out[1]second[1]}; lane=0; tested=25; found=0; failed=0; pruned=15; continued=10;
+stats:3 name=rots_no_group{main[0]out[1]second[1]}; lane=0; tested=50; found=0; failed=0; pruned=40; continued=10;
+stats:4 name=xforms_no_group{main[0]out[1]second[1]}; lane=1; tested=250; found=0; failed=0; pruned=150; continued=100;
+stats:5 name=rots_no_group{main[0]out[1]second[1]}; lane=1; tested=500; found=0; failed=0; pruned=400; continued=100;
+stats:6 name=stack_folding; lane=0; tested=100; found=0; failed=0; pruned=98; continued=2;
+stats:7 name=broadcast{group[1]}; lane=0; tested=2; found=0; failed=0; pruned=0; continued=2;
+stats:8 name=cond_keep_no_consts{restrict[1|0]}; lane=0; tested=28; found=0; failed=0; pruned=24; continued=4;
+stats:9 name=cond_keep_no_consts{restrict[1|1]}; lane=0; tested=56; found=0; failed=48; pruned=6; continued=2;
+stats:10 name=transpose; lane=0; tested=2; found=0; failed=0; pruned=0; continued=2;
+stats:11 name=reshape; lane=0; tested=2; found=0; failed=0; pruned=0; continued=2;
+stats:12 name=(last); lane=0; tested=2; found=2; failed=0; pruned=0; continued=0;
+search:specs/swinv_like/l1/mult-32-with-4.json success=true; mode=All; time=0.002111393;
+spec:specs/swinv_like/l1/trove-crc-1.json
+build:matrices/32,1-row_rots_no_group-32,1 density=0.0009765625; time=0.000084273;
+Using newly-built matrices/32,1-row_rots_no_group-32,1
+build:matrices/32,1-col_rots_no_group-32,1 density=0.03125; time=0.001770691;
+mul:matrices/32,1-row_rots_no_group_32,1-col_rots_no_group-32,1 density=0.03125; time=0.009150873;
+Begin search
+solution:init;load_rep;id;id;id;id;id;id
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms_no_group; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:2 name=row_rots_no_group; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:3 name=col_xforms_no_group; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:4 name=col_rots_no_group; lane=0; tested=32; found=0; failed=0; pruned=31; continued=1;
+stats:5 name=row_xforms_no_group; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:6 name=row_rots_no_group; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:7 name=(last); lane=0; tested=1; found=1; failed=0; pruned=0; continued=0;
+search:specs/swinv_like/l1/trove-crc-1.json success=true; mode=All; time=0.000161436;
+spec:specs/swinv_like/l1/trove-crc-2.json
+build:matrices/32,2-row_rots_no_group-32,2 density=0.00048828125; time=0.000888594;
+Using newly-built matrices/32,2-row_rots_no_group-32,2
+build:matrices/32,2-row_xforms_no_group-32,2 density=0.0008957386016845703; time=0.002646641;
+mul:matrices/32,2-row_rots_no_group_32,2-row_xforms_no_group-32,2 density=0.0009613037109375; time=0.159804417;
+build:matrices/32,2-col_rots_no_group-32,2 density=0.0078125; time=0.007310013;
+mul:matrices/32,2-row_rots_no_group_32,2-row_xforms_no_group_32,2-col_rots_no_group-32,2 density=0.03076171875; time=0.212446019;
+build:matrices/32,2-col_xforms_no_group-32,2 density=0.10117721557617188; time=0.221423662;
+mul:matrices/32,2-row_rots_no_group_32,2-row_xforms_no_group_32,2-col_rots_no_group_32,2-col_xforms_no_group-32,2 density=0.81219482421875; time=1.272034192;
+mul:matrices/32,2-row_rots_no_group_32,2-row_xforms_no_group_32,2-col_rots_no_group_32,2-col_xforms_no_group_32,2-row_rots_no_group-32,2 density=0.856201171875; time=0.214361894;
+Begin search
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms_no_group; lane=0; tested=10; found=0; failed=0; pruned=5; continued=5;
+stats:2 name=row_rots_no_group; lane=0; tested=10; found=0; failed=0; pruned=8; continued=2;
+stats:3 name=col_xforms_no_group; lane=0; tested=1984; found=0; failed=0; pruned=1984; continued=0;
+stats:4 name=col_rots_no_group; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+stats:5 name=row_xforms_no_group; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+stats:6 name=row_rots_no_group; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+stats:7 name=(last); lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+search:specs/swinv_like/l1/trove-crc-2.json success=false; mode=All; time=0.005048396;
+spec:specs/swinv_like/l1/trove-crc-3.json
+build:matrices/32,3-row_rots_no_group-32,3 density=0.0003255208333333333; time=0.005409847;
+Using newly-built matrices/32,3-row_rots_no_group-32,3
+build:matrices/32,3-row_xforms_no_group-32,3 density=0.0008534207756136671; time=0.021196769;
+mul:matrices/32,3-row_rots_no_group_32,3-row_xforms_no_group-32,3 density=0.0009509192572699653; time=0.933607507;
+load:matrices/32,3-col_rots_no_group-32,3 density=0.003472222222222222; time=0.026766307;
+mul:matrices/32,3-row_rots_no_group_32,3-row_xforms_no_group_32,3-col_rots_no_group-32,3 density=0.030429416232638888; time=1.7099080770000001;
+load:matrices/32,3-col_xforms_no_group-32,3 density=0.043589650848765434; time=0.027199913;
+mul:matrices/32,3-row_rots_no_group_32,3-row_xforms_no_group_32,3-col_rots_no_group_32,3-col_xforms_no_group-32,3 density=0.8640927915219907; time=10.60673602;
+mul:matrices/32,3-row_rots_no_group_32,3-row_xforms_no_group_32,3-col_rots_no_group_32,3-col_xforms_no_group_32,3-row_rots_no_group-32,3 density=0.8899739583333334; time=1.245928579;
+Begin search
+solution:init;load_rep;xform(0,1,32);rot(1);xform(3,31,3);rot(22);xform(2,0,32);rot(1)
+solution:init;load_rep;xform(2,1,32);id;xform(3,1,3);id;id;id
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms_no_group; lane=0; tested=30; found=0; failed=0; pruned=28; continued=2;
+stats:2 name=row_rots_no_group; lane=0; tested=6; found=0; failed=0; pruned=4; continued=2;
+stats:3 name=col_xforms_no_group; lane=0; tested=1984; found=0; failed=0; pruned=1982; continued=2;
+stats:4 name=col_rots_no_group; lane=0; tested=64; found=0; failed=0; pruned=62; continued=2;
+stats:5 name=row_xforms_no_group; lane=0; tested=60; found=0; failed=0; pruned=58; continued=2;
+stats:6 name=row_rots_no_group; lane=0; tested=6; found=0; failed=0; pruned=0; continued=6;
+stats:7 name=(last); lane=0; tested=6; found=2; failed=4; pruned=0; continued=0;
+search:specs/swinv_like/l1/trove-crc-3.json success=true; mode=All; time=0.009373957;
+spec:specs/swinv_like/l1/trove-crc-4.json
+build:matrices/32,4-row_rots_no_group-32,4 density=0.000244140625; time=0.013992051;
+Using newly-built matrices/32,4-row_rots_no_group-32,4
+build:matrices/32,4-row_xforms_no_group-32,4 density=0.0008633285760879517; time=0.081002465;
+mul:matrices/32,4-row_rots_no_group_32,4-row_xforms_no_group-32,4 density=0.0009555220603942871; time=3.566282092;
+build:matrices/32,4-col_rots_no_group-32,4 density=0.001953125; time=0.09027344;
+mul:matrices/32,4-row_rots_no_group_32,4-row_xforms_no_group_32,4-col_rots_no_group-32,4 density=0.030576705932617188; time=9.788896183;
+build:matrices/32,4-col_xforms_no_group-32,4 density=0.03704237937927246; time=5.782517832;
+mul:matrices/32,4-row_rots_no_group_32,4-row_xforms_no_group_32,4-col_rots_no_group_32,4-col_xforms_no_group-32,4 density=0.9052581787109375; time=58.937545988;
+mul:matrices/32,4-row_rots_no_group_32,4-row_xforms_no_group_32,4-col_rots_no_group_32,4-col_xforms_no_group_32,4-row_rots_no_group-32,4 density=0.91680908203125; time=15.791219792;
+Begin search
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms_no_group; lane=0; tested=60; found=0; failed=0; pruned=59; continued=1;
+stats:2 name=row_rots_no_group; lane=0; tested=4; found=0; failed=0; pruned=0; continued=4;
+stats:3 name=col_xforms_no_group; lane=0; tested=7936; found=0; failed=0; pruned=7936; continued=0;
+stats:4 name=col_rots_no_group; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+stats:5 name=row_xforms_no_group; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+stats:6 name=row_rots_no_group; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+stats:7 name=(last); lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+search:specs/swinv_like/l1/trove-crc-4.json success=false; mode=All; time=0.037592953;
+spec:specs/swinv_like/l1/trove-crc-5.json
+build:matrices/32,5-row_rots_no_group-32,5 density=0.0001953125; time=0.030060272;
+Using newly-built matrices/32,5-row_rots_no_group-32,5
+build:matrices/32,5-row_xforms_no_group-32,5 density=0.0008788223266601562; time=0.171652543;
+mul:matrices/32,5-row_rots_no_group_32,5-row_xforms_no_group-32,5 density=0.00095672607421875; time=9.956502291;
+build:matrices/32,5-col_rots_no_group-32,5 density=0.00125; time=0.161153448;
+mul:matrices/32,5-row_rots_no_group_32,5-row_xforms_no_group_32,5-col_rots_no_group-32,5 density=0.030615234375; time=35.987010306;
+build:matrices/32,5-col_xforms_no_group-32,5 density=0.0165208251953125; time=4.780795084;
+mul:matrices/32,5-row_rots_no_group_32,5-row_xforms_no_group_32,5-col_rots_no_group_32,5-col_xforms_no_group-32,5 density=0.906208251953125; time=129.600759026;
+mul:matrices/32,5-row_rots_no_group_32,5-row_xforms_no_group_32,5-col_rots_no_group_32,5-col_xforms_no_group_32,5-row_rots_no_group-32,5 density=0.930234375; time=28.103188864;
+Begin search
+solution:init;load_rep;xform(3,2,32);id;xform(5,1,5);id;id;id
+solution:init;load_rep;xform(2,2,32);rot(1);xform(5,31,5);rot(20);xform(4,0,32);rot(1)
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms_no_group; lane=0; tested=100; found=0; failed=0; pruned=96; continued=4;
+stats:2 name=row_rots_no_group; lane=0; tested=20; found=0; failed=0; pruned=18; continued=2;
+stats:3 name=col_xforms_no_group; lane=0; tested=1984; found=0; failed=0; pruned=1982; continued=2;
+stats:4 name=col_rots_no_group; lane=0; tested=64; found=0; failed=0; pruned=62; continued=2;
+stats:5 name=row_xforms_no_group; lane=0; tested=200; found=0; failed=0; pruned=198; continued=2;
+stats:6 name=row_rots_no_group; lane=0; tested=10; found=0; failed=0; pruned=0; continued=10;
+stats:7 name=(last); lane=0; tested=10; found=2; failed=8; pruned=0; continued=0;
+search:specs/swinv_like/l1/trove-crc-5.json success=true; mode=All; time=0.020014644;
+spec:specs/swinv_like/l1/trove-cr_sum-1.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/32-col_rots_no_group-32,1 density=0.03125; time=0.001758989;
+Using newly-built matrices/32-col_rots_no_group-32,1
+Begin search
+solution:init;load_rep;id;id;id;id
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms_no_group; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:2 name=row_rots_no_group; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:3 name=col_xforms_no_group; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:4 name=col_rots_no_group; lane=0; tested=32; found=0; failed=0; pruned=0; continued=32;
+stats:5 name=(last); lane=0; tested=32; found=1; failed=31; pruned=0; continued=0;
+search:specs/swinv_like/l1/trove-cr_sum-1.json success=true; mode=All; time=0.000169173;
+spec:specs/swinv_like/l1/trove-cr_sum-2.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/32-col_rots_no_group-32,2 density=0.03125; time=0.011255105;
+Using newly-built matrices/32-col_rots_no_group-32,2
+load:matrices/32,2-col_xforms_no_group-32,2 density=0.10117721557617188; time=0.00586153;
+mul:matrices/32-col_rots_no_group_32,2-col_xforms_no_group-32,2 density=0.82025146484375; time=0.343983931;
+load:matrices/32,2-row_rots_no_group-32,2 density=0.00048828125; time=0.006545428;
+mul:matrices/32-col_rots_no_group_32,2-col_xforms_no_group_32,2-row_rots_no_group-32,2 density=0.8642578125; time=0.099069634;
+Begin search
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms_no_group; lane=0; tested=10; found=0; failed=0; pruned=5; continued=5;
+stats:2 name=row_rots_no_group; lane=0; tested=10; found=0; failed=0; pruned=8; continued=2;
+stats:3 name=col_xforms_no_group; lane=0; tested=1984; found=0; failed=0; pruned=1984; continued=0;
+stats:4 name=col_rots_no_group; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+stats:5 name=(last); lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+search:specs/swinv_like/l1/trove-cr_sum-2.json success=false; mode=All; time=0.007049532;
+spec:specs/swinv_like/l1/trove-cr_sum-3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/32-col_rots_no_group-32,3 density=0.03125; time=0.015111992;
+Using newly-built matrices/32-col_rots_no_group-32,3
+load:matrices/32,3-col_xforms_no_group-32,3 density=0.043589650848765434; time=0.029612109;
+mul:matrices/32-col_rots_no_group_32,3-col_xforms_no_group-32,3 density=0.8824598524305556; time=1.2918513950000001;
+load:matrices/32,3-row_rots_no_group-32,3 density=0.0003255208333333333; time=0.028643023;
+mul:matrices/32-col_rots_no_group_32,3-col_xforms_no_group_32,3-row_rots_no_group-32,3 density=0.9095052083333334; time=0.410344267;
+Begin search
+solution:init;load_rep;xform(2,1,32);id;xform(3,1,3);id
+solution:init;load_rep;xform(0,1,32);rot(1);xform(3,31,3);rot(22)
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms_no_group; lane=0; tested=30; found=0; failed=0; pruned=28; continued=2;
+stats:2 name=row_rots_no_group; lane=0; tested=6; found=0; failed=0; pruned=4; continued=2;
+stats:3 name=col_xforms_no_group; lane=0; tested=1984; found=0; failed=0; pruned=1982; continued=2;
+stats:4 name=col_rots_no_group; lane=0; tested=64; found=0; failed=0; pruned=0; continued=64;
+stats:5 name=(last); lane=0; tested=64; found=2; failed=62; pruned=0; continued=0;
+search:specs/swinv_like/l1/trove-cr_sum-3.json success=true; mode=All; time=0.010049266;
+spec:specs/swinv_like/l1/trove-cr_sum-4.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/32-col_rots_no_group-32,4 density=0.03125; time=0.025900887;
+Using newly-built matrices/32-col_rots_no_group-32,4
+load:matrices/32,4-col_xforms_no_group-32,4 density=0.03704237937927246; time=0.090589136;
+mul:matrices/32-col_rots_no_group_32,4-col_xforms_no_group-32,4 density=0.9211273193359375; time=3.254089592;
+load:matrices/32,4-row_rots_no_group-32,4 density=0.000244140625; time=0.093458965;
+mul:matrices/32-col_rots_no_group_32,4-col_xforms_no_group_32,4-row_rots_no_group-32,4 density=0.93212890625; time=4.034428245;
+Begin search
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms_no_group; lane=0; tested=60; found=0; failed=0; pruned=57; continued=3;
+stats:2 name=row_rots_no_group; lane=0; tested=12; found=0; failed=0; pruned=0; continued=12;
+stats:3 name=col_xforms_no_group; lane=0; tested=23808; found=0; failed=0; pruned=23808; continued=0;
+stats:4 name=col_rots_no_group; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+stats:5 name=(last); lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+search:specs/swinv_like/l1/trove-cr_sum-4.json success=false; mode=All; time=0.12801692;
+spec:specs/swinv_like/l1/trove-cr_sum-5.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/32-col_rots_no_group-32,5 density=0.03125; time=0.043250695;
+Using newly-built matrices/32-col_rots_no_group-32,5
+load:matrices/32,5-col_xforms_no_group-32,5 density=0.0165208251953125; time=0.220328394;
+mul:matrices/32-col_rots_no_group_32,5-col_xforms_no_group-32,5 density=0.920498046875; time=9.148150003;
+load:matrices/32,5-row_rots_no_group-32,5 density=0.0001953125; time=0.250638408;
+mul:matrices/32-col_rots_no_group_32,5-col_xforms_no_group_32,5-row_rots_no_group-32,5 density=0.945703125; time=3.737188814;
+Begin search
+solution:init;load_rep;xform(2,2,32);rot(1);xform(5,31,5);rot(20)
+solution:init;load_rep;xform(3,2,32);id;xform(5,1,5);id
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms_no_group; lane=0; tested=100; found=0; failed=0; pruned=96; continued=4;
+stats:2 name=row_rots_no_group; lane=0; tested=20; found=0; failed=0; pruned=18; continued=2;
+stats:3 name=col_xforms_no_group; lane=0; tested=1984; found=0; failed=0; pruned=1982; continued=2;
+stats:4 name=col_rots_no_group; lane=0; tested=64; found=0; failed=0; pruned=0; continued=64;
+stats:5 name=(last); lane=0; tested=64; found=2; failed=62; pruned=0; continued=0;
+search:specs/swinv_like/l1/trove-cr_sum-5.json success=true; mode=All; time=0.0177288;
+spec:specs/swinv_like/l1/trove-cr_sum-7.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/32-col_rots_no_group-32,7 density=0.03125; time=0.092030053;
+Using newly-built matrices/32-col_rots_no_group-32,7
+build:matrices/32,7-col_xforms_no_group-32,7 density=0.008823323279606804; time=9.901044969;
+mul:matrices/32-col_rots_no_group_32,7-col_xforms_no_group-32,7 density=0.9359006297831632; time=42.888035352;
+build:matrices/32,7-row_rots_no_group-32,7 density=0.00013950892857142856; time=0.095718664;
+mul:matrices/32-col_rots_no_group_32,7-col_xforms_no_group_32,7-row_rots_no_group-32,7 density=0.9612165178571429; time=33.677882816;
+Begin search
+solution:init;load_rep;xform(2,5,32);id;xform(7,1,7);id
+solution:init;load_rep;xform(5,5,32);rot(1);xform(7,31,7);rot(10)
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms_no_group; lane=0; tested=210; found=0; failed=0; pruned=204; continued=6;
+stats:2 name=row_rots_no_group; lane=0; tested=42; found=0; failed=0; pruned=40; continued=2;
+stats:3 name=col_xforms_no_group; lane=0; tested=1984; found=0; failed=0; pruned=1982; continued=2;
+stats:4 name=col_rots_no_group; lane=0; tested=64; found=0; failed=0; pruned=0; continued=64;
+stats:5 name=(last); lane=0; tested=64; found=2; failed=62; pruned=0; continued=0;
+search:specs/swinv_like/l1/trove-cr_sum-7.json success=true; mode=All; time=0.02359038;
+spec:specs/swinv_like/l1/trove-rcr-1.json
+load:matrices/32,1-col_rots_no_group-32,1 density=0.03125; time=0.000496481;
+load:matrices/32,1-col_rots_no_group-32,1 density=0.03125; time=0.000353483;
+mul:matrices/32,1-col_rots_no_group_32,1-col_rots_no_group-32,1 density=0.03125; time=0.06239909;
+Begin search
+solution:init;load_rep;id;rot(2);id;id;id;rot(30)
+solution:init;load_rep;id;rot(15);id;id;id;rot(17)
+solution:init;load_rep;id;rot(17);id;id;id;rot(15)
+solution:init;load_rep;id;rot(11);id;id;id;rot(21)
+solution:init;load_rep;id;rot(8);id;id;id;rot(24)
+solution:init;load_rep;id;rot(21);id;id;id;rot(11)
+solution:init;load_rep;id;rot(29);id;id;id;rot(3)
+solution:init;load_rep;id;rot(5);id;id;id;rot(27)
+solution:init;load_rep;id;rot(19);id;id;id;rot(13)
+solution:init;load_rep;id;rot(24);id;id;id;rot(8)
+solution:init;load_rep;id;rot(16);id;id;id;rot(16)
+solution:init;load_rep;id;rot(22);id;id;id;rot(10)
+solution:init;load_rep;id;rot(30);id;id;id;rot(2)
+solution:init;load_rep;id;rot(12);id;id;id;rot(20)
+solution:init;load_rep;id;rot(1);id;id;id;rot(31)
+solution:init;load_rep;id;rot(13);id;id;id;rot(19)
+solution:init;load_rep;id;rot(31);id;id;id;rot(1)
+solution:init;load_rep;id;rot(6);id;id;id;rot(26)
+solution:init;load_rep;id;rot(25);id;id;id;rot(7)
+solution:init;load_rep;id;rot(3);id;id;id;rot(29)
+solution:init;load_rep;id;rot(27);id;id;id;rot(5)
+solution:init;load_rep;id;rot(20);id;id;id;rot(12)
+solution:init;load_rep;id;rot(7);id;id;id;rot(25)
+solution:init;load_rep;id;rot(26);id;id;id;rot(6)
+solution:init;load_rep;id;rot(10);id;id;id;rot(22)
+solution:init;load_rep;id;rot(4);id;id;id;rot(28)
+solution:init;load_rep;id;rot(23);id;id;id;rot(9)
+solution:init;load_rep;id;rot(14);id;id;id;rot(18)
+solution:init;load_rep;id;rot(9);id;id;id;rot(23)
+solution:init;load_rep;id;rot(18);id;id;id;rot(14)
+solution:init;load_rep;id;rot(28);id;id;id;rot(4)
+solution:init;load_rep;id;id;id;id;id;id
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=col_xforms_no_group; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:2 name=col_rots_no_group; lane=0; tested=32; found=0; failed=0; pruned=0; continued=32;
+stats:3 name=row_xforms_no_group; lane=0; tested=32; found=0; failed=0; pruned=0; continued=32;
+stats:4 name=row_rots_no_group; lane=0; tested=32; found=0; failed=0; pruned=0; continued=32;
+stats:5 name=col_xforms_no_group; lane=0; tested=32; found=0; failed=0; pruned=0; continued=32;
+stats:6 name=col_rots_no_group; lane=0; tested=1024; found=0; failed=0; pruned=0; continued=1024;
+stats:7 name=(last); lane=0; tested=1024; found=32; failed=992; pruned=0; continued=0;
+search:specs/swinv_like/l1/trove-rcr-1.json success=true; mode=All; time=0.002515389;
+spec:specs/swinv_like/l1/trove-rcr-2.json
+load:matrices/32,2-col_rots_no_group-32,2 density=0.0078125; time=0.006001815;
+load:matrices/32,2-col_xforms_no_group-32,2 density=0.10117721557617188; time=0.005841425;
+mul:matrices/32,2-col_rots_no_group_32,2-col_xforms_no_group-32,2 density=0.2050628662109375; time=0.85304006;
+load:matrices/32,2-row_rots_no_group-32,2 density=0.00048828125; time=0.00597779;
+mul:matrices/32,2-col_rots_no_group_32,2-col_xforms_no_group_32,2-row_rots_no_group-32,2 density=0.410125732421875; time=0.237025758;
+load:matrices/32,2-row_xforms_no_group-32,2 density=0.0008957386016845703; time=0.005308821;
+mul:matrices/32,2-col_rots_no_group_32,2-col_xforms_no_group_32,2-row_rots_no_group_32,2-row_xforms_no_group-32,2 density=0.81219482421875; time=0.270448274;
+load:matrices/32,2-col_rots_no_group-32,2 density=0.0078125; time=0.005603189;
+mul:matrices/32,2-col_rots_no_group_32,2-col_xforms_no_group_32,2-row_rots_no_group_32,2-row_xforms_no_group_32,2-col_rots_no_group-32,2 density=0.856201171875; time=0.388264679;
+Begin search
+solution:init;load_rep;xform(29,3,2);id;xform(0,1,32);id;xform(10,21,2);id
+solution:init;load_rep;xform(11,11,2);rot(31);xform(0,1,32);rot(1);xform(6,3,2);rot(16)
+solution:init;load_rep;xform(25,7,2);id;xform(0,1,32);id;xform(18,9,2);id
+solution:init;load_rep;xform(17,17,2);rot(31);xform(0,1,32);rot(1);xform(2,17,2);rot(16)
+solution:init;load_rep;xform(13,13,2);rot(31);xform(0,1,32);rot(1);xform(10,5,2);rot(16)
+solution:init;load_rep;xform(5,5,2);rot(31);xform(0,1,32);rot(1);xform(26,13,2);rot(16)
+solution:init;load_rep;xform(23,23,2);rot(31);xform(0,1,32);rot(1);xform(14,7,2);rot(16)
+solution:init;load_rep;xform(31,1,2);id;xform(0,1,32);id;xform(30,31,2);id
+solution:init;load_rep;xform(27,5,2);id;xform(0,1,32);id;xform(6,19,2);id
+solution:init;load_rep;xform(11,21,2);id;xform(0,1,32);id;xform(6,3,2);id
+solution:init;load_rep;xform(21,21,2);rot(31);xform(0,1,32);rot(1);xform(26,29,2);rot(16)
+solution:init;load_rep;xform(19,13,2);id;xform(0,1,32);id;xform(22,27,2);id
+solution:init;load_rep;xform(3,3,2);rot(31);xform(0,1,32);rot(1);xform(22,11,2);rot(16)
+solution:init;load_rep;xform(19,19,2);rot(31);xform(0,1,32);rot(1);xform(22,27,2);rot(16)
+solution:init;load_rep;xform(5,27,2);id;xform(0,1,32);id;xform(26,13,2);id
+solution:init;load_rep;xform(25,25,2);rot(31);xform(0,1,32);rot(1);xform(18,9,2);rot(16)
+solution:init;load_rep;xform(9,23,2);id;xform(0,1,32);id;xform(18,25,2);id
+solution:init;load_rep;xform(7,25,2);id;xform(0,1,32);id;xform(14,23,2);id
+solution:init;load_rep;xform(31,31,2);rot(31);xform(0,1,32);rot(1);xform(30,31,2);rot(16)
+solution:init;load_rep;xform(15,17,2);id;xform(0,1,32);id;xform(30,15,2);id
+solution:init;load_rep;xform(27,27,2);rot(31);xform(0,1,32);rot(1);xform(6,19,2);rot(16)
+solution:init;load_rep;xform(23,9,2);id;xform(0,1,32);id;xform(14,7,2);id
+solution:init;load_rep;xform(13,19,2);id;xform(0,1,32);id;xform(10,5,2);id
+solution:init;load_rep;xform(3,29,2);id;xform(0,1,32);id;xform(22,11,2);id
+solution:init;load_rep;xform(17,15,2);id;xform(0,1,32);id;xform(2,17,2);id
+solution:init;load_rep;xform(0,31,2);id;xform(0,1,32);id;xform(2,1,2);id
+solution:init;load_rep;xform(7,7,2);rot(31);xform(0,1,32);rot(1);xform(14,23,2);rot(16)
+solution:init;load_rep;xform(21,11,2);id;xform(0,1,32);id;xform(26,29,2);id
+solution:init;load_rep;xform(0,1,2);rot(31);xform(0,1,32);rot(1);xform(2,1,2);rot(16)
+solution:init;load_rep;xform(15,15,2);rot(31);xform(0,1,32);rot(1);xform(30,15,2);rot(16)
+solution:init;load_rep;xform(29,29,2);rot(31);xform(0,1,32);rot(1);xform(10,21,2);rot(16)
+solution:init;load_rep;xform(9,9,2);rot(31);xform(0,1,32);rot(1);xform(18,25,2);rot(16)
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=col_xforms_no_group; lane=0; tested=992; found=0; failed=0; pruned=960; continued=32;
+stats:2 name=col_rots_no_group; lane=0; tested=1024; found=0; failed=0; pruned=992; continued=32;
+stats:3 name=row_xforms_no_group; lane=0; tested=320; found=0; failed=0; pruned=288; continued=32;
+stats:4 name=row_rots_no_group; lane=0; tested=64; found=0; failed=0; pruned=32; continued=32;
+stats:5 name=col_xforms_no_group; lane=0; tested=31744; found=0; failed=0; pruned=31712; continued=32;
+stats:6 name=col_rots_no_group; lane=0; tested=1024; found=0; failed=0; pruned=0; continued=1024;
+stats:7 name=(last); lane=0; tested=1024; found=32; failed=992; pruned=0; continued=0;
+search:specs/swinv_like/l1/trove-rcr-2.json success=true; mode=All; time=0.096861247;
+spec:specs/swinv_like/l1/trove-rcr-3.json
+load:matrices/32,3-col_rots_no_group-32,3 density=0.003472222222222222; time=0.029357887;
+load:matrices/32,3-col_xforms_no_group-32,3 density=0.043589650848765434; time=0.029560392;
+mul:matrices/32,3-col_rots_no_group_32,3-col_xforms_no_group-32,3 density=0.09805109471450617; time=4.547227545;
+load:matrices/32,3-row_rots_no_group-32,3 density=0.0003255208333333333; time=0.029269812;
+mul:matrices/32,3-col_rots_no_group_32,3-col_xforms_no_group_32,3-row_rots_no_group-32,3 density=0.29415328414351855; time=1.5117192529999999;
+load:matrices/32,3-row_xforms_no_group-32,3 density=0.0008534207756136671; time=0.026727536;
+mul:matrices/32,3-col_rots_no_group_32,3-col_xforms_no_group_32,3-row_rots_no_group_32,3-row_xforms_no_group-32,3 density=0.8669953522858797; time=1.431986559;
+load:matrices/32,3-col_rots_no_group-32,3 density=0.003472222222222222; time=0.026905869;
+mul:matrices/32,3-col_rots_no_group_32,3-col_xforms_no_group_32,3-row_rots_no_group_32,3-row_xforms_no_group_32,3-col_rots_no_group-32,3 density=0.8982928240740741; time=2.177486795;
+Begin search
+solution:init;load_rep;id;id;xform(2,1,32);id;xform(3,1,3);id
+solution:init;load_rep;id;rot(16);xform(2,1,16);rot(2);xform(3,1,3);rot(16)
+solution:init;load_rep;xform(31,0,3);rot(1);xform(2,2,32);rot(2);xform(29,31,3);rot(11)
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=col_xforms_no_group; lane=0; tested=992; found=0; failed=0; pruned=976; continued=16;
+stats:2 name=col_rots_no_group; lane=0; tested=512; found=0; failed=0; pruned=479; continued=33;
+stats:3 name=row_xforms_no_group; lane=0; tested=990; found=0; failed=0; pruned=987; continued=3;
+stats:4 name=row_rots_no_group; lane=0; tested=9; found=0; failed=0; pruned=6; continued=3;
+stats:5 name=col_xforms_no_group; lane=0; tested=2976; found=0; failed=0; pruned=2973; continued=3;
+stats:6 name=col_rots_no_group; lane=0; tested=96; found=0; failed=0; pruned=0; continued=96;
+stats:7 name=(last); lane=0; tested=96; found=3; failed=93; pruned=0; continued=0;
+search:specs/swinv_like/l1/trove-rcr-3.json success=true; mode=All; time=0.029430371;
+spec:specs/swinv_like/l1/trove-rcr-4.json
+load:matrices/32,4-col_rots_no_group-32,4 density=0.001953125; time=0.091186004;
+load:matrices/32,4-col_xforms_no_group-32,4 density=0.03704237937927246; time=0.091806451;
+mul:matrices/32,4-col_rots_no_group_32,4-col_xforms_no_group-32,4 density=0.057570457458496094; time=19.61247889;
+load:matrices/32,4-row_rots_no_group-32,4 density=0.000244140625; time=0.107963424;
+mul:matrices/32,4-col_rots_no_group_32,4-col_xforms_no_group_32,4-row_rots_no_group-32,4 density=0.23028182983398438; time=18.691319085;
+load:matrices/32,4-row_xforms_no_group-32,4 density=0.0008633285760879517; time=0.090004763;
+mul:matrices/32,4-col_rots_no_group_32,4-col_xforms_no_group_32,4-row_rots_no_group_32,4-row_xforms_no_group-32,4 density=0.9093227386474609; time=20.547766666;
+load:matrices/32,4-col_rots_no_group-32,4 density=0.001953125; time=0.090935678;
+mul:matrices/32,4-col_rots_no_group_32,4-col_xforms_no_group_32,4-row_rots_no_group_32,4-row_xforms_no_group_32,4-col_rots_no_group-32,4 density=0.925689697265625; time=19.053652368;
+Begin search
+solution:init;load_rep;xform(13,19,4);id;xform(3,1,32);id;xform(20,5,4);id
+solution:init;load_rep;xform(25,7,4);id;xform(3,1,32);id;xform(4,9,4);id
+solution:init;load_rep;xform(17,15,4);id;xform(3,1,32);id;xform(4,17,4);id
+solution:init;load_rep;xform(19,13,4);id;xform(0,1,32);id;xform(12,27,4);id
+solution:init;load_rep;xform(23,9,4);id;xform(0,1,32);id;xform(28,7,4);id
+solution:init;load_rep;xform(21,11,4);id;xform(3,1,32);id;xform(20,29,4);id
+solution:init;load_rep;xform(7,25,4);id;xform(0,1,32);id;xform(28,23,4);id
+solution:init;load_rep;xform(29,3,4);id;xform(3,1,32);id;xform(20,21,4);id
+solution:init;load_rep;xform(3,29,4);id;xform(0,1,32);id;xform(12,11,4);id
+solution:init;load_rep;xform(27,5,4);id;xform(0,1,32);id;xform(12,19,4);id
+solution:init;load_rep;xform(15,17,4);id;xform(0,1,32);id;xform(28,15,4);id
+solution:init;load_rep;xform(31,1,4);id;xform(0,1,32);id;xform(28,31,4);id
+solution:init;load_rep;xform(0,31,4);id;xform(3,1,32);id;xform(4,1,4);id
+solution:init;load_rep;xform(9,23,4);id;xform(3,1,32);id;xform(4,25,4);id
+solution:init;load_rep;xform(5,27,4);id;xform(3,1,32);id;xform(20,13,4);id
+solution:init;load_rep;xform(11,21,4);id;xform(0,1,32);id;xform(12,3,4);id
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=col_xforms_no_group; lane=0; tested=1984; found=0; failed=0; pruned=1968; continued=16;
+stats:2 name=col_rots_no_group; lane=0; tested=512; found=0; failed=0; pruned=496; continued=16;
+stats:3 name=row_xforms_no_group; lane=0; tested=960; found=0; failed=0; pruned=944; continued=16;
+stats:4 name=row_rots_no_group; lane=0; tested=64; found=0; failed=0; pruned=48; continued=16;
+stats:5 name=col_xforms_no_group; lane=0; tested=31744; found=0; failed=0; pruned=31728; continued=16;
+stats:6 name=col_rots_no_group; lane=0; tested=512; found=0; failed=0; pruned=0; continued=512;
+stats:7 name=(last); lane=0; tested=512; found=16; failed=496; pruned=0; continued=0;
+search:specs/swinv_like/l1/trove-rcr-4.json success=true; mode=All; time=0.202432824;
+spec:specs/swinv_like/l1/trove-rcr-5.json
+load:matrices/32,5-col_rots_no_group-32,5 density=0.00125; time=0.221400801;
+load:matrices/32,5-col_xforms_no_group-32,5 density=0.0165208251953125; time=0.221505215;
+mul:matrices/32,5-col_rots_no_group_32,5-col_xforms_no_group-32,5 density=0.036819921875; time=36.626032492;
+load:matrices/32,5-row_rots_no_group-32,5 density=0.0001953125; time=0.220948043;
+mul:matrices/32,5-col_rots_no_group_32,5-col_xforms_no_group_32,5-row_rots_no_group-32,5 density=0.184099609375; time=34.231506493;
+load:matrices/32,5-row_xforms_no_group-32,5 density=0.0008788223266601562; time=0.21770347;
+mul:matrices/32,5-col_rots_no_group_32,5-col_xforms_no_group_32,5-row_rots_no_group_32,5-row_xforms_no_group-32,5 density=0.9079287109375; time=36.415252046;
+load:matrices/32,5-col_rots_no_group-32,5 density=0.00125; time=0.217410339;
+mul:matrices/32,5-col_rots_no_group_32,5-col_xforms_no_group_32,5-row_rots_no_group_32,5-row_xforms_no_group_32,5-col_rots_no_group-32,5 density=0.933609375; time=43.819096725;
+Begin search
+solution:init;load_rep;xform(31,0,5);rot(1);xform(3,3,32);rot(4);xform(27,31,5);rot(13)
+solution:init;load_rep;id;id;xform(3,2,32);id;xform(5,1,5);id
+solution:init;load_rep;id;rot(16);xform(3,2,16);rot(4);xform(5,1,5);rot(16)
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=col_xforms_no_group; lane=0; tested=992; found=0; failed=0; pruned=976; continued=16;
+stats:2 name=col_rots_no_group; lane=0; tested=512; found=0; failed=0; pruned=479; continued=33;
+stats:3 name=row_xforms_no_group; lane=0; tested=3300; found=0; failed=0; pruned=3297; continued=3;
+stats:4 name=row_rots_no_group; lane=0; tested=15; found=0; failed=0; pruned=12; continued=3;
+stats:5 name=col_xforms_no_group; lane=0; tested=2976; found=0; failed=0; pruned=2973; continued=3;
+stats:6 name=col_rots_no_group; lane=0; tested=96; found=0; failed=0; pruned=0; continued=96;
+stats:7 name=(last); lane=0; tested=96; found=3; failed=93; pruned=0; continued=0;
+search:specs/swinv_like/l1/trove-rcr-5.json success=true; mode=All; time=0.089869352;
+spec:specs/swinv_like/l2/1d-conv.json
+build:matrices/32-cond_keep-32,3 density=0.0009765625; time=0.00805137;
+Using newly-built matrices/32-cond_keep-32,3
+load:matrices/32,3-col_rots_no_group-32,3 density=0.003472222222222222; time=0.029776106;
+mul:matrices/32-cond_keep_32,3-col_rots_no_group-32,3 density=0.03125; time=0.304954584;
+load:matrices/32,3-col_xforms_no_group-32,3 density=0.043589650848765434; time=0.029400598;
+mul:matrices/32-cond_keep_32,3-col_rots_no_group_32,3-col_xforms_no_group-32,3 density=0.8824598524305556; time=1.292502712;
+Begin search
+solution:stack_fold[init;load_trunc;select(d0 >= 0 + d1);xform(0,1,3);id,init;broadcast;id];keep_if(d0 = 0 + d0)
+stats:0 name=load_trunc; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=broadcast; lane=1; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:2 name=identity; lane=1; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:3 name=reg_select; lane=0; tested=38; found=0; failed=0; pruned=36; continued=2;
+stats:4 name=col_xforms_no_group; lane=0; tested=1984; found=0; failed=0; pruned=1982; continued=2;
+stats:5 name=col_rots_no_group; lane=0; tested=64; found=0; failed=0; pruned=62; continued=2;
+stats:6 name=stack_folding; lane=0; tested=2; found=0; failed=1; pruned=0; continued=1;
+stats:7 name=cond_keep; lane=0; tested=38; found=0; failed=28; pruned=0; continued=10;
+stats:8 name=(last); lane=0; tested=10; found=1; failed=9; pruned=0; continued=0;
+search:specs/swinv_like/l2/1d-conv.json success=true; mode=All; time=0.012703065;
+spec:specs/swinv_like/l2/1d-stencil.json
+load:matrices/32-cond_keep-32,3 density=0.0009765625; time=0.003225431;
+load:matrices/32-cond_keep_32,3-col_rots_no_group-32,3 density=0.03125; time=0.003298378;
+load:matrices/32-cond_keep_32,3-col_rots_no_group_32,3-col_xforms_no_group-32,3 density=0.8824598524305556; time=0.00329751;
+Begin search
+solution:init;load_trunc;select(d0 > 1 - d1);xform(0,31,3);rot(2);keep_if(d0 = 0 + d0)
+solution:init;load_trunc;select(d0 >= 0 + d1);xform(0,1,3);id;keep_if(d0 = 0 + d0)
+stats:0 name=load_trunc; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=reg_select; lane=0; tested=38; found=0; failed=0; pruned=36; continued=2;
+stats:2 name=col_xforms_no_group; lane=0; tested=1984; found=0; failed=0; pruned=1982; continued=2;
+stats:3 name=col_rots_no_group; lane=0; tested=64; found=0; failed=0; pruned=62; continued=2;
+stats:4 name=cond_keep; lane=0; tested=76; found=0; failed=56; pruned=0; continued=20;
+stats:5 name=(last); lane=0; tested=20; found=2; failed=18; pruned=0; continued=0;
+search:specs/swinv_like/l2/1d-stencil.json success=true; mode=All; time=0.006186761;
+spec:specs/swinv_like/l2/2d-stencil-3.json
+load:matrices/4,4-identity-4,4,3,3 density=0.00390625; time=0.00202365;
+load:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}-4,4,3,3 density=0.015625; time=0.0018783;
+load:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}-4,4,3,3 density=0.04991319444444445; time=0.001847122;
+load:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}_4,4,3,3-2s-rnc{main[0]out[0]second[2]}-4,4,3,3 density=0.1996527777777778; time=0.00176201;
+load:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}_4,4,3,3-2s-rnc{main[0]out[0]second[2]}_4,4,3,3-2s-xfnc{main[0]out[0]second[2]}-4,4,3,3 density=0.6377797067901234; time=0.001767549;
+build:matrices/4,4,3,3-2s-g{axis[3]dims[1|3]}-4,4,3,2 density=0.00041594328703703704; time=0.058265777;
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}_4,4,3,3-2s-rnc{main[0]out[0]second[2]}_4,4,3,3-2s-xfnc{main[0]out[0]second[2]}_4,4,3,3-2s-g{axis[3]dims[1|3]}-4,4,3,2 density=0.7986111111111112; time=0.769747735;
+Begin search
+solution:init;id;load_grid_2d;select(d0 > 1 - d2, );select(d1 > 1 - d3, );xform(0,3,3);rot(2);xform(0,3,3);rot(2);id
+solution:init;id;load_grid_2d;select(d0 > 1 - d2, );select(d1 >= 0 + d3, );xform(0,3,3);rot(2);xform(0,1,3);id;id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, );select(d1 > 1 - d3, );xform(0,1,3);id;xform(0,3,3);rot(2);id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, );select(d1 >= 0 + d3, );xform(0,1,3);id;xform(0,1,3);id;id
+stats:0 name=reshape; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=load_grid_2d; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:2 name=2s-g{axis[2]dims[0|2]}; lane=0; tested=38; found=0; failed=0; pruned=36; continued=2;
+stats:3 name=2s-g{axis[3]dims[1|3]}; lane=0; tested=76; found=0; failed=0; pruned=72; continued=4;
+stats:4 name=2s-xfnc{main[0]out[0]second[2]}; lane=0; tested=48; found=0; failed=0; pruned=44; continued=4;
+stats:5 name=2s-rnc{main[0]out[0]second[2]}; lane=0; tested=16; found=0; failed=0; pruned=12; continued=4;
+stats:6 name=2s-xfnc{main[1]out[1]second[3]}; lane=0; tested=48; found=0; failed=0; pruned=44; continued=4;
+stats:7 name=2s-rnc{main[1]out[1]second[3]}; lane=0; tested=16; found=0; failed=0; pruned=12; continued=4;
+stats:8 name=identity; lane=0; tested=4; found=0; failed=0; pruned=0; continued=4;
+stats:9 name=(last); lane=0; tested=4; found=4; failed=0; pruned=0; continued=0;
+search:specs/swinv_like/l2/2d-stencil-3.json success=true; mode=All; time=0.007760248;
+spec:specs/swinv_like/l2/mult-32-with-4.json
+load:matrices/8-reshape-2,4 density=0.015625; time=0.00001563;
+load:matrices/8-reshape_2,4-transpose-4,2 density=0.015625; time=0.000007696;
+build:matrices/4,2-cond_keep{restrict[1|1]}-4,2,4 density=0.015625; time=0.001849645;
+mul:matrices/8-reshape_2,4-transpose_4,2-cond_keep{restrict[1|1]}-4,2,4 density=0.015625; time=0.00035487;
+load:matrices/4,2,4-broadcast{group[1]}-4,4 density=0.00390625; time=0.000099729;
+mul:matrices/8-reshape_2,4-transpose_4,2-cond_keep{restrict[1|1]}_4,2,4-broadcast{group[1]}-4,4 density=0.0625; time=0.001078841;
+load:matrices/4,4-rots_no_group{main[0]out[1]second[1]}-4,4 density=0.0185546875; time=0.000026631;
+mul:matrices/8-reshape_2,4-transpose_4,2-cond_keep{restrict[1|1]}_4,2,4-broadcast{group[1]}_4,4-rots_no_group{main[0]out[1]second[1]}-4,4 density=0.0625; time=0.000633578;
+load:matrices/8-reshape_2,4-transpose_4,2-cond_keep{restrict[1|1]}_4,2,4-broadcast{group[1]}_4,4-rots_no_group{main[0]out[1]second[1]}-4,4 density=0.0625; time=0.000010695;
+Begin search
+solution:stack_fold[init;broadcast;xform(0,3,4);id,init;broadcast;id;id];broadcast;keep_if(d0 >= 0 + d2);keep_if(d0 < 0 + d2);tr;id
+solution:stack_fold[init;broadcast;id;id,init;broadcast;xform(0,3,4);id];broadcast;keep_if(d0 >= 0 + d2);keep_if(d0 < 0 + d2);tr;id
+stats:0 name=broadcast; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=broadcast; lane=1; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:2 name=xforms_no_group{main[0]out[1]second[1]}; lane=0; tested=25; found=0; failed=0; pruned=15; continued=10;
+stats:3 name=rots_no_group{main[0]out[1]second[1]}; lane=0; tested=50; found=0; failed=0; pruned=40; continued=10;
+stats:4 name=xforms_no_group{main[0]out[1]second[1]}; lane=1; tested=250; found=0; failed=0; pruned=150; continued=100;
+stats:5 name=rots_no_group{main[0]out[1]second[1]}; lane=1; tested=500; found=0; failed=0; pruned=400; continued=100;
+stats:6 name=stack_folding; lane=0; tested=100; found=0; failed=0; pruned=98; continued=2;
+stats:7 name=broadcast{group[1]}; lane=0; tested=2; found=0; failed=0; pruned=0; continued=2;
+stats:8 name=cond_keep{restrict[1|0]}; lane=0; tested=88; found=0; failed=0; pruned=80; continued=8;
+stats:9 name=cond_keep{restrict[1|1]}; lane=0; tested=352; found=0; failed=342; pruned=8; continued=2;
+stats:10 name=transpose; lane=0; tested=2; found=0; failed=0; pruned=0; continued=2;
+stats:11 name=reshape; lane=0; tested=2; found=0; failed=0; pruned=0; continued=2;
+stats:12 name=(last); lane=0; tested=2; found=2; failed=0; pruned=0; continued=0;
+search:specs/swinv_like/l2/mult-32-with-4.json success=true; mode=All; time=0.002369352;
+spec:specs/swinv_like/l3/1d-conv.json
+load:matrices/32-cond_keep-32,3 density=0.0009765625; time=0.003488476;
+build:matrices/32,3-col_rots-32,3 density=0.004523383246527778; time=0.058615915;
+mul:matrices/32-cond_keep_32,3-col_rots-32,3 density=0.04071044921875; time=0.304923709;
+build:matrices/32,3-col_xforms-32,3 density=0.046303513609332804; time=1.143641117;
+mul:matrices/32-cond_keep_32,3-col_rots_32,3-col_xforms-32,3 density=0.9083069695366753; time=1.39194345;
+Begin search
+solution:stack_fold[init;load_trunc;select(d0 >= 0 + d1);xform(0,1,3);id,init;broadcast;id];keep_if(d0 = 0 + d0)
+stats:0 name=load_trunc; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=broadcast; lane=1; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:2 name=identity; lane=1; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:3 name=reg_select; lane=0; tested=38; found=0; failed=0; pruned=36; continued=2;
+stats:4 name=col_xforms; lane=0; tested=2694; found=0; failed=0; pruned=2692; continued=2;
+stats:5 name=col_rots; lane=0; tested=116; found=0; failed=0; pruned=114; continued=2;
+stats:6 name=stack_folding; lane=0; tested=2; found=0; failed=1; pruned=0; continued=1;
+stats:7 name=cond_keep; lane=0; tested=38; found=0; failed=28; pruned=0; continued=10;
+stats:8 name=(last); lane=0; tested=10; found=1; failed=9; pruned=0; continued=0;
+search:specs/swinv_like/l3/1d-conv.json success=true; mode=All; time=0.017400382;
+spec:specs/swinv_like/l3/1d-stencil.json
+load:matrices/32-cond_keep-32,3 density=0.0009765625; time=0.003215425;
+load:matrices/32-cond_keep_32,3-col_rots-32,3 density=0.04071044921875; time=0.003248767;
+load:matrices/32-cond_keep_32,3-col_rots_32,3-col_xforms-32,3 density=0.9083069695366753; time=0.003270035;
+Begin search
+solution:init;load_trunc;select(d0 >= 0 + d1);xform(0,1,3);id;keep_if(d0 = 0 + d0)
+solution:init;load_trunc;select(d0 > 1 - d1);xform(0,31,3);rot(2);keep_if(d0 = 0 + d0)
+stats:0 name=load_trunc; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=reg_select; lane=0; tested=38; found=0; failed=0; pruned=36; continued=2;
+stats:2 name=col_xforms; lane=0; tested=2694; found=0; failed=0; pruned=2692; continued=2;
+stats:3 name=col_rots; lane=0; tested=116; found=0; failed=0; pruned=114; continued=2;
+stats:4 name=cond_keep; lane=0; tested=76; found=0; failed=56; pruned=0; continued=20;
+stats:5 name=(last); lane=0; tested=20; found=2; failed=18; pruned=0; continued=0;
+search:specs/swinv_like/l3/1d-stencil.json success=true; mode=All; time=0.008107712;
+spec:specs/swinv_like/l3/2d-stencil-3.json
+load:matrices/4,4-identity-4,4,3,3 density=0.00390625; time=0.001867057;
+build:matrices/4,4,3,3-2s-r{main[1]out[1]second[3]}-4,4,3,3 density=0.00021701388888888888; time=0.023762635;
+mul:matrices/4,4-identity_4,4,3,3-2s-r{main[1]out[1]second[3]}-4,4,3,3 density=0.017578125; time=1.325191928;
+build:matrices/4,4,3,3-2s-xf{main[1]out[1]second[3]}-4,4,3,3 density=0.0003154738940329218; time=0.036830563;
+mul:matrices/4,4-identity_4,4,3,3-2s-r{main[1]out[1]second[3]}_4,4,3,3-2s-xf{main[1]out[1]second[3]}-4,4,3,3 density=0.050455729166666664; time=3.800429688;
+build:matrices/4,4,3,3-2s-r{main[0]out[0]second[2]}-4,4,3,3 density=0.00021701388888888888; time=0.023860558;
+mul:matrices/4,4-identity_4,4,3,3-2s-r{main[1]out[1]second[3]}_4,4,3,3-2s-xf{main[1]out[1]second[3]}_4,4,3,3-2s-r{main[0]out[0]second[2]}-4,4,3,3 density=0.22705078125; time=1.7865161459999999;
+build:matrices/4,4,3,3-2s-xf{main[0]out[0]second[2]}-4,4,3,3 density=0.0003154738940329218; time=0.037701383;
+mul:matrices/4,4-identity_4,4,3,3-2s-r{main[1]out[1]second[3]}_4,4,3,3-2s-xf{main[1]out[1]second[3]}_4,4,3,3-2s-r{main[0]out[0]second[2]}_4,4,3,3-2s-xf{main[0]out[0]second[2]}-4,4,3,3 density=0.6517198350694444; time=1.788620473;
+load:matrices/4,4,3,3-2s-g{axis[3]dims[1|3]}-4,4,3,2 density=0.00041594328703703704; time=0.065753037;
+mul:matrices/4,4-identity_4,4,3,3-2s-r{main[1]out[1]second[3]}_4,4,3,3-2s-xf{main[1]out[1]second[3]}_4,4,3,3-2s-r{main[0]out[0]second[2]}_4,4,3,3-2s-xf{main[0]out[0]second[2]}_4,4,3,3-2s-g{axis[3]dims[1|3]}-4,4,3,2 density=0.8072916666666666; time=0.791569516;
+Begin search
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, );select(d1 > 1 - d3, );xform(0,1,3);id;xform(0,3,3);rot(2);id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, );select(d1 >= 0 + d3, );xform(0,1,3);id;xform(0,1,3);id;id
+solution:init;id;load_grid_2d;select(d0 > 1 - d2, );select(d1 > 1 - d3, );xform(0,3,3);rot(2);xform(0,3,3);rot(2);id
+solution:init;id;load_grid_2d;select(d0 > 1 - d2, );select(d1 >= 0 + d3, );xform(0,3,3);rot(2);xform(0,1,3);id;id
+stats:0 name=reshape; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=load_grid_2d; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:2 name=2s-g{axis[2]dims[0|2]}; lane=0; tested=38; found=0; failed=0; pruned=36; continued=2;
+stats:3 name=2s-g{axis[3]dims[1|3]}; lane=0; tested=76; found=0; failed=0; pruned=72; continued=4;
+stats:4 name=2s-xf{main[0]out[0]second[2]}; lane=0; tested=56; found=0; failed=0; pruned=52; continued=4;
+stats:5 name=2s-r{main[0]out[0]second[2]}; lane=0; tested=20; found=0; failed=0; pruned=16; continued=4;
+stats:6 name=2s-xf{main[1]out[1]second[3]}; lane=0; tested=56; found=0; failed=0; pruned=52; continued=4;
+stats:7 name=2s-r{main[1]out[1]second[3]}; lane=0; tested=20; found=0; failed=0; pruned=16; continued=4;
+stats:8 name=identity; lane=0; tested=4; found=0; failed=0; pruned=0; continued=4;
+stats:9 name=(last); lane=0; tested=4; found=4; failed=0; pruned=0; continued=0;
+search:specs/swinv_like/l3/2d-stencil-3.json success=true; mode=All; time=0.007935233;
+spec:specs/swinv_like/l3/mult-32-with-4.json
+load:matrices/8-reshape-2,4 density=0.015625; time=0.000012387;
+load:matrices/8-reshape_2,4-transpose-4,2 density=0.015625; time=0.000008194;
+load:matrices/8-reshape_2,4-transpose_4,2-cond_keep{restrict[1|1]}-4,2,4 density=0.015625; time=0.00003798;
+load:matrices/8-reshape_2,4-transpose_4,2-cond_keep{restrict[1|1]}_4,2,4-broadcast{group[1]}-4,4 density=0.0625; time=0.000011714;
+build:matrices/4,4-rots{main[0]out[1]second[1]}-4,4 density=0.0203857421875; time=0.000087845;
+mul:matrices/8-reshape_2,4-transpose_4,2-cond_keep{restrict[1|1]}_4,2,4-broadcast{group[1]}_4,4-rots{main[0]out[1]second[1]}-4,4 density=0.0625; time=0.000641448;
+load:matrices/8-reshape_2,4-transpose_4,2-cond_keep{restrict[1|1]}_4,2,4-broadcast{group[1]}_4,4-rots{main[0]out[1]second[1]}-4,4 density=0.0625; time=0.000010314;
+Begin search
+solution:stack_fold[init;broadcast;id;id,init;broadcast;xform(0,3,4);id];broadcast;keep_if(d0 >= 0 + d2);keep_if(d0 < 0 + d2);tr;id
+solution:stack_fold[init;broadcast;xform(0,3,4);id,init;broadcast;id;id];broadcast;keep_if(d0 >= 0 + d2);keep_if(d0 < 0 + d2);tr;id
+stats:0 name=broadcast; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=broadcast; lane=1; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:2 name=xforms{main[0]out[1]second[1]}; lane=0; tested=30; found=0; failed=0; pruned=20; continued=10;
+stats:3 name=rots{main[0]out[1]second[1]}; lane=0; tested=60; found=0; failed=0; pruned=50; continued=10;
+stats:4 name=xforms{main[0]out[1]second[1]}; lane=1; tested=300; found=0; failed=0; pruned=200; continued=100;
+stats:5 name=rots{main[0]out[1]second[1]}; lane=1; tested=600; found=0; failed=0; pruned=500; continued=100;
+stats:6 name=stack_folding; lane=0; tested=100; found=0; failed=0; pruned=98; continued=2;
+stats:7 name=broadcast{group[1]}; lane=0; tested=2; found=0; failed=0; pruned=0; continued=2;
+stats:8 name=cond_keep{restrict[1|0]}; lane=0; tested=88; found=0; failed=0; pruned=80; continued=8;
+stats:9 name=cond_keep{restrict[1|1]}; lane=0; tested=352; found=0; failed=342; pruned=8; continued=2;
+stats:10 name=transpose; lane=0; tested=2; found=0; failed=0; pruned=0; continued=2;
+stats:11 name=reshape; lane=0; tested=2; found=0; failed=0; pruned=0; continued=2;
+stats:12 name=(last); lane=0; tested=2; found=2; failed=0; pruned=0; continued=0;
+search:specs/swinv_like/l3/mult-32-with-4.json success=true; mode=All; time=0.002613857;
+spec:specs/swinv_like/l3/trove-crc-1.json
+build:matrices/32,1-row_rots-32,1 density=0.0009765625; time=0.000086341;
+Using newly-built matrices/32,1-row_rots-32,1
+build:matrices/32,1-col_rots-32,1 density=0.04071044921875; time=0.003104052;
+mul:matrices/32,1-row_rots_32,1-col_rots-32,1 density=0.04071044921875; time=0.009072541;
+Begin search
+solution:init;load_rep;id;id;id;id;id;id
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:2 name=row_rots; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:3 name=col_xforms; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:4 name=col_rots; lane=0; tested=58; found=0; failed=0; pruned=57; continued=1;
+stats:5 name=row_xforms; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:6 name=row_rots; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:7 name=(last); lane=0; tested=1; found=1; failed=0; pruned=0; continued=0;
+search:specs/swinv_like/l3/trove-crc-1.json success=true; mode=All; time=0.000215175;
+spec:specs/swinv_like/l3/trove-crc-2.json
+build:matrices/32,2-row_rots-32,2 density=0.00048828125; time=0.000886517;
+Using newly-built matrices/32,2-row_rots-32,2
+build:matrices/32,2-row_xforms-32,2 density=0.0008957386016845703; time=0.002738659;
+mul:matrices/32,2-row_rots_32,2-row_xforms-32,2 density=0.0009613037109375; time=0.156688128;
+build:matrices/32,2-col_rots-32,2 density=0.0101776123046875; time=0.01328842;
+mul:matrices/32,2-row_rots_32,2-row_xforms_32,2-col_rots-32,2 density=0.04022216796875; time=0.212178005;
+build:matrices/32,2-col_xforms-32,2 density=0.10524827241897583; time=0.294581203;
+mul:matrices/32,2-row_rots_32,2-row_xforms_32,2-col_rots_32,2-col_xforms-32,2 density=0.8511590957641602; time=1.378999004;
+mul:matrices/32,2-row_rots_32,2-row_xforms_32,2-col_rots_32,2-col_xforms_32,2-row_rots-32,2 density=0.8948745727539063; time=0.203870614;
+Begin search
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms; lane=0; tested=10; found=0; failed=0; pruned=5; continued=5;
+stats:2 name=row_rots; lane=0; tested=10; found=0; failed=0; pruned=8; continued=2;
+stats:3 name=col_xforms; lane=0; tested=2596; found=0; failed=0; pruned=2596; continued=0;
+stats:4 name=col_rots; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+stats:5 name=row_xforms; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+stats:6 name=row_rots; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+stats:7 name=(last); lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+search:specs/swinv_like/l3/trove-crc-2.json success=false; mode=All; time=0.006359641;
+spec:specs/swinv_like/l3/trove-crc-3.json
+build:matrices/32,3-row_rots-32,3 density=0.0003255208333333333; time=0.004275816;
+Using newly-built matrices/32,3-row_rots-32,3
+build:matrices/32,3-row_xforms-32,3 density=0.0008534207756136671; time=0.020020245;
+mul:matrices/32,3-row_rots_32,3-row_xforms-32,3 density=0.0009509192572699653; time=0.917577007;
+load:matrices/32,3-col_rots-32,3 density=0.004523383246527778; time=0.0269695;
+mul:matrices/32,3-row_rots_32,3-row_xforms_32,3-col_rots-32,3 density=0.03973812527126736; time=1.6893119589999999;
+load:matrices/32,3-col_xforms-32,3 density=0.046303513609332804; time=0.027093274;
+mul:matrices/32,3-row_rots_32,3-row_xforms_32,3-col_rots_32,3-col_xforms-32,3 density=0.8899348223650897; time=11.502533029;
+mul:matrices/32,3-row_rots_32,3-row_xforms_32,3-col_rots_32,3-col_xforms_32,3-row_rots-32,3 density=0.9157562255859375; time=1.221248944;
+Begin search
+solution:init;load_rep;xform(0,1,32);rot(1);xform(3,31,3);rot(22);xform(2,0,32);rot(1)
+solution:init;load_rep;xform(2,1,32);id;xform(3,1,3);id;id;id
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms; lane=0; tested=30; found=0; failed=0; pruned=28; continued=2;
+stats:2 name=row_rots; lane=0; tested=6; found=0; failed=0; pruned=4; continued=2;
+stats:3 name=col_xforms; lane=0; tested=2694; found=0; failed=0; pruned=2692; continued=2;
+stats:4 name=col_rots; lane=0; tested=116; found=0; failed=0; pruned=114; continued=2;
+stats:5 name=row_xforms; lane=0; tested=60; found=0; failed=0; pruned=58; continued=2;
+stats:6 name=row_rots; lane=0; tested=6; found=0; failed=0; pruned=0; continued=6;
+stats:7 name=(last); lane=0; tested=6; found=2; failed=4; pruned=0; continued=0;
+search:specs/swinv_like/l3/trove-crc-3.json success=true; mode=All; time=0.012090737;
+spec:specs/swinv_like/l3/trove-crc-4.json
+build:matrices/32,4-row_rots-32,4 density=0.000274658203125; time=0.014383084;
+Using newly-built matrices/32,4-row_rots-32,4
+build:matrices/32,4-row_xforms-32,4 density=0.0008758679032325745; time=0.080790451;
+mul:matrices/32,4-row_rots_32,4-row_xforms-32,4 density=0.0009633451700210571; time=3.735373627;
+build:matrices/32,4-col_rots-32,4 density=0.002544403076171875; time=0.150652396;
+mul:matrices/32,4-row_rots_32,4-row_xforms_32,4-col_rots-32,4 density=0.040277957916259766; time=8.520063943;
+build:matrices/32,4-col_xforms-32,4 density=0.03853124752640724; time=7.210278815;
+mul:matrices/32,4-row_rots_32,4-row_xforms_32,4-col_rots_32,4-col_xforms-32,4 density=0.9326784610748291; time=51.329779435;
+mul:matrices/32,4-row_rots_32,4-row_xforms_32,4-col_rots_32,4-col_xforms_32,4-row_rots-32,4 density=0.9454231262207031; time=15.189033283;
+Begin search
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms; lane=0; tested=77; found=0; failed=0; pruned=74; continued=3;
+stats:2 name=row_rots; lane=0; tested=15; found=0; failed=0; pruned=10; continued=5;
+stats:3 name=col_xforms; lane=0; tested=13580; found=0; failed=0; pruned=13580; continued=0;
+stats:4 name=col_rots; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+stats:5 name=row_xforms; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+stats:6 name=row_rots; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+stats:7 name=(last); lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+search:specs/swinv_like/l3/trove-crc-4.json success=false; mode=All; time=0.062461447;
+spec:specs/swinv_like/l3/trove-crc-5.json
+build:matrices/32,5-row_rots-32,5 density=0.0001953125; time=0.030658912;
+Using newly-built matrices/32,5-row_rots-32,5
+build:matrices/32,5-row_xforms-32,5 density=0.0008788223266601562; time=0.174925153;
+mul:matrices/32,5-row_rots_32,5-row_xforms-32,5 density=0.00095672607421875; time=9.645712109;
+build:matrices/32,5-col_rots-32,5 density=0.00162841796875; time=0.279849605;
+mul:matrices/32,5-row_rots_32,5-row_xforms_32,5-col_rots-32,5 density=0.039958343505859376; time=29.605806572;
+build:matrices/32,5-col_xforms-32,5 density=0.017708180236816407; time=6.397355481;
+mul:matrices/32,5-row_rots_32,5-row_xforms_32,5-col_rots_32,5-col_xforms-32,5 density=0.9238141937255859; time=119.40263348;
+mul:matrices/32,5-row_rots_32,5-row_xforms_32,5-col_rots_32,5-col_xforms_32,5-row_rots-32,5 density=0.9457037353515625; time=27.031801682;
+Begin search
+solution:init;load_rep;xform(3,2,32);id;xform(5,1,5);id;id;id
+solution:init;load_rep;xform(2,2,32);rot(1);xform(5,31,5);rot(20);xform(4,0,32);rot(1)
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms; lane=0; tested=100; found=0; failed=0; pruned=96; continued=4;
+stats:2 name=row_rots; lane=0; tested=20; found=0; failed=0; pruned=18; continued=2;
+stats:3 name=col_xforms; lane=0; tested=2728; found=0; failed=0; pruned=2726; continued=2;
+stats:4 name=col_rots; lane=0; tested=116; found=0; failed=0; pruned=114; continued=2;
+stats:5 name=row_xforms; lane=0; tested=200; found=0; failed=0; pruned=198; continued=2;
+stats:6 name=row_rots; lane=0; tested=10; found=0; failed=0; pruned=0; continued=10;
+stats:7 name=(last); lane=0; tested=10; found=2; failed=8; pruned=0; continued=0;
+search:specs/swinv_like/l3/trove-crc-5.json success=true; mode=All; time=0.024329982;
+spec:specs/swinv_like/l3/trove-cr_sum-1.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/32-col_rots-32,1 density=0.04071044921875; time=0.003144653;
+Using newly-built matrices/32-col_rots-32,1
+Begin search
+solution:init;load_rep;id;id;id;id
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:2 name=row_rots; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:3 name=col_xforms; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:4 name=col_rots; lane=0; tested=58; found=0; failed=0; pruned=0; continued=58;
+stats:5 name=(last); lane=0; tested=58; found=1; failed=57; pruned=0; continued=0;
+search:specs/swinv_like/l3/trove-cr_sum-1.json success=true; mode=All; time=0.000284933;
+spec:specs/swinv_like/l3/trove-cr_sum-2.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/32-col_rots-32,2 density=0.04071044921875; time=0.011460679;
+Using newly-built matrices/32-col_rots-32,2
+load:matrices/32,2-col_xforms-32,2 density=0.10524827241897583; time=0.00604657;
+mul:matrices/32-col_rots_32,2-col_xforms-32,2 density=0.8592157363891602; time=0.362463712;
+load:matrices/32,2-row_rots-32,2 density=0.00048828125; time=0.005989359;
+mul:matrices/32-col_rots_32,2-col_xforms_32,2-row_rots-32,2 density=0.9029312133789063; time=0.096998716;
+Begin search
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms; lane=0; tested=10; found=0; failed=0; pruned=5; continued=5;
+stats:2 name=row_rots; lane=0; tested=10; found=0; failed=0; pruned=8; continued=2;
+stats:3 name=col_xforms; lane=0; tested=2596; found=0; failed=0; pruned=2596; continued=0;
+stats:4 name=col_rots; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+stats:5 name=(last); lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+search:specs/swinv_like/l3/trove-cr_sum-2.json success=false; mode=All; time=0.008916284;
+spec:specs/swinv_like/l3/trove-cr_sum-3.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/32-col_rots-32,3 density=0.04071044921875; time=0.025695322;
+Using newly-built matrices/32-col_rots-32,3
+load:matrices/32,3-col_xforms-32,3 density=0.046303513609332804; time=0.030569719;
+mul:matrices/32-col_rots_32,3-col_xforms-32,3 density=0.9083069695366753; time=1.394462676;
+load:matrices/32,3-row_rots-32,3 density=0.0003255208333333333; time=0.028961645;
+mul:matrices/32-col_rots_32,3-col_xforms_32,3-row_rots-32,3 density=0.9352874755859375; time=0.414209166;
+Begin search
+solution:init;load_rep;xform(0,1,32);rot(1);xform(3,31,3);rot(22)
+solution:init;load_rep;xform(2,1,32);id;xform(3,1,3);id
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms; lane=0; tested=30; found=0; failed=0; pruned=28; continued=2;
+stats:2 name=row_rots; lane=0; tested=6; found=0; failed=0; pruned=4; continued=2;
+stats:3 name=col_xforms; lane=0; tested=2694; found=0; failed=0; pruned=2692; continued=2;
+stats:4 name=col_rots; lane=0; tested=116; found=0; failed=0; pruned=0; continued=116;
+stats:5 name=(last); lane=0; tested=116; found=2; failed=114; pruned=0; continued=0;
+search:specs/swinv_like/l3/trove-cr_sum-3.json success=true; mode=All; time=0.013727677;
+spec:specs/swinv_like/l3/trove-cr_sum-4.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/32-col_rots-32,4 density=0.04071044921875; time=0.047631368;
+Using newly-built matrices/32-col_rots-32,4
+load:matrices/32,4-col_xforms-32,4 density=0.03853124752640724; time=0.09141426;
+mul:matrices/32-col_rots_32,4-col_xforms-32,4 density=0.9405367374420166; time=3.45956992;
+load:matrices/32,4-row_rots-32,4 density=0.000274658203125; time=0.091089246;
+mul:matrices/32-col_rots_32,4-col_xforms_32,4-row_rots-32,4 density=0.9514656066894531; time=3.782497888;
+Begin search
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms; lane=0; tested=77; found=0; failed=0; pruned=74; continued=3;
+stats:2 name=row_rots; lane=0; tested=15; found=0; failed=0; pruned=0; continued=15;
+stats:3 name=col_xforms; lane=0; tested=40740; found=0; failed=0; pruned=40740; continued=0;
+stats:4 name=col_rots; lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+stats:5 name=(last); lane=0; tested=0; found=0; failed=0; pruned=0; continued=0;
+search:specs/swinv_like/l3/trove-cr_sum-4.json success=false; mode=All; time=0.213502801;
+spec:specs/swinv_like/l3/trove-cr_sum-5.json
+WARNING: It doesn't make sense to prune after the last instructions are applied. Suppressing.
+build:matrices/32-col_rots-32,5 density=0.04071044921875; time=0.072823763;
+Using newly-built matrices/32-col_rots-32,5
+load:matrices/32,5-col_xforms-32,5 density=0.017708180236816407; time=0.219677277;
+mul:matrices/32-col_rots_32,5-col_xforms-32,5 density=0.9381253814697266; time=9.39387035;
+load:matrices/32,5-row_rots-32,5 density=0.0001953125; time=0.218852685;
+mul:matrices/32-col_rots_32,5-col_xforms_32,5-row_rots-32,5 density=0.9611724853515625; time=3.014943553;
+Begin search
+solution:init;load_rep;xform(2,2,32);rot(1);xform(5,31,5);rot(20)
+solution:init;load_rep;xform(3,2,32);id;xform(5,1,5);id
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=row_xforms; lane=0; tested=100; found=0; failed=0; pruned=96; continued=4;
+stats:2 name=row_rots; lane=0; tested=20; found=0; failed=0; pruned=18; continued=2;
+stats:3 name=col_xforms; lane=0; tested=2728; found=0; failed=0; pruned=2726; continued=2;
+stats:4 name=col_rots; lane=0; tested=116; found=0; failed=0; pruned=0; continued=116;
+stats:5 name=(last); lane=0; tested=116; found=2; failed=114; pruned=0; continued=0;
+search:specs/swinv_like/l3/trove-cr_sum-5.json success=true; mode=All; time=0.021548689;
+spec:specs/swinv_like/l3/trove-rcr-1.json
+load:matrices/32,1-col_rots-32,1 density=0.04071044921875; time=0.000393741;
+load:matrices/32,1-col_rots-32,1 density=0.04071044921875; time=0.000355602;
+mul:matrices/32,1-col_rots_32,1-col_rots-32,1 density=0.18035888671875; time=0.074885338;
+Begin search
+solution:init;load_rep;id;rot(12);id;id;id;rot(20)
+solution:init;load_rep;id;rot(22);id;id;id;rot(10)
+solution:init;load_rep;id;rot(18);id;id;id;rot(14)
+solution:init;load_rep;id;rot(3);id;id;id;rot(29)
+solution:init;load_rep;id;rot(16);id;id;id;rot(16)
+solution:init;load_rep;id;rot(26);id;id;id;rot(6)
+solution:init;load_rep;id;rot(23);id;id;id;rot(9)
+solution:init;load_rep;id;rot(28);id;id;id;rot(4)
+solution:init;load_rep;id;rot(25);id;id;id;rot(7)
+solution:init;load_rep;id;grouped(rot(10),16);id;id;id;grouped(rot(6),16)
+solution:init;load_rep;id;rot(15);id;id;id;rot(17)
+solution:init;load_rep;id;grouped(rot(2),16);id;id;id;grouped(rot(14),16)
+solution:init;load_rep;id;rot(30);id;id;id;rot(2)
+solution:init;load_rep;id;rot(11);id;id;id;rot(21)
+solution:init;load_rep;id;grouped(rot(6),16);id;id;id;grouped(rot(10),16)
+solution:init;load_rep;id;grouped(rot(13),16);id;id;id;grouped(rot(3),16)
+solution:init;load_rep;id;rot(14);id;id;id;rot(18)
+solution:init;load_rep;id;grouped(rot(1),8);id;id;id;grouped(rot(7),8)
+solution:init;load_rep;id;grouped(rot(4),16);id;id;id;grouped(rot(12),16)
+solution:init;load_rep;id;rot(10);id;id;id;rot(22)
+solution:init;load_rep;id;grouped(rot(11),16);id;id;id;grouped(rot(5),16)
+solution:init;load_rep;id;rot(17);id;id;id;rot(15)
+solution:init;load_rep;id;grouped(rot(2),4);id;id;id;grouped(rot(2),4)
+solution:init;load_rep;id;grouped(rot(2),8);id;id;id;grouped(rot(6),8)
+solution:init;load_rep;id;grouped(rot(3),4);id;id;id;grouped(rot(1),4)
+solution:init;load_rep;id;grouped(rot(1),4);id;id;id;grouped(rot(3),4)
+solution:init;load_rep;id;rot(2);id;id;id;rot(30)
+solution:init;load_rep;id;grouped(rot(9),16);id;id;id;grouped(rot(7),16)
+solution:init;load_rep;id;rot(8);id;id;id;rot(24)
+solution:init;load_rep;id;grouped(rot(14),16);id;id;id;grouped(rot(2),16)
+solution:init;load_rep;id;rot(5);id;id;id;rot(27)
+solution:init;load_rep;id;grouped(rot(5),8);id;id;id;grouped(rot(3),8)
+solution:init;load_rep;id;rot(9);id;id;id;rot(23)
+solution:init;load_rep;id;rot(6);id;id;id;rot(26)
+solution:init;load_rep;id;rot(21);id;id;id;rot(11)
+solution:init;load_rep;id;rot(27);id;id;id;rot(5)
+solution:init;load_rep;id;grouped(rot(1),16);id;id;id;grouped(rot(15),16)
+solution:init;load_rep;id;grouped(rot(4),8);id;id;id;grouped(rot(4),8)
+solution:init;load_rep;id;grouped(rot(6),8);id;id;id;grouped(rot(2),8)
+solution:init;load_rep;id;grouped(rot(12),16);id;id;id;grouped(rot(4),16)
+solution:init;load_rep;id;rot(7);id;id;id;rot(25)
+solution:init;load_rep;id;rot(4);id;id;id;rot(28)
+solution:init;load_rep;id;rot(31);id;id;id;rot(1)
+solution:init;load_rep;id;id;id;id;id;id
+solution:init;load_rep;id;rot(19);id;id;id;rot(13)
+solution:init;load_rep;id;rot(20);id;id;id;rot(12)
+solution:init;load_rep;id;grouped(rot(3),8);id;id;id;grouped(rot(5),8)
+solution:init;load_rep;id;grouped(rot(7),8);id;id;id;grouped(rot(1),8)
+solution:init;load_rep;id;grouped(rot(1),2);id;id;id;grouped(rot(1),2)
+solution:init;load_rep;id;rot(13);id;id;id;rot(19)
+solution:init;load_rep;id;rot(29);id;id;id;rot(3)
+solution:init;load_rep;id;grouped(rot(5),16);id;id;id;grouped(rot(11),16)
+solution:init;load_rep;id;grouped(rot(8),16);id;id;id;grouped(rot(8),16)
+solution:init;load_rep;id;rot(1);id;id;id;rot(31)
+solution:init;load_rep;id;rot(24);id;id;id;rot(8)
+solution:init;load_rep;id;grouped(rot(3),16);id;id;id;grouped(rot(13),16)
+solution:init;load_rep;id;grouped(rot(7),16);id;id;id;grouped(rot(9),16)
+solution:init;load_rep;id;grouped(rot(15),16);id;id;id;grouped(rot(1),16)
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=col_xforms; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:2 name=col_rots; lane=0; tested=58; found=0; failed=0; pruned=0; continued=58;
+stats:3 name=row_xforms; lane=0; tested=58; found=0; failed=0; pruned=0; continued=58;
+stats:4 name=row_rots; lane=0; tested=58; found=0; failed=0; pruned=0; continued=58;
+stats:5 name=col_xforms; lane=0; tested=58; found=0; failed=0; pruned=0; continued=58;
+stats:6 name=col_rots; lane=0; tested=3364; found=0; failed=0; pruned=0; continued=3364;
+stats:7 name=(last); lane=0; tested=3364; found=58; failed=3306; pruned=0; continued=0;
+search:specs/swinv_like/l3/trove-rcr-1.json success=true; mode=All; time=0.006905209;
+spec:specs/swinv_like/l3/trove-rcr-2.json
+load:matrices/32,2-col_rots-32,2 density=0.0101776123046875; time=0.005765113;
+load:matrices/32,2-col_xforms-32,2 density=0.10524827241897583; time=0.005795139;
+mul:matrices/32,2-col_rots_32,2-col_xforms-32,2 density=0.21480393409729004; time=1.094329163;
+load:matrices/32,2-row_rots-32,2 density=0.00048828125; time=0.005907562;
+mul:matrices/32,2-col_rots_32,2-col_xforms_32,2-row_rots-32,2 density=0.4296078681945801; time=0.228189675;
+load:matrices/32,2-row_xforms-32,2 density=0.0008957386016845703; time=0.005327282;
+mul:matrices/32,2-col_rots_32,2-col_xforms_32,2-row_rots_32,2-row_xforms-32,2 density=0.8511590957641602; time=0.255956667;
+load:matrices/32,2-col_rots-32,2 density=0.0101776123046875; time=0.00549663;
+mul:matrices/32,2-col_rots_32,2-col_xforms_32,2-row_rots_32,2-row_xforms_32,2-col_rots-32,2 density=0.9255809783935547; time=0.335605692;
+Begin search
+solution:init;load_rep;xform(13,19,2);rot(24);xform(0,1,32);id;xform(10,5,2);grouped(rot(4),16)
+solution:init;load_rep;xform(13,19,2);rot(26);xform(0,1,32);id;xform(10,5,2);grouped(rot(7),16)
+solution:init;load_rep;xform(13,19,2);rot(6);xform(0,1,32);id;xform(10,5,2);grouped(rot(9),16)
+solution:init;load_rep;xform(13,19,2);rot(16);xform(0,1,32);id;xform(10,5,2);grouped(rot(8),16)
+solution:init;load_rep;xform(13,19,2);rot(2);xform(0,1,32);id;xform(10,5,2);grouped(rot(3),16)
+solution:init;load_rep;xform(13,19,2);rot(30);xform(0,1,32);id;xform(10,5,2);grouped(rot(13),16)
+solution:init;load_rep;xform(13,19,2);rot(22);xform(0,1,32);id;xform(10,5,2);grouped(rot(1),16)
+solution:init;load_rep;xform(13,19,2);rot(18);xform(0,1,32);id;xform(10,5,2);grouped(rot(11),16)
+solution:init;load_rep;xform(13,19,2);id;xform(0,1,32);id;xform(10,5,2);id
+solution:init;load_rep;xform(13,19,2);rot(10);xform(0,1,32);id;xform(10,5,2);grouped(rot(15),16)
+solution:init;load_rep;xform(13,19,2);rot(28);xform(0,1,32);id;xform(10,5,2);grouped(rot(10),16)
+solution:init;load_rep;xform(13,19,2);rot(12);xform(0,1,32);id;xform(10,5,2);grouped(rot(2),16)
+solution:init;load_rep;xform(13,19,2);rot(14);xform(0,1,32);id;xform(10,5,2);grouped(rot(5),16)
+solution:init;load_rep;xform(13,19,2);rot(4);xform(0,1,32);id;xform(10,5,2);grouped(rot(6),16)
+solution:init;load_rep;xform(13,19,2);rot(8);xform(0,1,32);id;xform(10,5,2);grouped(rot(12),16)
+solution:init;load_rep;xform(13,19,2);rot(20);xform(0,1,32);id;xform(10,5,2);grouped(rot(14),16)
+solution:init;load_rep;xform(0,31,2);rot(24);xform(0,1,32);id;xform(2,1,2);grouped(rot(4),16)
+solution:init;load_rep;xform(0,31,2);rot(26);xform(0,1,32);id;xform(2,1,2);grouped(rot(3),16)
+solution:init;load_rep;xform(0,31,2);rot(6);xform(0,1,32);id;xform(2,1,2);grouped(rot(13),16)
+solution:init;load_rep;xform(0,31,2);rot(16);xform(0,1,32);id;xform(2,1,2);grouped(rot(8),16)
+solution:init;load_rep;xform(0,31,2);rot(2);xform(0,1,32);id;xform(2,1,2);grouped(rot(15),16)
+solution:init;load_rep;xform(0,31,2);rot(30);xform(0,1,32);id;xform(2,1,2);grouped(rot(1),16)
+solution:init;load_rep;xform(0,31,2);rot(22);xform(0,1,32);id;xform(2,1,2);grouped(rot(5),16)
+solution:init;load_rep;xform(0,31,2);rot(18);xform(0,1,32);id;xform(2,1,2);grouped(rot(7),16)
+solution:init;load_rep;xform(0,31,2);id;xform(0,1,32);id;xform(2,1,2);id
+solution:init;load_rep;xform(0,31,2);rot(10);xform(0,1,32);id;xform(2,1,2);grouped(rot(11),16)
+solution:init;load_rep;xform(0,31,2);rot(28);xform(0,1,32);id;xform(2,1,2);grouped(rot(2),16)
+solution:init;load_rep;xform(0,31,2);rot(12);xform(0,1,32);id;xform(2,1,2);grouped(rot(10),16)
+solution:init;load_rep;xform(0,31,2);rot(14);xform(0,1,32);id;xform(2,1,2);grouped(rot(9),16)
+solution:init;load_rep;xform(0,31,2);rot(4);xform(0,1,32);id;xform(2,1,2);grouped(rot(14),16)
+solution:init;load_rep;xform(0,31,2);rot(8);xform(0,1,32);id;xform(2,1,2);grouped(rot(12),16)
+solution:init;load_rep;xform(0,31,2);rot(20);xform(0,1,32);id;xform(2,1,2);grouped(rot(6),16)
+solution:init;load_rep;xform(15,17,2);rot(24);xform(0,1,32);id;xform(30,15,2);grouped(rot(12),16)
+solution:init;load_rep;xform(15,17,2);rot(26);xform(0,1,32);id;xform(30,15,2);grouped(rot(13),16)
+solution:init;load_rep;xform(15,17,2);rot(6);xform(0,1,32);id;xform(30,15,2);grouped(rot(3),16)
+solution:init;load_rep;xform(15,17,2);rot(16);xform(0,1,32);id;xform(30,15,2);grouped(rot(8),16)
+solution:init;load_rep;xform(15,17,2);rot(2);xform(0,1,32);id;xform(30,15,2);grouped(rot(1),16)
+solution:init;load_rep;xform(15,17,2);rot(30);xform(0,1,32);id;xform(30,15,2);grouped(rot(15),16)
+solution:init;load_rep;xform(15,17,2);rot(22);xform(0,1,32);id;xform(30,15,2);grouped(rot(11),16)
+solution:init;load_rep;xform(15,17,2);rot(18);xform(0,1,32);id;xform(30,15,2);grouped(rot(9),16)
+solution:init;load_rep;xform(15,17,2);id;xform(0,1,32);id;xform(30,15,2);id
+solution:init;load_rep;xform(15,17,2);rot(10);xform(0,1,32);id;xform(30,15,2);grouped(rot(5),16)
+solution:init;load_rep;xform(15,17,2);rot(28);xform(0,1,32);id;xform(30,15,2);grouped(rot(14),16)
+solution:init;load_rep;xform(15,17,2);rot(12);xform(0,1,32);id;xform(30,15,2);grouped(rot(6),16)
+solution:init;load_rep;xform(15,17,2);rot(14);xform(0,1,32);id;xform(30,15,2);grouped(rot(7),16)
+solution:init;load_rep;xform(15,17,2);rot(4);xform(0,1,32);id;xform(30,15,2);grouped(rot(2),16)
+solution:init;load_rep;xform(15,17,2);rot(8);xform(0,1,32);id;xform(30,15,2);grouped(rot(4),16)
+solution:init;load_rep;xform(15,17,2);rot(20);xform(0,1,32);id;xform(30,15,2);grouped(rot(10),16)
+solution:init;load_rep;xform(0,1,2);rot(31);xform(0,1,32);rot(1);xform(2,1,2);rot(16)
+solution:init;load_rep;xform(11,11,2);rot(31);xform(0,1,32);rot(1);xform(6,3,2);rot(16)
+solution:init;load_rep;xform(27,27,2);rot(31);xform(0,1,32);rot(1);xform(6,19,2);rot(16)
+solution:init;load_rep;xform(25,7,2);rot(24);xform(0,1,32);id;xform(18,9,2);grouped(rot(4),16)
+solution:init;load_rep;xform(25,7,2);rot(26);xform(0,1,32);id;xform(18,9,2);grouped(rot(11),16)
+solution:init;load_rep;xform(25,7,2);rot(6);xform(0,1,32);id;xform(18,9,2);grouped(rot(5),16)
+solution:init;load_rep;xform(25,7,2);rot(16);xform(0,1,32);id;xform(18,9,2);grouped(rot(8),16)
+solution:init;load_rep;xform(25,7,2);rot(2);xform(0,1,32);id;xform(18,9,2);grouped(rot(7),16)
+solution:init;load_rep;xform(25,7,2);rot(30);xform(0,1,32);id;xform(18,9,2);grouped(rot(9),16)
+solution:init;load_rep;xform(25,7,2);rot(22);xform(0,1,32);id;xform(18,9,2);grouped(rot(13),16)
+solution:init;load_rep;xform(25,7,2);rot(18);xform(0,1,32);id;xform(18,9,2);grouped(rot(15),16)
+solution:init;load_rep;xform(25,7,2);id;xform(0,1,32);id;xform(18,9,2);id
+solution:init;load_rep;xform(25,7,2);rot(10);xform(0,1,32);id;xform(18,9,2);grouped(rot(3),16)
+solution:init;load_rep;xform(25,7,2);rot(28);xform(0,1,32);id;xform(18,9,2);grouped(rot(2),16)
+solution:init;load_rep;xform(25,7,2);rot(12);xform(0,1,32);id;xform(18,9,2);grouped(rot(10),16)
+solution:init;load_rep;xform(25,7,2);rot(14);xform(0,1,32);id;xform(18,9,2);grouped(rot(1),16)
+solution:init;load_rep;xform(25,7,2);rot(4);xform(0,1,32);id;xform(18,9,2);grouped(rot(14),16)
+solution:init;load_rep;xform(25,7,2);rot(8);xform(0,1,32);id;xform(18,9,2);grouped(rot(12),16)
+solution:init;load_rep;xform(25,7,2);rot(20);xform(0,1,32);id;xform(18,9,2);grouped(rot(6),16)
+solution:init;load_rep;xform(5,27,2);rot(24);xform(0,1,32);id;xform(26,13,2);grouped(rot(4),16)
+solution:init;load_rep;xform(5,27,2);rot(26);xform(0,1,32);id;xform(26,13,2);grouped(rot(15),16)
+solution:init;load_rep;xform(5,27,2);rot(6);xform(0,1,32);id;xform(26,13,2);grouped(rot(1),16)
+solution:init;load_rep;xform(5,27,2);rot(16);xform(0,1,32);id;xform(26,13,2);grouped(rot(8),16)
+solution:init;load_rep;xform(5,27,2);rot(2);xform(0,1,32);id;xform(26,13,2);grouped(rot(11),16)
+solution:init;load_rep;xform(5,27,2);rot(30);xform(0,1,32);id;xform(26,13,2);grouped(rot(5),16)
+solution:init;load_rep;xform(5,27,2);rot(22);xform(0,1,32);id;xform(26,13,2);grouped(rot(9),16)
+solution:init;load_rep;xform(5,27,2);rot(18);xform(0,1,32);id;xform(26,13,2);grouped(rot(3),16)
+solution:init;load_rep;xform(5,27,2);id;xform(0,1,32);id;xform(26,13,2);id
+solution:init;load_rep;xform(5,27,2);rot(10);xform(0,1,32);id;xform(26,13,2);grouped(rot(7),16)
+solution:init;load_rep;xform(5,27,2);rot(28);xform(0,1,32);id;xform(26,13,2);grouped(rot(10),16)
+solution:init;load_rep;xform(5,27,2);rot(12);xform(0,1,32);id;xform(26,13,2);grouped(rot(2),16)
+solution:init;load_rep;xform(5,27,2);rot(14);xform(0,1,32);id;xform(26,13,2);grouped(rot(13),16)
+solution:init;load_rep;xform(5,27,2);rot(4);xform(0,1,32);id;xform(26,13,2);grouped(rot(6),16)
+solution:init;load_rep;xform(5,27,2);rot(8);xform(0,1,32);id;xform(26,13,2);grouped(rot(12),16)
+solution:init;load_rep;xform(5,27,2);rot(20);xform(0,1,32);id;xform(26,13,2);grouped(rot(14),16)
+solution:init;load_rep;xform(31,1,2);rot(24);xform(0,1,32);id;xform(30,31,2);grouped(rot(12),16)
+solution:init;load_rep;xform(31,1,2);rot(26);xform(0,1,32);id;xform(30,31,2);grouped(rot(13),16)
+solution:init;load_rep;xform(31,1,2);rot(6);xform(0,1,32);id;xform(30,31,2);grouped(rot(3),16)
+solution:init;load_rep;xform(31,1,2);rot(16);xform(0,1,32);id;xform(30,31,2);grouped(rot(8),16)
+solution:init;load_rep;xform(31,1,2);rot(2);xform(0,1,32);id;xform(30,31,2);grouped(rot(1),16)
+solution:init;load_rep;xform(31,1,2);rot(30);xform(0,1,32);id;xform(30,31,2);grouped(rot(15),16)
+solution:init;load_rep;xform(31,1,2);rot(22);xform(0,1,32);id;xform(30,31,2);grouped(rot(11),16)
+solution:init;load_rep;xform(31,1,2);rot(18);xform(0,1,32);id;xform(30,31,2);grouped(rot(9),16)
+solution:init;load_rep;xform(31,1,2);id;xform(0,1,32);id;xform(30,31,2);id
+solution:init;load_rep;xform(31,1,2);rot(10);xform(0,1,32);id;xform(30,31,2);grouped(rot(5),16)
+solution:init;load_rep;xform(31,1,2);rot(28);xform(0,1,32);id;xform(30,31,2);grouped(rot(14),16)
+solution:init;load_rep;xform(31,1,2);rot(12);xform(0,1,32);id;xform(30,31,2);grouped(rot(6),16)
+solution:init;load_rep;xform(31,1,2);rot(14);xform(0,1,32);id;xform(30,31,2);grouped(rot(7),16)
+solution:init;load_rep;xform(31,1,2);rot(4);xform(0,1,32);id;xform(30,31,2);grouped(rot(2),16)
+solution:init;load_rep;xform(31,1,2);rot(8);xform(0,1,32);id;xform(30,31,2);grouped(rot(4),16)
+solution:init;load_rep;xform(31,1,2);rot(20);xform(0,1,32);id;xform(30,31,2);grouped(rot(10),16)
+solution:init;load_rep;xform(27,5,2);rot(24);xform(0,1,32);id;xform(6,19,2);grouped(rot(12),16)
+solution:init;load_rep;xform(27,5,2);rot(26);xform(0,1,32);id;xform(6,19,2);grouped(rot(1),16)
+solution:init;load_rep;xform(27,5,2);rot(6);xform(0,1,32);id;xform(6,19,2);grouped(rot(15),16)
+solution:init;load_rep;xform(27,5,2);rot(16);xform(0,1,32);id;xform(6,19,2);grouped(rot(8),16)
+solution:init;load_rep;xform(27,5,2);rot(2);xform(0,1,32);id;xform(6,19,2);grouped(rot(5),16)
+solution:init;load_rep;xform(27,5,2);rot(30);xform(0,1,32);id;xform(6,19,2);grouped(rot(11),16)
+solution:init;load_rep;xform(27,5,2);rot(22);xform(0,1,32);id;xform(6,19,2);grouped(rot(7),16)
+solution:init;load_rep;xform(27,5,2);rot(18);xform(0,1,32);id;xform(6,19,2);grouped(rot(13),16)
+solution:init;load_rep;xform(27,5,2);id;xform(0,1,32);id;xform(6,19,2);id
+solution:init;load_rep;xform(27,5,2);rot(10);xform(0,1,32);id;xform(6,19,2);grouped(rot(9),16)
+solution:init;load_rep;xform(27,5,2);rot(28);xform(0,1,32);id;xform(6,19,2);grouped(rot(6),16)
+solution:init;load_rep;xform(27,5,2);rot(12);xform(0,1,32);id;xform(6,19,2);grouped(rot(14),16)
+solution:init;load_rep;xform(27,5,2);rot(14);xform(0,1,32);id;xform(6,19,2);grouped(rot(3),16)
+solution:init;load_rep;xform(27,5,2);rot(4);xform(0,1,32);id;xform(6,19,2);grouped(rot(10),16)
+solution:init;load_rep;xform(27,5,2);rot(8);xform(0,1,32);id;xform(6,19,2);grouped(rot(4),16)
+solution:init;load_rep;xform(27,5,2);rot(20);xform(0,1,32);id;xform(6,19,2);grouped(rot(2),16)
+solution:init;load_rep;xform(23,23,2);rot(31);xform(0,1,32);rot(1);xform(14,7,2);rot(16)
+solution:init;load_rep;xform(17,17,2);rot(31);xform(0,1,32);rot(1);xform(2,17,2);rot(16)
+solution:init;load_rep;xform(21,11,2);rot(24);xform(0,1,32);id;xform(26,29,2);grouped(rot(4),16)
+solution:init;load_rep;xform(21,11,2);rot(26);xform(0,1,32);id;xform(26,29,2);grouped(rot(15),16)
+solution:init;load_rep;xform(21,11,2);rot(6);xform(0,1,32);id;xform(26,29,2);grouped(rot(1),16)
+solution:init;load_rep;xform(21,11,2);rot(16);xform(0,1,32);id;xform(26,29,2);grouped(rot(8),16)
+solution:init;load_rep;xform(21,11,2);rot(2);xform(0,1,32);id;xform(26,29,2);grouped(rot(11),16)
+solution:init;load_rep;xform(21,11,2);rot(30);xform(0,1,32);id;xform(26,29,2);grouped(rot(5),16)
+solution:init;load_rep;xform(21,11,2);rot(22);xform(0,1,32);id;xform(26,29,2);grouped(rot(9),16)
+solution:init;load_rep;xform(21,11,2);rot(18);xform(0,1,32);id;xform(26,29,2);grouped(rot(3),16)
+solution:init;load_rep;xform(21,11,2);id;xform(0,1,32);id;xform(26,29,2);id
+solution:init;load_rep;xform(21,11,2);rot(10);xform(0,1,32);id;xform(26,29,2);grouped(rot(7),16)
+solution:init;load_rep;xform(21,11,2);rot(28);xform(0,1,32);id;xform(26,29,2);grouped(rot(10),16)
+solution:init;load_rep;xform(21,11,2);rot(12);xform(0,1,32);id;xform(26,29,2);grouped(rot(2),16)
+solution:init;load_rep;xform(21,11,2);rot(14);xform(0,1,32);id;xform(26,29,2);grouped(rot(13),16)
+solution:init;load_rep;xform(21,11,2);rot(4);xform(0,1,32);id;xform(26,29,2);grouped(rot(6),16)
+solution:init;load_rep;xform(21,11,2);rot(8);xform(0,1,32);id;xform(26,29,2);grouped(rot(12),16)
+solution:init;load_rep;xform(21,11,2);rot(20);xform(0,1,32);id;xform(26,29,2);grouped(rot(14),16)
+solution:init;load_rep;xform(25,25,2);rot(31);xform(0,1,32);rot(1);xform(18,9,2);rot(16)
+solution:init;load_rep;xform(9,23,2);rot(24);xform(0,1,32);id;xform(18,25,2);grouped(rot(4),16)
+solution:init;load_rep;xform(9,23,2);rot(26);xform(0,1,32);id;xform(18,25,2);grouped(rot(11),16)
+solution:init;load_rep;xform(9,23,2);rot(6);xform(0,1,32);id;xform(18,25,2);grouped(rot(5),16)
+solution:init;load_rep;xform(9,23,2);rot(16);xform(0,1,32);id;xform(18,25,2);grouped(rot(8),16)
+solution:init;load_rep;xform(9,23,2);rot(2);xform(0,1,32);id;xform(18,25,2);grouped(rot(7),16)
+solution:init;load_rep;xform(9,23,2);rot(30);xform(0,1,32);id;xform(18,25,2);grouped(rot(9),16)
+solution:init;load_rep;xform(9,23,2);rot(22);xform(0,1,32);id;xform(18,25,2);grouped(rot(13),16)
+solution:init;load_rep;xform(9,23,2);rot(18);xform(0,1,32);id;xform(18,25,2);grouped(rot(15),16)
+solution:init;load_rep;xform(9,23,2);id;xform(0,1,32);id;xform(18,25,2);id
+solution:init;load_rep;xform(9,23,2);rot(10);xform(0,1,32);id;xform(18,25,2);grouped(rot(3),16)
+solution:init;load_rep;xform(9,23,2);rot(28);xform(0,1,32);id;xform(18,25,2);grouped(rot(2),16)
+solution:init;load_rep;xform(9,23,2);rot(12);xform(0,1,32);id;xform(18,25,2);grouped(rot(10),16)
+solution:init;load_rep;xform(9,23,2);rot(14);xform(0,1,32);id;xform(18,25,2);grouped(rot(1),16)
+solution:init;load_rep;xform(9,23,2);rot(4);xform(0,1,32);id;xform(18,25,2);grouped(rot(14),16)
+solution:init;load_rep;xform(9,23,2);rot(8);xform(0,1,32);id;xform(18,25,2);grouped(rot(12),16)
+solution:init;load_rep;xform(9,23,2);rot(20);xform(0,1,32);id;xform(18,25,2);grouped(rot(6),16)
+solution:init;load_rep;xform(7,25,2);rot(24);xform(0,1,32);id;xform(14,23,2);grouped(rot(12),16)
+solution:init;load_rep;xform(7,25,2);rot(26);xform(0,1,32);id;xform(14,23,2);grouped(rot(5),16)
+solution:init;load_rep;xform(7,25,2);rot(6);xform(0,1,32);id;xform(14,23,2);grouped(rot(11),16)
+solution:init;load_rep;xform(7,25,2);rot(16);xform(0,1,32);id;xform(14,23,2);grouped(rot(8),16)
+solution:init;load_rep;xform(7,25,2);rot(2);xform(0,1,32);id;xform(14,23,2);grouped(rot(9),16)
+solution:init;load_rep;xform(7,25,2);rot(30);xform(0,1,32);id;xform(14,23,2);grouped(rot(7),16)
+solution:init;load_rep;xform(7,25,2);rot(22);xform(0,1,32);id;xform(14,23,2);grouped(rot(3),16)
+solution:init;load_rep;xform(7,25,2);rot(18);xform(0,1,32);id;xform(14,23,2);grouped(rot(1),16)
+solution:init;load_rep;xform(7,25,2);id;xform(0,1,32);id;xform(14,23,2);id
+solution:init;load_rep;xform(7,25,2);rot(10);xform(0,1,32);id;xform(14,23,2);grouped(rot(13),16)
+solution:init;load_rep;xform(7,25,2);rot(28);xform(0,1,32);id;xform(14,23,2);grouped(rot(14),16)
+solution:init;load_rep;xform(7,25,2);rot(12);xform(0,1,32);id;xform(14,23,2);grouped(rot(6),16)
+solution:init;load_rep;xform(7,25,2);rot(14);xform(0,1,32);id;xform(14,23,2);grouped(rot(15),16)
+solution:init;load_rep;xform(7,25,2);rot(4);xform(0,1,32);id;xform(14,23,2);grouped(rot(2),16)
+solution:init;load_rep;xform(7,25,2);rot(8);xform(0,1,32);id;xform(14,23,2);grouped(rot(4),16)
+solution:init;load_rep;xform(7,25,2);rot(20);xform(0,1,32);id;xform(14,23,2);grouped(rot(10),16)
+solution:init;load_rep;xform(5,5,2);rot(31);xform(0,1,32);rot(1);xform(26,13,2);rot(16)
+solution:init;load_rep;xform(13,13,2);rot(31);xform(0,1,32);rot(1);xform(10,5,2);rot(16)
+solution:init;load_rep;xform(29,29,2);rot(31);xform(0,1,32);rot(1);xform(10,21,2);rot(16)
+solution:init;load_rep;xform(23,9,2);rot(24);xform(0,1,32);id;xform(14,7,2);grouped(rot(12),16)
+solution:init;load_rep;xform(23,9,2);rot(26);xform(0,1,32);id;xform(14,7,2);grouped(rot(5),16)
+solution:init;load_rep;xform(23,9,2);rot(6);xform(0,1,32);id;xform(14,7,2);grouped(rot(11),16)
+solution:init;load_rep;xform(23,9,2);rot(16);xform(0,1,32);id;xform(14,7,2);grouped(rot(8),16)
+solution:init;load_rep;xform(23,9,2);rot(2);xform(0,1,32);id;xform(14,7,2);grouped(rot(9),16)
+solution:init;load_rep;xform(23,9,2);rot(30);xform(0,1,32);id;xform(14,7,2);grouped(rot(7),16)
+solution:init;load_rep;xform(23,9,2);rot(22);xform(0,1,32);id;xform(14,7,2);grouped(rot(3),16)
+solution:init;load_rep;xform(23,9,2);rot(18);xform(0,1,32);id;xform(14,7,2);grouped(rot(1),16)
+solution:init;load_rep;xform(23,9,2);id;xform(0,1,32);id;xform(14,7,2);id
+solution:init;load_rep;xform(23,9,2);rot(10);xform(0,1,32);id;xform(14,7,2);grouped(rot(13),16)
+solution:init;load_rep;xform(23,9,2);rot(28);xform(0,1,32);id;xform(14,7,2);grouped(rot(14),16)
+solution:init;load_rep;xform(23,9,2);rot(12);xform(0,1,32);id;xform(14,7,2);grouped(rot(6),16)
+solution:init;load_rep;xform(23,9,2);rot(14);xform(0,1,32);id;xform(14,7,2);grouped(rot(15),16)
+solution:init;load_rep;xform(23,9,2);rot(4);xform(0,1,32);id;xform(14,7,2);grouped(rot(2),16)
+solution:init;load_rep;xform(23,9,2);rot(8);xform(0,1,32);id;xform(14,7,2);grouped(rot(4),16)
+solution:init;load_rep;xform(23,9,2);rot(20);xform(0,1,32);id;xform(14,7,2);grouped(rot(10),16)
+solution:init;load_rep;xform(9,9,2);rot(31);xform(0,1,32);rot(1);xform(18,25,2);rot(16)
+solution:init;load_rep;xform(19,19,2);rot(31);xform(0,1,32);rot(1);xform(22,27,2);rot(16)
+solution:init;load_rep;xform(21,21,2);rot(31);xform(0,1,32);rot(1);xform(26,29,2);rot(16)
+solution:init;load_rep;xform(7,7,2);rot(31);xform(0,1,32);rot(1);xform(14,23,2);rot(16)
+solution:init;load_rep;xform(19,13,2);rot(24);xform(0,1,32);id;xform(22,27,2);grouped(rot(12),16)
+solution:init;load_rep;xform(19,13,2);rot(26);xform(0,1,32);id;xform(22,27,2);grouped(rot(9),16)
+solution:init;load_rep;xform(19,13,2);rot(6);xform(0,1,32);id;xform(22,27,2);grouped(rot(7),16)
+solution:init;load_rep;xform(19,13,2);rot(16);xform(0,1,32);id;xform(22,27,2);grouped(rot(8),16)
+solution:init;load_rep;xform(19,13,2);rot(2);xform(0,1,32);id;xform(22,27,2);grouped(rot(13),16)
+solution:init;load_rep;xform(19,13,2);rot(30);xform(0,1,32);id;xform(22,27,2);grouped(rot(3),16)
+solution:init;load_rep;xform(19,13,2);rot(22);xform(0,1,32);id;xform(22,27,2);grouped(rot(15),16)
+solution:init;load_rep;xform(19,13,2);rot(18);xform(0,1,32);id;xform(22,27,2);grouped(rot(5),16)
+solution:init;load_rep;xform(19,13,2);id;xform(0,1,32);id;xform(22,27,2);id
+solution:init;load_rep;xform(19,13,2);rot(10);xform(0,1,32);id;xform(22,27,2);grouped(rot(1),16)
+solution:init;load_rep;xform(19,13,2);rot(28);xform(0,1,32);id;xform(22,27,2);grouped(rot(6),16)
+solution:init;load_rep;xform(19,13,2);rot(12);xform(0,1,32);id;xform(22,27,2);grouped(rot(14),16)
+solution:init;load_rep;xform(19,13,2);rot(14);xform(0,1,32);id;xform(22,27,2);grouped(rot(11),16)
+solution:init;load_rep;xform(19,13,2);rot(4);xform(0,1,32);id;xform(22,27,2);grouped(rot(10),16)
+solution:init;load_rep;xform(19,13,2);rot(8);xform(0,1,32);id;xform(22,27,2);grouped(rot(4),16)
+solution:init;load_rep;xform(19,13,2);rot(20);xform(0,1,32);id;xform(22,27,2);grouped(rot(2),16)
+solution:init;load_rep;xform(3,3,2);rot(31);xform(0,1,32);rot(1);xform(22,11,2);rot(16)
+solution:init;load_rep;xform(31,31,2);rot(31);xform(0,1,32);rot(1);xform(30,31,2);rot(16)
+solution:init;load_rep;xform(11,21,2);rot(24);xform(0,1,32);id;xform(6,3,2);grouped(rot(12),16)
+solution:init;load_rep;xform(11,21,2);rot(26);xform(0,1,32);id;xform(6,3,2);grouped(rot(1),16)
+solution:init;load_rep;xform(11,21,2);rot(6);xform(0,1,32);id;xform(6,3,2);grouped(rot(15),16)
+solution:init;load_rep;xform(11,21,2);rot(16);xform(0,1,32);id;xform(6,3,2);grouped(rot(8),16)
+solution:init;load_rep;xform(11,21,2);rot(2);xform(0,1,32);id;xform(6,3,2);grouped(rot(5),16)
+solution:init;load_rep;xform(11,21,2);rot(30);xform(0,1,32);id;xform(6,3,2);grouped(rot(11),16)
+solution:init;load_rep;xform(11,21,2);rot(22);xform(0,1,32);id;xform(6,3,2);grouped(rot(7),16)
+solution:init;load_rep;xform(11,21,2);rot(18);xform(0,1,32);id;xform(6,3,2);grouped(rot(13),16)
+solution:init;load_rep;xform(11,21,2);id;xform(0,1,32);id;xform(6,3,2);id
+solution:init;load_rep;xform(11,21,2);rot(10);xform(0,1,32);id;xform(6,3,2);grouped(rot(9),16)
+solution:init;load_rep;xform(11,21,2);rot(28);xform(0,1,32);id;xform(6,3,2);grouped(rot(6),16)
+solution:init;load_rep;xform(11,21,2);rot(12);xform(0,1,32);id;xform(6,3,2);grouped(rot(14),16)
+solution:init;load_rep;xform(11,21,2);rot(14);xform(0,1,32);id;xform(6,3,2);grouped(rot(3),16)
+solution:init;load_rep;xform(11,21,2);rot(4);xform(0,1,32);id;xform(6,3,2);grouped(rot(10),16)
+solution:init;load_rep;xform(11,21,2);rot(8);xform(0,1,32);id;xform(6,3,2);grouped(rot(4),16)
+solution:init;load_rep;xform(11,21,2);rot(20);xform(0,1,32);id;xform(6,3,2);grouped(rot(2),16)
+solution:init;load_rep;xform(29,3,2);rot(24);xform(0,1,32);id;xform(10,21,2);grouped(rot(4),16)
+solution:init;load_rep;xform(29,3,2);rot(26);xform(0,1,32);id;xform(10,21,2);grouped(rot(7),16)
+solution:init;load_rep;xform(29,3,2);rot(6);xform(0,1,32);id;xform(10,21,2);grouped(rot(9),16)
+solution:init;load_rep;xform(29,3,2);rot(16);xform(0,1,32);id;xform(10,21,2);grouped(rot(8),16)
+solution:init;load_rep;xform(29,3,2);rot(2);xform(0,1,32);id;xform(10,21,2);grouped(rot(3),16)
+solution:init;load_rep;xform(29,3,2);rot(30);xform(0,1,32);id;xform(10,21,2);grouped(rot(13),16)
+solution:init;load_rep;xform(29,3,2);rot(22);xform(0,1,32);id;xform(10,21,2);grouped(rot(1),16)
+solution:init;load_rep;xform(29,3,2);rot(18);xform(0,1,32);id;xform(10,21,2);grouped(rot(11),16)
+solution:init;load_rep;xform(29,3,2);id;xform(0,1,32);id;xform(10,21,2);id
+solution:init;load_rep;xform(29,3,2);rot(10);xform(0,1,32);id;xform(10,21,2);grouped(rot(15),16)
+solution:init;load_rep;xform(29,3,2);rot(28);xform(0,1,32);id;xform(10,21,2);grouped(rot(10),16)
+solution:init;load_rep;xform(29,3,2);rot(12);xform(0,1,32);id;xform(10,21,2);grouped(rot(2),16)
+solution:init;load_rep;xform(29,3,2);rot(14);xform(0,1,32);id;xform(10,21,2);grouped(rot(5),16)
+solution:init;load_rep;xform(29,3,2);rot(4);xform(0,1,32);id;xform(10,21,2);grouped(rot(6),16)
+solution:init;load_rep;xform(29,3,2);rot(8);xform(0,1,32);id;xform(10,21,2);grouped(rot(12),16)
+solution:init;load_rep;xform(29,3,2);rot(20);xform(0,1,32);id;xform(10,21,2);grouped(rot(14),16)
+solution:init;load_rep;xform(3,29,2);rot(24);xform(0,1,32);id;xform(22,11,2);grouped(rot(12),16)
+solution:init;load_rep;xform(3,29,2);rot(26);xform(0,1,32);id;xform(22,11,2);grouped(rot(9),16)
+solution:init;load_rep;xform(3,29,2);rot(6);xform(0,1,32);id;xform(22,11,2);grouped(rot(7),16)
+solution:init;load_rep;xform(3,29,2);rot(16);xform(0,1,32);id;xform(22,11,2);grouped(rot(8),16)
+solution:init;load_rep;xform(3,29,2);rot(2);xform(0,1,32);id;xform(22,11,2);grouped(rot(13),16)
+solution:init;load_rep;xform(3,29,2);rot(30);xform(0,1,32);id;xform(22,11,2);grouped(rot(3),16)
+solution:init;load_rep;xform(3,29,2);rot(22);xform(0,1,32);id;xform(22,11,2);grouped(rot(15),16)
+solution:init;load_rep;xform(3,29,2);rot(18);xform(0,1,32);id;xform(22,11,2);grouped(rot(5),16)
+solution:init;load_rep;xform(3,29,2);id;xform(0,1,32);id;xform(22,11,2);id
+solution:init;load_rep;xform(3,29,2);rot(10);xform(0,1,32);id;xform(22,11,2);grouped(rot(1),16)
+solution:init;load_rep;xform(3,29,2);rot(28);xform(0,1,32);id;xform(22,11,2);grouped(rot(6),16)
+solution:init;load_rep;xform(3,29,2);rot(12);xform(0,1,32);id;xform(22,11,2);grouped(rot(14),16)
+solution:init;load_rep;xform(3,29,2);rot(14);xform(0,1,32);id;xform(22,11,2);grouped(rot(11),16)
+solution:init;load_rep;xform(3,29,2);rot(4);xform(0,1,32);id;xform(22,11,2);grouped(rot(10),16)
+solution:init;load_rep;xform(3,29,2);rot(8);xform(0,1,32);id;xform(22,11,2);grouped(rot(4),16)
+solution:init;load_rep;xform(3,29,2);rot(20);xform(0,1,32);id;xform(22,11,2);grouped(rot(2),16)
+solution:init;load_rep;xform(17,15,2);rot(24);xform(0,1,32);id;xform(2,17,2);grouped(rot(4),16)
+solution:init;load_rep;xform(17,15,2);rot(26);xform(0,1,32);id;xform(2,17,2);grouped(rot(3),16)
+solution:init;load_rep;xform(17,15,2);rot(6);xform(0,1,32);id;xform(2,17,2);grouped(rot(13),16)
+solution:init;load_rep;xform(17,15,2);rot(16);xform(0,1,32);id;xform(2,17,2);grouped(rot(8),16)
+solution:init;load_rep;xform(17,15,2);rot(2);xform(0,1,32);id;xform(2,17,2);grouped(rot(15),16)
+solution:init;load_rep;xform(17,15,2);rot(30);xform(0,1,32);id;xform(2,17,2);grouped(rot(1),16)
+solution:init;load_rep;xform(17,15,2);rot(22);xform(0,1,32);id;xform(2,17,2);grouped(rot(5),16)
+solution:init;load_rep;xform(17,15,2);rot(18);xform(0,1,32);id;xform(2,17,2);grouped(rot(7),16)
+solution:init;load_rep;xform(17,15,2);id;xform(0,1,32);id;xform(2,17,2);id
+solution:init;load_rep;xform(17,15,2);rot(10);xform(0,1,32);id;xform(2,17,2);grouped(rot(11),16)
+solution:init;load_rep;xform(17,15,2);rot(28);xform(0,1,32);id;xform(2,17,2);grouped(rot(2),16)
+solution:init;load_rep;xform(17,15,2);rot(12);xform(0,1,32);id;xform(2,17,2);grouped(rot(10),16)
+solution:init;load_rep;xform(17,15,2);rot(14);xform(0,1,32);id;xform(2,17,2);grouped(rot(9),16)
+solution:init;load_rep;xform(17,15,2);rot(4);xform(0,1,32);id;xform(2,17,2);grouped(rot(14),16)
+solution:init;load_rep;xform(17,15,2);rot(8);xform(0,1,32);id;xform(2,17,2);grouped(rot(12),16)
+solution:init;load_rep;xform(17,15,2);rot(20);xform(0,1,32);id;xform(2,17,2);grouped(rot(6),16)
+solution:init;load_rep;xform(15,15,2);rot(31);xform(0,1,32);rot(1);xform(30,15,2);rot(16)
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=col_xforms; lane=0; tested=1298; found=0; failed=0; pruned=1231; continued=67;
+stats:2 name=col_rots; lane=0; tested=3886; found=0; failed=0; pruned=3586; continued=300;
+stats:3 name=row_xforms; lane=0; tested=3000; found=0; failed=0; pruned=2700; continued=300;
+stats:4 name=row_rots; lane=0; tested=600; found=0; failed=0; pruned=300; continued=300;
+stats:5 name=col_xforms; lane=0; tested=389400; found=0; failed=0; pruned=389128; continued=272;
+stats:6 name=col_rots; lane=0; tested=15776; found=0; failed=0; pruned=0; continued=15776;
+stats:7 name=(last); lane=0; tested=15776; found=272; failed=15504; pruned=0; continued=0;
+search:specs/swinv_like/l3/trove-rcr-2.json success=true; mode=All; time=1.096104283;
+spec:specs/swinv_like/l3/trove-rcr-3.json
+load:matrices/32,3-col_rots-32,3 density=0.004523383246527778; time=0.029319663;
+load:matrices/32,3-col_xforms-32,3 density=0.046303513609332804; time=0.02936817;
+mul:matrices/32,3-col_rots_32,3-col_xforms-32,3 density=0.10092299661518615; time=5.732060974;
+load:matrices/32,3-row_rots-32,3 density=0.0003255208333333333; time=0.029108118;
+mul:matrices/32,3-col_rots_32,3-col_xforms_32,3-row_rots-32,3 density=0.30276898984555844; time=1.540673621;
+load:matrices/32,3-row_xforms-32,3 density=0.0008534207756136671; time=0.027186854;
+mul:matrices/32,3-col_rots_32,3-col_xforms_32,3-row_rots_32,3-row_xforms-32,3 density=0.8917457439281322; time=1.4260082459999999;
+load:matrices/32,3-col_rots-32,3 density=0.004523383246527778; time=0.026923952;
+mul:matrices/32,3-col_rots_32,3-col_xforms_32,3-row_rots_32,3-row_xforms_32,3-col_rots-32,3 density=0.9449686121057581; time=1.889386912;
+Begin search
+solution:init;load_rep;xform(31,0,3);rot(1);xform(2,2,32);rot(2);xform(29,31,3);rot(11)
+solution:init;load_rep;id;id;xform(2,1,32);id;xform(3,1,3);id
+solution:init;load_rep;id;rot(16);xform(2,1,16);rot(2);xform(3,1,3);rot(16)
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=col_xforms; lane=0; tested=1347; found=0; failed=0; pruned=1320; continued=27;
+stats:2 name=col_rots; lane=0; tested=1566; found=0; failed=0; pruned=1526; continued=40;
+stats:3 name=row_xforms; lane=0; tested=1200; found=0; failed=0; pruned=1193; continued=7;
+stats:4 name=row_rots; lane=0; tested=21; found=0; failed=0; pruned=14; continued=7;
+stats:5 name=col_xforms; lane=0; tested=9429; found=0; failed=0; pruned=9426; continued=3;
+stats:6 name=col_rots; lane=0; tested=174; found=0; failed=0; pruned=0; continued=174;
+stats:7 name=(last); lane=0; tested=174; found=3; failed=171; pruned=0; continued=0;
+search:specs/swinv_like/l3/trove-rcr-3.json success=true; mode=All; time=0.063939675;
+spec:specs/swinv_like/l3/trove-rcr-4.json
+load:matrices/32,4-col_rots-32,4 density=0.002544403076171875; time=0.089810403;
+load:matrices/32,4-col_xforms-32,4 density=0.03853124752640724; time=0.089613592;
+mul:matrices/32,4-col_rots_32,4-col_xforms-32,4 density=0.05878354609012604; time=25.428301689;
+load:matrices/32,4-row_rots-32,4 density=0.000274658203125; time=0.089585473;
+mul:matrices/32,4-col_rots_32,4-col_xforms_32,4-row_rots-32,4 density=0.26638418436050415; time=19.109907012;
+load:matrices/32,4-row_xforms-32,4 density=0.0008758679032325745; time=0.088794943;
+mul:matrices/32,4-col_rots_32,4-col_xforms_32,4-row_rots_32,4-row_xforms-32,4 density=0.9333506971597672; time=19.886322182;
+load:matrices/32,4-col_rots-32,4 density=0.002544403076171875; time=0.089984319;
+mul:matrices/32,4-col_rots_32,4-col_xforms_32,4-row_rots_32,4-row_xforms_32,4-col_rots-32,4 density=0.963559627532959; time=17.732993606;
+Begin search
+solution:init;load_rep;xform(19,13,4);rot(4);xform(0,1,32);id;xform(12,27,4);grouped(rot(5),8)
+solution:init;load_rep;xform(19,13,4);rot(8);xform(0,1,32);id;xform(12,27,4);grouped(rot(2),8)
+solution:init;load_rep;xform(19,13,4);rot(24);xform(0,1,32);id;xform(12,27,4);grouped(rot(6),8)
+solution:init;load_rep;xform(19,13,4);rot(28);xform(0,1,32);id;xform(12,27,4);grouped(rot(3),8)
+solution:init;load_rep;xform(19,13,4);id;xform(0,1,32);id;xform(12,27,4);id
+solution:init;load_rep;xform(19,13,4);rot(20);xform(0,1,32);id;xform(12,27,4);grouped(rot(1),8)
+solution:init;load_rep;xform(19,13,4);rot(12);xform(0,1,32);id;xform(12,27,4);grouped(rot(7),8)
+solution:init;load_rep;xform(19,13,4);rot(16);xform(0,1,32);id;xform(12,27,4);grouped(rot(4),8)
+solution:init;load_rep;xform(0,31,4);rot(4);xform(3,1,32);id;xform(4,1,4);grouped(rot(7),8)
+solution:init;load_rep;xform(0,31,4);rot(8);xform(3,1,32);id;xform(4,1,4);grouped(rot(6),8)
+solution:init;load_rep;xform(0,31,4);rot(24);xform(3,1,32);id;xform(4,1,4);grouped(rot(2),8)
+solution:init;load_rep;xform(0,31,4);rot(28);xform(3,1,32);id;xform(4,1,4);grouped(rot(1),8)
+solution:init;load_rep;xform(0,31,4);id;xform(3,1,32);id;xform(4,1,4);id
+solution:init;load_rep;xform(0,31,4);rot(20);xform(3,1,32);id;xform(4,1,4);grouped(rot(3),8)
+solution:init;load_rep;xform(0,31,4);rot(12);xform(3,1,32);id;xform(4,1,4);grouped(rot(5),8)
+solution:init;load_rep;xform(0,31,4);rot(16);xform(3,1,32);id;xform(4,1,4);grouped(rot(4),8)
+solution:init;load_rep;xform(7,25,4);rot(4);xform(0,1,32);id;xform(28,23,4);grouped(rot(1),8)
+solution:init;load_rep;xform(7,25,4);rot(8);xform(0,1,32);id;xform(28,23,4);grouped(rot(2),8)
+solution:init;load_rep;xform(7,25,4);rot(24);xform(0,1,32);id;xform(28,23,4);grouped(rot(6),8)
+solution:init;load_rep;xform(7,25,4);rot(28);xform(0,1,32);id;xform(28,23,4);grouped(rot(7),8)
+solution:init;load_rep;xform(7,25,4);id;xform(0,1,32);id;xform(28,23,4);id
+solution:init;load_rep;xform(7,25,4);rot(20);xform(0,1,32);id;xform(28,23,4);grouped(rot(5),8)
+solution:init;load_rep;xform(7,25,4);rot(12);xform(0,1,32);id;xform(28,23,4);grouped(rot(3),8)
+solution:init;load_rep;xform(7,25,4);rot(16);xform(0,1,32);id;xform(28,23,4);grouped(rot(4),8)
+solution:init;load_rep;xform(23,9,4);rot(4);xform(0,1,32);id;xform(28,7,4);grouped(rot(1),8)
+solution:init;load_rep;xform(23,9,4);rot(8);xform(0,1,32);id;xform(28,7,4);grouped(rot(2),8)
+solution:init;load_rep;xform(23,9,4);rot(24);xform(0,1,32);id;xform(28,7,4);grouped(rot(6),8)
+solution:init;load_rep;xform(23,9,4);rot(28);xform(0,1,32);id;xform(28,7,4);grouped(rot(7),8)
+solution:init;load_rep;xform(23,9,4);id;xform(0,1,32);id;xform(28,7,4);id
+solution:init;load_rep;xform(23,9,4);rot(20);xform(0,1,32);id;xform(28,7,4);grouped(rot(5),8)
+solution:init;load_rep;xform(23,9,4);rot(12);xform(0,1,32);id;xform(28,7,4);grouped(rot(3),8)
+solution:init;load_rep;xform(23,9,4);rot(16);xform(0,1,32);id;xform(28,7,4);grouped(rot(4),8)
+solution:init;load_rep;xform(25,7,4);rot(4);xform(3,1,32);id;xform(4,9,4);grouped(rot(7),8)
+solution:init;load_rep;xform(25,7,4);rot(8);xform(3,1,32);id;xform(4,9,4);grouped(rot(6),8)
+solution:init;load_rep;xform(25,7,4);rot(24);xform(3,1,32);id;xform(4,9,4);grouped(rot(2),8)
+solution:init;load_rep;xform(25,7,4);rot(28);xform(3,1,32);id;xform(4,9,4);grouped(rot(1),8)
+solution:init;load_rep;xform(25,7,4);id;xform(3,1,32);id;xform(4,9,4);id
+solution:init;load_rep;xform(25,7,4);rot(20);xform(3,1,32);id;xform(4,9,4);grouped(rot(3),8)
+solution:init;load_rep;xform(25,7,4);rot(12);xform(3,1,32);id;xform(4,9,4);grouped(rot(5),8)
+solution:init;load_rep;xform(25,7,4);rot(16);xform(3,1,32);id;xform(4,9,4);grouped(rot(4),8)
+solution:init;load_rep;xform(11,21,4);rot(4);xform(0,1,32);id;xform(12,3,4);grouped(rot(5),8)
+solution:init;load_rep;xform(11,21,4);rot(8);xform(0,1,32);id;xform(12,3,4);grouped(rot(2),8)
+solution:init;load_rep;xform(11,21,4);rot(24);xform(0,1,32);id;xform(12,3,4);grouped(rot(6),8)
+solution:init;load_rep;xform(11,21,4);rot(28);xform(0,1,32);id;xform(12,3,4);grouped(rot(3),8)
+solution:init;load_rep;xform(11,21,4);id;xform(0,1,32);id;xform(12,3,4);id
+solution:init;load_rep;xform(11,21,4);rot(20);xform(0,1,32);id;xform(12,3,4);grouped(rot(1),8)
+solution:init;load_rep;xform(11,21,4);rot(12);xform(0,1,32);id;xform(12,3,4);grouped(rot(7),8)
+solution:init;load_rep;xform(11,21,4);rot(16);xform(0,1,32);id;xform(12,3,4);grouped(rot(4),8)
+solution:init;load_rep;xform(9,23,4);rot(4);xform(3,1,32);id;xform(4,25,4);grouped(rot(7),8)
+solution:init;load_rep;xform(9,23,4);rot(8);xform(3,1,32);id;xform(4,25,4);grouped(rot(6),8)
+solution:init;load_rep;xform(9,23,4);rot(24);xform(3,1,32);id;xform(4,25,4);grouped(rot(2),8)
+solution:init;load_rep;xform(9,23,4);rot(28);xform(3,1,32);id;xform(4,25,4);grouped(rot(1),8)
+solution:init;load_rep;xform(9,23,4);id;xform(3,1,32);id;xform(4,25,4);id
+solution:init;load_rep;xform(9,23,4);rot(20);xform(3,1,32);id;xform(4,25,4);grouped(rot(3),8)
+solution:init;load_rep;xform(9,23,4);rot(12);xform(3,1,32);id;xform(4,25,4);grouped(rot(5),8)
+solution:init;load_rep;xform(9,23,4);rot(16);xform(3,1,32);id;xform(4,25,4);grouped(rot(4),8)
+solution:init;load_rep;xform(13,19,4);rot(4);xform(3,1,32);id;xform(20,5,4);grouped(rot(3),8)
+solution:init;load_rep;xform(13,19,4);rot(8);xform(3,1,32);id;xform(20,5,4);grouped(rot(6),8)
+solution:init;load_rep;xform(13,19,4);rot(24);xform(3,1,32);id;xform(20,5,4);grouped(rot(2),8)
+solution:init;load_rep;xform(13,19,4);rot(28);xform(3,1,32);id;xform(20,5,4);grouped(rot(5),8)
+solution:init;load_rep;xform(13,19,4);id;xform(3,1,32);id;xform(20,5,4);id
+solution:init;load_rep;xform(13,19,4);rot(20);xform(3,1,32);id;xform(20,5,4);grouped(rot(7),8)
+solution:init;load_rep;xform(13,19,4);rot(12);xform(3,1,32);id;xform(20,5,4);grouped(rot(1),8)
+solution:init;load_rep;xform(13,19,4);rot(16);xform(3,1,32);id;xform(20,5,4);grouped(rot(4),8)
+solution:init;load_rep;xform(27,5,4);rot(4);xform(0,1,32);id;xform(12,19,4);grouped(rot(5),8)
+solution:init;load_rep;xform(27,5,4);rot(8);xform(0,1,32);id;xform(12,19,4);grouped(rot(2),8)
+solution:init;load_rep;xform(27,5,4);rot(24);xform(0,1,32);id;xform(12,19,4);grouped(rot(6),8)
+solution:init;load_rep;xform(27,5,4);rot(28);xform(0,1,32);id;xform(12,19,4);grouped(rot(3),8)
+solution:init;load_rep;xform(27,5,4);id;xform(0,1,32);id;xform(12,19,4);id
+solution:init;load_rep;xform(27,5,4);rot(20);xform(0,1,32);id;xform(12,19,4);grouped(rot(1),8)
+solution:init;load_rep;xform(27,5,4);rot(12);xform(0,1,32);id;xform(12,19,4);grouped(rot(7),8)
+solution:init;load_rep;xform(27,5,4);rot(16);xform(0,1,32);id;xform(12,19,4);grouped(rot(4),8)
+solution:init;load_rep;xform(15,17,4);rot(4);xform(0,1,32);id;xform(28,15,4);grouped(rot(1),8)
+solution:init;load_rep;xform(15,17,4);rot(8);xform(0,1,32);id;xform(28,15,4);grouped(rot(2),8)
+solution:init;load_rep;xform(15,17,4);rot(24);xform(0,1,32);id;xform(28,15,4);grouped(rot(6),8)
+solution:init;load_rep;xform(15,17,4);rot(28);xform(0,1,32);id;xform(28,15,4);grouped(rot(7),8)
+solution:init;load_rep;xform(15,17,4);id;xform(0,1,32);id;xform(28,15,4);id
+solution:init;load_rep;xform(15,17,4);rot(20);xform(0,1,32);id;xform(28,15,4);grouped(rot(5),8)
+solution:init;load_rep;xform(15,17,4);rot(12);xform(0,1,32);id;xform(28,15,4);grouped(rot(3),8)
+solution:init;load_rep;xform(15,17,4);rot(16);xform(0,1,32);id;xform(28,15,4);grouped(rot(4),8)
+solution:init;load_rep;xform(21,11,4);rot(4);xform(3,1,32);id;xform(20,29,4);grouped(rot(3),8)
+solution:init;load_rep;xform(21,11,4);rot(8);xform(3,1,32);id;xform(20,29,4);grouped(rot(6),8)
+solution:init;load_rep;xform(21,11,4);rot(24);xform(3,1,32);id;xform(20,29,4);grouped(rot(2),8)
+solution:init;load_rep;xform(21,11,4);rot(28);xform(3,1,32);id;xform(20,29,4);grouped(rot(5),8)
+solution:init;load_rep;xform(21,11,4);id;xform(3,1,32);id;xform(20,29,4);id
+solution:init;load_rep;xform(21,11,4);rot(20);xform(3,1,32);id;xform(20,29,4);grouped(rot(7),8)
+solution:init;load_rep;xform(21,11,4);rot(12);xform(3,1,32);id;xform(20,29,4);grouped(rot(1),8)
+solution:init;load_rep;xform(21,11,4);rot(16);xform(3,1,32);id;xform(20,29,4);grouped(rot(4),8)
+solution:init;load_rep;xform(3,29,4);rot(4);xform(0,1,32);id;xform(12,11,4);grouped(rot(5),8)
+solution:init;load_rep;xform(3,29,4);rot(8);xform(0,1,32);id;xform(12,11,4);grouped(rot(2),8)
+solution:init;load_rep;xform(3,29,4);rot(24);xform(0,1,32);id;xform(12,11,4);grouped(rot(6),8)
+solution:init;load_rep;xform(3,29,4);rot(28);xform(0,1,32);id;xform(12,11,4);grouped(rot(3),8)
+solution:init;load_rep;xform(3,29,4);id;xform(0,1,32);id;xform(12,11,4);id
+solution:init;load_rep;xform(3,29,4);rot(20);xform(0,1,32);id;xform(12,11,4);grouped(rot(1),8)
+solution:init;load_rep;xform(3,29,4);rot(12);xform(0,1,32);id;xform(12,11,4);grouped(rot(7),8)
+solution:init;load_rep;xform(3,29,4);rot(16);xform(0,1,32);id;xform(12,11,4);grouped(rot(4),8)
+solution:init;load_rep;xform(5,27,4);rot(4);xform(3,1,32);id;xform(20,13,4);grouped(rot(3),8)
+solution:init;load_rep;xform(5,27,4);rot(8);xform(3,1,32);id;xform(20,13,4);grouped(rot(6),8)
+solution:init;load_rep;xform(5,27,4);rot(24);xform(3,1,32);id;xform(20,13,4);grouped(rot(2),8)
+solution:init;load_rep;xform(5,27,4);rot(28);xform(3,1,32);id;xform(20,13,4);grouped(rot(5),8)
+solution:init;load_rep;xform(5,27,4);id;xform(3,1,32);id;xform(20,13,4);id
+solution:init;load_rep;xform(5,27,4);rot(20);xform(3,1,32);id;xform(20,13,4);grouped(rot(7),8)
+solution:init;load_rep;xform(5,27,4);rot(12);xform(3,1,32);id;xform(20,13,4);grouped(rot(1),8)
+solution:init;load_rep;xform(5,27,4);rot(16);xform(3,1,32);id;xform(20,13,4);grouped(rot(4),8)
+solution:init;load_rep;xform(31,1,4);rot(4);xform(0,1,32);id;xform(28,31,4);grouped(rot(1),8)
+solution:init;load_rep;xform(31,1,4);rot(8);xform(0,1,32);id;xform(28,31,4);grouped(rot(2),8)
+solution:init;load_rep;xform(31,1,4);rot(24);xform(0,1,32);id;xform(28,31,4);grouped(rot(6),8)
+solution:init;load_rep;xform(31,1,4);rot(28);xform(0,1,32);id;xform(28,31,4);grouped(rot(7),8)
+solution:init;load_rep;xform(31,1,4);id;xform(0,1,32);id;xform(28,31,4);id
+solution:init;load_rep;xform(31,1,4);rot(20);xform(0,1,32);id;xform(28,31,4);grouped(rot(5),8)
+solution:init;load_rep;xform(31,1,4);rot(12);xform(0,1,32);id;xform(28,31,4);grouped(rot(3),8)
+solution:init;load_rep;xform(31,1,4);rot(16);xform(0,1,32);id;xform(28,31,4);grouped(rot(4),8)
+solution:init;load_rep;xform(17,15,4);rot(4);xform(3,1,32);id;xform(4,17,4);grouped(rot(7),8)
+solution:init;load_rep;xform(17,15,4);rot(8);xform(3,1,32);id;xform(4,17,4);grouped(rot(6),8)
+solution:init;load_rep;xform(17,15,4);rot(24);xform(3,1,32);id;xform(4,17,4);grouped(rot(2),8)
+solution:init;load_rep;xform(17,15,4);rot(28);xform(3,1,32);id;xform(4,17,4);grouped(rot(1),8)
+solution:init;load_rep;xform(17,15,4);id;xform(3,1,32);id;xform(4,17,4);id
+solution:init;load_rep;xform(17,15,4);rot(20);xform(3,1,32);id;xform(4,17,4);grouped(rot(3),8)
+solution:init;load_rep;xform(17,15,4);rot(12);xform(3,1,32);id;xform(4,17,4);grouped(rot(5),8)
+solution:init;load_rep;xform(17,15,4);rot(16);xform(3,1,32);id;xform(4,17,4);grouped(rot(4),8)
+solution:init;load_rep;xform(29,3,4);rot(4);xform(3,1,32);id;xform(20,21,4);grouped(rot(3),8)
+solution:init;load_rep;xform(29,3,4);rot(8);xform(3,1,32);id;xform(20,21,4);grouped(rot(6),8)
+solution:init;load_rep;xform(29,3,4);rot(24);xform(3,1,32);id;xform(20,21,4);grouped(rot(2),8)
+solution:init;load_rep;xform(29,3,4);rot(28);xform(3,1,32);id;xform(20,21,4);grouped(rot(5),8)
+solution:init;load_rep;xform(29,3,4);id;xform(3,1,32);id;xform(20,21,4);id
+solution:init;load_rep;xform(29,3,4);rot(20);xform(3,1,32);id;xform(20,21,4);grouped(rot(7),8)
+solution:init;load_rep;xform(29,3,4);rot(12);xform(3,1,32);id;xform(20,21,4);grouped(rot(1),8)
+solution:init;load_rep;xform(29,3,4);rot(16);xform(3,1,32);id;xform(20,21,4);grouped(rot(4),8)
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=col_xforms; lane=0; tested=2716; found=0; failed=0; pruned=2668; continued=48;
+stats:2 name=col_rots; lane=0; tested=2784; found=0; failed=0; pruned=2624; continued=160;
+stats:3 name=row_xforms; lane=0; tested=12320; found=0; failed=0; pruned=12157; continued=163;
+stats:4 name=row_rots; lane=0; tested=815; found=0; failed=0; pruned=652; continued=163;
+stats:5 name=col_xforms; lane=0; tested=442708; found=0; failed=0; pruned=442580; continued=128;
+stats:6 name=col_rots; lane=0; tested=7424; found=0; failed=0; pruned=0; continued=7424;
+stats:7 name=(last); lane=0; tested=7424; found=128; failed=7296; pruned=0; continued=0;
+search:specs/swinv_like/l3/trove-rcr-4.json success=true; mode=All; time=2.428795608;
+spec:specs/swinv_like/l3/trove-rcr-5.json
+load:matrices/32,5-col_rots-32,5 density=0.00162841796875; time=0.223372355;
+load:matrices/32,5-col_xforms-32,5 density=0.017708180236816407; time=0.223742387;
+mul:matrices/32,5-col_rots_32,5-col_xforms-32,5 density=0.03752501525878906; time=47.419602815;
+load:matrices/32,5-row_rots-32,5 density=0.0001953125; time=0.219495225;
+mul:matrices/32,5-col_rots_32,5-col_xforms_32,5-row_rots-32,5 density=0.18762507629394531; time=33.572672782;
+load:matrices/32,5-row_xforms-32,5 density=0.0008788223266601562; time=0.216136401;
+mul:matrices/32,5-col_rots_32,5-col_xforms_32,5-row_rots_32,5-row_xforms-32,5 density=0.9248141784667969; time=35.786433048;
+load:matrices/32,5-col_rots-32,5 density=0.00162841796875; time=0.219191807;
+mul:matrices/32,5-col_rots_32,5-col_xforms_32,5-row_rots_32,5-row_xforms_32,5-col_rots-32,5 density=0.9629173278808594; time=42.503344286;
+Begin search
+solution:init;load_rep;id;id;xform(3,2,32);id;xform(5,1,5);id
+solution:init;load_rep;id;rot(16);xform(3,2,16);rot(4);xform(5,1,5);rot(16)
+solution:init;load_rep;xform(31,0,5);rot(1);xform(3,3,32);rot(4);xform(27,31,5);rot(13)
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=col_xforms; lane=0; tested=1364; found=0; failed=0; pruned=1337; continued=27;
+stats:2 name=col_rots; lane=0; tested=1566; found=0; failed=0; pruned=1527; continued=39;
+stats:3 name=row_xforms; lane=0; tested=3900; found=0; failed=0; pruned=3895; continued=5;
+stats:4 name=row_rots; lane=0; tested=25; found=0; failed=0; pruned=20; continued=5;
+stats:5 name=col_xforms; lane=0; tested=6820; found=0; failed=0; pruned=6817; continued=3;
+stats:6 name=col_rots; lane=0; tested=174; found=0; failed=0; pruned=0; continued=174;
+stats:7 name=(last); lane=0; tested=174; found=3; failed=171; pruned=0; continued=0;
+search:specs/swinv_like/l3/trove-rcr-5.json success=true; mode=All; time=0.143242022;

@@ -1,0 +1,25 @@
+spec:specs/swinv_like_big/l3/2d-stencil-5.json
+load:matrices/4,4-identity-4,4,5,5 density=0.00390625; time=0.018066572;
+build:matrices/4,4,5,5-2s-r{main[1]out[1]second[3]}-4,4,5,5 density=0.000028125; time=0.377565737;
+mul:matrices/4,4-identity_4,4,5,5-2s-r{main[1]out[1]second[3]}-4,4,5,5 density=0.017578125; time=81.277743757;
+build:matrices/4,4,5,5-2s-xf{main[1]out[1]second[3]}-4,4,5,5 density=0.00004228125; time=0.635898217;
+mul:matrices/4,4-identity_4,4,5,5-2s-r{main[1]out[1]second[3]}_4,4,5,5-2s-xf{main[1]out[1]second[3]}-4,4,5,5 density=0.051875; time=462.162612286;
+build:matrices/4,4,5,5-2s-r{main[0]out[0]second[2]}-4,4,5,5 density=0.000028125; time=0.606631329;
+mul:matrices/4,4-identity_4,4,5,5-2s-r{main[1]out[1]second[3]}_4,4,5,5-2s-xf{main[1]out[1]second[3]}_4,4,5,5-2s-r{main[0]out[0]second[2]}-4,4,5,5 density=0.2334375; time=384.749273067;
+build:matrices/4,4,5,5-2s-xf{main[0]out[0]second[2]}-4,4,5,5 density=0.00004228125; time=0.756580226;
+mul:matrices/4,4-identity_4,4,5,5-2s-r{main[1]out[1]second[3]}_4,4,5,5-2s-xf{main[1]out[1]second[3]}_4,4,5,5-2s-r{main[0]out[0]second[2]}_4,4,5,5-2s-xf{main[0]out[0]second[2]}-4,4,5,5 density=0.6889; time=332.450648084;
+build:matrices/4,4,5,5-2s-g{axis[3]dims[1|3]}-4,4,5,2 density=0.0001515625; time=1.177772548;
+mul:matrices/4,4-identity_4,4,5,5-2s-r{main[1]out[1]second[3]}_4,4,5,5-2s-xf{main[1]out[1]second[3]}_4,4,5,5-2s-r{main[0]out[0]second[2]}_4,4,5,5-2s-xf{main[0]out[0]second[2]}_4,4,5,5-2s-g{axis[3]dims[1|3]}-4,4,5,2 density=0.83; time=60.786789519;
+Begin search
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, );select(d1 >= 0 + d3, );xform(0,1,5);id;xform(0,1,5);id;id
+stats:0 name=reshape; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:1 name=load_grid_2d; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:2 name=2s-g{axis[2]dims[0|2]}; lane=0; tested=36; found=0; failed=0; pruned=33; continued=3;
+stats:3 name=2s-g{axis[3]dims[1|3]}; lane=0; tested=108; found=0; failed=0; pruned=99; continued=9;
+stats:4 name=2s-xf{main[0]out[0]second[2]}; lane=0; tested=126; found=0; failed=0; pruned=123; continued=3;
+stats:5 name=2s-r{main[0]out[0]second[2]}; lane=0; tested=15; found=0; failed=0; pruned=12; continued=3;
+stats:6 name=2s-xf{main[1]out[1]second[3]}; lane=0; tested=42; found=0; failed=0; pruned=41; continued=1;
+stats:7 name=2s-r{main[1]out[1]second[3]}; lane=0; tested=5; found=0; failed=0; pruned=4; continued=1;
+stats:8 name=identity; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1;
+stats:9 name=(last); lane=0; tested=1; found=1; failed=0; pruned=0; continued=0;
+search:specs/swinv_like_big/l3/2d-stencil-5.json success=true; mode=All; time=0.08361078;

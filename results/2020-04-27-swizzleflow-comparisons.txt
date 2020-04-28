@@ -1,0 +1,112 @@
+General notes: to swap level 3/1, swap ?sw-xform/?sw-xform-easy
+and ?sw-cond/?sw-cond-easy
+
+Also remove any [], ake the (0, 1, -1) restriction, from ?sw-xform
+
+## Convolution, 1D, weights free, 32x3, level 3
+Diff is:
+```
+diff --git a/ex2-conv1d.rkt b/ex2-conv1d.rkt
+index 427c461..02ff942 100644
+--- a/ex2-conv1d.rkt
++++ b/ex2-conv1d.rkt
+@@ -103,9 +103,10 @@
+   (for/bounded ([i 3])
+     (let* ([index (ite (?cond (@dup i) localId) (@dup 0) (@dup 1))]
+            [lane (?sw-xform localId warpSize
+-                            i warpSize [])]
++                            i warpSize [])]
++           [w-idx (?sw-xform localId warpSize i warpSize [])]
+            [x (shfl (get I-cached index) lane)]
+-           [w (@dup (get W i))])
++           [w (get W w-idx)])
+       (accumulate o (list w x) #:pred (?cond localId (@dup i))) ; (?cond localId (@dup i))
+       ))
+```
+
+cpu time: 3926 real time: 15447 gc time: 414
+
+## Same, but level 1
+
+cpu time: 3615 real time: 5040 gc time: 379
+
+## Conv 1D, 32x3, stock (ex2-conv1d), level 3
+
+cpu time: 3380 real time: 8984 gc time: 365
+
+## Same, level 1
+
+cpu time: 3713 real time: 5095 gc time: 373
+
+## 1D Stencil, no weights, 32x3, level 3
+
+cpu time: 2514 real time: 8577 gc time: 261
+
+## ... level 1
+
+cpu time: 2363 real time: 3071 gc time: 246
+
+## 2D stencil, no weights, 16x7x7
+
+cpu time: 391235 real time: 445596 gc time: 4428
+
+## Same stencil, 5x5 window, level 3
+
+diff --git a/ex2-stencil2d.rkt b/ex2-stencil2d.rkt
+index 35b7092..ca19bc7 100644
+--- a/ex2-stencil2d.rkt
++++ b/ex2-stencil2d.rkt
+@@ -63,7 +63,7 @@
+   (for* ([j (get-y o-sizes)]
+          [i (get-x o-sizes)])
+     (let ([o (create-accumulator (list +) /9)])
+-      (for* ([jj 7] [ii 7])
++      (for* ([jj 5] [ii 5])
+         (accumulate o (get I (+ i ii) (+ j jj)))
+       (set O i j o)))))
+
+@@ -123,13 +123,13 @@
+
+   (define o (create-accumulator (list +) /9 blockDim))
+
+-  (for* ([ky 3] [kx 3])
++  (for* ([ky 5] [kx 5])
+     (let* ([index-j (ite (?cond warp-row ky) (@dup 0) (@dup 1))]
+            [index-i (ite (?cond warp-col kx) (@dup 0) (@dup 1))]
+            [lane-x (?sw-xform warp-col W
+-                              kx 3 [])]
++                              kx 5)]
+            [lane-y (?sw-xform warp-row H
+-                              ky 3 [])]
++                              ky 5)]
+            [lane (+ (* lane-y W) lane-x)]
+            [x (shfl (get I-cached index-i index-j) lane)])
+       (accumulate o x)
+@@ -223,7 +223,7 @@
+   (define sol
+     (time (solve
+            (assert (andmap
+-                    (lambda (w) (run-with-warp-size stencil-2d-spec stencil-2d-sketch2 w))
++                    (lambda (w) (run-with-warp-size stencil-2d-spec stencil-2d-sketch w))
+                     (list WARP_SIZE))))))
+   (print-forms sol)
+   ;(print-lane 'lane (evaluate my-lane sol) '#(localId i) '#())
+
+cpu time: 48125 real time: 362339 gc time: 608
+
+## ..., Level 1
+cpu time: 18929 real time: 33366 gc time: 324
+
+
+## Stencil, 2D, 16x3x3
+
+cpu time: 16979 real time: 22854 gc time: 247
+
+## ... level 1
+
+cpu time: 6629 real time: 9563 gc time: 80
+
+
+# Trove, loads only, 3, level 3
+
+cpu time: 130 real time: 10813 gc time: 10
