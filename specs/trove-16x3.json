@@ -1,23 +1,30 @@
 {
-  "target": {"Builtin": "conv"},
+  "target": {"Builtin": "trove"},
   "target_info": [16, 3],
   "steps": [
     {
       "step": {"Initial": {"From": 0}},
-      "out_shape": [18],
+      "out_shape": [48],
       "lane": 0,
       "prune": false,
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "load_trunc"}},
+      "step": { "Gather": { "Builtin": "load_rep"}},
       "lane": 0,
-      "out_shape": [16, 2],
+      "out_shape": [16, 3],
       "prune": false,
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "reg_select"}},
+      "step": { "Gather": { "Builtin": "row_xforms"}},
+      "lane": 0,
+      "out_shape": [16, 3],
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "row_rots"}},
       "lane": 0,
       "out_shape": [16, 3],
       "prune": true,
@@ -38,11 +45,18 @@
       "then_fold": false
     },
     {
-      "step": { "Gather": { "Builtin": "cond_keep"}},
+      "step": { "Gather": { "Builtin": "row_xforms"}},
+      "lane": 0,
+      "out_shape": [16, 3],
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "row_rots"}},
       "lane": 0,
       "out_shape": [16, 3],
       "prune": false,
-      "then_fold": true
+      "then_fold": false
     }
   ]
 }

@@ -95,3 +95,11 @@ def expand_target_checks(df, to_copy=["spec", "lane"]):
         if name in df:
             final_df.insert(0, name, df[name])
     return final_df
+
+def compute_basis_size(df):
+    if isinstance(df, dict):
+        for v in df.values():
+            compute_basis_size(v)
+    else:
+        moved_cont = pd.Series([1]).append(df['continued'][:-1], ignore_index=True)
+        df['basis_size'] = df['tested'] // moved_cont
