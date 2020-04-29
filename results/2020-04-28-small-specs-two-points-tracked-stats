@@ -1,0 +1,45 @@
+spec:specs/1d-conv-16x3.json
+build:matrices/16-cond_keep-16,3 n_ones=2304; n_elems=589824; density=0.00390625; time=0.005839266;
+Using newly-built matrices/16-cond_keep-16,3
+build:matrices/16,3-col_rots-16,3 n_ones=46944; n_elems=5308416; density=0.008843315972222222; time=0.005631334;
+mul_stats:: probes_success=[(1, 5216), (2, 5216), (3, 5216), (4, 5216), (5, 5216), (6, 5216), (7, 5216), (8, 5216), (9, 5216)]; probes_failure=[(9, 542880)];
+mul:matrices/16-cond_keep_16,3-col_rots-16,3 n_ones=46944; n_elems=589824; density=0.07958984375; time=0.020435819;
+build:matrices/16,3-col_xforms-16,3 n_ones=247988; n_elems=5308416; density=0.046716007185570986; time=0.039954845;
+mul_stats:: probes_success=[(1, 2337), (2, 4096), (3, 3896), (4, 24576), (5, 24772), (6, 26046), (7, 21838), (8, 25053), (9, 22391), (10, 186445), (20, 59890), (30, 32190), (40, 17749), (50, 10678), (60, 10137), (70, 10300), (80, 9674), (90, 7669), (100, 28612), (200, 599)]; probes_failure=[(100, 52530), (200, 8346)];
+mul:matrices/16-cond_keep_16,3-col_rots_16,3-col_xforms-16,3 n_ones=528948; n_elems=589824; density=0.89678955078125; time=0.067687498;
+Begin search
+solution:init;load_trunc;select(d0 > 1 - d1);xform(0,15,3);rot(2);keep_if(d0 = 0 + d0)
+solution:init;load_trunc;select(d0 >= 0 + d1);xform(0,1,3);id;keep_if(d0 = 0 + d0)
+stats:0 name=load_trunc; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1; target_checks=[];
+stats:1 name=reg_select; lane=0; tested=38; found=0; failed=0; pruned=36; continued=2; target_checks=[(1, 15), (3, 4), (6, 2), (9, 1), (20, 3), (40, 7), (1200, 4)];
+stats:2 name=col_xforms; lane=0; tested=648; found=0; failed=0; pruned=646; continued=2; target_checks=[(1, 578), (2, 62), (3, 2), (9, 1), (20, 1), (100, 1), (600, 1)];
+stats:3 name=col_rots; lane=0; tested=54; found=0; failed=0; pruned=52; continued=2; target_checks=[(1, 50), (5, 1), (10, 1)];
+stats:4 name=cond_keep; lane=0; tested=76; found=0; failed=56; pruned=0; continued=20; target_checks=[];
+stats:5 name=(last); lane=0; tested=20; found=2; failed=18; pruned=0; continued=0; target_checks=[];
+search:specs/1d-conv-16x3.json success=true; mode=All; time=0.001416888;
+spec:specs/trove-16x3.json
+build:matrices/16,3-row_rots-16,3 n_ones=6912; n_elems=5308416; density=0.0013020833333333333; time=0.000445346;
+Using newly-built matrices/16,3-row_rots-16,3
+build:matrices/16,3-row_xforms-16,3 n_ones=17068; n_elems=5308416; density=0.0032152717496141976; time=0.003232111;
+mul_stats:: probes_success=[(1, 15984), (2, 3531), (3, 321)]; probes_failure=[(3, 5288580)];
+mul:matrices/16,3-row_rots_16,3-row_xforms-16,3 n_ones=19836; n_elems=5308416; density=0.0037367078993055555; time=0.077660291;
+load:matrices/16,3-col_rots-16,3 n_ones=46944; n_elems=5308416; density=0.008843315972222222; time=0.001682447;
+mul_stats:: probes_success=[(1, 46944), (2, 46944), (3, 46944), (4, 46176), (5, 46176), (6, 46176), (7, 42240), (8, 42240), (9, 42240)]; probes_failure=[(3, 108288), (6, 446400), (9, 4347648)];
+mul:matrices/16,3-row_rots_16,3-row_xforms_16,3-col_rots-16,3 n_ones=406080; n_elems=5308416; density=0.07649739583333333; time=0.139029676;
+load:matrices/16,3-col_xforms-16,3 n_ones=247988; n_elems=5308416; density=0.046716007185570986; time=0.001648672;
+mul_stats:: probes_success=[(1, 371235), (2, 358263), (3, 374658), (4, 382884), (5, 350847), (6, 323244), (7, 286305), (8, 289137), (9, 235137), (10, 198171), (11, 166341), (12, 160677), (13, 139425), (14, 109338), (15, 101169), (16, 93672), (17, 52287), (18, 41658), (19, 37395), (20, 37467), (21, 32436), (22, 29250), (23, 22893), (24, 14601), (25, 24600), (26, 19866), (27, 12789), (28, 23502), (29, 18861), (30, 13644), (31, 13065), (32, 19272), (33, 9522), (34, 14040), (35, 14649), (36, 6741), (37, 8106), (38, 8679), (39, 8535), (40, 9240), (41, 8934), (42, 9954), (43, 9987), (44, 2448), (45, 9711), (46, 3477), (47, 5652), (48, 2538), (49, 7284), (50, 2520), (51, 5865), (52, 2343), (53, 5475), (54, 4695), (55, 2328), (56, 3708), (57, 6426), (58, 2652), (59, 4266), (60, 2136), (61, 4716), (62, 1506), (63, 2898), (64, 2964), (65, 5022), (66, 3342), (67, 1854), (68, 846), (69, 1938), (70, 1254), (71, 3798), (72, 3000), (73, 3312), (74, 486), (75, 2934), (76, 1782), (77, 846), (78, 2988), (79, 1134), (80, 2178), (81, 2754), (82, 990), (83, 1314), (84, 2034), (85, 234), (86, 504), (87, 270), (88, 792), (89, 2268), (90, 558), (91, 702), (92, 108), (93, 450), (94, 918), (95, 72), (96, 630), (97, 126), (98, 216), (100, 54), (101, 108), (102, 36), (103, 612), (105, 180), (106, 18), (107, 216), (109, 36), (113, 1332), (115, 378), (117, 216), (119, 540), (121, 630), (123, 864), (124, 468), (125, 1080), (126, 270), (127, 18), (128, 18), (129, 1620), (132, 432), (133, 486), (135, 234), (136, 216), (138, 90), (139, 216), (141, 540), (143, 162), (145, 72), (146, 468), (148, 18), (149, 216), (151, 18), (159, 18), (161, 18)]; probes_failure=[(1, 2256), (4, 5514), (7, 4560), (8, 8850), (9, 15258), (10, 11232), (11, 21006), (13, 13446), (14, 12510), (15, 65850), (16, 44526), (17, 13050), (18, 27972), (19, 19530), (20, 19872), (21, 18540), (22, 5220), (35, 23160), (59, 4704), (61, 7104), (63, 4704), (64, 21120), (65, 2016), (80, 3192), (82, 1440), (84, 5712), (85, 4800), (86, 5484), (88, 27504), (89, 204), (90, 2964), (91, 4308), (92, 19404), (93, 204), (94, 5628), (95, 16668), (96, 14496), (97, 7248), (98, 6672), (99, 2400), (100, 10104), (101, 10908), (102, 4608), (103, 408), (104, 204), (106, 204), (109, 408), (110, 612), (111, 408), (112, 7872), (113, 204), (114, 408), (115, 204), (117, 204), (120, 5976), (123, 408), (124, 408), (125, 816), (126, 408), (128, 5892), (129, 816), (130, 612), (131, 816), (132, 1224), (133, 816), (134, 408), (135, 612), (136, 1020), (137, 612), (138, 1224), (139, 816), (140, 408), (141, 408), (142, 612), (143, 408), (144, 7140), (145, 408), (147, 408), (148, 6780), (149, 204), (150, 204), (151, 204), (152, 7128), (153, 204), (154, 9624), (155, 1224), (156, 7572), (157, 612), (158, 4788), (159, 1020), (160, 18540), (161, 3060), (162, 13272), (163, 2244), (164, 12060), (165, 1224), (166, 1428), (167, 1020), (168, 13092), (169, 1224), (170, 1224), (171, 1020), (172, 3696), (173, 1020), (174, 1608), (175, 204), (176, 10944), (192, 576)];
+mul:matrices/16,3-row_rots_16,3-row_xforms_16,3-col_rots_16,3-col_xforms-16,3 n_ones=4611636; n_elems=5308416; density=0.8687405056423612; time=0.318205311;
+mul_stats:: probes_success=[(1, 4425264), (2, 336096)]; probes_failure=[(3, 547056)];
+mul:matrices/16,3-row_rots_16,3-row_xforms_16,3-col_rots_16,3-col_xforms_16,3-row_rots-16,3 n_ones=4761360; n_elems=5308416; density=0.8969455295138888; time=0.09134658;
+Begin search
+solution:init;load_rep;xform(2,2,16);rot(1);xform(3,15,3);rot(6);xform(2,0,16);rot(1)
+solution:init;load_rep;xform(0,2,16);id;xform(3,1,3);id;id;id
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1; target_checks=[];
+stats:1 name=row_xforms; lane=0; tested=24; found=0; failed=0; pruned=22; continued=2; target_checks=[(1, 8), (2, 2), (9, 5), (10, 2), (20, 5)];
+stats:2 name=row_rots; lane=0; tested=6; found=0; failed=0; pruned=4; continued=2; target_checks=[(1, 2), (40, 2)];
+stats:3 name=col_xforms; lane=0; tested=648; found=0; failed=0; pruned=646; continued=2; target_checks=[(1, 578), (2, 20), (3, 43), (4, 3), (8, 1), (200, 1)];
+stats:4 name=col_rots; lane=0; tested=54; found=0; failed=0; pruned=52; continued=2; target_checks=[(1, 51), (6, 1)];
+stats:5 name=row_xforms; lane=0; tested=48; found=0; failed=0; pruned=46; continued=2; target_checks=[(1, 24), (3, 16), (6, 2), (10, 2), (20, 2)];
+stats:6 name=row_rots; lane=0; tested=6; found=0; failed=0; pruned=0; continued=6; target_checks=[];
+stats:7 name=(last); lane=0; tested=6; found=2; failed=4; pruned=0; continued=0; target_checks=[];
+search:specs/trove-16x3.json success=true; mode=All; time=0.001877868;

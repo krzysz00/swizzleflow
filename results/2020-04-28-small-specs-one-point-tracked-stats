@@ -1,0 +1,45 @@
+spec:specs/1d-conv-16x3.json
+build:mats_one/16-cond_keep-16,3 n_ones=48; n_elems=768; density=0.0625; time=0.000416803;
+Using newly-built mats_one/16-cond_keep-16,3
+build:mats_one/16,3-col_rots-16,3 n_ones=768; n_elems=2304; density=0.3333333333333333; time=0.000319833;
+mul_stats:: probes_success=[(1, 256), (2, 256), (3, 256)]; probes_failure=[];
+mul:mats_one/16-cond_keep_16,3-col_rots-16,3 n_ones=768; n_elems=768; density=1; time=0.000174239;
+build:mats_one/16,3-col_xforms-16,3 n_ones=638; n_elems=2304; density=0.2769097222222222; time=0.002958211;
+mul_stats:: probes_success=[(1, 768)]; probes_failure=[];
+mul:mats_one/16-cond_keep_16,3-col_rots_16,3-col_xforms-16,3 n_ones=768; n_elems=768; density=1; time=0.00011155;
+Begin search
+solution:init;load_trunc;select(d0 > 1 - d1);xform(0,15,3);rot(2);keep_if(d0 = 0 + d0)
+solution:init;load_trunc;select(d0 >= 0 + d1);xform(0,1,3);id;keep_if(d0 = 0 + d0)
+stats:0 name=load_trunc; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1; target_checks=[];
+stats:1 name=reg_select; lane=0; tested=38; found=0; failed=0; pruned=31; continued=7; target_checks=[(1, 11), (2, 3), (4, 4), (7, 2), (10, 1), (20, 3), (40, 7)];
+stats:2 name=col_xforms; lane=0; tested=2268; found=0; failed=0; pruned=0; continued=2268; target_checks=[];
+stats:3 name=col_rots; lane=0; tested=61236; found=0; failed=0; pruned=61234; continued=2; target_checks=[(1, 55900), (2, 4805), (3, 456), (4, 36), (5, 15), (6, 8), (10, 8), (20, 4), (40, 2)];
+stats:4 name=cond_keep; lane=0; tested=76; found=0; failed=56; pruned=0; continued=20; target_checks=[];
+stats:5 name=(last); lane=0; tested=20; found=2; failed=18; pruned=0; continued=0; target_checks=[];
+search:specs/1d-conv-16x3.json success=true; mode=All; time=0.101278199;
+spec:specs/trove-16x3.json
+build:mats_one/16,3-row_rots-16,3 n_ones=144; n_elems=2304; density=0.0625; time=0.00000818;
+Using newly-built mats_one/16,3-row_rots-16,3
+build:mats_one/16,3-row_xforms-16,3 n_ones=136; n_elems=2304; density=0.059027777777777776; time=0.000070052;
+mul_stats:: probes_success=[(1, 144)]; probes_failure=[(1, 45), (2, 270), (3, 1845)];
+mul:mats_one/16,3-row_rots_16,3-row_xforms-16,3 n_ones=144; n_elems=2304; density=0.0625; time=0.000051507;
+load:mats_one/16,3-col_rots-16,3 n_ones=768; n_elems=2304; density=0.3333333333333333; time=0.000010309;
+mul_stats:: probes_success=[(1, 768), (2, 768), (3, 768)]; probes_failure=[];
+mul:mats_one/16,3-row_rots_16,3-row_xforms_16,3-col_rots-16,3 n_ones=2304; n_elems=2304; density=1; time=0.000048846;
+load:mats_one/16,3-col_xforms-16,3 n_ones=638; n_elems=2304; density=0.2769097222222222; time=0.000007287;
+mul_stats:: probes_success=[(1, 2304)]; probes_failure=[];
+mul:mats_one/16,3-row_rots_16,3-row_xforms_16,3-col_rots_16,3-col_xforms-16,3 n_ones=2304; n_elems=2304; density=1; time=0.000065858;
+mul_stats:: probes_success=[(1, 2304)]; probes_failure=[];
+mul:mats_one/16,3-row_rots_16,3-row_xforms_16,3-col_rots_16,3-col_xforms_16,3-row_rots-16,3 n_ones=2304; n_elems=2304; density=1; time=0.000082735;
+Begin search
+solution:init;load_rep;xform(0,2,16);id;xform(3,1,3);id;id;id
+solution:init;load_rep;xform(2,2,16);rot(1);xform(3,15,3);rot(6);xform(2,0,16);rot(1)
+stats:0 name=load_rep; lane=0; tested=1; found=0; failed=0; pruned=0; continued=1; target_checks=[];
+stats:1 name=row_xforms; lane=0; tested=24; found=0; failed=0; pruned=0; continued=24; target_checks=[];
+stats:2 name=row_rots; lane=0; tested=72; found=0; failed=0; pruned=0; continued=72; target_checks=[];
+stats:3 name=col_xforms; lane=0; tested=23328; found=0; failed=0; pruned=0; continued=23328; target_checks=[];
+stats:4 name=col_rots; lane=0; tested=629856; found=0; failed=0; pruned=629854; continued=2; target_checks=[(1, 593208), (2, 34920), (3, 1230), (4, 420), (5, 54), (7, 8), (9, 12), (10, 2)];
+stats:5 name=row_xforms; lane=0; tested=48; found=0; failed=0; pruned=0; continued=48; target_checks=[];
+stats:6 name=row_rots; lane=0; tested=144; found=0; failed=0; pruned=0; continued=144; target_checks=[];
+stats:7 name=(last); lane=0; tested=144; found=2; failed=142; pruned=0; continued=0; target_checks=[];
+search:specs/trove-16x3.json success=true; mode=All; time=1.174730809;
