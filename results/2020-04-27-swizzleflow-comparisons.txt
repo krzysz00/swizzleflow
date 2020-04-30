@@ -1,8 +1,6 @@
 General notes: to swap level 3/1, swap ?sw-xform/?sw-xform-easy
 and ?sw-cond/?sw-cond-easy
 
-Also remove any [], ake the (0, 1, -1) restriction, from ?sw-xform
-
 ## Convolution, 1D, weights free, 32x3, level 3
 Diff is:
 ```
@@ -24,31 +22,32 @@ index 427c461..02ff942 100644
        ))
 ```
 
-cpu time: 3926 real time: 15447 gc time: 414
+cpu time: 4030 real time: 13400 gc time: 417
 
 ## Same, but level 1
 
-cpu time: 3615 real time: 5040 gc time: 379
+cpu time: 3762 real time: 8072 gc time: 400
 
 ## Conv 1D, 32x3, stock (ex2-conv1d), level 3
 
-cpu time: 3380 real time: 8984 gc time: 365
+cpu time: 3467 real time: 9233 gc time: 378
 
 ## Same, level 1
 
-cpu time: 3713 real time: 5095 gc time: 373
+cpu time: 2999 real time: 3769 gc time: 284
 
 ## 1D Stencil, no weights, 32x3, level 3
 
-cpu time: 2514 real time: 8577 gc time: 261
+cpu time: 2672 real time: 8386 gc time: 270
 
 ## ... level 1
 
-cpu time: 2363 real time: 3071 gc time: 246
+cpu time: 2453 real time: 4262 gc time: 254
 
-## 2D stencil, no weights, 16x7x7
+## 2D stencil, no weights, 16x7x7, level 3
 
-cpu time: 391235 real time: 445596 gc time: 4428
+**Note** This sketch was cheating
+/// cpu time: 391235 real time: 445596 gc time: 4428
 
 ## Same stencil, 5x5 window, level 3
 
@@ -75,10 +74,10 @@ index 35b7092..ca19bc7 100644
             [index-i (ite (?cond warp-col kx) (@dup 0) (@dup 1))]
             [lane-x (?sw-xform warp-col W
 -                              kx 3 [])]
-+                              kx 5)]
++                              kx 5 [])]
             [lane-y (?sw-xform warp-row H
 -                              ky 3 [])]
-+                              ky 5)]
++                              ky 5 [])]
             [lane (+ (* lane-y W) lane-x)]
             [x (shfl (get I-cached index-i index-j) lane)])
        (accumulate o x)
@@ -92,21 +91,49 @@ index 35b7092..ca19bc7 100644
    (print-forms sol)
    ;(print-lane 'lane (evaluate my-lane sol) '#(localId i) '#())
 
-cpu time: 48125 real time: 362339 gc time: 608
+cpu time: 53817 real time: 200545 gc time: 693
 
 ## ..., Level 1
-cpu time: 18929 real time: 33366 gc time: 324
 
+cpu time: 20045 real time: 36551 gc time: 309
 
-## Stencil, 2D, 16x3x3
+## Stencil, 2D, 16x3x3, level 3
 
-cpu time: 16979 real time: 22854 gc time: 247
+cpu time: 20966 real time: 27267 gc time: 315
 
 ## ... level 1
 
-cpu time: 6629 real time: 9563 gc time: 80
+cpu time: 8072 real time: 8817 gc time: 107
+
+## Trove, column row column
+Struct size 3
+Level 3
+cpu time: 134 real time: 10973 gc time: 10
+Level 1
+cpu time: 106 real time: 627 gc time: 8
+Struct size 5
+Level 3
+cpu time: 236 real time: 87108 gc time: 22
+Level 1
+cpu time: 188 real time: 1328 gc time: 19
+Struct size 7
+Level 3
+cpu time: 317 real time: 107661 gc time: 24
+Level 1
+cpu time: 309 real time: 6855 gc time: 28
+
+## Trove, row column row, level 3
+Timeouts at 30 minutes
+## Trove, row column row, level 1
+Struct size 3
+cpu time: 657 real time: 2929 gc time: 160
+Struct size 5
+cpu time: 1956 real time: 6307 gc time: 295
+Struct size 7
+cpu time: 4512 real time: 12107 gc time: 935
 
 
-# Trove, loads only, 3, level 3
-
-cpu time: 130 real time: 10813 gc time: 10
+## Polynomial mult. 32 with 4, Level 3
+TODO: Couldn't get it to run
+## ... ,Level 1
+cpu time: 56 real time: 86 gc time: 0

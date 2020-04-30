@@ -56,7 +56,7 @@ def pull_spec_in(tables):
         ret.append(new_df)
     return pd.concat(ret)
 
-_SWINV_SPEC_RE = re.compile("^specs/swinv_like/l(\\d)/.*\\.json$")
+_SWINV_SPEC_RE = re.compile("^specs/swinv_like[^/]*/l(\\d)/.*\\.json$")
 def _humanize_name(name):
     ret = os.path.basename(name)
     if ret[-5:] == ".json":
