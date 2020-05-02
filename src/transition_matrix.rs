@@ -44,6 +44,7 @@ pub trait TransitionMatrixOps: Sized + std::fmt::Debug + std::clone::Clone {
     fn get_target_shape(&self) -> &[Ix];
     fn get_current_shape(&self) -> &[Ix];
 
+    // Slots are current/input, target/output
     fn slots(&self) -> (usize, usize);
     fn matrix_dims(&self) -> (usize, usize) {
         let (current_slots, target_slots) = self.slots();

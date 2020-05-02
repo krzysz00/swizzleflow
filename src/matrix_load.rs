@@ -30,9 +30,11 @@ use itertools::iproduct;
 
 fn stats(tag: &str, path: &Path, matrix: &TransitionMatrix, dur: f64) {
     if COLLECT_STATS {
-        println!("{}:{} n_ones={}; n_elems={}; density={}; time={};",
+        let (in_slots, out_slots) = matrix.slots();
+        println!("{}:{} n_ones={}; n_elems={}; in_slots={}; out_slots={}; density={}; time={};",
                  tag, path.display(),
-                 matrix.n_ones(), matrix.n_elements(), density(matrix),
+                 matrix.n_ones(), matrix.n_elements(),
+                 in_slots, out_slots, density(matrix),
                  dur);
     }
     else {
@@ -52,7 +54,8 @@ fn union_matrices(a: &mut TransitionMatrix, b: &TransitionMatrix) {
     for (c1, c2, t1, t2) in iproduct![(0..current), (0..current),
                                       (0..target), (0..target)] {
         if b.get_idxs(c1, c2, t1, t2) {
-            a.set_idxs(c1, c2, t1, t2, true);
+            a.set_idxs(c1, c2, t1, t2,
+                       true);
         }
     }
 }

@@ -4,8 +4,8 @@ We don't actually have any README content yet, but what this code will
 do is located in [the designdocument](https://www.overleaf.com/read/twvwgqfbxmyx).
 
 ## Build
-`cargo build --release`
-To include more statistics about the operation of the algorithm at the cost of performance, use `cargo build --features stats --release`
+`make build`, or just `make`
+To include more statistics about the operation of the algorithm at the cost of performance, use `make build-stats`
 
 To run, execute `./target/release/swizzleflow` or `cargo run`
 The tool's arguments are
@@ -29,6 +29,18 @@ OPTIONS:
 ARGS:
     <SPEC>...    Specification files (stdin if none specified)
 ```
+
+## Experimental data
+`make timings` builds the tool and runs the experiments that run in less than a few minutes
+`make timings-all` includes the long-running ones
+
+A similar pattern holds for `stats` and `stats-all`
+
+You may wont to use `make clean-matrices timings` or things like that to get results that include multiplications,
+especially when also collecting stats.
+
+Notes to future me running on a laptop:
+`echo 1 | sudo tee /sys/devices/system/cpu/intel_pstate/no_turbo` and set the cpu frequency scaling to "Performance"
 ## Licensing
 Copyright (C) 2019 Krzysztof Drewniak et al.
 
