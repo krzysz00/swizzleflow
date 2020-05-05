@@ -45,7 +45,7 @@ struct SearchLevelStats {
     tested: AtomicUsize,
     pruned: AtomicUsize,
     failed: AtomicUsize,
-    succeeded: AtomicUsize,
+    in_solution: AtomicUsize,
     target_checks: Option<Arc<Mutex<BTreeMap<usize, usize>>>>,
 }
 
@@ -62,7 +62,7 @@ impl SearchLevelStats {
     }
 
     pub fn success(&self) {
-        self.succeeded.fetch_add(1, Ordering::Relaxed);
+        self.in_solution.fetch_add(1, Ordering::Relaxed);
     }
 
     pub fn checking(&self) {
@@ -94,7 +94,7 @@ impl Clone for SearchLevelStats {
     fn clone(&self) -> Self {
         Self { tested: AtomicUsize::new(self.tested.load(Ordering::SeqCst)),
                pruned: AtomicUsize::new(self.pruned.load(Ordering::SeqCst)),
-               succeeded: AtomicUsize::new(self.succeeded.load(Ordering::SeqCst)),
+               in_solution: AtomicUsize::new(self.in_solution.load(Ordering::SeqCst)),
                failed: AtomicUsize::new(self.failed.load(Ordering::SeqCst)),
                target_checks: self.target_checks.clone(),
         }
@@ -105,14 +105,14 @@ impl Display for SearchLevelStats {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         // Let's force a memory fence here to be safe
         let tested = self.tested.load(Ordering::SeqCst);
-        let found = self.succeeded.load(Ordering::Relaxed);
         let pruned = self.pruned.load(Ordering::Relaxed);
         let failed = self.failed.load(Ordering::Relaxed);
+        let in_solution = self.in_solution.load(Ordering::Relaxed);
 
-        let continued = tested - found - pruned - failed;
+        let continued = tested - pruned - failed;
 
-        write!(f, "tested={}; found={}; failed={}; pruned={}; continued={};",
-               tested, found, failed, pruned, continued)?;
+        write!(f, "tested={}; failed={}; pruned={}; continued={}; in_solution={}",
+               tested, failed, pruned, continued, in_solution)?;
 
         if COLLECT_STATS {
             if let Some(ref lock) = self.target_checks {
@@ -239,8 +239,11 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                 let ret = search(new_states, target, levels, expected_syms,
                                  current_level + 1, stats, mode, caches,
                                  print, print_pruned);
-                if print && ret {
-                    println!("success_path [level {} @ lane {}]\n{}", current_level, lane, c.unwrap())
+                if ret {
+                    tracker.success();
+                    if print {
+                        println!("success_path [level {} @ lane {}]\n{}", current_level, lane, c.unwrap())
+                    }
                 }
                 ret
             },
@@ -329,8 +332,11 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                     let ret = search(new_states, target, levels, expected_syms,
                                      current_level + 1, stats, mode, caches,
                                      print, print_pruned);
-                    if print && ret {
-                        println!("success_path [level {} @ lane {}]\n{}", current_level, lane, state)
+                    if ret {
+                        tracker.success();
+                        if print {
+                            println!("success_path [level {} @ lane {}]\n{}", current_level, lane, state)
+                        }
                     }
                     ret
                 } else { tracker.failed(); false }
@@ -369,9 +375,10 @@ pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
     let dur = time_since(start_time);
 
     for (idx, stats) in (&stats).iter().enumerate() {
-        println!("stats:{} name={}; lane={}; {}", idx,
+        println!("stats:{} name={}; lane={}; pruning={}; {}", idx,
                  levels.get(idx).map_or(&"(last)".into(), |x| &x.ops.name),
                  levels.get(idx).map_or(0, |x| x.lane),
+                 levels.get(idx).map_or(false, |l| l.prune),
                  stats);
     }
     println!("search:{} success={}; mode={:?}; time={};", spec_name, ret, mode, dur);

@@ -25,5 +25,5 @@ def process(results):
 if __name__ == '__main__':
     results = parsing.get_results()
     output = process(results)
-    printable = output[["spec", "name", "tested", "found", "pruned", "failed", "continued"]]
+    printable = output[["spec", "name", "tested", "pruned", "failed", "continued", "in_solution", "pruning"]]
     print(printable.to_csv(index=False), end='')
