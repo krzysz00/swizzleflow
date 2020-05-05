@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import numpy as np
 import pandas as pd
 import os
 import re
@@ -103,3 +104,27 @@ def compute_basis_size(df):
     else:
         moved_cont = pd.Series([1]).append(df['continued'][:-1], ignore_index=True)
         df['basis_size'] = df['tested'] // moved_cont
+
+def extract_swizzle_inventor_times(df):
+    ret = df.groupby('spec').median().reset_index()
+    ret["time"] = ret["time"] / 1000.0
+    return ret
+
+def level(spec):
+    if spec[0] == 'l' and spec[1].isdigit() and spec[2] == '/':
+        return int(spec[1])
+    else:
+        return np.nan
+
+def problem(spec):
+    if spec[2] == '/' and spec[0] == 'l':
+        return spec[3:]
+    else:
+        return spec
+
+def split_spec(df):
+    if isinstance(df, dict):
+        return {k: split_spec(v) for k, v in df.items()}
+    df['level'] = df['spec'].map(level)
+    df['problem'] = df['spec'].map(problem)
+    return df

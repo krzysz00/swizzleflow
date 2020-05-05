@@ -70,9 +70,9 @@ def parse_swizzle_inventor(stream):
     for line in stream:
         if line.startswith("run:"):
             spec, raw_time = line[4:].split(' ')
-            data.append([spec, int(raw_time)/1000.0])
+            data.append([spec, int(raw_time)])
     return pandas.DataFrame(data, columns=["spec", "time"])
 
 def parse_swizzle_inventor_file(path):
     with open(path, mode='r') as f:
-        return parse_swizzle_inventor_file(f)
+        return parse_swizzle_inventor(f)

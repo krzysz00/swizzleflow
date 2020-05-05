@@ -1,8 +1,8 @@
 specs_small := $(wildcard specs/swinv_like/l?/*.json)
 specs_big := $(wildcard specs/swinv_like_big/l?/*.json)
 
-swizzle_inventor_tests_small := $(wildcard swizzle_inventor_benchmarks/small_*.rkt)
-swizzle_inventor_tests_big := $(wildcard swizzle_inventor_benchmarks/big_*.rkt)
+swizzle_inventor_tests_small := $(wildcard swizzle-inventor-benchmarks/small_*.rkt)
+swizzle_inventor_tests_big := $(wildcard swizzle-inventor-benchmarks/big_*.rkt)
 
 SWIZZLEFLOW_FLAGS ?= -a
 build:
@@ -20,10 +20,10 @@ stats: build-stats ${specs_small}
 stats-all: build-stats ${specs_small} ${specs_big}
 	./target/release/swizzleflow ${SWIZZLEFLOW_FLAGS} ${specs_big} ${specs_small}
 
-swizzle-inventor: swizzle_inventor_benchmarks/benchmark.sh ${swizzle_inventor_tests_small}
-	./swizzle_inventor_benchmarks/benchmark.sh ${swizzle_inventor_tests_small}
-swizzle-inventor-all: swizzle_inventor_benchmarks/benchmark.sh ${swizzle_inventor_tests_small} ${swizzle_inventor_tests_big}
-	./swizzle_inventor_benchmarks/benchmark.sh ${swizzle_inventor_tests_big} ${swizzle_inventor_tests_small}
+swizzle-inventor: swizzle-inventor-benchmarks/benchmark.sh ${swizzle_inventor_tests_small}
+	./swizzle-inventor-benchmarks/benchmark.sh ${swizzle_inventor_tests_small}
+swizzle-inventor-all: swizzle-inventor-benchmarks/benchmark.sh ${swizzle_inventor_tests_small} ${swizzle_inventor_tests_big}
+	./swizzle-inventor-benchmarks/benchmark.sh ${swizzle_inventor_tests_big} ${swizzle_inventor_tests_small}
 
 clean:
 	rm -rf target
