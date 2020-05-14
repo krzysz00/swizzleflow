@@ -12,6 +12,7 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+use std::cmp::min;
 use std::collections::BTreeMap;
 
 use crate::transition_matrix::{TransitionMatrixOps, TransitionMatrix};
@@ -23,6 +24,8 @@ use itertools::iproduct;
 use parking_lot::Mutex;
 use rayon::prelude::*;
 
+
+const TILE_SIZE: usize = 64;
 // Note, because of how these matrices are used
 // the lookup API takes (j, i) not (i, j)
 // Also note that the matrix is really (m x m)x(k x k)
@@ -41,10 +44,11 @@ fn sparsify_mul_no_trans(a: &TransitionMatrix, b: &TransitionMatrix)
     let probes_success = Mutex::new(BTreeMap::new());
     let probes_failure = Mutex::new(BTreeMap::new());
 
-    (0..m_squared).into_par_iter()
+    (0..m_squared/TILE_SIZE).into_par_iter()
     .for_each_init(
     || Vec::with_capacity(m_squared / 8),
-    |k_idxs, i_combined| {
+    |k_idxs, i_tile| {
+        for i_combined in i_tile*TILE_SIZE..min((i_tile + 1)*TILE_SIZE,m_squared) {
         let (i1, i2) = (i_combined / m, i_combined % m);
         for (kidx1, kidx2) in iproduct!(0..k, 0..k) {
             if a.get_idxs(kidx1, kidx2, i1, i2) {
@@ -71,6 +75,7 @@ fn sparsify_mul_no_trans(a: &TransitionMatrix, b: &TransitionMatrix)
             }
         }
         k_idxs.clear();
+    }
     });
 
     if COLLECT_STATS {
@@ -97,10 +102,11 @@ fn sparsify_mul_with_trans(a: &TransitionMatrix, b: &TransitionMatrix)
     let probes_success = Mutex::new(BTreeMap::new());
     let probes_failure = Mutex::new(BTreeMap::new());
 
-    (0..n_squared).into_par_iter()
+    (0..n_squared/TILE_SIZE).into_par_iter()
     .for_each_init(
     || Vec::with_capacity(n_squared / 8),
-    |k_idxs, j_combined| {
+    |k_idxs, j_tile| {
+    for j_combined in j_tile*TILE_SIZE..min((j_tile+1)*TILE_SIZE, n_squared) {
         let (j1, j2) = (j_combined / n, j_combined % n);
         for (kidx1, kidx2) in iproduct!(0..k, 0..k) {
             if b.get_idxs(j1, j2, kidx1, kidx2) {
@@ -128,6 +134,7 @@ fn sparsify_mul_with_trans(a: &TransitionMatrix, b: &TransitionMatrix)
             }
         }
         k_idxs.clear();
+    }
     });
 
     if COLLECT_STATS {
