@@ -23,14 +23,17 @@ use itertools::iproduct;
 // Note, because of how these matrices are used
 // the lookup API takes (j, i) not (i, j)
 // Also note that the matrix is really (m x m)x(k x k)
-fn sparsify_mul_no_trans(a: &TransitionMatrix, b: &TransitionMatrix,
-                         c: &mut TransitionMatrix) {
+fn sparsify_mul_no_trans(a: &TransitionMatrix, b: &TransitionMatrix)
+                         -> TransitionMatrix {
     let (k, m) = a.slots();
     let (n, k2) = b.slots();
     if k != k2 {
         panic!("Invalid shapes for multiply ({}, {}), ({}, {})",
         m, k, k2, n);
     }
+
+    let mut c = TransitionMatrix::empty(a.get_target_shape(),
+                                        b.get_current_shape());
 
     let mut probes_success = BTreeMap::new();
     let mut probes_failure = BTreeMap::new();
@@ -66,16 +69,20 @@ fn sparsify_mul_no_trans(a: &TransitionMatrix, b: &TransitionMatrix,
                  probes_success.iter().format(", "),
                  probes_failure.iter().format(", "));
     }
+    c
 }
 
-fn sparsify_mul_with_trans(a: &TransitionMatrix, b: &TransitionMatrix,
-                           c: &mut TransitionMatrix) {
+fn sparsify_mul_with_trans(a: &TransitionMatrix, b: &TransitionMatrix)
+                           -> TransitionMatrix {
     let (k, m) = a.slots();
     let (n, k2) = b.slots();
     if k != k2 {
         panic!("Invalid shapes for multiply ({}, {}), ({}, {})",
         m, k, k2, n);
     }
+
+    let mut c = TransitionMatrix::empty(a.get_target_shape(),
+                                        b.get_current_shape());
 
     let mut probes_success = BTreeMap::new();
     let mut probes_failure = BTreeMap::new();
@@ -111,14 +118,15 @@ fn sparsify_mul_with_trans(a: &TransitionMatrix, b: &TransitionMatrix,
                  probes_success.iter().format(", "),
                  probes_failure.iter().format(", "));
     }
+    c
 }
 
-pub fn sparsifying_mul(a: &TransitionMatrix, b: &TransitionMatrix,
-                       c: &mut TransitionMatrix) {
+pub fn sparsifying_mul(a: &TransitionMatrix, b: &TransitionMatrix)
+                       -> TransitionMatrix {
     if a.n_ones() <= b.n_ones() {
-        sparsify_mul_no_trans(a, b, c);
+        sparsify_mul_no_trans(a, b)
     }
     else {
-        sparsify_mul_with_trans(a, b, c);
+        sparsify_mul_with_trans(a, b)
     }
 }
