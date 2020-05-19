@@ -41,11 +41,10 @@ fn sparsify_mul_no_trans(a: &DenseTransitionMatrix, b: &DenseTransitionMatrix)
                 k_idxs.push((kidx1, kidx2))
             }
         }
-        for (j1, j2) in iproduct!(0..n, 0..n) {
-            for (kidx1, kidx2) in k_idxs.iter().copied() {
+        for (kidx1, kidx2) in k_idxs.iter().copied() {
+            for (j1, j2) in iproduct!(0..n, 0..n) {
                 if b.get_idxs(j1, j2, kidx1, kidx2) {
                     c.set_idxs(j1, j2, i1, i2, true);
-                    break;
                 }
             }
         }
@@ -76,11 +75,10 @@ fn sparsify_mul_with_trans(a: &DenseTransitionMatrix, b: &DenseTransitionMatrix)
             }
         }
 
-        for (i1, i2) in iproduct!(0..m, 0..m) {
-            for (kidx1, kidx2) in k_idxs.iter().copied() {
+        for (kidx1, kidx2) in k_idxs.iter().copied() {
+            for (i1, i2) in iproduct!(0..m, 0..m) {
                 if a.get_idxs(kidx1, kidx2, i1, i2) {
                     c.set_idxs(j1, j2, i1, i2, true);
-                    break;
                 }
             }
         }
