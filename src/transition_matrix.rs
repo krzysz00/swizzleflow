@@ -57,19 +57,18 @@ pub trait TransitionMatrixOps: Sized + std::fmt::Debug + std::clone::Clone {
     fn n_elements(&self) -> usize;
 }
 
-fn to_index(i1: &[Ix], i2: &[Ix], ishape: &[Ix], j1: &[Ix], j2: &[Ix], jshape: &[Ix]) -> Ix {
+fn to_index(c1: &[Ix], c2: &[Ix], shape: &[Ix]) -> Ix {
     let mut ret = 0;
-    for (is, ss) in [(i1, ishape), (i2, ishape), (j1, jshape), (j2, jshape)].iter() {
-        for (v, scale) in is.iter().zip(ss.iter()) {
-            // ret starts at 0 so the initial case is fine
-            ret = (ret * scale) + v
-        }
+    for (v, scale) in c1.iter().zip(shape.iter()).chain(
+        c2.iter().zip(shape.iter())) {
+        // ret starts at 0 so the initial case is fine
+        ret = (ret * scale) + v
     }
     ret
 }
 
-fn to_raw_index(i1: Ix, i2: Ix, ishape: Ix, j1: Ix, j2: Ix, jshape: Ix) -> Ix {
-    j2 + (jshape * (j1 + jshape * (i2 + (ishape * i1))))
+fn to_raw_index(c1: Ix, c2: Ix, shape: Ix) -> Ix {
+    c2 + (shape * c1)
 }
 
 fn write_length_tagged_idxs<T: Write>(io: &mut T, data: &[Ix]) -> io::Result<()> {
@@ -91,7 +90,7 @@ fn read_length_tagged_idxs<T: Read>(io: &mut T) -> io::Result<ShapeVec> {
 
 #[derive(Clone, Debug)]
 pub struct DenseTransitionMatrix {
-    data: BitVec,
+    data: Vec<BitVec>,
     target_shape: ShapeVec,
     current_shape: ShapeVec,
     current_len: usize,
@@ -99,89 +98,113 @@ pub struct DenseTransitionMatrix {
 }
 
 impl DenseTransitionMatrix {
-    fn new(data: BitVec, target_shape: ShapeVec, current_shape: ShapeVec) -> Self {
+    fn new(data: Vec<BitVec>, target_shape: ShapeVec, current_shape: ShapeVec) -> Self {
         let current_len: usize = current_shape.iter().product();
         let target_len: usize = target_shape.iter().product();
         Self {data, target_shape, current_shape, current_len, target_len}
+    }
+
+    pub fn update_row(&mut self, i1: Ix, i2: Ix,
+                      other: &Self, k1: Ix, k2: Ix) {
+        let our_row = to_raw_index(i1, i2, self.target_len);
+        let their_row = to_raw_index(k1, k2, other.target_len);
+        self.data[our_row].or(&other.data[their_row]);
     }
 }
 
 impl TransitionMatrixOps for DenseTransitionMatrix {
     fn get(&self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix]) -> bool {
-        self.data[to_index(target1, target2, &self.target_shape,
-                           current1, current2, &self.current_shape)]
+        let row = to_index(target1, target2, &self.target_shape);
+        let column = to_index(current1, current2, &self.current_shape);
+        self.data[row][column]
     }
 
     fn get_cur_pos(&self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix]) -> bool {
-        self.data[to_index(target1, target2, &self.target_shape,
-                           &[current1], &[current2], &[self.current_len])]
+        let row = to_index(target1, target2, &self.current_shape);
+        let column = to_raw_index(current1, current2, self.current_len);
+        self.data[row][column]
     }
 
     fn get_idxs(&self, current1: Ix, current2: Ix, target1: Ix, target2: Ix) -> bool {
-        self.data[to_raw_index(target1, target2, self.target_len,
-                               current1, current2, self.current_len)]
+        let row = to_raw_index(target1, target2, self.target_len);
+        let column = to_raw_index(current1, current2, self.current_len);
+        self.data[row][column]
     }
 
     fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool) {
-        let index = to_index(target1, target2, &self.target_shape,
-                             current1, current2, &self.current_shape);
-        self.data.set(index, value);
+        let row = to_index(target1, target2, &self.target_shape);
+        let column = to_index(current1, current2, &self.current_shape);
+        self.data[row].set(column, value);
     }
 
     fn set_cur_pos(&mut self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix], value: bool) {
-        let index = to_index(target1, target2, &self.target_shape,
-                             &[current1], &[current2], &[self.current_len]);
-        self.data.set(index, value);
+        let row = to_index(target1, target2, &self.current_shape);
+        let column = to_raw_index(current1, current2, self.current_len);
+        self.data[row].set(column, value);
     }
 
     fn set_idxs(&mut self, current1: Ix, current2: Ix, target1: Ix, target2: Ix, value: bool) {
-        let index = to_raw_index(target1, target2, self.target_len,
-                                 current1, current2, self.current_len);
-        self.data.set(index, value);
+        let row = to_raw_index(target1, target2, self.target_len);
+        let column = to_raw_index(current1, current2, self.current_len);
+        self.data[row].set(column, value);
     }
 
     fn write<T: Write>(&self, io: &mut T) -> Result<()> {
         write_length_tagged_idxs(io, &self.target_shape)?;
         write_length_tagged_idxs(io, &self.current_shape)?;
         io.write_u64::<LittleEndian>(self.data.len() as u64)?;
-        io.write_all(&self.data.to_bytes()).map_err(|e| e.into())
+        for row in &self.data {
+            io.write_u64::<LittleEndian>(row.len() as u64)?;
+            io.write_all(&row.to_bytes())?;
+        }
+        Ok(())
     }
 
     fn read<T: Read>(io: &mut T) -> Result<Self> {
         let target_shape = read_length_tagged_idxs(io)?;
         let current_shape = read_length_tagged_idxs(io)?;
-        let len = io.read_u64::<LittleEndian>()? as usize;
-        let io_len = (len + 7) / 8;
-        let mut bytes = Vec::with_capacity(io_len);
-        unsafe {
-            // We need an unitialized pile of storage
-            bytes.set_len(io_len);
-        }
-        io.read_exact(&mut bytes)?;
+        let n_rows = io.read_u64::<LittleEndian>()? as usize;
+        let data: Result<Vec<BitVec>> = (0..n_rows).map(|_| {
+            let len = io.read_u64::<LittleEndian>()? as usize;
+            let io_len = (len + 7) / 8;
+            let mut bytes = Vec::with_capacity(io_len);
+            unsafe {
+                // We need an unitialized pile of storage
+                bytes.set_len(io_len);
+            }
+            io.read_exact(&mut bytes)?;
 
-        let mut bits = BitVec::from_bytes(&bytes);
-        bits.truncate(len);
+            let mut bits = BitVec::from_bytes(&bytes);
+            bits.truncate(len);
+            Ok(bits)
+        }).collect();
+        let data = data?;
 
-        Ok(Self::new(bits, target_shape, current_shape))
+        Ok(Self::new(data, target_shape, current_shape))
     }
 
     fn empty(target_shape: &[Ix], current_shape: &[Ix]) -> Self {
         let out_slots: usize = target_shape.iter().copied().product();
         let in_slots: usize = current_shape.iter().copied().product();
-        let len = out_slots.pow(2) * in_slots.pow(2);
-        let bits = BitVec::from_elem(len, false);
-        Self::new(bits, ShapeVec::from_slice(target_shape), ShapeVec::from_slice(current_shape))
+        let n_rows = out_slots.pow(2);
+        let n_cols = in_slots.pow(2);
+        let data = vec![BitVec::from_elem(n_cols, false); n_rows];
+        Self::new(data, ShapeVec::from_slice(target_shape), ShapeVec::from_slice(current_shape))
     }
 
     fn to_f32_mat(&self) -> Array2<f32> {
-        let floats = self.data.iter().map(|b| if b { 1.0 } else { 0.0 }).collect();
+        let floats = self.data.iter().flat_map(
+            |v| v.iter().map(|b| if b { 1.0 } else { 0.0 })).collect();
         let dims = self.matrix_dims();
         Array2::from_shape_vec(dims, floats).unwrap()
     }
 
     fn from_f32_mat(mat: &Array2<f32>, target_shape: &[Ix], current_shape: &[Ix]) -> Self {
-        let bits = mat.as_slice().unwrap().iter().map(|f| !(f.abs() < EPSILON)).collect();
-        Self::new(bits, ShapeVec::from_slice(target_shape), ShapeVec::from_slice(current_shape))
+        let n_columns = current_shape.iter().copied().product::<usize>().pow(2);
+        let data = mat.as_slice().unwrap().chunks(n_columns)
+            .map(|s| s.iter().map(|f| !(f.abs() < EPSILON)).collect())
+            .collect();
+        Self::new(data, ShapeVec::from_slice(target_shape), ShapeVec::from_slice(current_shape))
     }
 
     fn get_target_shape(&self) -> &[Ix] {
@@ -207,11 +230,13 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
     }
 
     fn n_ones(&self) -> usize {
-        self.data.iter().filter(|x| *x).count()
+        self.data.iter().map(
+            |v| v.blocks().map(|b| b.count_ones()).sum::<u32>() as usize)
+            .sum()
     }
 
     fn n_elements(&self) -> usize {
-        self.data.len()
+        self.current_len.pow(2) * self.target_len.pow(2)
     }
 }
 
@@ -253,7 +278,7 @@ pub enum TransitionMatrix {
     Dense(DenseTransitionMatrix),
 }
 
-const DENSE_MATRIX_TAG: u8 = 1;
+const DENSE_MATRIX_TAG: u8 = 2;
 const FILE_MARKER: &[u8; 8] = b"SWIZFLOW";
 
 impl TransitionMatrixOps for TransitionMatrix {

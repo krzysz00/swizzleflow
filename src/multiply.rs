@@ -42,11 +42,7 @@ fn sparsify_mul_no_trans(a: &DenseTransitionMatrix, b: &DenseTransitionMatrix)
             }
         }
         for (kidx1, kidx2) in k_idxs.iter().copied() {
-            for (j1, j2) in iproduct!(0..n, 0..n) {
-                if b.get_idxs(j1, j2, kidx1, kidx2) {
-                    c.set_idxs(j1, j2, i1, i2, true);
-                }
-            }
+            c.update_row(i1, i2, b, kidx1, kidx2);
         }
         k_idxs.clear();
     }
@@ -93,12 +89,12 @@ pub fn sparsifying_mul(a: &TransitionMatrix, b: &TransitionMatrix)
                        -> TransitionMatrix {
     match (a, b) {
         (TransitionMatrix::Dense(a), TransitionMatrix::Dense(b)) => {
-            if a.n_ones() <= b.n_ones() {
+//            if a.n_ones() <= b.n_ones() {
                 sparsify_mul_no_trans(a, b)
-            }
-            else {
-                sparsify_mul_with_trans(a, b)
-            }
+//            }
+//            else {
+//                sparsify_mul_with_trans(a, b)
+//            }
         }
     }
 }

@@ -9,7 +9,7 @@ edition = "2018"
 ndarray = { version = "0.13" }
 
 smallvec = "0.6.9"
-bit-vec = "0.6.1"
+bit-vec = "0.6.2"
 
 num-integer = "0.1.39"
 itertools = "0.8.0"
