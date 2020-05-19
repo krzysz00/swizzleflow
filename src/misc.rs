@@ -51,6 +51,8 @@ pub fn in_bounds(index: &[Ix], bounds: &[Ix]) -> bool {
     index.iter().zip(bounds.iter()).all(move |(i, v)| i < v)
 }
 
+// Used in previous experiments for reporting, might be needed again
+#[allow(dead_code)]
 pub fn loghist(n: usize) -> usize {
     if n < 10 {
         n
