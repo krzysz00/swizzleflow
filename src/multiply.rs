@@ -12,13 +12,15 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use std::collections::BTreeMap;
+use std::cmp::min;
 
 use crate::transition_matrix::{TransitionMatrixOps, TransitionMatrix};
-use crate::misc::{COLLECT_STATS, loghist};
+//use crate::misc::{COLLECT_STATS};
 
-use itertools::Itertools;
 use itertools::iproduct;
+
+// 64 byte cache lines
+const TILE_SIZE: usize = 64 * 8;
 
 // Note, because of how these matrices are used
 // the lookup API takes (j, i) not (i, j)
@@ -32,11 +34,12 @@ fn sparsify_mul_no_trans(a: &TransitionMatrix, b: &TransitionMatrix)
         m, k, k2, n);
     }
 
+    let n_squared = n.pow(2);
+    let n_tiles = n_squared / TILE_SIZE;
+
     let mut c = TransitionMatrix::empty(a.get_target_shape(),
                                         b.get_current_shape());
 
-    let mut probes_success = BTreeMap::new();
-    let mut probes_failure = BTreeMap::new();
     let mut k_idxs = Vec::with_capacity(m.pow(2) / 8);
 
     for (i1, i2) in iproduct!(0..m, 0..m) {
@@ -45,29 +48,17 @@ fn sparsify_mul_no_trans(a: &TransitionMatrix, b: &TransitionMatrix)
                 k_idxs.push((kidx1, kidx2))
             }
         }
-        for (j1, j2) in iproduct!(0..n, 0..n) {
-            let mut p = 0;
+        for j_tile in 0..n_tiles {
             for (kidx1, kidx2) in k_idxs.iter().copied() {
-                if b.get_idxs(j1, j2, kidx1, kidx2) {
-                    c.set_idxs(j1, j2, i1, i2, true);
-                    if COLLECT_STATS {
-                        *probes_success.entry(loghist(p + 1)).or_insert(0) += 1;
-                    }
-                    break;
+                for j in (j_tile*TILE_SIZE)..min((j_tile+1)*TILE_SIZE, n_squared) {
+                    let (j1, j2) = (j / n, j % n);
+                    c.set_idxs(j1, j2, i1, i2,
+                               c.get_idxs(j1, j2, i1, i2)
+                               || b.get_idxs(j1, j2, kidx1, kidx2));
                 }
-                p += 1;
-            }
-            if COLLECT_STATS && p == k_idxs.len() {
-                *probes_failure.entry(loghist(p)).or_insert(0) += 1;
             }
         }
         k_idxs.clear();
-    }
-
-    if COLLECT_STATS {
-        println!("mul_stats:: probes_success=[{:?}]; probes_failure=[{:?}];",
-                 probes_success.iter().format(", "),
-                 probes_failure.iter().format(", "));
     }
     c
 }
@@ -84,8 +75,6 @@ fn sparsify_mul_with_trans(a: &TransitionMatrix, b: &TransitionMatrix)
     let mut c = TransitionMatrix::empty(a.get_target_shape(),
                                         b.get_current_shape());
 
-    let mut probes_success = BTreeMap::new();
-    let mut probes_failure = BTreeMap::new();
     let mut k_idxs = Vec::with_capacity(m.pow(2) / 8);
     for (j1, j2) in iproduct!(0..n, 0..n) {
         for (kidx1, kidx2) in iproduct!(0..k, 0..k) {
@@ -95,28 +84,14 @@ fn sparsify_mul_with_trans(a: &TransitionMatrix, b: &TransitionMatrix)
         }
 
         for (i1, i2) in iproduct!(0..m, 0..m) {
-            let mut p = 0;
             for (kidx1, kidx2) in k_idxs.iter().copied() {
                 if a.get_idxs(kidx1, kidx2, i1, i2) {
                     c.set_idxs(j1, j2, i1, i2, true);
-                    if COLLECT_STATS {
-                        *probes_success.entry(p + 1).or_insert(0) += 1;
-                    }
                     break;
                 }
-                p += 1;
-            }
-            if COLLECT_STATS && p == k_idxs.len() {
-                *probes_failure.entry(p).or_insert(0) += 1;
             }
         }
         k_idxs.clear();
-    }
-
-    if COLLECT_STATS {
-        println!("mul_stats:: probes_success=[{:?}]; probes_failure=[{:?}];",
-                 probes_success.iter().format(", "),
-                 probes_failure.iter().format(", "));
     }
     c
 }
