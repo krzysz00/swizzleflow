@@ -1,0 +1,24 @@
+spec:specs/hvx_conv/fixed_regs_discover_oe.json
+build:matrices/16-reshape-8,2 density=0.00390625; time=0.000051224;
+Using newly-built matrices/16-reshape-8,2
+build:matrices/8,2-rot_idx{r[1]}-2,3,8 density=0.00390625; time=0.000328112;
+mul_stats:: transposed=false; density_a=0.00390625; density_b = 0.00390625
+mul:matrices/16-reshape_8,2-rot_idx{r[1]}-2,3,8 density=0.00390625; time=0.0004205;
+build:matrices/2,3,8-setup_add-4,8 density=0.0009765625; time=0.000597108;
+mul_stats:: transposed=false; density_a=0.00390625; density_b = 0.0009765625
+mul:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add-4,8 density=0.0068359375; time=0.003074421;
+build:matrices/4,8-hvx_inplace-4,8 density=0.058502197265625; time=0.032314487;
+mul_stats:: transposed=false; density_a=0.0068359375; density_b = 0.058502197265625
+mul:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add_4,8-hvx_inplace-4,8 density=0.05124664306640625; time=0.001323204;
+mul_stats:: transposed=false; density_a=0.05124664306640625; density_b = 0.058502197265625
+mul:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add_4,8-hvx_inplace_4,8-hvx_inplace-4,8 density=0.09375; time=0.00190203;
+Begin search
+stats:0 name=hvx_conv_load; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=0
+stats:1 name=hvx_inplace; lane=0; pruning=true; tested=267; failed=0; pruned=267; continued=0; in_solution=0
+stats:2 name=hvx_inplace; lane=0; pruning=true; tested=0; failed=0; pruned=0; continued=0; in_solution=0
+stats:3 name=hvx_inplace; lane=0; pruning=true; tested=0; failed=0; pruned=0; continued=0; in_solution=0
+stats:4 name=setup_add; lane=0; pruning=true; tested=0; failed=0; pruned=0; continued=0; in_solution=0
+stats:5 name=rot_idx{r[1]}; lane=0; pruning=false; tested=0; failed=0; pruned=0; continued=0; in_solution=0
+stats:6 name=reshape; lane=0; pruning=false; tested=0; failed=0; pruned=0; continued=0; in_solution=0
+stats:7 name=(last); lane=0; pruning=false; tested=0; failed=0; pruned=0; continued=0; in_solution=0
+search:specs/hvx_conv/fixed_regs_discover_oe.json success=false; mode=All; time=0.000895522;

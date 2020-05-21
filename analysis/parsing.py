@@ -52,9 +52,14 @@ def parse_results(stream):
             category = match[1]
             key = match[2]
             data = match[3]
-            parsed = {"category": category, "key": parse_value(key) if key != ":" else len(accum)}
+            parsed = {"category": category, "key": parse_value(key) if key != ":" else ':'}
             for key, value in DATUM_REGEX.findall(data):
                 parsed[key] = parse_value(value)
+            # Merge in statistics about multiplications
+            if category == 'mul' and accum[-1]['category'] == 'mul_stats' and accum[-1]['key'] == ':':
+                mul_stats = accum.pop()
+                mul_stats.update(parsed)
+                parsed = mul_stats
             accum.append(parsed)
     return ret
 
