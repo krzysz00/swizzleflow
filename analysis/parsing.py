@@ -56,7 +56,7 @@ def parse_results(stream):
             for key, value in DATUM_REGEX.findall(data):
                 parsed[key] = parse_value(value)
             # Merge in statistics about multiplications
-            if category == 'mul' and accum[-1]['category'] == 'mul_stats' and accum[-1]['key'] == ':':
+            if accum and accum[-1]['category'] == 'mul_stats' and accum[-1]['key'] == ':':
                 mul_stats = accum.pop()
                 mul_stats.update(parsed)
                 parsed = mul_stats

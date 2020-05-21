@@ -14,7 +14,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::transition_matrix::{DenseTransitionMatrix,
                                TransitionMatrixOps, TransitionMatrix};
-//use crate::misc::{COLLECT_STATS, loghist};
+use crate::misc::{COLLECT_STATS,time_since};
+
+use std::time::Instant;
 
 use itertools::iproduct;
 
@@ -64,10 +66,18 @@ fn transpose(mat: &DenseTransitionMatrix) -> DenseTransitionMatrix {
 
 fn sparsify_mul_with_trans(a: &DenseTransitionMatrix, b: &DenseTransitionMatrix)
                            -> DenseTransitionMatrix {
+    let tr_in_start = Instant::now();
     let b_tr = transpose(b);
     let a_tr = transpose(a);
+    let tr_in_time = time_since(tr_in_start);
     let c_tr = sparsify_mul_no_trans(&b_tr, &a_tr);
+    let tr_out_start = Instant::now();
     let c = transpose(&c_tr);
+    let tr_out_time = time_since(tr_out_start);
+    if COLLECT_STATS {
+        println!("mul_stats:: transpose_inputs={}; transpose_outputs={};",
+                 tr_in_time, tr_out_time)
+    }
     c
 }
 
