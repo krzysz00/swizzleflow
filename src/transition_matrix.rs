@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use ndarray::{Ix,Array2,Dimension};
-use std::io::{Write,Read};
+use std::io::{Write,Read,BufReader,BufWriter};
 use std::io;
 use std::path::Path;
 
@@ -155,7 +155,11 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
         io.write_u64::<LittleEndian>(self.data.len() as u64)?;
         for row in &self.data {
             io.write_u64::<LittleEndian>(row.len() as u64)?;
-            io.write_all(&row.to_bytes())?;
+            let storage = row.storage();
+            io.write_u64::<LittleEndian>(storage.len() as u64)?;
+            for item in storage.iter().copied() {
+                io.write_u32::<LittleEndian>(item)?;
+            }
         }
         Ok(())
     }
@@ -166,16 +170,16 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
         let n_rows = io.read_u64::<LittleEndian>()? as usize;
         let data: Result<Vec<BitVec>> = (0..n_rows).map(|_| {
             let len = io.read_u64::<LittleEndian>()? as usize;
-            let io_len = (len + 7) / 8;
-            let mut bytes = Vec::with_capacity(io_len);
+            let io_len = io.read_u64::<LittleEndian>()? as usize;
+            let mut bits = BitVec::new();
             unsafe {
-                // We need an unitialized pile of storage
-                bytes.set_len(io_len);
+                bits.set_len(len);
+                let storage = bits.storage_mut();
+                storage.reserve(io_len);
+                for _ in 0..io_len {
+                    storage.push(io.read_u32::<LittleEndian>()?);
+                }
             }
-            io.read_exact(&mut bytes)?;
-
-            let mut bits = BitVec::from_bytes(&bytes);
-            bits.truncate(len);
             Ok(bits)
         }).collect();
         let data = data?;
@@ -278,7 +282,7 @@ pub enum TransitionMatrix {
     Dense(DenseTransitionMatrix),
 }
 
-const DENSE_MATRIX_TAG: u8 = 2;
+const DENSE_MATRIX_TAG: u8 = 3;
 const FILE_MARKER: &[u8; 8] = b"SWIZFLOW";
 
 impl TransitionMatrixOps for TransitionMatrix {
@@ -399,13 +403,15 @@ impl TransitionMatrixOps for TransitionMatrix {
 impl TransitionMatrix {
     pub fn load_matrix(path: impl AsRef<Path>) -> Result<Self> {
         let path = path.as_ref();
-        let mut file = open_file(path)?;
-        Self::read(&mut file).chain_err(|| ErrorKind::MatrixLoad(path.to_owned()))
+        let file = open_file(path)?;
+        let mut reader = BufReader::new(file);
+        Self::read(&mut reader).chain_err(|| ErrorKind::MatrixLoad(path.to_owned()))
     }
 
     pub fn store_matrix(&self, path: impl AsRef<Path>) -> Result<()> {
-        let mut file = create_file(path)?;
-        self.write(&mut file)
+        let file = create_file(path)?;
+        let mut writer = BufWriter::new(file);
+        self.write(&mut writer)
     }
 }
 
