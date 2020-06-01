@@ -131,7 +131,7 @@ fn add_matrix(ops: &OpSet, lane: usize,
             match prev_mats[lane] {
                 Some(ref mut prev) => {
                     let start = Instant::now();
-                    let mut output = sparsifying_mul(prev, basis_matrix);
+                    let mut output = sparsifying_mul(basis_matrix, prev);
                     let time = time_since(start);
 
                     stats("mul", path.as_ref(), &output, time);
