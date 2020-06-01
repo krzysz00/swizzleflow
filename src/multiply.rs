@@ -14,9 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::transition_matrix::{DenseTransitionMatrix,
                                TransitionMatrixOps, TransitionMatrix};
-use crate::misc::{COLLECT_STATS,time_since};
-
-use std::time::Instant;
+use crate::misc::{COLLECT_STATS};
 
 use itertools::iproduct;
 
@@ -25,21 +23,21 @@ use itertools::iproduct;
 // Also note that the matrix is really (m x m)x(k x k)
 fn sparsify_mul_no_trans(a: &DenseTransitionMatrix, b: &DenseTransitionMatrix)
                          -> DenseTransitionMatrix {
-    let (k, m) = a.slots();
-    let (n, k2) = b.slots();
+    let (m, k) = a.slots();
+    let (k2, n) = b.slots();
     if k != k2 {
         panic!("Invalid shapes for multiply ({}, {}), ({}, {})",
         m, k, k2, n);
     }
 
-    let mut c = DenseTransitionMatrix::empty(b.get_current_shape(),
-                                             a.get_target_shape());
+    let mut c = DenseTransitionMatrix::empty(a.get_current_shape(),
+                                             b.get_target_shape());
 
     let mut k_idxs = Vec::with_capacity(m.pow(2) / 8);
 
     for (i1, i2) in iproduct!(0..m, 0..m) {
         for (kidx1, kidx2) in iproduct!(0..k, 0..k) {
-            if a.get_idxs(kidx1, kidx2, i1, i2) {
+            if a.get_idxs(i1, i2, kidx1, kidx2) {
                 k_idxs.push((kidx1, kidx2))
             }
         }
@@ -48,36 +46,6 @@ fn sparsify_mul_no_trans(a: &DenseTransitionMatrix, b: &DenseTransitionMatrix)
         }
         k_idxs.clear();
     }
-
-    c
-}
-
-fn transpose(mat: &DenseTransitionMatrix) -> DenseTransitionMatrix {
-    let mut ret = DenseTransitionMatrix::empty(mat.get_target_shape(),
-                                               mat.get_current_shape());
-    let (n, m) = mat.slots();
-    for (i1, i2) in iproduct!(0..m, 0..m) {
-        for (j1, j2) in iproduct!(0..n, 0..n) {
-            ret.set_idxs(i1, i2, j1, j2, mat.get_idxs(j1, j2, i1, i2));
-        }
-    }
-    ret
-}
-
-fn sparsify_mul_with_trans(a: &DenseTransitionMatrix, b: &DenseTransitionMatrix)
-                           -> DenseTransitionMatrix {
-    let tr_in_start = Instant::now();
-    let b_tr = transpose(b);
-    let a_tr = transpose(a);
-    let tr_in_time = time_since(tr_in_start);
-    let c_tr = sparsify_mul_no_trans(&b_tr, &a_tr);
-    let tr_out_start = Instant::now();
-    let c = transpose(&c_tr);
-    let tr_out_time = time_since(tr_out_start);
-    if COLLECT_STATS {
-        println!("mul_stats:: transpose_inputs={}; transpose_outputs={};",
-                 tr_in_time, tr_out_time)
-    }
     c
 }
 
@@ -85,22 +53,16 @@ pub fn sparsifying_mul(a: &TransitionMatrix, b: &TransitionMatrix)
                        -> TransitionMatrix {
     match (a, b) {
         (TransitionMatrix::Dense(a), TransitionMatrix::Dense(b)) => {
-            let ones_a = a.n_ones();
-            let ones_b = b.n_ones();
-            let density_a = (ones_a as f64) / (a.n_elements() as f64);
-            let density_b = (ones_b as f64) / (b.n_elements() as f64);
-            if ones_a <= ones_b {
-                let c = sparsify_mul_no_trans(a, b);
-                println!("mul_stats:: transposed=false; ones_a={}; ones_b={}; density_a={}; density_b={};",
+            if COLLECT_STATS {
+                let ones_a = a.n_ones();
+                let ones_b = b.n_ones();
+                let density_a = (ones_a as f64) / (a.n_elements() as f64);
+                let density_b = (ones_b as f64) / (b.n_elements() as f64);
+                println!("mul_stats:: ones_a={}; ones_b={}; density_a={}; density_b={};",
                          ones_a, ones_b, density_a, density_b);
-                c.into()
             }
-            else {
-                let c = sparsify_mul_with_trans(a, b);
-                println!("mul_stats:: transposed=true; ones_a={}; ones_b={}; density_a={}; density_b={};",
-                         ones_a, ones_b, density_a, density_b);
-                c.into()
-            }
+            let c = sparsify_mul_no_trans(a, b);
+            c.into()
         }
     }
 }

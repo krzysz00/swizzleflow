@@ -106,46 +106,46 @@ impl DenseTransitionMatrix {
 
     pub fn update_row(&mut self, i1: Ix, i2: Ix,
                       other: &Self, k1: Ix, k2: Ix) {
-        let our_row = to_raw_index(i1, i2, self.target_len);
-        let their_row = to_raw_index(k1, k2, other.target_len);
+        let our_row = to_raw_index(i1, i2, self.current_len);
+        let their_row = to_raw_index(k1, k2, other.current_len);
         self.data[our_row].or(&other.data[their_row]);
     }
 }
 
 impl TransitionMatrixOps for DenseTransitionMatrix {
     fn get(&self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix]) -> bool {
-        let row = to_index(target1, target2, &self.target_shape);
-        let column = to_index(current1, current2, &self.current_shape);
+        let row = to_index(current1, current2, &self.current_shape);
+        let column = to_index(target1, target2, &self.target_shape);
         self.data[row][column]
     }
 
     fn get_cur_pos(&self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix]) -> bool {
-        let row = to_index(target1, target2, &self.target_shape);
-        let column = to_raw_index(current1, current2, self.current_len);
+        let row = to_raw_index(current1, current2, self.current_len);
+        let column = to_index(target1, target2, &self.target_shape);
         self.data[row][column]
     }
 
     fn get_idxs(&self, current1: Ix, current2: Ix, target1: Ix, target2: Ix) -> bool {
-        let row = to_raw_index(target1, target2, self.target_len);
-        let column = to_raw_index(current1, current2, self.current_len);
+        let row = to_raw_index(current1, current2, self.current_len);
+        let column = to_raw_index(target1, target2, self.target_len);
         self.data[row][column]
     }
 
     fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool) {
-        let row = to_index(target1, target2, &self.target_shape);
-        let column = to_index(current1, current2, &self.current_shape);
+        let row = to_index(current1, current2, &self.current_shape);
+        let column = to_index(target1, target2, &self.target_shape);
         self.data[row].set(column, value);
     }
 
     fn set_cur_pos(&mut self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix], value: bool) {
-        let row = to_index(target1, target2, &self.target_shape);
-        let column = to_raw_index(current1, current2, self.current_len);
+        let row = to_raw_index(current1, current2, self.current_len);
+        let column = to_index(target1, target2, &self.target_shape);
         self.data[row].set(column, value);
     }
 
     fn set_idxs(&mut self, current1: Ix, current2: Ix, target1: Ix, target2: Ix, value: bool) {
-        let row = to_raw_index(target1, target2, self.target_len);
-        let column = to_raw_index(current1, current2, self.current_len);
+        let row = to_raw_index(current1, current2, self.current_len);
+        let column = to_raw_index(target1, target2, self.target_len);
         self.data[row].set(column, value);
     }
 
@@ -188,10 +188,10 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
     }
 
     fn empty(current_shape: &[Ix], target_shape: &[Ix]) -> Self {
-        let out_slots: usize = target_shape.iter().copied().product();
         let in_slots: usize = current_shape.iter().copied().product();
-        let n_rows = out_slots.pow(2);
-        let n_cols = in_slots.pow(2);
+        let out_slots: usize = target_shape.iter().copied().product();
+        let n_rows = in_slots.pow(2);
+        let n_cols = out_slots.pow(2);
         let data = vec![BitVec::from_elem(n_cols, false); n_rows];
         Self::new(data, ShapeVec::from_slice(target_shape), ShapeVec::from_slice(current_shape))
     }
@@ -204,7 +204,7 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
     }
 
     fn from_f32_mat(mat: &Array2<f32>, current_shape: &[Ix], target_shape: &[Ix]) -> Self {
-        let n_columns = current_shape.iter().copied().product::<usize>().pow(2);
+        let n_columns = target_shape.iter().copied().product::<usize>().pow(2);
         let data = mat.as_slice().unwrap().chunks(n_columns)
             .map(|s| s.iter().map(|f| !(f.abs() < EPSILON)).collect())
             .collect();
