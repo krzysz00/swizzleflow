@@ -36,10 +36,10 @@ pub trait TransitionMatrixOps: Sized + std::fmt::Debug + std::clone::Clone {
     fn set_idxs(&mut self, current1: Ix, current2: Ix, target1: Ix, target2: Ix, value: bool);
     fn write<T: Write>(&self, io: &mut T) -> Result<()>;
     fn read<T: Read>(io: &mut T) -> Result<Self>;
-    fn empty(target_shape: &[Ix], current_shape: &[Ix]) -> Self;
-    // The shape is [target1, target2, current1, current2]
+    fn empty(current_shape: &[Ix], target_shape: &[Ix]) -> Self;
+
     fn to_f32_mat(&self) -> Array2<f32>;
-    fn from_f32_mat(mat: &Array2<f32>, target_shape: &[Ix], current_shape: &[Ix]) -> Self;
+    fn from_f32_mat(mat: &Array2<f32>, current_shape: &[Ix], target_shape: &[Ix]) -> Self;
 
     fn get_target_shape(&self) -> &[Ix];
     fn get_current_shape(&self) -> &[Ix];
@@ -120,7 +120,7 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
     }
 
     fn get_cur_pos(&self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix]) -> bool {
-        let row = to_index(target1, target2, &self.current_shape);
+        let row = to_index(target1, target2, &self.target_shape);
         let column = to_raw_index(current1, current2, self.current_len);
         self.data[row][column]
     }
@@ -138,7 +138,7 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
     }
 
     fn set_cur_pos(&mut self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix], value: bool) {
-        let row = to_index(target1, target2, &self.current_shape);
+        let row = to_index(target1, target2, &self.target_shape);
         let column = to_raw_index(current1, current2, self.current_len);
         self.data[row].set(column, value);
     }
@@ -187,7 +187,7 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
         Ok(Self::new(data, target_shape, current_shape))
     }
 
-    fn empty(target_shape: &[Ix], current_shape: &[Ix]) -> Self {
+    fn empty(current_shape: &[Ix], target_shape: &[Ix]) -> Self {
         let out_slots: usize = target_shape.iter().copied().product();
         let in_slots: usize = current_shape.iter().copied().product();
         let n_rows = out_slots.pow(2);
@@ -203,7 +203,7 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
         Array2::from_shape_vec(dims, floats).unwrap()
     }
 
-    fn from_f32_mat(mat: &Array2<f32>, target_shape: &[Ix], current_shape: &[Ix]) -> Self {
+    fn from_f32_mat(mat: &Array2<f32>, current_shape: &[Ix], target_shape: &[Ix]) -> Self {
         let n_columns = current_shape.iter().copied().product::<usize>().pow(2);
         let data = mat.as_slice().unwrap().chunks(n_columns)
             .map(|s| s.iter().map(|f| !(f.abs() < EPSILON)).collect())
@@ -251,8 +251,7 @@ pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet) -> T {
     let in_bound = in_slots as isize;
     let fold = ops.fused_fold;
 
-    // empty takes out, in, unlike set and their friends
-    let mut ret = T::empty(&out_shape, &ops.in_shape);
+    let mut ret = T::empty(&ops.in_shape, &out_shape);
     let gathers = ops.ops.gathers().unwrap();
     for op in gathers {
         let output_shape = op.data.shape();
@@ -348,8 +347,8 @@ impl TransitionMatrixOps for TransitionMatrix {
         }
     }
 
-    fn empty(target_shape: &[Ix], current_shape: &[Ix]) -> Self {
-        TransitionMatrix::Dense(DenseTransitionMatrix::empty(target_shape, current_shape))
+    fn empty(current_shape: &[Ix], target_shape: &[Ix]) -> Self {
+        TransitionMatrix::Dense(DenseTransitionMatrix::empty(current_shape, target_shape))
     }
 
     fn to_f32_mat(&self) -> Array2<f32> {
@@ -358,8 +357,8 @@ impl TransitionMatrixOps for TransitionMatrix {
         }
     }
 
-    fn from_f32_mat(mat: &Array2<f32>, target_shape: &[Ix], current_shape: &[Ix]) -> Self {
-       TransitionMatrix::Dense(DenseTransitionMatrix::from_f32_mat(mat, target_shape, current_shape))
+    fn from_f32_mat(mat: &Array2<f32>, current_shape: &[Ix], target_shape: &[Ix]) -> Self {
+       TransitionMatrix::Dense(DenseTransitionMatrix::from_f32_mat(mat, current_shape, target_shape))
     }
 
     fn get_target_shape(&self) -> &[Ix] {
