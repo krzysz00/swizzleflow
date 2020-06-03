@@ -58,7 +58,7 @@ def pull_spec_in(tables):
     return pd.concat(ret)
 
 _SWINV_SPEC_RE = re.compile("^specs/swinv_like[^/]*/l(\\d)/.*\\.json$")
-def _humanize_name(name):
+def humanize_name(name):
     ret = os.path.basename(name)
     if ret[-5:] == ".json":
         ret = ret[:-5]
@@ -69,14 +69,16 @@ def _humanize_name(name):
 
 def humanize_names(specs):
     if isinstance(specs, dict):
-        return {_humanize_name(k): v for k, v, in specs.items()}
+        return {humanize_name(k): v for k, v, in specs.items()}
 
     if isinstance(specs, pd.Series) or isinstance(specs, pd.DataFrame):
         ret = specs.copy()
         if len(ret.index) > 0 and isinstance(ret.index[0], str):
-            ret.index = ret.index.map(_humanize_name)
+            ret.index = ret.index.map(humanize_name)
+        if isinstance(specs, pd.Series) and isinstance(ret[0], str):
+            ret = ret.map(humanize_name)
         if "spec" in ret:
-            ret["spec"] = ret["spec"].map(_humanize_name)
+            ret["spec"] = ret["spec"].map(humanize_name)
         return ret
 
 def expand_target_checks(df, to_copy=["spec", "lane"]):
@@ -127,4 +129,13 @@ def split_spec(df):
         return {k: split_spec(v) for k, v in df.items()}
     df['level'] = df['spec'].map(level)
     df['problem'] = df['spec'].map(problem)
+    return df
+
+def get_times(data, categories=None):
+    d = [{'key': humanize_name(v['key']),
+          'spec': k, 'category': v['category'],
+          'time': v['time']}
+         for k, l in data.items() for v in l
+         if 'time' in v if (categories is None or v['category'] in categories)]
+    df = pd.DataFrame(d)
     return df
