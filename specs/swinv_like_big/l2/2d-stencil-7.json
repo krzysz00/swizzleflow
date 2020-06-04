@@ -1,0 +1,88 @@
+{
+  "target": {"Builtin": "stencil_2d"},
+  "target_info": [4, 7],
+  "steps": [
+    {
+      "step": {"Initial": {"From": 0}},
+      "out_shape": [100],
+      "lane": 0,
+      "prune": false,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "reshape"}},
+      "out_shape": [10, 10],
+      "lane": 0,
+      "prune": false,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "load_grid_2d"}},
+      "lane": 0,
+      "out_shape": [4, 4, 3, 3],
+      "prune": false,
+      "then_fold": false
+    },
+    {
+      "name": "2s-g",
+      "step": { "Gather": { "Builtin": "general_select"}},
+      "lane": 0,
+      "out_shape": [4, 4, 7, 3],
+      "options": { "axis": [2], "dims": [0, 2] },
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "name": "2s-g",
+      "step": { "Gather": { "Builtin": "general_select"}},
+      "lane": 0,
+      "out_shape": [4, 4, 7, 7],
+      "options": { "axis": [3], "dims": [1, 3] },
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "name": "2s-xfnc",
+      "step": { "Gather": { "Builtin": "xforms_no_group"}},
+      "lane": 0,
+      "out_shape": [4, 4, 7, 7],
+      "options": { "main": [0], "second": [2], "out": [0] },
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "name": "2s-rnc",
+      "step": { "Gather": { "Builtin": "rots_no_group"}},
+      "lane": 0,
+      "out_shape": [4, 4, 7, 7],
+      "options": { "main": [0], "second": [2], "out": [0] },
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "name": "2s-xfnc",
+      "step": { "Gather": { "Builtin": "xforms_no_group"}},
+      "lane": 0,
+      "out_shape": [4, 4, 7, 7],
+      "options": { "main": [1], "second": [3], "out": [1] },
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "name": "2s-rnc",
+      "step": { "Gather": { "Builtin": "rots_no_group"}},
+      "lane": 0,
+      "out_shape": [4, 4, 7, 7],
+      "options": { "main": [1], "second": [3], "out": [1] },
+      "prune": true,
+      "then_fold": false
+    },
+    {
+      "step": { "Gather": { "Builtin": "identity"}},
+      "lane": 0,
+      "out_shape": [4, 4, 49],
+      "prune": false,
+      "then_fold": true
+    }
+  ]
+}

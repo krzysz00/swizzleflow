@@ -11,8 +11,8 @@ specs/swinv_like/l1/trove-crc-4.json\
 specs/swinv_like/l1/trove-rcr-4.json\
 specs/swinv_like/l1/trove-cr_sum-5.json\
 specs/swinv_like/l1/trove-cr_sum-7.json\
-specs/swinv_like_big/l1/trove-crc-5.json\
-specs/swinv_like_big/l1/2d-stencil-5.json
+specs/swinv_like/l1/trove-crc-5.json\
+specs/swinv_like/l1/2d-stencil-5.json
 
 SWIZZLEFLOW_FLAGS ?= -a
 build:
