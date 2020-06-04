@@ -12,13 +12,13 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use ndarray::{Ix,Array2,Dimension};
+use ndarray::{Ix,Dimension};
 use std::io::{Write,Read,BufReader,BufWriter};
 use std::io;
 use std::path::Path;
 
 use crate::operators::OpSet;
-use crate::misc::{EPSILON,ShapeVec,open_file,create_file};
+use crate::misc::{ShapeVec,open_file,create_file};
 use crate::errors::*;
 
 use bit_vec::BitVec;
@@ -37,9 +37,6 @@ pub trait TransitionMatrixOps: Sized + std::fmt::Debug + std::clone::Clone {
     fn write<T: Write>(&self, io: &mut T) -> Result<()>;
     fn read<T: Read>(io: &mut T) -> Result<Self>;
     fn empty(current_shape: &[Ix], target_shape: &[Ix]) -> Self;
-
-    fn to_f32_mat(&self) -> Array2<f32>;
-    fn from_f32_mat(mat: &Array2<f32>, current_shape: &[Ix], target_shape: &[Ix]) -> Self;
 
     fn get_target_shape(&self) -> &[Ix];
     fn get_current_shape(&self) -> &[Ix];
@@ -196,21 +193,6 @@ impl TransitionMatrixOps for DenseTransitionMatrix {
         Self::new(data, ShapeVec::from_slice(target_shape), ShapeVec::from_slice(current_shape))
     }
 
-    fn to_f32_mat(&self) -> Array2<f32> {
-        let floats = self.data.iter().flat_map(
-            |v| v.iter().map(|b| if b { 1.0 } else { 0.0 })).collect();
-        let dims = self.matrix_dims();
-        Array2::from_shape_vec(dims, floats).unwrap()
-    }
-
-    fn from_f32_mat(mat: &Array2<f32>, current_shape: &[Ix], target_shape: &[Ix]) -> Self {
-        let n_columns = target_shape.iter().copied().product::<usize>().pow(2);
-        let data = mat.as_slice().unwrap().chunks(n_columns)
-            .map(|s| s.iter().map(|f| !(f.abs() < EPSILON)).collect())
-            .collect();
-        Self::new(data, ShapeVec::from_slice(target_shape), ShapeVec::from_slice(current_shape))
-    }
-
     fn get_target_shape(&self) -> &[Ix] {
         self.target_shape.as_slice()
     }
@@ -351,16 +333,6 @@ impl TransitionMatrixOps for TransitionMatrix {
         TransitionMatrix::Dense(DenseTransitionMatrix::empty(current_shape, target_shape))
     }
 
-    fn to_f32_mat(&self) -> Array2<f32> {
-        match self {
-            TransitionMatrix::Dense(d) => d.to_f32_mat()
-        }
-    }
-
-    fn from_f32_mat(mat: &Array2<f32>, current_shape: &[Ix], target_shape: &[Ix]) -> Self {
-       TransitionMatrix::Dense(DenseTransitionMatrix::from_f32_mat(mat, current_shape, target_shape))
-    }
-
     fn get_target_shape(&self) -> &[Ix] {
         match self {
             TransitionMatrix::Dense(d) => d.get_target_shape()
@@ -431,17 +403,22 @@ mod tests {
 
     #[test]
     fn test_write_round_trip() {
-        use ndarray::Array2;
         use std::io::{Seek,SeekFrom};
 
         const M: usize = 3;
         const N: usize = 8;
 
-        let size = (M * N).pow(2);
-        let floats: Vec<f32> = (0..size.pow(2)).map(|x| if x % 4 == 0 { 1.0 } else { 0.0 }).collect();
-        let floats = Array2::from_shape_vec((size, size), floats).unwrap();
-        let matrix = DenseTransitionMatrix::from_f32_mat(
-            &floats, &[M, N], &[M, N]);
+        let dim = M * N;
+        let size = dim.pow(2);
+        let mut matrix = DenseTransitionMatrix::empty(&[M, N], &[M, N]);
+        for x in 0..size.pow(2) {
+            if x % 4 == 0 {
+                let current = x / size;
+                let target = x % size;
+                matrix.set_idxs(current / dim, current % dim,
+                                target / dim, target % dim, true);
+            }
+        }
 
         let mut file = tempfile().unwrap();
         matrix.write(&mut file).unwrap();

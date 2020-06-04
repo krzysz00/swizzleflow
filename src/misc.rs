@@ -14,7 +14,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::errors::*;
 
+#[allow(dead_code)]
 pub(crate) const EPSILON: f32 = 1e-5;
+
 pub type ShapeVec = smallvec::SmallVec<[usize; 3]>;
 
 #[cfg(feature = "stats")]
