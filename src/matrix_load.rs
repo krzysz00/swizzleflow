@@ -18,7 +18,7 @@ use crate::errors::*;
 use crate::operators::{OpSet, OpSetKind, SynthesisLevel, stack_adapter_gather};
 use crate::transition_matrix::{TransitionMatrix, build_mat,
                                TransitionMatrixOps, density};
-use crate::multiply::sparsifying_mul;
+use crate::multiply::transition_mul;
 use crate::misc::{time_since,COLLECT_STATS};
 
 use std::collections::HashMap;
@@ -71,7 +71,7 @@ fn build_or_load_basis_mat(ops: &OpSet, path: impl AsRef<Path>) -> Result<Transi
     }
     else {
         let start = Instant::now();
-        let matrix = TransitionMatrix::Dense(build_mat(ops));
+        let matrix = TransitionMatrix::RowSparse(build_mat(ops));
         let dur = time_since(start);
         matrix.store_matrix(path)?;
         stats("build", path, &matrix, dur);
@@ -131,7 +131,7 @@ fn add_matrix(ops: &OpSet, lane: usize,
             match prev_mats[lane] {
                 Some(ref mut prev) => {
                     let start = Instant::now();
-                    let mut output = sparsifying_mul(basis_matrix, prev);
+                    let mut output = transition_mul(basis_matrix, prev);
                     let time = time_since(start);
 
                     stats("mul", path.as_ref(), &output, time);

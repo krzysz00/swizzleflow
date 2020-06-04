@@ -11,6 +11,8 @@ ndarray = { version = "0.13" }
 smallvec = "0.6.9"
 bit-vec = "0.6.2"
 
+fnv = "1.0.7"
+
 num-integer = "0.1.39"
 itertools = "0.8.0"
 byteorder = "1.3.1"

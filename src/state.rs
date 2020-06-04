@@ -363,12 +363,15 @@ impl Display for ProgState<'_> {
 }
 
 // Gather operator creation
+pub fn to_ix(index: &[Ix], shape: &[Ix]) -> Ix {
+    return index.iter().zip(shape.iter())
+        .fold(0, |acc, (i, b)| acc * b + i)
+}
+
 pub type OptIx = isize;
 pub fn to_opt_ix(index: &[Ix], shape: &[Ix]) -> OptIx {
     if in_bounds(index, shape) {
-        index.iter().zip(shape.iter())
-            .fold(0, |acc, (i, b)| acc * b + i)
-            as isize
+        to_ix(index, shape) as isize
     }
     else {
         -1
