@@ -28,7 +28,7 @@
       "step": { "Gather": { "Builtin": "general_select"}},
       "lane": 0,
       "out_shape": [4, 4, 7, 3],
-      "options": { "axis": [2], "dims": [0, 2] },
+      "options": { "axis": [2], "dims": [0, 2], "consts": [0, 1, -1, 4, -4] },
       "prune": true,
       "then_fold": false
     },
@@ -37,7 +37,7 @@
       "step": { "Gather": { "Builtin": "general_select"}},
       "lane": 0,
       "out_shape": [4, 4, 7, 7],
-      "options": { "axis": [3], "dims": [1, 3] },
+      "options": { "axis": [3], "dims": [1, 3], "consts": [0, 1, -1, 4, -4] },
       "prune": true,
       "then_fold": false
     },

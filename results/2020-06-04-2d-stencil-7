@@ -1,0 +1,196 @@
+cargo build --release
+./target/release/swizzleflow -a specs/swinv_like_big/l2/2d-stencil-7.json specs/swinv_like_big/l3/2d-stencil-7.json specs/swinv_like_big/l3/trove-rcr-7.json specs/swinv_like_big/l3/trove-crc-7.json specs/swinv_like_big/l1/2d-stencil-7.json specs/swinv_like_big/l1/trove-rcr-7.json specs/swinv_like_big/l1/trove-crc-7.json
+spec:specs/swinv_like_big/l2/2d-stencil-7.json
+build:matrices/4,4-identity-4,4,7,7 density=0.00390625; time=0.334267394;
+Using newly-built matrices/4,4-identity-4,4,7,7
+build:matrices/4,4,7,7-2s-rnc{main[1]out[1]second[3]}-4,4,7,7 density=0.000006507705122865473; time=1.00593403;
+mul_stats:: b_sparse=true
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}-4,4,7,7 density=0.015625; time=0.32867913;
+build:matrices/4,4,7,7-2s-xfnc{main[1]out[1]second[3]}-4,4,7,7 density=0.000011156065924912239; time=3.398555085;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}-4,4,7,7 density=0.05181760204081633; time=0.388266463;
+build:matrices/4,4,7,7-2s-rnc{main[0]out[0]second[2]}-4,4,7,7 density=0.000006507705122865473; time=1.036849387;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}_4,4,7,7-2s-rnc{main[0]out[0]second[2]}-4,4,7,7 density=0.2072704081632653; time=0.26400539;
+build:matrices/4,4,7,7-2s-xfnc{main[0]out[0]second[2]}-4,4,7,7 density=0.000011156065924912239; time=3.023635429;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}_4,4,7,7-2s-rnc{main[0]out[0]second[2]}_4,4,7,7-2s-xfnc{main[0]out[0]second[2]}-4,4,7,7 density=0.6873763536026656; time=0.374719663;
+build:matrices/4,4,7,7-2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}-4,4,7,3 density=0.00007741457552408718; time=499.980290197;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}_4,4,7,7-2s-rnc{main[0]out[0]second[2]}_4,4,7,7-2s-xfnc{main[0]out[0]second[2]}_4,4,7,7-2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}-4,4,7,3 density=0.8290816326530612; time=0.743632502;
+Begin search
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, d2 <= 4 + d0, );select(d1 >= 0 + d3, d3 <= 4 + d1, );xform(0,1,7);id;xform(0,1,7);id;id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, d2 <= 4 + d0, );select(d1 >= 0 + d3, d3 > 4 - d3, );xform(0,1,7);id;xform(0,1,7);id;id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, d2 > 4 - d2, );select(d1 >= 0 + d3, d3 <= 4 + d1, );xform(0,1,7);id;xform(0,1,7);id;id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, d2 > 4 - d2, );select(d1 >= 0 + d3, d3 > 4 - d3, );xform(0,1,7);id;xform(0,1,7);id;id
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1
+stats:2 name=2s-g{axis[2]consts[0|1|-1|4|-4]dims[0|2]}; lane=0; pruning=true; tested=1469; failed=0; pruned=1451; continued=18; in_solution=2
+stats:3 name=2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}; lane=0; pruning=true; tested=26442; failed=0; pruned=26118; continued=324; in_solution=4
+stats:4 name=2s-xfnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=3888; failed=0; pruned=3852; continued=36; in_solution=4
+stats:5 name=2s-rnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=144; failed=0; pruned=108; continued=36; in_solution=4
+stats:6 name=2s-xfnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=432; failed=0; pruned=428; continued=4; in_solution=4
+stats:7 name=2s-rnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=16; failed=0; pruned=12; continued=4; in_solution=4
+stats:8 name=identity; lane=0; pruning=false; tested=4; failed=0; pruned=0; continued=4; in_solution=4
+stats:9 name=(last); lane=0; pruning=false; tested=4; failed=0; pruned=0; continued=4; in_solution=4
+search:specs/swinv_like_big/l2/2d-stencil-7.json success=true; mode=All; time=32.239388185;
+spec:specs/swinv_like_big/l3/2d-stencil-7.json
+load:matrices/4,4-identity-4,4,7,7 density=0.00390625; time=0.24997321;
+build:matrices/4,4,7,7-2s-r{main[1]out[1]second[3]}-4,4,7,7 density=0.0000073211682632236566; time=1.061482474;
+mul_stats:: b_sparse=true
+mul:matrices/4,4-identity_4,4,7,7-2s-r{main[1]out[1]second[3]}-4,4,7,7 density=0.017578125; time=0.302464066;
+build:matrices/4,4,7,7-2s-xf{main[1]out[1]second[3]}-4,4,7,7 density=0.000011654104582274392; time=3.758866151;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-r{main[1]out[1]second[3]}_4,4,7,7-2s-xf{main[1]out[1]second[3]}-4,4,7,7 density=0.05253507653061224; time=0.336614821;
+build:matrices/4,4,7,7-2s-r{main[0]out[0]second[2]}-4,4,7,7 density=0.0000073211682632236566; time=1.049167318;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-r{main[1]out[1]second[3]}_4,4,7,7-2s-xf{main[1]out[1]second[3]}_4,4,7,7-2s-r{main[0]out[0]second[2]}-4,4,7,7 density=0.2364078443877551; time=0.219360798;
+build:matrices/4,4,7,7-2s-xf{main[0]out[0]second[2]}-4,4,7,7 density=0.000011654104582274392; time=3.324399616;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-r{main[1]out[1]second[3]}_4,4,7,7-2s-xf{main[1]out[1]second[3]}_4,4,7,7-2s-r{main[0]out[0]second[2]}_4,4,7,7-2s-xf{main[0]out[0]second[2]}-4,4,7,7 density=0.7065431721157851; time=0.329991098;
+load:matrices/4,4,7,7-2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}-4,4,7,3 density=0.00007741457552408718; time=0.978668963;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-r{main[1]out[1]second[3]}_4,4,7,7-2s-xf{main[1]out[1]second[3]}_4,4,7,7-2s-r{main[0]out[0]second[2]}_4,4,7,7-2s-xf{main[0]out[0]second[2]}_4,4,7,7-2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}-4,4,7,3 density=0.8405612244897959; time=0.29265277;
+Begin search
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, d2 > 4 - d2, );select(d1 >= 0 + d3, d3 > 4 - d3, );xform(0,1,7);id;xform(0,1,7);id;id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, d2 > 4 - d2, );select(d1 >= 0 + d3, d3 <= 4 + d1, );xform(0,1,7);id;xform(0,1,7);id;id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, d2 <= 4 + d0, );select(d1 >= 0 + d3, d3 > 4 - d3, );xform(0,1,7);id;xform(0,1,7);id;id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, d2 <= 4 + d0, );select(d1 >= 0 + d3, d3 <= 4 + d1, );xform(0,1,7);id;xform(0,1,7);id;id
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1
+stats:2 name=2s-g{axis[2]consts[0|1|-1|4|-4]dims[0|2]}; lane=0; pruning=true; tested=1469; failed=0; pruned=1451; continued=18; in_solution=2
+stats:3 name=2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}; lane=0; pruning=true; tested=26442; failed=0; pruned=26118; continued=324; in_solution=4
+stats:4 name=2s-xf{main[0]out[0]second[2]}; lane=0; pruning=true; tested=4536; failed=0; pruned=4500; continued=36; in_solution=4
+stats:5 name=2s-r{main[0]out[0]second[2]}; lane=0; pruning=true; tested=180; failed=0; pruned=144; continued=36; in_solution=4
+stats:6 name=2s-xf{main[1]out[1]second[3]}; lane=0; pruning=true; tested=504; failed=0; pruned=500; continued=4; in_solution=4
+stats:7 name=2s-r{main[1]out[1]second[3]}; lane=0; pruning=true; tested=20; failed=0; pruned=16; continued=4; in_solution=4
+stats:8 name=identity; lane=0; pruning=false; tested=4; failed=0; pruned=0; continued=4; in_solution=4
+stats:9 name=(last); lane=0; pruning=false; tested=4; failed=0; pruned=0; continued=4; in_solution=4
+search:specs/swinv_like_big/l3/2d-stencil-7.json success=true; mode=All; time=33.692007946;
+spec:specs/swinv_like_big/l3/trove-rcr-7.json
+build:matrices/32,7-col_rots-32,7 density=0.000830825494260204; time=1.488923568;
+Using newly-built matrices/32,7-col_rots-32,7
+build:matrices/32,7-col_xforms-32,7 density=0.009505178172704529; time=46.554871865;
+mul_stats:: b_sparse=true
+mul:matrices/32,7-col_rots_32,7-col_xforms-32,7 density=0.019430332112342106; time=39.032900437;
+build:matrices/32,7-row_rots-32,7 density=0.00013950892857142856; time=0.127425687;
+mul_stats:: b_sparse=false
+mul:matrices/32,7-col_rots_32,7-col_xforms_32,7-row_rots-32,7 density=0.13601232478639474; time=1.9204693609999999;
+build:matrices/32,7-row_xforms-32,7 density=0.0008846499035131032; time=6.352782939;
+mul_stats:: b_sparse=false
+mul:matrices/32,7-col_rots_32,7-col_xforms_32,7-row_rots_32,7-row_xforms-32,7 density=0.9422030268188121; time=9.702141695;
+mul_stats:: b_sparse=false
+mul:matrices/32,7-col_rots_32,7-col_xforms_32,7-row_rots_32,7-row_xforms_32,7-col_rots-32,7 density=0.9708201016351016; time=9.687120872;
+Begin search
+solution:init;load_rep;id;rot(16);xform(2,5,16);rot(5);xform(7,1,7);rot(16)
+solution:init;load_rep;id;id;xform(2,5,32);id;xform(7,1,7);id
+solution:init;load_rep;xform(31,0,7);rot(1);xform(2,2,32);rot(4);xform(25,31,7);rot(23)
+stats:0 name=load_rep; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1
+stats:1 name=col_xforms; lane=0; pruning=true; tested=1365; failed=0; pruned=1338; continued=27; in_solution=2
+stats:2 name=col_rots; lane=0; pruning=true; tested=1566; failed=0; pruned=1532; continued=34; in_solution=3
+stats:3 name=row_xforms; lane=0; pruning=true; tested=7140; failed=0; pruned=7137; continued=3; in_solution=3
+stats:4 name=row_rots; lane=0; pruning=true; tested=21; failed=0; pruned=18; continued=3; in_solution=3
+stats:5 name=col_xforms; lane=0; pruning=true; tested=4095; failed=0; pruned=4092; continued=3; in_solution=3
+stats:6 name=col_rots; lane=0; pruning=false; tested=174; failed=0; pruned=0; continued=174; in_solution=3
+stats:7 name=(last); lane=0; pruning=false; tested=174; failed=171; pruned=0; continued=3; in_solution=3
+search:specs/swinv_like_big/l3/trove-rcr-7.json success=true; mode=All; time=0.879487996;
+spec:specs/swinv_like_big/l3/trove-crc-7.json
+load:matrices/32,7-row_rots-32,7 density=0.00013950892857142856; time=0.076459031;
+load:matrices/32,7-row_xforms-32,7 density=0.0008846499035131032; time=0.431870079;
+mul_stats:: b_sparse=true
+mul:matrices/32,7-row_rots_32,7-row_xforms-32,7 density=0.0009620043696189413; time=0.60250076;
+load:matrices/32,7-col_rots-32,7 density=0.000830825494260204; time=0.386946393;
+mul_stats:: b_sparse=false
+mul:matrices/32,7-row_rots_32,7-row_xforms_32,7-col_rots-32,7 density=0.04015926438934949; time=9.2761045;
+load:matrices/32,7-col_xforms-32,7 density=0.009505178172704529; time=4.087853676;
+mul_stats:: b_sparse=false
+mul:matrices/32,7-row_rots_32,7-row_xforms_32,7-col_rots_32,7-col_xforms-32,7 density=0.941882937017057; time=108.656131348;
+load:matrices/32,7-row_rots-32,7 density=0.00013950892857142856; time=0.074558149;
+mul_stats:: b_sparse=false
+mul:matrices/32,7-row_rots_32,7-row_xforms_32,7-col_rots_32,7-col_xforms_32,7-row_rots-32,7 density=0.96106548698581; time=1.581726791;
+Begin search
+solution:init;load_rep;xform(5,5,32);rot(1);xform(7,31,7);rot(10);xform(6,0,32);rot(1)
+solution:init;load_rep;xform(2,5,32);id;xform(7,1,7);id;id;id
+stats:0 name=load_rep; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1
+stats:1 name=row_xforms; lane=0; pruning=true; tested=210; failed=0; pruned=204; continued=6; in_solution=2
+stats:2 name=row_rots; lane=0; pruning=true; tested=42; failed=0; pruned=40; continued=2; in_solution=2
+stats:3 name=col_xforms; lane=0; pruning=true; tested=2730; failed=0; pruned=2728; continued=2; in_solution=2
+stats:4 name=col_rots; lane=0; pruning=true; tested=116; failed=0; pruned=114; continued=2; in_solution=2
+stats:5 name=row_xforms; lane=0; pruning=true; tested=420; failed=0; pruned=418; continued=2; in_solution=2
+stats:6 name=row_rots; lane=0; pruning=false; tested=14; failed=0; pruned=0; continued=14; in_solution=2
+stats:7 name=(last); lane=0; pruning=false; tested=14; failed=12; pruned=0; continued=2; in_solution=2
+search:specs/swinv_like_big/l3/trove-crc-7.json success=true; mode=All; time=0.184493384;
+spec:specs/swinv_like_big/l1/2d-stencil-7.json
+load:matrices/4,4-identity-4,4,7,7 density=0.00390625; time=0.256059377;
+load:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}-4,4,7,7 density=0.015625; time=0.393634576;
+load:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}-4,4,7,7 density=0.05181760204081633; time=0.397246544;
+load:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}_4,4,7,7-2s-rnc{main[0]out[0]second[2]}-4,4,7,7 density=0.2072704081632653; time=0.393755469;
+load:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}_4,4,7,7-2s-rnc{main[0]out[0]second[2]}_4,4,7,7-2s-xfnc{main[0]out[0]second[2]}-4,4,7,7 density=0.6873763536026656; time=0.397753422;
+build:matrices/4,4,7,7-2s-gnc{axis[3]dims[1|3]}-4,4,7,3 density=0.00006561935998889352; time=21.423055784;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}_4,4,7,7-2s-rnc{main[0]out[0]second[2]}_4,4,7,7-2s-xfnc{main[0]out[0]second[2]}_4,4,7,7-2s-gnc{axis[3]dims[1|3]}-4,4,7,3 density=0.8290816326530612; time=0.282319402;
+Begin search
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=0
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=0
+stats:2 name=2s-gnc{axis[2]dims[0|2]}; lane=0; pruning=true; tested=93; failed=0; pruned=93; continued=0; in_solution=0
+stats:3 name=2s-gnc{axis[3]dims[1|3]}; lane=0; pruning=true; tested=0; failed=0; pruned=0; continued=0; in_solution=0
+stats:4 name=2s-xfnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=0; failed=0; pruned=0; continued=0; in_solution=0
+stats:5 name=2s-rnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=0; failed=0; pruned=0; continued=0; in_solution=0
+stats:6 name=2s-xfnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=0; failed=0; pruned=0; continued=0; in_solution=0
+stats:7 name=2s-rnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=0; failed=0; pruned=0; continued=0; in_solution=0
+stats:8 name=identity; lane=0; pruning=false; tested=0; failed=0; pruned=0; continued=0; in_solution=0
+stats:9 name=(last); lane=0; pruning=false; tested=0; failed=0; pruned=0; continued=0; in_solution=0
+search:specs/swinv_like_big/l1/2d-stencil-7.json success=false; mode=All; time=0.003070301;
+spec:specs/swinv_like_big/l1/trove-rcr-7.json
+build:matrices/32,7-col_rots_no_group-32,7 density=0.0006377551020408163; time=0.769018475;
+Using newly-built matrices/32,7-col_rots_no_group-32,7
+build:matrices/32,7-col_xforms_no_group-32,7 density=0.008823323279606804; time=33.410316929;
+mul_stats:: b_sparse=true
+mul:matrices/32,7-col_rots_no_group_32,7-col_xforms_no_group-32,7 density=0.01910001285271762; time=25.206355086;
+build:matrices/32,7-row_rots_no_group-32,7 density=0.00013950892857142856; time=0.127997372;
+mul_stats:: b_sparse=false
+mul:matrices/32,7-col_rots_no_group_32,7-col_xforms_no_group_32,7-row_rots_no_group-32,7 density=0.13370008996902333; time=1.924412837;
+build:matrices/32,7-row_xforms_no_group-32,7 density=0.0008846499035131032; time=6.343255999;
+mul_stats:: b_sparse=false
+mul:matrices/32,7-col_rots_no_group_32,7-col_xforms_no_group_32,7-row_rots_no_group_32,7-row_xforms_no_group-32,7 density=0.9265293310404519; time=9.63671308;
+mul_stats:: b_sparse=false
+mul:matrices/32,7-col_rots_no_group_32,7-col_xforms_no_group_32,7-row_rots_no_group_32,7-row_xforms_no_group_32,7-col_rots_no_group-32,7 density=0.9486037718658892; time=7.479817278;
+Begin search
+solution:init;load_rep;xform(31,0,7);rot(1);xform(2,2,32);rot(4);xform(25,31,7);rot(23)
+solution:init;load_rep;id;id;xform(2,5,32);id;xform(7,1,7);id
+solution:init;load_rep;id;rot(16);xform(2,5,16);rot(5);xform(7,1,7);rot(16)
+stats:0 name=load_rep; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1
+stats:1 name=col_xforms_no_group; lane=0; pruning=true; tested=992; failed=0; pruned=976; continued=16; in_solution=2
+stats:2 name=col_rots_no_group; lane=0; pruning=true; tested=512; failed=0; pruned=479; continued=33; in_solution=3
+stats:3 name=row_xforms_no_group; lane=0; pruning=true; tested=6930; failed=0; pruned=6927; continued=3; in_solution=3
+stats:4 name=row_rots_no_group; lane=0; pruning=true; tested=21; failed=0; pruned=18; continued=3; in_solution=3
+stats:5 name=col_xforms_no_group; lane=0; pruning=true; tested=2976; failed=0; pruned=2973; continued=3; in_solution=3
+stats:6 name=col_rots_no_group; lane=0; pruning=false; tested=96; failed=0; pruned=0; continued=96; in_solution=3
+stats:7 name=(last); lane=0; pruning=false; tested=96; failed=93; pruned=0; continued=3; in_solution=3
+search:specs/swinv_like_big/l1/trove-rcr-7.json success=true; mode=All; time=0.663687739;
+spec:specs/swinv_like_big/l1/trove-crc-7.json
+load:matrices/32,7-row_rots_no_group-32,7 density=0.00013950892857142856; time=0.074382834;
+load:matrices/32,7-row_xforms_no_group-32,7 density=0.0008846499035131032; time=0.406979043;
+mul_stats:: b_sparse=true
+mul:matrices/32,7-row_rots_no_group_32,7-row_xforms_no_group-32,7 density=0.0009620043696189413; time=0.588421705;
+load:matrices/32,7-col_rots_no_group-32,7 density=0.0006377551020408163; time=0.300427672;
+mul_stats:: b_sparse=false
+mul:matrices/32,7-row_rots_no_group_32,7-row_xforms_no_group_32,7-col_rots_no_group-32,7 density=0.03078413982780612; time=7.12125811;
+load:matrices/32,7-col_xforms_no_group-32,7 density=0.008823323279606804; time=4.513548547;
+mul_stats:: b_sparse=false
+mul:matrices/32,7-row_rots_no_group_32,7-row_xforms_no_group_32,7-col_rots_no_group_32,7-col_xforms_no_group-32,7 density=0.9257387211301932; time=101.091018624;
+load:matrices/32,7-row_rots_no_group-32,7 density=0.00013950892857142856; time=0.085565076;
+mul_stats:: b_sparse=false
+mul:matrices/32,7-row_rots_no_group_32,7-row_xforms_no_group_32,7-col_rots_no_group_32,7-col_xforms_no_group_32,7-row_rots_no_group-32,7 density=0.9500159438775511; time=1.9264549720000002;
+Begin search
+solution:init;load_rep;xform(2,5,32);id;xform(7,1,7);id;id;id
+solution:init;load_rep;xform(5,5,32);rot(1);xform(7,31,7);rot(10);xform(6,0,32);rot(1)
+stats:0 name=load_rep; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1
+stats:1 name=row_xforms_no_group; lane=0; pruning=true; tested=210; failed=0; pruned=204; continued=6; in_solution=2
+stats:2 name=row_rots_no_group; lane=0; pruning=true; tested=42; failed=0; pruned=40; continued=2; in_solution=2
+stats:3 name=col_xforms_no_group; lane=0; pruning=true; tested=1984; failed=0; pruned=1982; continued=2; in_solution=2
+stats:4 name=col_rots_no_group; lane=0; pruning=true; tested=64; failed=0; pruned=62; continued=2; in_solution=2
+stats:5 name=row_xforms_no_group; lane=0; pruning=true; tested=420; failed=0; pruned=418; continued=2; in_solution=2
+stats:6 name=row_rots_no_group; lane=0; pruning=false; tested=14; failed=0; pruned=0; continued=14; in_solution=2
+stats:7 name=(last); lane=0; pruning=false; tested=14; failed=12; pruned=0; continued=2; in_solution=2
+search:specs/swinv_like_big/l1/trove-crc-7.json success=true; mode=All; time=0.159256999;
