@@ -11515,3 +11515,71 @@ run:l3/trove-rcr-2 1540175
       (sw-xform localId warpSize 1 32 32 1 i struct-size 16 2 16))))
 (cost 0)
 1541
+big_l2_2d-stencil-7.rkt - 0
+solving...
+(warpSize 16)
+(blockID
+ (0 0)
+ (16 1)
+ #((0 0)
+   (1 0)
+   (2 0)
+   (3 0)
+   (4 0)
+   (5 0)
+   (6 0)
+   (7 0)
+   (8 0)
+   (9 0)
+   (10 0)
+   (11 0)
+   (12 0)
+   (13 0)
+   (14 0)
+   (15 0)))
+run:l2/2d-stencil-7 851822
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/big_l2_2d-stencil-7.rkt:142:0
+'(define (stencil-2d-sketch2 threadId blockID blockDim I O I-sizes O-sizes)
+   (define gid (+ (* blockID blockDim) threadId))
+   (define gx (get-x gid))
+   (define gy (get-y gid))
+   (define id (modulo (get-x threadId) warpSize))
+   (define warp-col (modulo id W))
+   (define warp-row (quotient id W))
+   (define offset-x (* (quotient gx warpSize) W))
+   (define offset-y (* gy H))
+   (define I-cached (create-matrix-local (x-y-z 3 3)))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1 1)
+    (lov2vol (x-y-z offset-x offset-y))
+    (+ warp-shape 6)
+    #f
+    #:warp-shape
+    warp-shape
+    #:round
+    (x-y-z 3 3))
+   (define o (create-accumulator (list +) /9 blockDim))
+   (for*
+    ((ky 7) (kx 7))
+    (let* ((index-j
+            (ite
+             (<= ky (+ 0 warp-row))
+             (@dup 0)
+             (ite (> ky (- H ky)) (@dup 1) (@dup 2))))
+           (index-i
+            (ite
+             (< kx (+ 1 warp-col))
+             (@dup 0)
+             (ite (> kx (- W kx)) (@dup 1) (@dup 2))))
+           (lane-x (sw-xform warp-col W 1 W W 1 kx 7 1 7 0))
+           (lane-y (sw-xform warp-row H 1 H H 1 ky 7 1 7 0))
+           (lane (+ (* lane-y W) lane-x))
+           (x (shfl (get I-cached index-i index-j) lane)))
+      (accumulate o x)))
+   (reg-to-global
+    (accumulate-final o)
+    O
+    (lov2vol (x-y-z (+ offset-x warp-col) (+ offset-y warp-row)))))
+852
