@@ -5,14 +5,16 @@ swizzle_inventor_tests_small := $(wildcard swizzle-inventor-benchmarks/small_*.r
 swizzle_inventor_tests_big := $(wildcard swizzle-inventor-benchmarks/big_*.rkt)
 
 specs_matmul_large :=\
-specs/swinv_like/l1/trove-crc-2.json\
 specs/swinv_like/l1/trove-crc-3.json\
 specs/swinv_like/l1/trove-crc-4.json\
 specs/swinv_like/l1/trove-rcr-4.json\
 specs/swinv_like/l1/trove-cr_sum-5.json\
 specs/swinv_like/l1/trove-cr_sum-7.json\
 specs/swinv_like/l1/trove-crc-5.json\
-specs/swinv_like/l1/2d-stencil-5.json
+specs/swinv_like/l1/trove-rcr-5.json\
+specs/swinv_like_big/l1/trove-crc-7.json\
+specs/swinv_like/l1/2d-stencil-5.json\
+specs/swinv_like_big/l2/2d-stencil-7.json
 
 SWIZZLEFLOW_FLAGS ?= -a
 build:

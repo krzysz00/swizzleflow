@@ -12,7 +12,7 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use ndarray::{Ix,Dimension};
+use ndarray::{Ix};
 
 use fnv::FnvHashSet;
 
@@ -28,8 +28,6 @@ use crate::errors::*;
 use bit_vec::BitVec;
 
 use byteorder::{LittleEndian,WriteBytesExt,ReadBytesExt};
-
-use smallvec::SmallVec;
 
 pub trait TransitionMatrixOps: Sized + std::fmt::Debug + std::clone::Clone {
     fn get(&self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix]) -> bool {
@@ -366,25 +364,30 @@ pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet) -> T {
     let gathers = ops.ops.gathers().unwrap();
     let n_ops = gathers.len();
 
+    // Get actual last dimension
+    let fold_dim = gathers.get(0)
+        .and_then(|o| o.data.shape().get(out_shape.len()).copied())
+        .unwrap_or(1);
+
     let mut ret = T::with_row_size_hint(&ops.in_shape, &out_shape, n_ops);
     for op in gathers {
-        let fn_output_shape = op.data.shape();
-        for (input1, output1) in op.data.into_iter().copied()
-            .zip(ndarray::indices(fn_output_shape)).filter(|&(i, _)| i >= 0 && i < in_bound) {
-                for (input2, output2) in op.data.into_iter().copied()
-                    .zip(ndarray::indices(fn_output_shape)).filter(|&(i, _)| i >= 0 && i < in_bound) {
-                        let mut out1: SmallVec<[usize; 6]> =
-                            SmallVec::from_slice(output1.slice());
-                        let mut out2: SmallVec<[usize; 6]> =
-                            SmallVec::from_slice(output2.slice());
-                        if fold {
-                            out1.pop();
-                            out2.pop();
-                        }
-                        let out1_ix = to_ix(&out1, &out_shape);
-                        let out2_ix = to_ix(&out2, &out_shape);
+        for (output1, input1) in op.data.into_iter().copied()
+            .enumerate().filter(|&(_, i)| i >= 0 && i < in_bound) {
+                for (output2, input2) in op.data.into_iter().copied()
+                    .enumerate().filter(|&(_, i)| i >= 0 && i < in_bound) {
+                        // Remove fold dimension if needed
+                        let output1 = if fold {
+                            output1 / fold_dim
+                        } else {
+                            output1
+                        };
+                        let output2 = if fold {
+                            output2 / fold_dim
+                        } else {
+                            output2
+                        };
                         ret.set_idxs(input1 as usize, input2 as usize,
-                                     out1_ix, out2_ix,
+                                     output1, output2,
                                      true);
                     }
             }
