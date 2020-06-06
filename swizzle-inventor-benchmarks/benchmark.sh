@@ -2,7 +2,7 @@
 for file in "$@"; do
     local filename=$(basename "$file")
     local typ=$(echo $filename | cut -d_ -f1)
-    local spec_name=$(echo $filename | cut -d_ -f2- | sed -e 's/.rkt$//' -e 's#_#/#g')
+    local spec_name=$(echo $filename | cut -d_ -f2- | sed -e 's/.rkt$//' -e 's#_#/#')
     local reruns=1
     if [[ $typ == "small" ]]; then
         reruns=3

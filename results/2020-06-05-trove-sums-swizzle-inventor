@@ -1,0 +1,2835 @@
+small_l1_trove-cr_sum-1.rkt - 0
+solving...
+(spec-cost 32)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 1)
+(i 0 1)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-1 280
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l1_trove-cr_sum-1.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i)
+        (sw-xform
+         i
+         struct-size
+         0
+         struct-size
+         struct-size
+         1
+         localId
+         warpSize
+         0
+         warpSize
+         0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane
+            (sw-xform
+             localId
+             warpSize
+             1
+             warpSize
+             warpSize
+             1
+             i
+             struct-size
+             31
+             struct-size
+             0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 1)
+1
+small_l1_trove-cr_sum-1.rkt - 1
+solving...
+(spec-cost 32)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 1)
+(i 0 1)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-1 323
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l1_trove-cr_sum-1.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i)
+        (sw-xform
+         i
+         struct-size
+         0
+         struct-size
+         struct-size
+         1
+         localId
+         warpSize
+         0
+         warpSize
+         0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane
+            (sw-xform
+             localId
+             warpSize
+             1
+             warpSize
+             warpSize
+             1
+             i
+             struct-size
+             31
+             struct-size
+             0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 1)
+0
+small_l1_trove-cr_sum-1.rkt - 2
+solving...
+(spec-cost 32)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 1)
+(i 0 1)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-1 276
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l1_trove-cr_sum-1.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i)
+        (sw-xform
+         i
+         struct-size
+         0
+         struct-size
+         struct-size
+         1
+         localId
+         warpSize
+         0
+         warpSize
+         0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane
+            (sw-xform
+             localId
+             warpSize
+             1
+             warpSize
+             warpSize
+             1
+             i
+             struct-size
+             31
+             struct-size
+             0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 1)
+1
+small_l1_trove-cr_sum-2.rkt - 0
+solving...
+(spec-cost 64)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 2)
+(i 0 2)
+(i 1 2)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-2 774
+small_l1_trove-cr_sum-2.rkt - 1
+solving...
+(spec-cost 64)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 2)
+(i 0 2)
+(i 1 2)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-2 714
+small_l1_trove-cr_sum-2.rkt - 2
+solving...
+(spec-cost 64)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 2)
+(i 0 2)
+(i 1 2)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-2 709
+small_l1_trove-cr_sum-3.rkt - 0
+solving...
+(spec-cost 96)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 3)
+(i 0 3)
+(i 1 3)
+(i 2 3)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-3 2040
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l1_trove-cr_sum-3.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i)
+        (sw-xform
+         i
+         struct-size
+         2
+         struct-size
+         struct-size
+         1
+         localId
+         warpSize
+         1
+         warpSize
+         0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane
+            (sw-xform
+             localId
+             warpSize
+             3
+             warpSize
+             warpSize
+             1
+             i
+             struct-size
+             1
+             struct-size
+             0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 3)
+3
+small_l1_trove-cr_sum-3.rkt - 1
+solving...
+(spec-cost 96)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 3)
+(i 0 3)
+(i 1 3)
+(i 2 3)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-3 2029
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l1_trove-cr_sum-3.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i)
+        (sw-xform
+         i
+         struct-size
+         2
+         struct-size
+         struct-size
+         1
+         localId
+         warpSize
+         1
+         warpSize
+         0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane
+            (sw-xform
+             localId
+             warpSize
+             3
+             warpSize
+             warpSize
+             1
+             i
+             struct-size
+             1
+             struct-size
+             0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 3)
+2
+small_l1_trove-cr_sum-3.rkt - 2
+solving...
+(spec-cost 96)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 3)
+(i 0 3)
+(i 1 3)
+(i 2 3)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-3 2049
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l1_trove-cr_sum-3.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i)
+        (sw-xform
+         i
+         struct-size
+         2
+         struct-size
+         struct-size
+         1
+         localId
+         warpSize
+         1
+         warpSize
+         0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane
+            (sw-xform
+             localId
+             warpSize
+             3
+             warpSize
+             warpSize
+             1
+             i
+             struct-size
+             1
+             struct-size
+             0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 3)
+3
+small_l1_trove-cr_sum-4.rkt - 0
+solving...
+(spec-cost 128)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 4)
+(i 0 4)
+(i 1 4)
+(i 2 4)
+(i 3 4)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-4 2300
+small_l1_trove-cr_sum-4.rkt - 1
+solving...
+(spec-cost 128)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 4)
+(i 0 4)
+(i 1 4)
+(i 2 4)
+(i 3 4)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-4 2317
+small_l1_trove-cr_sum-4.rkt - 2
+solving...
+(spec-cost 128)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 4)
+(i 0 4)
+(i 1 4)
+(i 2 4)
+(i 3 4)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-4 2255
+small_l1_trove-cr_sum-5.rkt - 0
+solving...
+(spec-cost 160)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 5)
+(i 0 5)
+(i 1 5)
+(i 2 5)
+(i 3 5)
+(i 4 5)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-5 4725
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l1_trove-cr_sum-5.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i)
+        (sw-xform
+         i
+         struct-size
+         3
+         struct-size
+         struct-size
+         1
+         localId
+         warpSize
+         2
+         warpSize
+         0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane
+            (sw-xform
+             localId
+             warpSize
+             5
+             warpSize
+             warpSize
+             1
+             i
+             struct-size
+             1
+             struct-size
+             0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 5)
+5
+small_l1_trove-cr_sum-5.rkt - 1
+solving...
+(spec-cost 160)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 5)
+(i 0 5)
+(i 1 5)
+(i 2 5)
+(i 3 5)
+(i 4 5)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-5 4780
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l1_trove-cr_sum-5.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i)
+        (sw-xform
+         i
+         struct-size
+         3
+         struct-size
+         struct-size
+         1
+         localId
+         warpSize
+         2
+         warpSize
+         0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane
+            (sw-xform
+             localId
+             warpSize
+             5
+             warpSize
+             warpSize
+             1
+             i
+             struct-size
+             1
+             struct-size
+             0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 5)
+5
+small_l1_trove-cr_sum-5.rkt - 2
+solving...
+(spec-cost 160)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 5)
+(i 0 5)
+(i 1 5)
+(i 2 5)
+(i 3 5)
+(i 4 5)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-5 4815
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l1_trove-cr_sum-5.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i)
+        (sw-xform
+         i
+         struct-size
+         3
+         struct-size
+         struct-size
+         1
+         localId
+         warpSize
+         2
+         warpSize
+         0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane
+            (sw-xform
+             localId
+             warpSize
+             5
+             warpSize
+             warpSize
+             1
+             i
+             struct-size
+             1
+             struct-size
+             0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 5)
+6
+small_l1_trove-cr_sum-7.rkt - 0
+solving...
+(spec-cost 224)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 7)
+(i 0 7)
+(i 1 7)
+(i 2 7)
+(i 3 7)
+(i 4 7)
+(i 5 7)
+(i 6 7)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-7 7964
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l1_trove-cr_sum-7.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i)
+        (sw-xform
+         i
+         struct-size
+         2
+         struct-size
+         struct-size
+         1
+         localId
+         warpSize
+         5
+         warpSize
+         0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane
+            (sw-xform
+             localId
+             warpSize
+             7
+             warpSize
+             warpSize
+             1
+             i
+             struct-size
+             1
+             struct-size
+             0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 7)
+9
+small_l1_trove-cr_sum-7.rkt - 1
+solving...
+(spec-cost 224)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 7)
+(i 0 7)
+(i 1 7)
+(i 2 7)
+(i 3 7)
+(i 4 7)
+(i 5 7)
+(i 6 7)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-7 8151
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l1_trove-cr_sum-7.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i)
+        (sw-xform
+         i
+         struct-size
+         2
+         struct-size
+         struct-size
+         1
+         localId
+         warpSize
+         5
+         warpSize
+         0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane
+            (sw-xform
+             localId
+             warpSize
+             7
+             warpSize
+             warpSize
+             1
+             i
+             struct-size
+             1
+             struct-size
+             0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 7)
+10
+small_l1_trove-cr_sum-7.rkt - 2
+solving...
+(spec-cost 224)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 7)
+(i 0 7)
+(i 1 7)
+(i 2 7)
+(i 3 7)
+(i 4 7)
+(i 5 7)
+(i 6 7)
+finish permute-vector
+finish kernel
+run:l1/trove-cr_sum-7 7914
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l1_trove-cr_sum-7.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i)
+        (sw-xform
+         i
+         struct-size
+         2
+         struct-size
+         struct-size
+         1
+         localId
+         warpSize
+         5
+         warpSize
+         0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane
+            (sw-xform
+             localId
+             warpSize
+             7
+             warpSize
+             warpSize
+             1
+             i
+             struct-size
+             1
+             struct-size
+             0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 7)
+9
+small_l3_trove-cr_sum-1.rkt - 0
+solving...
+(spec-cost 32)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 1)
+(i 0 1)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-1 8861
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-1.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i)
+        (sw-xform i struct-size 0 1 1 (choose 1 -1) localId warpSize 0 1 0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 1 32 32 -1 i struct-size 30 1 20))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 1)
+10
+small_l3_trove-cr_sum-1.rkt - 1
+solving...
+(spec-cost 32)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 1)
+(i 0 1)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-1 8917
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-1.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i)
+        (sw-xform i struct-size 0 1 1 (choose 1 -1) localId warpSize 0 1 0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 1 32 32 -1 i struct-size 30 1 20))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 1)
+10
+small_l3_trove-cr_sum-1.rkt - 2
+solving...
+(spec-cost 32)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 1)
+(i 0 1)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-1 8948
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-1.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i)
+        (sw-xform i struct-size 0 1 1 (choose 1 -1) localId warpSize 0 1 0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 1 32 32 -1 i struct-size 30 1 20))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 1)
+10
+small_l3_trove-cr_sum-2.rkt - 0
+solving...
+(spec-cost 64)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 2)
+(i 0 2)
+(i 1 2)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-2 15199
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-2.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i) (sw-xform i struct-size 1 2 2 1 localId warpSize -1 32 0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 2 16 32 -1 i struct-size 0 -1 0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 2)
+16
+small_l3_trove-cr_sum-2.rkt - 1
+solving...
+(spec-cost 64)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 2)
+(i 0 2)
+(i 1 2)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-2 15305
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-2.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i) (sw-xform i struct-size 1 2 2 1 localId warpSize -1 32 0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 2 16 32 -1 i struct-size 0 -1 0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 2)
+16
+small_l3_trove-cr_sum-2.rkt - 2
+solving...
+(spec-cost 64)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 2)
+(i 0 2)
+(i 1 2)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-2 15113
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-2.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i) (sw-xform i struct-size 1 2 2 1 localId warpSize -1 32 0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 2 16 32 -1 i struct-size 0 -1 0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 2)
+15
+small_l3_trove-cr_sum-3.rkt - 0
+solving...
+(spec-cost 96)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 3)
+(i 0 3)
+(i 1 3)
+(i 2 3)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-3 24029
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-3.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i) (sw-xform i struct-size 0 -1 3 -1 localId warpSize 1 32 0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 3 32 32 1 i struct-size 0 1 0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 3)
+25
+small_l3_trove-cr_sum-3.rkt - 1
+solving...
+(spec-cost 96)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 3)
+(i 0 3)
+(i 1 3)
+(i 2 3)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-3 23979
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-3.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i) (sw-xform i struct-size 0 -1 3 -1 localId warpSize 1 32 0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 3 32 32 1 i struct-size 0 1 0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 3)
+24
+small_l3_trove-cr_sum-3.rkt - 2
+solving...
+(spec-cost 96)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 3)
+(i 0 3)
+(i 1 3)
+(i 2 3)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-3 23974
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-3.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i) (sw-xform i struct-size 0 -1 3 -1 localId warpSize 1 32 0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 3 32 32 1 i struct-size 0 1 0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 3)
+25
+small_l3_trove-cr_sum-4.rkt - 0
+solving...
+(spec-cost 128)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 4)
+(i 0 4)
+(i 1 4)
+(i 2 4)
+(i 3 4)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-4 34649
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-4.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i) (sw-xform i struct-size 1 4 4 1 localId warpSize 0 1 2))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 4 8 32 -1 i struct-size 0 -1 2))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 4)
+35
+small_l3_trove-cr_sum-4.rkt - 1
+solving...
+(spec-cost 128)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 4)
+(i 0 4)
+(i 1 4)
+(i 2 4)
+(i 3 4)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-4 34639
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-4.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i) (sw-xform i struct-size 1 4 4 1 localId warpSize 0 1 2))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 4 8 32 -1 i struct-size 0 -1 2))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 4)
+36
+small_l3_trove-cr_sum-4.rkt - 2
+solving...
+(spec-cost 128)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 4)
+(i 0 4)
+(i 1 4)
+(i 2 4)
+(i 3 4)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-4 34603
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-4.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i) (sw-xform i struct-size 1 4 4 1 localId warpSize 0 1 2))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 4 8 32 -1 i struct-size 0 -1 2))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 4)
+36
+small_l3_trove-cr_sum-5.rkt - 0
+solving...
+(spec-cost 160)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 5)
+(i 0 5)
+(i 1 5)
+(i 2 5)
+(i 3 5)
+(i 4 5)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-5 49717
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-5.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i) (sw-xform i struct-size 3 5 5 1 localId warpSize 1 1 0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 5 -32 32 1 i struct-size 0 1 0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 5)
+51
+small_l3_trove-cr_sum-5.rkt - 1
+solving...
+(spec-cost 160)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 5)
+(i 0 5)
+(i 1 5)
+(i 2 5)
+(i 3 5)
+(i 4 5)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-5 49260
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-5.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i) (sw-xform i struct-size 3 5 5 1 localId warpSize 1 1 0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 5 -32 32 1 i struct-size 0 1 0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 5)
+51
+small_l3_trove-cr_sum-5.rkt - 2
+solving...
+(spec-cost 160)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 5)
+(i 0 5)
+(i 1 5)
+(i 2 5)
+(i 3 5)
+(i 4 5)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-5 49736
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-5.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i) (sw-xform i struct-size 3 5 5 1 localId warpSize 1 1 0))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 5 -32 32 1 i struct-size 0 1 0))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 5)
+51
+small_l3_trove-cr_sum-7.rkt - 0
+solving...
+(spec-cost 224)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 7)
+(i 0 7)
+(i 1 7)
+(i 2 7)
+(i 3 7)
+(i 4 7)
+(i 5 7)
+(i 6 7)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-7 66065
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-7.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i) (sw-xform i struct-size 5 7 7 1 localId warpSize 4 1 5))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 7 32 32 1 i struct-size 0 -1 6))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 7)
+67
+small_l3_trove-cr_sum-7.rkt - 1
+solving...
+(spec-cost 224)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 7)
+(i 0 7)
+(i 1 7)
+(i 2 7)
+(i 3 7)
+(i 4 7)
+(i 5 7)
+(i 6 7)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-7 65978
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-7.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i) (sw-xform i struct-size 5 7 7 1 localId warpSize 4 1 5))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 7 32 32 1 i struct-size 0 -1 6))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 7)
+68
+small_l3_trove-cr_sum-7.rkt - 2
+solving...
+(spec-cost 224)
+(blockID
+ (0)
+ (32)
+ #((0)
+   (1)
+   (2)
+   (3)
+   (4)
+   (5)
+   (6)
+   (7)
+   (8)
+   (9)
+   (10)
+   (11)
+   (12)
+   (13)
+   (14)
+   (15)
+   (16)
+   (17)
+   (18)
+   (19)
+   (20)
+   (21)
+   (22)
+   (23)
+   (24)
+   (25)
+   (26)
+   (27)
+   (28)
+   (29)
+   (30)
+   (31)))
+(permute-vector 7)
+(i 0 7)
+(i 1 7)
+(i 2 7)
+(i 3 7)
+(i 4 7)
+(i 5 7)
+(i 6 7)
+finish permute-vector
+finish kernel
+run:l3/trove-cr_sum-7 66098
+/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/small_l3_trove-cr_sum-7.rkt:90:0
+'(define (AOS-sum-sketch threadId blockID blockDim I O I-sizes O-sizes a b c)
+   (define I-cached (create-matrix-local (x-y-z struct-size)))
+   (define gid (+ (* blockID blockDim) threadId))
+   (define localId (get-idInWarp threadId))
+   (global-to-local
+    I
+    I-cached
+    (x-y-z 1)
+    (* struct-size (- gid localId))
+    (x-y-z (* warpSize struct-size))
+    #f
+    #:round
+    struct-size)
+   (define o (create-accumulator (list +) identity blockDim))
+   (define I-cached2
+     (permute-vector
+      I-cached
+      struct-size
+      (lambda (i) (sw-xform i struct-size 5 7 7 1 localId warpSize 4 1 5))))
+   (pretty-display "finish permute-vector")
+   (for
+    ((i struct-size))
+    (let* ((lane (sw-xform localId warpSize 7 32 32 1 i struct-size 0 -1 6))
+           (x (shfl (get I-cached2 (@dup i)) lane)))
+      (accumulate o x #:pred #t)))
+   (reg-to-global o O gid)
+   (pretty-display "finish kernel"))
+(cost 7)
+68
