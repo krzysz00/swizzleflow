@@ -29,7 +29,7 @@ def process_data(swizzleflow_raw, loads_raw, swinv_times):
     total.name = "Swizzleflow"
 
     load_times = load_times[load_times['category'] != 'search'].groupby(['spec'])['time'].sum()
-    load_times = pd.DataFrame({"Mat. load": load_times})
+    load_times = pd.DataFrame({"Reloading all": load_times})
 
     swinv_times_for_join = swinv_info.set_index('spec')['time']
     swinv_times_for_join.name = "Swizzle Inventor"

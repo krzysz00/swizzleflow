@@ -111,7 +111,7 @@ impl Display for SearchLevelStats {
 
         let continued = tested - pruned - failed;
 
-        write!(f, "tested={}; failed={}; pruned={}; continued={}; in_solution={}",
+        write!(f, "tested={}; failed={}; pruned={}; continued={}; in_solution={};",
                tested, failed, pruned, continued, in_solution)?;
 
         if COLLECT_STATS {
