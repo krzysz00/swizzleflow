@@ -247,16 +247,14 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                 let ret = search(new_states, target, levels, expected_syms,
                                  current_level + 1, stats, mode, caches,
                                  print, print_pruned);
+                if level.prune {
+                    let mut cache = cache.write().unwrap();
+                    cache.insert(r.clone(), ret);
+                }
                 if ret {
                     tracker.success();
                     if print {
                         println!("success_path [level {} @ lane {}]\n{}", current_level, lane, c.unwrap())
-                    }
-                }
-                else {
-                    if level.prune {
-                        let mut cache = cache.write().unwrap();
-                        cache.insert(r.clone(), false);
                     }
                 }
                 ret
