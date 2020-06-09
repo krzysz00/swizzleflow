@@ -180,8 +180,13 @@ fn run() -> Result<()> {
         let max_lanes = initial.len();
         matrix_load::add_matrices(matrix_dir, &mut levels, max_lanes)?;
         println!("Begin search");
-        synthesize(initial, &target, &levels, &expected_syms, synthesis_mode,
-                   print, print_pruned, &name);
+        let (_, caches) =
+            synthesize(initial.clone(), &target, &levels, &expected_syms, synthesis_mode,
+                       print, print_pruned, &name, None);
+        println!("Begin second search");
+        let (_, _caches2) =
+            synthesize(initial, &target, &levels, &expected_syms, synthesis_mode,
+                       print, print_pruned, &name, Some(caches));
         matrix_load::remove_matrices(&mut levels);
     }
     Ok(())

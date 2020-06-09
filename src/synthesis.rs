@@ -132,10 +132,18 @@ type States<'d, 'l> = SmallVec<[Option<&'l ProgState<'d>>; 4]>;
 // Invariant: any level with pruning enabled has a corresponding pruning matrix available
 fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
               expected_syms: &[DomRef],
-              _cache: &ResultMap<'d>, tracker: &SearchLevelStats,
+              cache: &ResultMap<'d>, tracker: &SearchLevelStats,
               level: usize, print_pruned: bool) -> bool {
     let mut did_lookup = false;
     let mut target_checks = 0;
+    let cache = cache.read().unwrap();
+    if let Some(v) = cache.get(current) {
+        let v = *v;
+        if !v {
+            tracker.pruned();
+        }
+        return v;
+    }
     for (i, a) in expected_syms.iter().copied().enumerate() {
         for b in (&expected_syms[(i+1)..]).iter().copied().chain(std::iter::once(a)) {
             for (t1, t2) in iproduct!(target.inv_state[a].iter().copied(),
@@ -243,6 +251,12 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                     tracker.success();
                     if print {
                         println!("success_path [level {} @ lane {}]\n{}", current_level, lane, c.unwrap())
+                    }
+                }
+                else {
+                    if level.prune {
+                        let mut cache = cache.write().unwrap();
+                        cache.insert(r.clone(), false);
                     }
                 }
                 ret
@@ -356,17 +370,20 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
     ret
 }
 
-pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
+pub fn synthesize<'d>(start: Vec<Option<ProgState<'d>>>, target: &ProgState<'d>,
                   levels: &[SynthesisLevel],
                   expected_syms: &[Vec<DomRef>],
                   mode: Mode,
                   print: bool,
                   print_pruned: bool,
-                  spec_name: &str) -> bool {
+                  spec_name: &str,
+                  caches: Option<Vec<SearchResultCache<'d>>>) -> (bool, Vec<SearchResultCache<'d>>) {
     let n_levels = levels.len();
     let stats = (0..n_levels+1).map(|_| SearchLevelStats::new()).collect::<Vec<_>>();
-    let caches: Vec<SearchResultCache>
-        = (0..n_levels).map(|_| Arc::new(RwLock::new(HashMap::new()))).collect();
+    let cache_reuse = caches.is_some();
+    let caches: Vec<SearchResultCache> =
+        caches.unwrap_or_else(
+         || (0..n_levels).map(|_| Arc::new(RwLock::new(HashMap::new()))).collect());
 
     let states: States = SmallVec::from_iter(start.iter().map(|e| e.as_ref()));
     let start_time = Instant::now();
@@ -381,6 +398,6 @@ pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
                  levels.get(idx).map_or(false, |l| l.prune),
                  stats);
     }
-    println!("search:{} success={}; mode={:?}; time={};", spec_name, ret, mode, dur);
-    ret
+    println!("search:{} success={}; mode={:?}; cache_reuse={}; time={};", spec_name, ret, mode, cache_reuse, dur);
+    (ret, caches)
 }
