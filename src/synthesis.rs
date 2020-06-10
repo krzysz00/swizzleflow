@@ -46,14 +46,15 @@ struct SearchLevelStats {
     pruned: AtomicUsize,
     failed: AtomicUsize,
     in_solution: AtomicUsize,
-    target_checks: Option<Arc<Mutex<BTreeMap<usize, usize>>>>,
+    prune_time: std::cell::Cell<f64>,
+    value_checks: Option<Arc<Mutex<BTreeMap<usize, usize>>>>,
 }
 
 impl SearchLevelStats {
     pub fn new() -> Self {
         if COLLECT_STATS {
             let mut ret = Self::default();
-            ret.target_checks = Some(Arc::new(Mutex::new(BTreeMap::new())));
+            ret.value_checks = Some(Arc::new(Mutex::new(BTreeMap::new())));
             ret
         }
         else {
@@ -77,15 +78,19 @@ impl SearchLevelStats {
         self.failed.fetch_add(1, Ordering::Relaxed);
     }
 
+    pub fn add_prune_time(&self, t: f64) {
+        self.prune_time.replace(self.prune_time.get() + t);
+    }
+
     #[cfg(not(feature = "stats"))]
-    pub fn record_target_checks(&self, _count: usize) {}
+    pub fn record_value_checks(&self, _count: usize) {}
 
     #[cfg(feature = "stats")]
-    pub fn record_target_checks(&self, count: usize) {
+    pub fn record_value_checks(&self, count: usize) {
         use crate::misc::loghist;
-        if let Some(ref lock) = self.target_checks {
+        if let Some(ref lock) = self.value_checks {
             let mut map = lock.lock().unwrap();
-            *map.entry(loghist(count)).or_insert(0) += 1;
+            *map.entry(count).or_insert(0) += 1;
         }
     }
 }
@@ -96,7 +101,8 @@ impl Clone for SearchLevelStats {
                pruned: AtomicUsize::new(self.pruned.load(Ordering::SeqCst)),
                in_solution: AtomicUsize::new(self.in_solution.load(Ordering::SeqCst)),
                failed: AtomicUsize::new(self.failed.load(Ordering::SeqCst)),
-               target_checks: self.target_checks.clone(),
+               prune_time: self.prune_time.clone(),
+               value_checks: self.value_checks.clone(),
         }
     }
 }
@@ -109,15 +115,16 @@ impl Display for SearchLevelStats {
         let failed = self.failed.load(Ordering::Relaxed);
         let in_solution = self.in_solution.load(Ordering::Relaxed);
 
+        let prune_time = self.prune_time.get();
         let continued = tested - pruned - failed;
 
-        write!(f, "tested={}; failed={}; pruned={}; continued={}; in_solution={};",
-               tested, failed, pruned, continued, in_solution)?;
+        write!(f, "tested={}; failed={}; pruned={}; continued={}; in_solution={}; prune_time={};",
+               tested, failed, pruned, continued, in_solution, prune_time)?;
 
         if COLLECT_STATS {
-            if let Some(ref lock) = self.target_checks {
+            if let Some(ref lock) = self.value_checks {
                 let map = lock.lock().unwrap();
-                write!(f, " target_checks=[{:?}];",
+                write!(f, " value_checks=[{:?}];",
                        map.iter().format(", "))?;
             }
         }
@@ -130,17 +137,17 @@ type SearchResultCache<'d> = Arc<ResultMap<'d>>;
 type States<'d, 'l> = SmallVec<[Option<&'l ProgState<'d>>; 4]>;
 
 // Invariant: any level with pruning enabled has a corresponding pruning matrix available
-fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
-              expected_syms: &[DomRef],
-              _cache: &ResultMap<'d>, tracker: &SearchLevelStats,
-              level: usize, print_pruned: bool, prune_fuel: usize) -> bool {
+fn real_viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
+                   expected_syms: &[DomRef],
+                   _cache: &ResultMap<'d>, tracker: &SearchLevelStats,
+                   level: usize, print_pruned: bool, prune_fuel: usize) -> bool {
     let mut did_lookup = false;
-    let mut target_checks = 0;
+    let mut value_checks = 0;
     for (i, a) in expected_syms.iter().copied().enumerate() {
         for b in (&expected_syms[(i+1)..]).iter().copied().chain(std::iter::once(a)).take(prune_fuel) {
+            value_checks += 1;
             for (t1, t2) in iproduct!(target.inv_state[a].iter().copied(),
                                       target.inv_state[b].iter().copied()) {
-                target_checks += 1;
                 let result = iproduct!(current.inv_state[a].iter().copied(),
                                        current.inv_state[b].iter().copied())
                     .any(|(c1, c2)| {
@@ -152,7 +159,7 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
                     //     cache.write().unwrap().insert(current.clone(), false);
                     // }
                     tracker.pruned();
-                    tracker.record_target_checks(target_checks);
+                    tracker.record_value_checks(value_checks);
                     if print_pruned {
                         println!("pruned @ {}\n{}", level, current);
                         println!("v1 = {}, v2 = {}, t1 = {}, t2 = {}",
@@ -183,6 +190,19 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
         }
     }
     true
+}
+
+fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
+              expected_syms: &[DomRef],
+              cache: &ResultMap<'d>, tracker: &SearchLevelStats,
+              level: usize, print_pruned: bool, prune_fuel: usize) -> bool {
+    let start = Instant::now();
+    let ret = real_viable(current, target, matrix,
+                          expected_syms, cache, tracker,
+                          level, print_pruned, prune_fuel);
+    let dur = time_since(start);
+    tracker.add_prune_time(dur);
+    ret
 }
 
 fn copy_replacing<'d, 'm, 'l: 'm>(s: &States<'d, 'l>, idx: usize,
