@@ -14418,3 +14418,38 @@ run:l3/trove-cr_sum-7 66098
    (pretty-display "finish kernel"))
 (cost 7)
 68
+big_l1_2d-stencil-7.rkt - 0
+sat-model: contract violation
+  expected: sat?
+  given: (unsat)
+  context...:
+   /home/krzysd/.racket/7.2/pkgs/rosette/rosette/lib/synthax/core.rkt:163:0: solution->contexts
+   /home/krzysd/.racket/7.2/pkgs/rosette/rosette/lib/synthax/core.rkt:171:0: generate-forms
+   /home/krzysd/.racket/7.2/pkgs/rosette/rosette/lib/synthax/core.rkt:217:0: print-forms
+   "/home/krzysd/enumerative-search/swizzleflow/swizzle-inventor-benchmarks/big_l1_2d-stencil-7.rkt": [running body]
+   temp37_0
+   for-loop
+   run-module-instance!125
+   perform-require!78
+solving...
+(warpSize 16)
+(blockID
+ (0 0)
+ (16 1)
+ #((0 0)
+   (1 0)
+   (2 0)
+   (3 0)
+   (4 0)
+   (5 0)
+   (6 0)
+   (7 0)
+   (8 0)
+   (9 0)
+   (10 0)
+   (11 0)
+   (12 0)
+   (13 0)
+   (14 0)
+   (15 0)))
+run:l1/2d-stencil-7 634500
