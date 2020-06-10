@@ -26,6 +26,8 @@ use clap::clap_app;
 use std::path::Path;
 use std::io::BufReader;
 
+use itertools::iproduct;
+
 use crate::problem_desc::ProblemDesc;
 use crate::synthesis::{Mode, synthesize};
 use crate::misc::open_file;
@@ -179,9 +181,14 @@ fn run() -> Result<()> {
             .chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
         let max_lanes = initial.len();
         matrix_load::add_matrices(matrix_dir, &mut levels, max_lanes)?;
-        println!("Begin search");
-        synthesize(initial, &target, &levels, &expected_syms, synthesis_mode,
-                   print, print_pruned, &name);
+        let max_syms = expected_syms.iter().map(|l| l.len()).max().unwrap_or(1);
+        for w in iproduct!(0.., 1..10).map(|(d, n)| n * 10usize.pow(d))
+            .take_while(|n| n <= &max_syms)
+            .chain(std::iter::once(max_syms)) {
+            println!("Begin search");
+            synthesize(initial.clone(), &target, &levels, &expected_syms, synthesis_mode,
+                       print, print_pruned, w,  &name);
+        }
         matrix_load::remove_matrices(&mut levels);
     }
     Ok(())
