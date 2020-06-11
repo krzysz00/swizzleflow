@@ -49,3 +49,11 @@ PROBLEM_NAMES = {
     '2d-stencil-7': '2D stencil (k=7)',
     'mult-32-with-4': 'FFM (w=4)',
 }
+
+def split_spec_pretty(df):
+    df = df.copy()
+    df = extraction.split_spec(df)
+    df.insert(0, 'Level', df['level'].map({1: 'R', 2: 'FC', 3: 'F'}))
+    df.insert(0, 'Problem', df['problem'].map(PROBLEM_NAMES))
+    df.drop(columns=['spec', 'level', 'problem'], inplace=True)
+    return df
