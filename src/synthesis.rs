@@ -46,14 +46,14 @@ struct SearchLevelStats {
     pruned: AtomicUsize,
     failed: AtomicUsize,
     in_solution: AtomicUsize,
-    target_checks: Option<Arc<Mutex<BTreeMap<usize, usize>>>>,
+    value_checks: Option<Arc<Mutex<BTreeMap<usize, usize>>>>,
 }
 
 impl SearchLevelStats {
     pub fn new() -> Self {
         if COLLECT_STATS {
             let mut ret = Self::default();
-            ret.target_checks = Some(Arc::new(Mutex::new(BTreeMap::new())));
+            ret.value_checks = Some(Arc::new(Mutex::new(BTreeMap::new())));
             ret
         }
         else {
@@ -78,14 +78,14 @@ impl SearchLevelStats {
     }
 
     #[cfg(not(feature = "stats"))]
-    pub fn record_target_checks(&self, _count: usize) {}
+    pub fn record_value_checks(&self, _count: usize) {}
 
     #[cfg(feature = "stats")]
-    pub fn record_target_checks(&self, count: usize) {
+    pub fn record_value_checks(&self, count: usize) {
         use crate::misc::loghist;
-        if let Some(ref lock) = self.target_checks {
+        if let Some(ref lock) = self.value_checks {
             let mut map = lock.lock().unwrap();
-            *map.entry(loghist(count)).or_insert(0) += 1;
+            *map.entry(count).or_insert(0) += 1;
         }
     }
 }
@@ -96,7 +96,7 @@ impl Clone for SearchLevelStats {
                pruned: AtomicUsize::new(self.pruned.load(Ordering::SeqCst)),
                in_solution: AtomicUsize::new(self.in_solution.load(Ordering::SeqCst)),
                failed: AtomicUsize::new(self.failed.load(Ordering::SeqCst)),
-               target_checks: self.target_checks.clone(),
+               value_checks: self.value_checks.clone(),
         }
     }
 }
@@ -115,9 +115,9 @@ impl Display for SearchLevelStats {
                tested, failed, pruned, continued, in_solution)?;
 
         if COLLECT_STATS {
-            if let Some(ref lock) = self.target_checks {
+            if let Some(ref lock) = self.value_checks {
                 let map = lock.lock().unwrap();
-                write!(f, " target_checks=[{:?}];",
+                write!(f, " value_checks=[{:?}];",
                        map.iter().format(", "))?;
             }
         }
@@ -133,14 +133,14 @@ type States<'d, 'l> = SmallVec<[Option<&'l ProgState<'d>>; 4]>;
 fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
               expected_syms: &[DomRef],
               _cache: &ResultMap<'d>, tracker: &SearchLevelStats,
-              level: usize, print_pruned: bool) -> bool {
+              level: usize, print_pruned: bool, prune_fuel: usize) -> bool {
     let mut did_lookup = false;
-    let mut target_checks = 0;
+    let mut value_checks = 0;
     for (i, a) in expected_syms.iter().copied().enumerate() {
-        for b in (&expected_syms[(i+1)..]).iter().copied().chain(std::iter::once(a)) {
+        for b in (&expected_syms[(i+1)..]).iter().copied().chain(std::iter::once(a)).take(prune_fuel) {
+            value_checks += 1;
             for (t1, t2) in iproduct!(target.inv_state[a].iter().copied(),
                                       target.inv_state[b].iter().copied()) {
-                target_checks += 1;
                 let result = iproduct!(current.inv_state[a].iter().copied(),
                                        current.inv_state[b].iter().copied())
                     .any(|(c1, c2)| {
@@ -152,7 +152,7 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
                     //     cache.write().unwrap().insert(current.clone(), false);
                     // }
                     tracker.pruned();
-                    tracker.record_target_checks(target_checks);
+                    tracker.record_value_checks(value_checks);
                     if print_pruned {
                         println!("pruned @ {}\n{}", level, current);
                         println!("v1 = {}, v2 = {}, t1 = {}, t2 = {}",
@@ -197,7 +197,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                       current_level: usize,
                       stats: &'f [SearchLevelStats], mode: Mode,
                       caches: &'f [SearchResultCache<'d>],
-                      print: bool, print_pruned: bool) -> bool {
+                      print: bool, print_pruned: bool, prune_fuel: usize) -> bool {
     let tracker = &stats[current_level];
 
     if current_level == levels.len() {
@@ -230,7 +230,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                                level.matrix.as_ref().unwrap(),
                                &expected_syms[level.expected_syms],
                                cache.as_ref(), &tracker,
-                               current_level, print_pruned) {
+                               current_level, print_pruned, prune_fuel) {
                         return false;
                     }
                 }
@@ -238,7 +238,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                                                 lane, c);
                 let ret = search(new_states, target, levels, expected_syms,
                                  current_level + 1, stats, mode, caches,
-                                 print, print_pruned);
+                                 print, print_pruned, prune_fuel);
                 if ret {
                     tracker.success();
                     if print {
@@ -324,14 +324,14 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                                    level.matrix.as_ref().unwrap(),
                                    &expected_syms[level.expected_syms],
                                    cache.as_ref(), &tracker,
-                                   current_level, print_pruned) {
+                                   current_level, print_pruned, prune_fuel) {
                             return false;
                         }
                     }
 
                     let ret = search(new_states, target, levels, expected_syms,
                                      current_level + 1, stats, mode, caches,
-                                     print, print_pruned);
+                                     print, print_pruned, prune_fuel);
                     if ret {
                         tracker.success();
                         if print {
@@ -350,7 +350,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                 }
                 search(new_states, target, levels, expected_syms,
                        current_level + 1, stats, mode, caches,
-                       print, print_pruned)
+                       print, print_pruned, prune_fuel)
             }
         };
     ret
@@ -362,6 +362,7 @@ pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
                   mode: Mode,
                   print: bool,
                   print_pruned: bool,
+                  prune_fuel: usize,
                   spec_name: &str) -> bool {
     let n_levels = levels.len();
     let stats = (0..n_levels+1).map(|_| SearchLevelStats::new()).collect::<Vec<_>>();
@@ -371,16 +372,21 @@ pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
     let states: States = SmallVec::from_iter(start.iter().map(|e| e.as_ref()));
     let start_time = Instant::now();
     let ret = search(states, target, levels, expected_syms, 0, &stats,
-                     mode, &caches, print, print_pruned);
+                     mode, &caches, print, print_pruned, prune_fuel);
     let dur = time_since(start_time);
 
     for (idx, stats) in (&stats).iter().enumerate() {
+        if COLLECT_STATS {
+            println!("stats:: n_syms={};",
+                     levels.get(idx).map_or(0, |l| expected_syms[l.expected_syms].len()));
+        }
         println!("stats:{} name={}; lane={}; pruning={}; {}", idx,
                  levels.get(idx).map_or(&"(last)".into(), |x| &x.ops.name),
                  levels.get(idx).map_or(0, |x| x.lane),
                  levels.get(idx).map_or(false, |l| l.prune),
                  stats);
     }
-    println!("search:{} success={}; mode={:?}; time={};", spec_name, ret, mode, dur);
+    println!("search:{} success={}; mode={:?}; prune_fuel={}; time={};",
+             spec_name, ret, mode, prune_fuel, dur);
     ret
 }

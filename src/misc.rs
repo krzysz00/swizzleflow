@@ -66,3 +66,16 @@ pub fn loghist(n: usize) -> usize {
         (n / 100) * 100
     }
 }
+
+pub fn parse_opt_arg<T: std::str::FromStr>(arg: Option<&str>,
+                                           name: &'static str,
+                                           reqs: &'static str) -> Result<Option<T>> {
+    if let Some(s) = arg {
+        s.parse::<T>()
+            .map_err(|_| ErrorKind::InvalidCmdArg(name, reqs).into())
+            .map(|v| Some(v))
+    }
+    else {
+        Ok(None)
+    }
+}

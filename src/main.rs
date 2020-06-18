@@ -26,9 +26,10 @@ use clap::clap_app;
 use std::path::Path;
 use std::io::BufReader;
 
+
 use crate::problem_desc::ProblemDesc;
 use crate::synthesis::{Mode, synthesize};
-use crate::misc::open_file;
+use crate::misc::{open_file,parse_opt_arg};
 
 pub mod errors {
     use error_chain::error_chain;
@@ -125,6 +126,10 @@ pub mod errors {
                 description("bad specification")
                 display("bad specification: {:#?}", spec)
             }
+            InvalidCmdArg(name: &'static str, reqs: &'static str) {
+                description("argument is not valid")
+                display("value for {} is not valid (must be {})", name, reqs)
+            }
         }
     }
 }
@@ -132,6 +137,8 @@ pub mod errors {
 use errors::*;
 
 const DEFAULT_MATRIX_DIR: &str = "matrices/";
+const PRUNE_FUEL_ARG_REQS: &'static str = "a positive integer";
+const PRUNE_FUEL_FRAC_ARG_REQS: &'static str = "a floating point number in (0, 1]";
 
 fn run() -> Result<()> {
     let args =
@@ -145,12 +152,29 @@ fn run() -> Result<()> {
                   (@arg all: -a --all "Find all solutions")
                   (@arg print: -p --print "Print trace of valid solutions")
                   (@arg print_pruned: -P --("print-pruned") "Print pruned solutions")
+                  (@arg prune_fuel: -f --("prune-fuel") [FUEL] "Number of terms to pair with every term during pruning")
+                  (@arg prune_fuel_frac: -F --("prune-fuel-frac") [FUEL_FRAC] conflicts_with("prune_fuel") "Fraction of term count to pair with every term during pruning")
                   (@arg specs: ... value_name("SPEC") "Specification files (stdin if none specified)")
         ).setting(clap::AppSettings::TrailingVarArg).get_matches();
 
     let synthesis_mode = if args.is_present("all") { Mode::All } else { Mode::First };
     let print = args.is_present("print");
     let print_pruned = args.is_present("print_pruned");
+
+    let prune_fuel = parse_opt_arg::<u64>(args.value_of("prune_fuel"),
+                                          "--prune-fuel", PRUNE_FUEL_ARG_REQS)?
+        .map(|v| v as usize);
+    if !(prune_fuel.map(|v| v > 0).unwrap_or(true)) {
+        return Err(ErrorKind::InvalidCmdArg("--prune-fuel",
+                                            PRUNE_FUEL_ARG_REQS).into());
+    }
+    let prune_fuel_frac = parse_opt_arg::<f64>(args.value_of("prune_fuel_frac"),
+                                               "--prune-fuel-frac",
+                                               PRUNE_FUEL_FRAC_ARG_REQS)?;
+    if !(prune_fuel_frac.map(|v| v >= 0.0 && v <= 1.0).unwrap_or(true)) {
+        return Err(ErrorKind::InvalidCmdArg("--prune-fuel-frac",
+                                            PRUNE_FUEL_FRAC_ARG_REQS).into());
+    }
 
     let matrix_dir = Path::new(args.value_of_os("matrix_dir").unwrap()); // We have a default
     let specs: Vec<(ProblemDesc, String)> = match args.values_of_os("specs") {
@@ -179,9 +203,18 @@ fn run() -> Result<()> {
             .chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
         let max_lanes = initial.len();
         matrix_load::add_matrices(matrix_dir, &mut levels, max_lanes)?;
+        let max_syms = expected_syms.iter().map(|l| l.len()).max().unwrap_or(1);
+        let fuel_arg = if let Some(f) = prune_fuel {
+            f
+        } else if let Some(frac) = prune_fuel_frac {
+            (frac * (max_syms as f64)).ceil() as u64 as usize
+        } else {
+            max_syms
+        };
+        let fuel = std::cmp::min(fuel_arg, max_syms);
         println!("Begin search");
-        synthesize(initial, &target, &levels, &expected_syms, synthesis_mode,
-                   print, print_pruned, &name);
+        synthesize(initial.clone(), &target, &levels, &expected_syms, synthesis_mode,
+                   print, print_pruned, fuel,  &name);
         matrix_load::remove_matrices(&mut levels);
     }
     Ok(())

@@ -25,10 +25,16 @@ FLAGS:
 
 OPTIONS:
     -m, --matrix-dir <MATRIX_DIR>    Directory to store matrices in [default: matrices/]
+    -f, --prune-fuel <FUEL>              Number of terms to pair with every term during pruning
+    -F, --prune-fuel-frac <FUEL_FRAC>    Fraction of term count to pair with every term during pruning
 
 ARGS:
     <SPEC>...    Specification files (stdin if none specified)
 ```
+
+Lower values of `--prune-fuel` may make search take longer by exploring more candidates.
+However, it will make proceeding through successful candidates take less time.
+You may want to adjust this parameter if search is slow.
 
 ## Experimental data
 `make timings` builds the tool and runs the experiments that run in less than a few minutes
