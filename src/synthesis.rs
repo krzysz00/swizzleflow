@@ -46,7 +46,6 @@ struct SearchLevelStats {
     pruned: AtomicUsize,
     failed: AtomicUsize,
     in_solution: AtomicUsize,
-    prune_time: std::cell::Cell<f64>,
     value_checks: Option<Arc<Mutex<BTreeMap<usize, usize>>>>,
 }
 
@@ -78,10 +77,6 @@ impl SearchLevelStats {
         self.failed.fetch_add(1, Ordering::Relaxed);
     }
 
-    pub fn add_prune_time(&self, t: f64) {
-        self.prune_time.replace(self.prune_time.get() + t);
-    }
-
     #[cfg(not(feature = "stats"))]
     pub fn record_value_checks(&self, _count: usize) {}
 
@@ -101,7 +96,6 @@ impl Clone for SearchLevelStats {
                pruned: AtomicUsize::new(self.pruned.load(Ordering::SeqCst)),
                in_solution: AtomicUsize::new(self.in_solution.load(Ordering::SeqCst)),
                failed: AtomicUsize::new(self.failed.load(Ordering::SeqCst)),
-               prune_time: self.prune_time.clone(),
                value_checks: self.value_checks.clone(),
         }
     }
@@ -115,11 +109,10 @@ impl Display for SearchLevelStats {
         let failed = self.failed.load(Ordering::Relaxed);
         let in_solution = self.in_solution.load(Ordering::Relaxed);
 
-        let prune_time = self.prune_time.get();
         let continued = tested - pruned - failed;
 
-        write!(f, "tested={}; failed={}; pruned={}; continued={}; in_solution={}; prune_time={};",
-               tested, failed, pruned, continued, in_solution, prune_time)?;
+        write!(f, "tested={}; failed={}; pruned={}; continued={}; in_solution={};",
+               tested, failed, pruned, continued, in_solution)?;
 
         if COLLECT_STATS {
             if let Some(ref lock) = self.value_checks {
@@ -137,10 +130,10 @@ type SearchResultCache<'d> = Arc<ResultMap<'d>>;
 type States<'d, 'l> = SmallVec<[Option<&'l ProgState<'d>>; 4]>;
 
 // Invariant: any level with pruning enabled has a corresponding pruning matrix available
-fn real_viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
-                   expected_syms: &[DomRef],
-                   _cache: &ResultMap<'d>, tracker: &SearchLevelStats,
-                   level: usize, print_pruned: bool, prune_fuel: usize) -> bool {
+fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
+              expected_syms: &[DomRef],
+              _cache: &ResultMap<'d>, tracker: &SearchLevelStats,
+              level: usize, print_pruned: bool, prune_fuel: usize) -> bool {
     let mut did_lookup = false;
     let mut value_checks = 0;
     for (i, a) in expected_syms.iter().copied().enumerate() {
@@ -190,19 +183,6 @@ fn real_viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Tra
         }
     }
     true
-}
-
-fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
-              expected_syms: &[DomRef],
-              cache: &ResultMap<'d>, tracker: &SearchLevelStats,
-              level: usize, print_pruned: bool, prune_fuel: usize) -> bool {
-    let start = Instant::now();
-    let ret = real_viable(current, target, matrix,
-                          expected_syms, cache, tracker,
-                          level, print_pruned, prune_fuel);
-    let dur = time_since(start);
-    tracker.add_prune_time(dur);
-    ret
 }
 
 fn copy_replacing<'d, 'm, 'l: 'm>(s: &States<'d, 'l>, idx: usize,
@@ -396,11 +376,14 @@ pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
     let dur = time_since(start_time);
 
     for (idx, stats) in (&stats).iter().enumerate() {
-        println!("stats:{} name={}; lane={}; pruning={}; n_syms={}; {}", idx,
+        if COLLECT_STATS {
+            println!("stats:: n_syms={};",
+                     levels.get(idx).map_or(0, |l| expected_syms[l.expected_syms].len()));
+        }
+        println!("stats:{} name={}; lane={}; pruning={}; {}", idx,
                  levels.get(idx).map_or(&"(last)".into(), |x| &x.ops.name),
                  levels.get(idx).map_or(0, |x| x.lane),
                  levels.get(idx).map_or(false, |l| l.prune),
-                 levels.get(idx).map_or(0, |l| expected_syms[l.expected_syms].len()),
                  stats);
     }
     println!("search:{} success={}; mode={:?}; prune_fuel={}; time={};",
