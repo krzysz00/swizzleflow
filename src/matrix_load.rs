@@ -190,7 +190,7 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel],
                         prev_mats[lane] = prev_mats[to].clone();
                     }
                 }
-                if !level.ops.fused_fold {
+                if !level.ops.has_fold() {
                     let out_shape = &level.ops.out_shape;
                     let in_shape = &level.ops.in_shape;
                     for (column, lane) in from.iter().copied().enumerate() {
@@ -199,7 +199,7 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel],
                         let opset = OpSetKind::new_gathers(gather);
                         let ops = OpSet::new(name, opset,
                                              in_shape.clone(), out_shape.clone(),
-                                             false);
+                                             None);
                         add_matrix(&ops, lane, &mut our_path, &mut names,
                                    &mut prev_mats, &mut bases)?;
                     }

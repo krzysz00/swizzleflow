@@ -258,7 +258,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
     let ret =
         match ops {
             OpSetKind::Gathers(gathers, _) => {
-                if level.ops.fused_fold {
+                if level.ops.has_fold() {
                     match mode {
                         Mode::All => {
                             gathers.iter().map(
@@ -305,7 +305,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                     from.iter().copied().map(
                         |idx| curr_states[idx].unwrap()).collect();
                 let next =
-                    if level.ops.fused_fold {
+                    if level.ops.has_fold() {
                         ProgState::stack_folding(&to_stack)
                     } else {
                         Some(ProgState::stack(&to_stack))

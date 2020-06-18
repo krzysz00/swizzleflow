@@ -113,6 +113,10 @@ pub mod errors {
                 description("lane of last step must be 0")
                 display("lane of last step must be 0 but is {}", lane)
             }
+            ZeroFoldDimension {
+                description("cannot fold on length 0 dimensions")
+                display("cannot fold on length 0 dimensions")
+            }
             MatrixLoad(p: std::path::PathBuf) {
                 description("couldn't read matrix file")
                 display("couldn't read matrix file: {}", p.display())

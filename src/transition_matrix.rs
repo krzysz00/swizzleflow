@@ -359,15 +359,13 @@ pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet) -> T {
 
     let in_slots: usize = ops.in_shape.iter().product();
     let in_bound = in_slots as isize;
-    let fold = ops.fused_fold;
+
+    // Get actual last dimension
+    let fold_dim = ops.fold_dim.map(|x| x.get()).unwrap_or(1);
+    let has_fold = ops.has_fold();
 
     let gathers = ops.ops.gathers().unwrap();
     let n_ops = gathers.len();
-
-    // Get actual last dimension
-    let fold_dim = gathers.get(0)
-        .and_then(|o| o.data.shape().get(out_shape.len()).copied())
-        .unwrap_or(1);
 
     let mut ret = T::with_row_size_hint(&ops.in_shape, &out_shape, n_ops);
     for op in gathers {
@@ -376,12 +374,12 @@ pub fn build_mat<T: TransitionMatrixOps>(ops: &OpSet) -> T {
                 for (output2, input2) in op.data.into_iter().copied()
                     .enumerate().filter(|&(_, i)| i >= 0 && i < in_bound) {
                         // Remove fold dimension if needed
-                        let output1 = if fold {
+                        let output1 = if has_fold {
                             output1 / fold_dim
                         } else {
                             output1
                         };
-                        let output2 = if fold {
+                        let output2 = if has_fold {
                             output2 / fold_dim
                         } else {
                             output2
