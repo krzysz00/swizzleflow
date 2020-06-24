@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::state::{DomRef,ProgState};
-use crate::transition_matrix::{TransitionMatrix,TransitionMatrixOps};
+use crate::transition_matrix::{TransitionMatrix};
 use crate::operators::SynthesisLevel;
 use crate::operators::OpSetKind;
 

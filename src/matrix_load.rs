@@ -16,8 +16,9 @@
 use crate::errors::*;
 
 use crate::operators::{OpSet, OpSetKind, SynthesisLevel, stack_adapter_gather};
+use crate::matrix::RowSparseMatrix;
 use crate::transition_matrix::{TransitionMatrix, build_mat,
-                               TransitionMatrixOps, density};
+                               density};
 use crate::multiply::transition_mul;
 use crate::misc::{time_since,COLLECT_STATS};
 
@@ -71,7 +72,7 @@ fn build_or_load_basis_mat(ops: &OpSet, path: impl AsRef<Path>) -> Result<Transi
     }
     else {
         let start = Instant::now();
-        let matrix = TransitionMatrix::RowSparse(build_mat(ops));
+        let matrix = build_mat::<RowSparseMatrix>(ops);
         let dur = time_since(start);
         matrix.store_matrix(path)?;
         stats("build", path, &matrix, dur);

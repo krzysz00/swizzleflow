@@ -14,6 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 mod misc;
 mod state;
+mod matrix;
 mod transition_matrix;
 mod multiply;
 mod matrix_load;
@@ -147,7 +148,7 @@ const PRUNE_FUEL_FRAC_ARG_REQS: &'static str = "a floating point number in (0, 1
 fn run() -> Result<()> {
     let args =
         clap_app!(swizzleflow =>
-                  (version: "0.3.0")
+                  (version: "0.5.0")
                   (author: "Krzysztof Drewniak <krzysd@cs.washington.edu> et al.")
                   (about: "Tool for synthesizing high-performance kernels from dataflow graph sketches")
                   (@arg matrix_dir: -m --("matrix-dir") +takes_value value_name("MATRIX_DIR")
