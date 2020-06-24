@@ -15,7 +15,7 @@
 
 use ndarray::{Ix};
 
-use fnv::FnvHashSet;
+use rustc_hash::FxHashSet;
 
 use std::convert::{Into, From};
 use std::io::{Write,Read};
@@ -125,7 +125,7 @@ impl MatrixOps for DenseMatrix {
     }
 }
 
-pub type SparseMatRow = FnvHashSet<Ix>;
+pub type SparseMatRow = FxHashSet<Ix>;
 #[derive(Clone, Debug)]
 pub struct RowSparseMatrix {
     data: Vec<SparseMatRow>,
