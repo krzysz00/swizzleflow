@@ -30,6 +30,7 @@ use crate::misc::{ShapeVec, extending_set};
 
 use std::collections::{BTreeSet, BTreeMap, HashMap, HashSet};
 use std::iter::FromIterator;
+use std::num::NonZeroUsize;
 
 use serde::{Serialize, Deserialize};
 
@@ -567,6 +568,23 @@ impl SynthesisLevelDesc {
                                             options.as_ref(),
                                             lane)?;
 
+        let fold_dim = if self.then_fold {
+            let dim = match &opset {
+                OpSetKind::Gathers(_, _) => {
+                    out_shape[out_shape.len()-1]
+                },
+                OpSetKind::Stack(from, _to) => {
+                    from.len()
+                },
+                OpSetKind::Split(_, _) => {
+                    1 // errors later anyway
+                },
+            };
+            let dim = NonZeroUsize::new(dim)
+                .ok_or_else(|| Error::from_kind(ErrorKind::ZeroFoldDimension))?;
+            Some(dim)
+        } else { None };
+
         // Post-processing
         match &opset {
             OpSetKind::Gathers(_, _) => {
@@ -639,7 +657,7 @@ impl SynthesisLevelDesc {
             temp.push('}');
             name = temp.into();
         }
-        Ok(OpSet::new(name, opset, in_shape.clone(), out_shape, self.then_fold))
+        Ok(OpSet::new(name, opset, in_shape.clone(), out_shape, fold_dim))
     }
 
     pub fn to_synthesis_level(&self, shapes: &mut Vec<Option<Vec<usize>>>,
@@ -784,7 +802,7 @@ fn update_expected_syms_idxs(ops: &OpSet, lane: usize,
     use OpSetKind::*;
     match ops.ops {
         Gathers(_, _) => {
-            if ops.fused_fold {
+            if ops.has_fold() {
                 expected_syms_idxs[lane] = Some(*count);
                 *count += 1;
             }
@@ -812,7 +830,7 @@ fn update_expected_syms(level: &SynthesisLevel, domain: &Domain,
     let lane = level.lane;
     match level.ops.ops {
         Gathers(_, _) => {
-            if level.ops.fused_fold {
+            if level.ops.has_fold() {
                 let new_set = fold_expected(domain,
                                             &expected_syms_sets[
                                                 expected_syms_idxs[lane].unwrap()]);
@@ -828,7 +846,7 @@ fn update_expected_syms(level: &SynthesisLevel, domain: &Domain,
                     None => ()
                 }
             }
-            if level.ops.fused_fold {
+            if level.ops.has_fold() {
                 stack_set = fold_expected(domain, &stack_set);
             }
             expected_syms_idxs[to] = Some(expected_syms_sets.len());

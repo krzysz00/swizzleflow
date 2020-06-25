@@ -12,49 +12,46 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use crate::transition_matrix::{DenseTransitionMatrix,
-                               RowSparseTransitionMatrix,
-                               TransitionMatrixOps, TransitionMatrix};
+use crate::matrix::{DenseMatrix,
+                    RowSparseMatrix,
+                    MatrixOps, Matrix};
+use crate::transition_matrix::TransitionMatrix;
 use crate::misc::{COLLECT_STATS};
 
-use itertools::iproduct;
-
-fn sparse_dense_mul(a: &RowSparseTransitionMatrix, b: &DenseTransitionMatrix)
-                    -> DenseTransitionMatrix {
-    let (m, k) = a.slots();
-    let (k2, n) = b.slots();
+fn sparse_dense_mul(a: &RowSparseMatrix, b: &DenseMatrix)
+                    -> DenseMatrix {
+    let (m, k) = a.dims();
+    let (k2, n) = b.dims();
     if k != k2 {
         panic!("Invalid shapes for multiply ({}, {}), ({}, {})",
         m, k, k2, n);
     }
 
-    let mut c = DenseTransitionMatrix::empty(a.get_current_shape(),
-                                             b.get_target_shape());
+    let mut c = DenseMatrix::empty(m, n);
 
-    for (i1, i2) in iproduct!(0..m, 0..m) {
-        for (kidx1, kidx2) in a.view_row_set_elems(i1, i2).iter().copied() {
-            c.update_row(i1, i2, b, kidx1, kidx2);
+    for i in 0..m {
+        for kidx in a.view_row_set_elems(i).iter().copied() {
+            c.update_row(i, b, kidx);
         }
     }
     c
 }
 
-fn sparse_sparse_mul(a: &RowSparseTransitionMatrix, b: &RowSparseTransitionMatrix)
-                     -> DenseTransitionMatrix {
-    let (m, k) = a.slots();
-    let (k2, n) = b.slots();
+fn sparse_sparse_mul(a: &RowSparseMatrix, b: &RowSparseMatrix)
+                     -> DenseMatrix {
+    let (m, k) = a.dims();
+    let (k2, n) = b.dims();
     if k != k2 {
         panic!("Invalid shapes for multiply ({}, {}), ({}, {})",
         m, k, k2, n);
     }
 
-    let mut c = DenseTransitionMatrix::empty(a.get_current_shape(),
-                                             b.get_target_shape());
+    let mut c = DenseMatrix::empty(m, n);
 
-    for (i1, i2) in iproduct!(0..m, 0..m) {
-        for (kidx1, kidx2) in a.view_row_set_elems(i1, i2).iter().copied() {
-            for (j1, j2) in b.view_row_set_elems(kidx1, kidx2).iter().copied() {
-                c.set_idxs(i1, i2, j1, j2, true);
+    for i in 0..m {
+        for kidx in a.view_row_set_elems(i).iter().copied() {
+            for j in b.view_row_set_elems(kidx).iter().copied() {
+                c.set(i, j, true);
             }
         }
     }
@@ -62,8 +59,8 @@ fn sparse_sparse_mul(a: &RowSparseTransitionMatrix, b: &RowSparseTransitionMatri
 }
 
 
-pub fn transition_mul(a: &TransitionMatrix, b: &TransitionMatrix)
-                      -> TransitionMatrix {
+pub fn bool_mul(a: &Matrix, b: &Matrix)
+                -> Matrix {
     if COLLECT_STATS {
         let ones_a = a.n_ones();
         let ones_b = b.n_ones();
@@ -73,16 +70,22 @@ pub fn transition_mul(a: &TransitionMatrix, b: &TransitionMatrix)
                  ones_a, ones_b, density_a, density_b);
     }
     match (a, b) {
-        (TransitionMatrix::RowSparse(a), TransitionMatrix::Dense(b)) => {
+        (Matrix::RowSparse(a), Matrix::Dense(b)) => {
             println!("mul_stats:: b_sparse=false");
             let c = sparse_dense_mul(a, b);
             c.into()
         },
-        (TransitionMatrix::RowSparse(a), TransitionMatrix::RowSparse(b)) => {
+        (Matrix::RowSparse(a), Matrix::RowSparse(b)) => {
             println!("mul_stats:: b_sparse=true");
             let c = sparse_sparse_mul(a, b);
             c.into()
         },
         _ => panic!("Unsupported combination of types in multiply"),
     }
+}
+
+pub fn transition_mul(a: &TransitionMatrix, b: &TransitionMatrix)
+                      -> TransitionMatrix {
+    let ret = bool_mul(&a.mat, &b.mat);
+    TransitionMatrix::new(a.get_current_shape(), b.get_target_shape(), ret)
 }

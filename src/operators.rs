@@ -26,6 +26,7 @@ use crate::misc::ShapeVec;
 use smallvec::SmallVec;
 
 use std::borrow::Cow;
+use std::num::NonZeroUsize;
 
 use ndarray::Ix;
 
@@ -99,19 +100,24 @@ pub struct OpSet {
     pub ops: OpSetKind,
     pub in_shape: ShapeVec,
     pub out_shape: ShapeVec,
-    pub fused_fold: bool,
+    pub fold_dim: Option<NonZeroUsize>,
 }
 
 impl OpSet {
     pub fn new<T>(name: T, ops: OpSetKind, in_shape: ShapeVec, out_shape: ShapeVec,
-                  fused_fold: bool) -> Self
+                  fold_dim: Option<NonZeroUsize>) -> Self
     where T: Into<Cow<'static, str>> {
-        Self { name: name.into(), ops, in_shape, out_shape, fused_fold }
+        Self { name: name.into(), ops, in_shape, out_shape, fold_dim }
+    }
+
+    #[inline(always)]
+    pub fn has_fold(&self) -> bool {
+        self.fold_dim.is_some()
     }
 
     pub fn prunes_like_identity(&self) -> bool {
         use OpSetKind::*;
-        if self.fused_fold { return false; }
+        if self.has_fold() { return false; }
 
         match &self.ops {
             Gathers(_, summary) => summary.as_ref()

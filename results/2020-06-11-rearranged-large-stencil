@@ -1,0 +1,272 @@
+spec:specs/swinv_like_big/l1/2d-stencil-7.json
+build:matrices/4,4-identity-4,4,7,7 density=0.00390625; time=0.046486705;
+Using newly-built matrices/4,4-identity-4,4,7,7
+build:matrices/4,4,7,7-2s-rnc{main[1]out[1]second[3]}-4,4,7,7 density=0.000006507705122865473; time=0.096608438;
+mul_stats:: b_sparse=true
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}-4,4,7,7 density=0.015625; time=0.067890905;
+build:matrices/4,4,7,7-2s-xfnc{main[1]out[1]second[3]}-4,4,7,7 density=0.000011156065924912239; time=0.418408812;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}-4,4,7,7 density=0.05181760204081633; time=0.078821969;
+build:matrices/4,4,7,7-2s-gnc{axis[3]dims[1|3]}-4,4,7,3 density=0.00006561935998889352; time=1.9824321409999999;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}_4,4,7,7-2s-gnc{axis[3]dims[1|3]}-4,4,7,3 density=0.0625; time=0.058957943;
+build:matrices/4,4,7,3-2s-rnc{main[0]out[0]second[2]}-4,4,7,3 density=0.000035430839002267575; time=0.014522425;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}_4,4,7,7-2s-gnc{axis[3]dims[1|3]}_4,4,7,3-2s-rnc{main[0]out[0]second[2]}-4,4,7,3 density=0.25; time=0.00779832;
+build:matrices/4,4,7,3-2s-xfnc{main[0]out[0]second[2]}-4,4,7,3 density=0.00006073858114674441; time=0.071087073;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}_4,4,7,7-2s-gnc{axis[3]dims[1|3]}_4,4,7,3-2s-rnc{main[0]out[0]second[2]}_4,4,7,3-2s-xfnc{main[0]out[0]second[2]}-4,4,7,3 density=0.8290816326530612; time=0.015119645;
+Begin search
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=0;
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=0;
+stats:2 name=2s-gnc{axis[2]dims[0|2]}; lane=0; pruning=true; tested=93; failed=0; pruned=93; continued=0; in_solution=0;
+stats:3 name=2s-xfnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=0; failed=0; pruned=0; continued=0; in_solution=0;
+stats:4 name=2s-rnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=0; failed=0; pruned=0; continued=0; in_solution=0;
+stats:5 name=2s-gnc{axis[3]dims[1|3]}; lane=0; pruning=true; tested=0; failed=0; pruned=0; continued=0; in_solution=0;
+stats:6 name=2s-xfnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=0; failed=0; pruned=0; continued=0; in_solution=0;
+stats:7 name=2s-rnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=0; failed=0; pruned=0; continued=0; in_solution=0;
+stats:8 name=identity; lane=0; pruning=false; tested=0; failed=0; pruned=0; continued=0; in_solution=0;
+stats:9 name=(last); lane=0; pruning=false; tested=0; failed=0; pruned=0; continued=0; in_solution=0;
+search:specs/swinv_like_big/l1/2d-stencil-7.json success=false; mode=All; time=0.000628232;
+spec:specs/swinv_like_big/l2/2d-stencil-7.json
+load:matrices/4,4-identity-4,4,7,7 density=0.00390625; time=0.046916849;
+load:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}-4,4,7,7 density=0.015625; time=0.078373492;
+load:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}-4,4,7,7 density=0.05181760204081633; time=0.078964546;
+build:matrices/4,4,7,7-2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}-4,4,7,3 density=0.00007741457552408718; time=61.846357367;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}_4,4,7,7-2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}-4,4,7,3 density=0.0625; time=0.220979158;
+load:matrices/4,4,7,3-2s-rnc{main[0]out[0]second[2]}-4,4,7,3 density=0.000035430839002267575; time=0.019819532;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}_4,4,7,7-2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}_4,4,7,3-2s-rnc{main[0]out[0]second[2]}-4,4,7,3 density=0.25; time=0.007961726;
+load:matrices/4,4,7,3-2s-xfnc{main[0]out[0]second[2]}-4,4,7,3 density=0.00006073858114674441; time=0.032430996;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}_4,4,7,7-2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}_4,4,7,3-2s-rnc{main[0]out[0]second[2]}_4,4,7,3-2s-xfnc{main[0]out[0]second[2]}-4,4,7,3 density=0.8290816326530612; time=0.014079522;
+Begin search
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, d2 <= 4 + d0, );xform(0,1,7);id;select(d1 >= 0 + d3, d3 <= 4 + d1, );xform(0,1,7);id;id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, d2 <= 4 + d0, );xform(0,1,7);id;select(d1 >= 0 + d3, d3 > 4 - d3, );xform(0,1,7);id;id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, d2 > 4 - d2, );xform(0,1,7);id;select(d1 >= 0 + d3, d3 <= 4 + d1, );xform(0,1,7);id;id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, d2 > 4 - d2, );xform(0,1,7);id;select(d1 >= 0 + d3, d3 > 4 - d3, );xform(0,1,7);id;id
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:2 name=2s-g{axis[2]consts[0|1|-1|4|-4]dims[0|2]}; lane=0; pruning=true; tested=1469; failed=0; pruned=1451; continued=18; in_solution=2;
+stats:3 name=2s-xfnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=216; failed=0; pruned=214; continued=2; in_solution=2;
+stats:4 name=2s-rnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=8; failed=0; pruned=6; continued=2; in_solution=2;
+stats:5 name=2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}; lane=0; pruning=true; tested=2938; failed=0; pruned=2902; continued=36; in_solution=4;
+stats:6 name=2s-xfnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=432; failed=0; pruned=428; continued=4; in_solution=4;
+stats:7 name=2s-rnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=16; failed=0; pruned=12; continued=4; in_solution=4;
+stats:8 name=identity; lane=0; pruning=false; tested=4; failed=0; pruned=0; continued=4; in_solution=4;
+stats:9 name=(last); lane=0; pruning=false; tested=4; failed=0; pruned=0; continued=4; in_solution=4;
+search:specs/swinv_like_big/l2/2d-stencil-7.json success=true; mode=All; time=2.822945429;
+spec:specs/swinv_like_big/l3/2d-stencil-7.json
+load:matrices/4,4-identity-4,4,7,7 density=0.00390625; time=0.049659129;
+build:matrices/4,4,7,7-2s-r{main[1]out[1]second[3]}-4,4,7,7 density=0.0000073211682632236566; time=0.091162179;
+mul_stats:: b_sparse=true
+mul:matrices/4,4-identity_4,4,7,7-2s-r{main[1]out[1]second[3]}-4,4,7,7 density=0.017578125; time=0.063876619;
+build:matrices/4,4,7,7-2s-xf{main[1]out[1]second[3]}-4,4,7,7 density=0.000011654104582274392; time=0.476419428;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-r{main[1]out[1]second[3]}_4,4,7,7-2s-xf{main[1]out[1]second[3]}-4,4,7,7 density=0.05253507653061224; time=0.074680662;
+load:matrices/4,4,7,7-2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}-4,4,7,3 density=0.00007741457552408718; time=0.212374731;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-r{main[1]out[1]second[3]}_4,4,7,7-2s-xf{main[1]out[1]second[3]}_4,4,7,7-2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}-4,4,7,3 density=0.0625; time=0.057350384;
+build:matrices/4,4,7,3-2s-r{main[0]out[0]second[2]}-4,4,7,3 density=0.00003985969387755102; time=0.016912039;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-r{main[1]out[1]second[3]}_4,4,7,7-2s-xf{main[1]out[1]second[3]}_4,4,7,7-2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}_4,4,7,3-2s-r{main[0]out[0]second[2]}-4,4,7,3 density=0.28125; time=0.008975671;
+build:matrices/4,4,7,3-2s-xf{main[0]out[0]second[2]}-4,4,7,3 density=0.00006345012494793836; time=0.080873547;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,7,7-2s-r{main[1]out[1]second[3]}_4,4,7,7-2s-xf{main[1]out[1]second[3]}_4,4,7,7-2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}_4,4,7,3-2s-r{main[0]out[0]second[2]}_4,4,7,3-2s-xf{main[0]out[0]second[2]}-4,4,7,3 density=0.8405612244897959; time=0.015053707;
+Begin search
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, d2 > 4 - d2, );xform(0,1,7);id;select(d1 >= 0 + d3, d3 <= 4 + d1, );xform(0,1,7);id;id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, d2 > 4 - d2, );xform(0,1,7);id;select(d1 >= 0 + d3, d3 > 4 - d3, );xform(0,1,7);id;id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, d2 <= 4 + d0, );xform(0,1,7);id;select(d1 >= 0 + d3, d3 <= 4 + d1, );xform(0,1,7);id;id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, d2 <= 4 + d0, );xform(0,1,7);id;select(d1 >= 0 + d3, d3 > 4 - d3, );xform(0,1,7);id;id
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:2 name=2s-g{axis[2]consts[0|1|-1|4|-4]dims[0|2]}; lane=0; pruning=true; tested=1469; failed=0; pruned=1451; continued=18; in_solution=2;
+stats:3 name=2s-xf{main[0]out[0]second[2]}; lane=0; pruning=true; tested=252; failed=0; pruned=250; continued=2; in_solution=2;
+stats:4 name=2s-r{main[0]out[0]second[2]}; lane=0; pruning=true; tested=10; failed=0; pruned=8; continued=2; in_solution=2;
+stats:5 name=2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}; lane=0; pruning=true; tested=2938; failed=0; pruned=2902; continued=36; in_solution=4;
+stats:6 name=2s-xf{main[1]out[1]second[3]}; lane=0; pruning=true; tested=504; failed=0; pruned=500; continued=4; in_solution=4;
+stats:7 name=2s-r{main[1]out[1]second[3]}; lane=0; pruning=true; tested=20; failed=0; pruned=16; continued=4; in_solution=4;
+stats:8 name=identity; lane=0; pruning=false; tested=4; failed=0; pruned=0; continued=4; in_solution=4;
+stats:9 name=(last); lane=0; pruning=false; tested=4; failed=0; pruned=0; continued=4; in_solution=4;
+search:specs/swinv_like_big/l3/2d-stencil-7.json success=true; mode=All; time=2.952937017;
+spec:specs/swinv_like/l1/2d-stencil-3.json
+build:matrices/4,4-identity-4,4,3,3 density=0.00390625; time=0.001178548;
+Using newly-built matrices/4,4-identity-4,4,3,3
+build:matrices/4,4,3,3-2s-rnc{main[1]out[1]second[3]}-4,4,3,3 density=0.00019290123456790122; time=0.002388416;
+mul_stats:: b_sparse=true
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}-4,4,3,3 density=0.015625; time=0.001951296;
+build:matrices/4,4,3,3-2s-xfnc{main[1]out[1]second[3]}-4,4,3,3 density=0.0003054269547325103; time=0.008283436;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}-4,4,3,3 density=0.04991319444444445; time=0.002350773;
+build:matrices/4,4,3,3-2s-gnc{axis[3]dims[1|3]}-4,4,3,2 density=0.0003918306327160494; time=0.005442939;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}_4,4,3,3-2s-gnc{axis[3]dims[1|3]}-4,4,3,2 density=0.0625; time=0.00101479;
+build:matrices/4,4,3,2-2s-rnc{main[0]out[0]second[2]}-4,4,3,2 density=0.00043402777777777775; time=0.001030055;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}_4,4,3,3-2s-gnc{axis[3]dims[1|3]}_4,4,3,2-2s-rnc{main[0]out[0]second[2]}-4,4,3,2 density=0.25; time=0.000597725;
+build:matrices/4,4,3,2-2s-xfnc{main[0]out[0]second[2]}-4,4,3,2 density=0.0006872106481481482; time=0.003298785;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}_4,4,3,3-2s-gnc{axis[3]dims[1|3]}_4,4,3,2-2s-rnc{main[0]out[0]second[2]}_4,4,3,2-2s-xfnc{main[0]out[0]second[2]}-4,4,3,2 density=0.7986111111111112; time=0.001260481;
+Begin search
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, );xform(0,1,3);id;select(d1 >= 0 + d3, );xform(0,1,3);id;id
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:2 name=2s-gnc{axis[2]dims[0|2]}; lane=0; pruning=true; tested=14; failed=0; pruned=13; continued=1; in_solution=1;
+stats:3 name=2s-xfnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=12; failed=0; pruned=11; continued=1; in_solution=1;
+stats:4 name=2s-rnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=4; failed=0; pruned=3; continued=1; in_solution=1;
+stats:5 name=2s-gnc{axis[3]dims[1|3]}; lane=0; pruning=true; tested=14; failed=0; pruned=13; continued=1; in_solution=1;
+stats:6 name=2s-xfnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=12; failed=0; pruned=11; continued=1; in_solution=1;
+stats:7 name=2s-rnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=4; failed=0; pruned=3; continued=1; in_solution=1;
+stats:8 name=identity; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:9 name=(last); lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+search:specs/swinv_like/l1/2d-stencil-3.json success=true; mode=All; time=0.004315594;
+spec:specs/swinv_like/l1/2d-stencil-5.json
+build:matrices/4,4-identity-4,4,5,5 density=0.00390625; time=0.009549559;
+Using newly-built matrices/4,4-identity-4,4,5,5
+build:matrices/4,4,5,5-2s-rnc{main[1]out[1]second[3]}-4,4,5,5 density=0.000025; time=0.020879372;
+mul_stats:: b_sparse=true
+mul:matrices/4,4-identity_4,4,5,5-2s-rnc{main[1]out[1]second[3]}-4,4,5,5 density=0.015625; time=0.015789064;
+build:matrices/4,4,5,5-2s-xfnc{main[1]out[1]second[3]}-4,4,5,5 density=0.000040875; time=0.102989969;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,5,5-2s-rnc{main[1]out[1]second[3]}_4,4,5,5-2s-xfnc{main[1]out[1]second[3]}-4,4,5,5 density=0.05109375; time=0.018062753;
+build:matrices/4,4,5,5-2s-gnc{axis[3]dims[1|3]}-4,4,5,2 density=0.000140625; time=0.064527207;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,5,5-2s-rnc{main[1]out[1]second[3]}_4,4,5,5-2s-xfnc{main[1]out[1]second[3]}_4,4,5,5-2s-gnc{axis[3]dims[1|3]}-4,4,5,2 density=0.0625; time=0.008250202;
+build:matrices/4,4,5,2-2s-rnc{main[0]out[0]second[2]}-4,4,5,2 density=0.00015625; time=0.003249041;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,5,5-2s-rnc{main[1]out[1]second[3]}_4,4,5,5-2s-xfnc{main[1]out[1]second[3]}_4,4,5,5-2s-gnc{axis[3]dims[1|3]}_4,4,5,2-2s-rnc{main[0]out[0]second[2]}-4,4,5,2 density=0.25; time=0.00228451;
+build:matrices/4,4,5,2-2s-xfnc{main[0]out[0]second[2]}-4,4,5,2 density=0.00025546875; time=0.015219338;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,5,5-2s-rnc{main[1]out[1]second[3]}_4,4,5,5-2s-xfnc{main[1]out[1]second[3]}_4,4,5,5-2s-gnc{axis[3]dims[1|3]}_4,4,5,2-2s-rnc{main[0]out[0]second[2]}_4,4,5,2-2s-xfnc{main[0]out[0]second[2]}-4,4,5,2 density=0.8175; time=0.002745797;
+Begin search
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, );xform(0,1,5);id;select(d1 >= 0 + d3, );xform(0,1,5);id;id
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:2 name=2s-gnc{axis[2]dims[0|2]}; lane=0; pruning=true; tested=14; failed=0; pruned=13; continued=1; in_solution=1;
+stats:3 name=2s-xfnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=12; failed=0; pruned=11; continued=1; in_solution=1;
+stats:4 name=2s-rnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=4; failed=0; pruned=3; continued=1; in_solution=1;
+stats:5 name=2s-gnc{axis[3]dims[1|3]}; lane=0; pruning=true; tested=14; failed=0; pruned=13; continued=1; in_solution=1;
+stats:6 name=2s-xfnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=12; failed=0; pruned=11; continued=1; in_solution=1;
+stats:7 name=2s-rnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=4; failed=0; pruned=3; continued=1; in_solution=1;
+stats:8 name=identity; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:9 name=(last); lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+search:specs/swinv_like/l1/2d-stencil-5.json success=true; mode=All; time=0.066747754;
+spec:specs/swinv_like/l2/2d-stencil-3.json
+load:matrices/4,4-identity-4,4,3,3 density=0.00390625; time=0.001658426;
+load:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}-4,4,3,3 density=0.015625; time=0.002774556;
+load:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}-4,4,3,3 density=0.04991319444444445; time=0.002752736;
+build:matrices/4,4,3,3-2s-g{axis[3]dims[1|3]}-4,4,3,2 density=0.00041594328703703704; time=0.01649731;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}_4,4,3,3-2s-g{axis[3]dims[1|3]}-4,4,3,2 density=0.0625; time=0.001397337;
+load:matrices/4,4,3,2-2s-rnc{main[0]out[0]second[2]}-4,4,3,2 density=0.00043402777777777775; time=0.002357735;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}_4,4,3,3-2s-g{axis[3]dims[1|3]}_4,4,3,2-2s-rnc{main[0]out[0]second[2]}-4,4,3,2 density=0.25; time=0.000687004;
+load:matrices/4,4,3,2-2s-xfnc{main[0]out[0]second[2]}-4,4,3,2 density=0.0006872106481481482; time=0.002471403;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}_4,4,3,3-2s-g{axis[3]dims[1|3]}_4,4,3,2-2s-rnc{main[0]out[0]second[2]}_4,4,3,2-2s-xfnc{main[0]out[0]second[2]}-4,4,3,2 density=0.7986111111111112; time=0.001013455;
+Begin search
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, );xform(0,1,3);id;select(d1 > 1 - d3, );xform(0,3,3);rot(2);id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, );xform(0,1,3);id;select(d1 >= 0 + d3, );xform(0,1,3);id;id
+solution:init;id;load_grid_2d;select(d0 > 1 - d2, );xform(0,3,3);rot(2);select(d1 > 1 - d3, );xform(0,3,3);rot(2);id
+solution:init;id;load_grid_2d;select(d0 > 1 - d2, );xform(0,3,3);rot(2);select(d1 >= 0 + d3, );xform(0,1,3);id;id
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:2 name=2s-g{axis[2]dims[0|2]}; lane=0; pruning=true; tested=38; failed=0; pruned=36; continued=2; in_solution=2;
+stats:3 name=2s-xfnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=24; failed=0; pruned=22; continued=2; in_solution=2;
+stats:4 name=2s-rnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=8; failed=0; pruned=6; continued=2; in_solution=2;
+stats:5 name=2s-g{axis[3]dims[1|3]}; lane=0; pruning=true; tested=76; failed=0; pruned=72; continued=4; in_solution=4;
+stats:6 name=2s-xfnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=48; failed=0; pruned=44; continued=4; in_solution=4;
+stats:7 name=2s-rnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=16; failed=0; pruned=12; continued=4; in_solution=4;
+stats:8 name=identity; lane=0; pruning=false; tested=4; failed=0; pruned=0; continued=4; in_solution=4;
+stats:9 name=(last); lane=0; pruning=false; tested=4; failed=0; pruned=0; continued=4; in_solution=4;
+search:specs/swinv_like/l2/2d-stencil-3.json success=true; mode=All; time=0.016432699;
+spec:specs/swinv_like/l2/2d-stencil-5.json
+load:matrices/4,4-identity-4,4,5,5 density=0.00390625; time=0.013486735;
+load:matrices/4,4-identity_4,4,5,5-2s-rnc{main[1]out[1]second[3]}-4,4,5,5 density=0.015625; time=0.02286059;
+load:matrices/4,4-identity_4,4,5,5-2s-rnc{main[1]out[1]second[3]}_4,4,5,5-2s-xfnc{main[1]out[1]second[3]}-4,4,5,5 density=0.05109375; time=0.022253158;
+build:matrices/4,4,5,5-2s-g{axis[3]dims[1|3]}-4,4,5,2 density=0.0001515625; time=0.165305499;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,5,5-2s-rnc{main[1]out[1]second[3]}_4,4,5,5-2s-xfnc{main[1]out[1]second[3]}_4,4,5,5-2s-g{axis[3]dims[1|3]}-4,4,5,2 density=0.0625; time=0.008476195;
+load:matrices/4,4,5,2-2s-rnc{main[0]out[0]second[2]}-4,4,5,2 density=0.00015625; time=0.004692401;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,5,5-2s-rnc{main[1]out[1]second[3]}_4,4,5,5-2s-xfnc{main[1]out[1]second[3]}_4,4,5,5-2s-g{axis[3]dims[1|3]}_4,4,5,2-2s-rnc{main[0]out[0]second[2]}-4,4,5,2 density=0.25; time=0.001822023;
+load:matrices/4,4,5,2-2s-xfnc{main[0]out[0]second[2]}-4,4,5,2 density=0.00025546875; time=0.007275196;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,5,5-2s-rnc{main[1]out[1]second[3]}_4,4,5,5-2s-xfnc{main[1]out[1]second[3]}_4,4,5,5-2s-g{axis[3]dims[1|3]}_4,4,5,2-2s-rnc{main[0]out[0]second[2]}_4,4,5,2-2s-xfnc{main[0]out[0]second[2]}-4,4,5,2 density=0.8175; time=0.003167763;
+Begin search
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, );xform(0,1,5);id;select(d1 >= 0 + d3, );xform(0,1,5);id;id
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:2 name=2s-g{axis[2]dims[0|2]}; lane=0; pruning=true; tested=36; failed=0; pruned=33; continued=3; in_solution=1;
+stats:3 name=2s-xfnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=36; failed=0; pruned=35; continued=1; in_solution=1;
+stats:4 name=2s-rnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=4; failed=0; pruned=3; continued=1; in_solution=1;
+stats:5 name=2s-g{axis[3]dims[1|3]}; lane=0; pruning=true; tested=36; failed=0; pruned=33; continued=3; in_solution=1;
+stats:6 name=2s-xfnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=36; failed=0; pruned=35; continued=1; in_solution=1;
+stats:7 name=2s-rnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=4; failed=0; pruned=3; continued=1; in_solution=1;
+stats:8 name=identity; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:9 name=(last); lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+search:specs/swinv_like/l2/2d-stencil-5.json success=true; mode=All; time=0.090289734;
+spec:specs/swinv_like/l3/2d-stencil-3.json
+load:matrices/4,4-identity-4,4,3,3 density=0.00390625; time=0.001656007;
+build:matrices/4,4,3,3-2s-r{main[1]out[1]second[3]}-4,4,3,3 density=0.00021701388888888888; time=0.003293757;
+mul_stats:: b_sparse=true
+mul:matrices/4,4-identity_4,4,3,3-2s-r{main[1]out[1]second[3]}-4,4,3,3 density=0.017578125; time=0.002205095;
+build:matrices/4,4,3,3-2s-xf{main[1]out[1]second[3]}-4,4,3,3 density=0.0003154738940329218; time=0.009560371;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,3,3-2s-r{main[1]out[1]second[3]}_4,4,3,3-2s-xf{main[1]out[1]second[3]}-4,4,3,3 density=0.050455729166666664; time=0.002304338;
+load:matrices/4,4,3,3-2s-g{axis[3]dims[1|3]}-4,4,3,2 density=0.00041594328703703704; time=0.003100837;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,3,3-2s-r{main[1]out[1]second[3]}_4,4,3,3-2s-xf{main[1]out[1]second[3]}_4,4,3,3-2s-g{axis[3]dims[1|3]}-4,4,3,2 density=0.0625; time=0.001074454;
+build:matrices/4,4,3,2-2s-r{main[0]out[0]second[2]}-4,4,3,2 density=0.00048828125; time=0.001753113;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,3,3-2s-r{main[1]out[1]second[3]}_4,4,3,3-2s-xf{main[1]out[1]second[3]}_4,4,3,3-2s-g{axis[3]dims[1|3]}_4,4,3,2-2s-r{main[0]out[0]second[2]}-4,4,3,2 density=0.28125; time=0.000655401;
+build:matrices/4,4,3,2-2s-xf{main[0]out[0]second[2]}-4,4,3,2 density=0.0007098162615740741; time=0.003925727;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,3,3-2s-r{main[1]out[1]second[3]}_4,4,3,3-2s-xf{main[1]out[1]second[3]}_4,4,3,3-2s-g{axis[3]dims[1|3]}_4,4,3,2-2s-r{main[0]out[0]second[2]}_4,4,3,2-2s-xf{main[0]out[0]second[2]}-4,4,3,2 density=0.8072916666666666; time=0.000990099;
+Begin search
+solution:init;id;load_grid_2d;select(d0 > 1 - d2, );xform(0,3,3);rot(2);select(d1 > 1 - d3, );xform(0,3,3);rot(2);id
+solution:init;id;load_grid_2d;select(d0 > 1 - d2, );xform(0,3,3);rot(2);select(d1 >= 0 + d3, );xform(0,1,3);id;id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, );xform(0,1,3);id;select(d1 > 1 - d3, );xform(0,3,3);rot(2);id
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, );xform(0,1,3);id;select(d1 >= 0 + d3, );xform(0,1,3);id;id
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:2 name=2s-g{axis[2]dims[0|2]}; lane=0; pruning=true; tested=38; failed=0; pruned=36; continued=2; in_solution=2;
+stats:3 name=2s-xf{main[0]out[0]second[2]}; lane=0; pruning=true; tested=28; failed=0; pruned=26; continued=2; in_solution=2;
+stats:4 name=2s-r{main[0]out[0]second[2]}; lane=0; pruning=true; tested=10; failed=0; pruned=8; continued=2; in_solution=2;
+stats:5 name=2s-g{axis[3]dims[1|3]}; lane=0; pruning=true; tested=76; failed=0; pruned=72; continued=4; in_solution=4;
+stats:6 name=2s-xf{main[1]out[1]second[3]}; lane=0; pruning=true; tested=56; failed=0; pruned=52; continued=4; in_solution=4;
+stats:7 name=2s-r{main[1]out[1]second[3]}; lane=0; pruning=true; tested=20; failed=0; pruned=16; continued=4; in_solution=4;
+stats:8 name=identity; lane=0; pruning=false; tested=4; failed=0; pruned=0; continued=4; in_solution=4;
+stats:9 name=(last); lane=0; pruning=false; tested=4; failed=0; pruned=0; continued=4; in_solution=4;
+search:specs/swinv_like/l3/2d-stencil-3.json success=true; mode=All; time=0.016754505;
+spec:specs/swinv_like/l3/2d-stencil-5.json
+load:matrices/4,4-identity-4,4,5,5 density=0.00390625; time=0.013464641;
+build:matrices/4,4,5,5-2s-r{main[1]out[1]second[3]}-4,4,5,5 density=0.000028125; time=0.024625709;
+mul_stats:: b_sparse=true
+mul:matrices/4,4-identity_4,4,5,5-2s-r{main[1]out[1]second[3]}-4,4,5,5 density=0.017578125; time=0.017602347;
+build:matrices/4,4,5,5-2s-xf{main[1]out[1]second[3]}-4,4,5,5 density=0.00004228125; time=0.119195942;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,5,5-2s-r{main[1]out[1]second[3]}_4,4,5,5-2s-xf{main[1]out[1]second[3]}-4,4,5,5 density=0.051875; time=0.018679038;
+load:matrices/4,4,5,5-2s-g{axis[3]dims[1|3]}-4,4,5,2 density=0.0001515625; time=0.022318325;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,5,5-2s-r{main[1]out[1]second[3]}_4,4,5,5-2s-xf{main[1]out[1]second[3]}_4,4,5,5-2s-g{axis[3]dims[1|3]}-4,4,5,2 density=0.0625; time=0.007142129;
+build:matrices/4,4,5,2-2s-r{main[0]out[0]second[2]}-4,4,5,2 density=0.00017578125; time=0.003775577;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,5,5-2s-r{main[1]out[1]second[3]}_4,4,5,5-2s-xf{main[1]out[1]second[3]}_4,4,5,5-2s-g{axis[3]dims[1|3]}_4,4,5,2-2s-r{main[0]out[0]second[2]}-4,4,5,2 density=0.28125; time=0.001878902;
+build:matrices/4,4,5,2-2s-xf{main[0]out[0]second[2]}-4,4,5,2 density=0.0002642578125; time=0.016415058;
+mul_stats:: b_sparse=false
+mul:matrices/4,4-identity_4,4,5,5-2s-r{main[1]out[1]second[3]}_4,4,5,5-2s-xf{main[1]out[1]second[3]}_4,4,5,5-2s-g{axis[3]dims[1|3]}_4,4,5,2-2s-r{main[0]out[0]second[2]}_4,4,5,2-2s-xf{main[0]out[0]second[2]}-4,4,5,2 density=0.83; time=0.002843462;
+Begin search
+solution:init;id;load_grid_2d;select(d0 >= 0 + d2, );xform(0,1,5);id;select(d1 >= 0 + d3, );xform(0,1,5);id;id
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:2 name=2s-g{axis[2]dims[0|2]}; lane=0; pruning=true; tested=36; failed=0; pruned=33; continued=3; in_solution=1;
+stats:3 name=2s-xf{main[0]out[0]second[2]}; lane=0; pruning=true; tested=42; failed=0; pruned=41; continued=1; in_solution=1;
+stats:4 name=2s-r{main[0]out[0]second[2]}; lane=0; pruning=true; tested=5; failed=0; pruned=4; continued=1; in_solution=1;
+stats:5 name=2s-g{axis[3]dims[1|3]}; lane=0; pruning=true; tested=36; failed=0; pruned=33; continued=3; in_solution=1;
+stats:6 name=2s-xf{main[1]out[1]second[3]}; lane=0; pruning=true; tested=42; failed=0; pruned=41; continued=1; in_solution=1;
+stats:7 name=2s-r{main[1]out[1]second[3]}; lane=0; pruning=true; tested=5; failed=0; pruned=4; continued=1; in_solution=1;
+stats:8 name=identity; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:9 name=(last); lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+search:specs/swinv_like/l3/2d-stencil-5.json success=true; mode=All; time=0.085647096;

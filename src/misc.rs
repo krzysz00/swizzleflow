@@ -66,3 +66,35 @@ pub fn loghist(n: usize) -> usize {
         (n / 100) * 100
     }
 }
+
+pub fn parse_opt_arg<T: std::str::FromStr>(arg: Option<&str>,
+                                           name: &'static str,
+                                           reqs: &'static str) -> Result<Option<T>> {
+    if let Some(s) = arg {
+        s.parse::<T>()
+            .map_err(|_| ErrorKind::InvalidCmdArg(name, reqs).into())
+            .map(|v| Some(v))
+    }
+    else {
+        Ok(None)
+    }
+}
+
+use std::io::{Read,Write};
+use byteorder::{LittleEndian,WriteBytesExt,ReadBytesExt};
+pub fn write_length_tagged_idxs<T: Write>(io: &mut T, data: &[Ix]) -> std::io::Result<()> {
+    io.write_u64::<LittleEndian>(data.len() as u64)?;
+    for i in data {
+        io.write_u64::<LittleEndian>(*i as u64)?;
+    }
+    Ok(())
+}
+
+pub fn read_length_tagged_idxs<T: Read>(io: &mut T) -> std::io::Result<ShapeVec> {
+    let length = io.read_u64::<LittleEndian>()? as usize;
+    let mut buffer = ShapeVec::with_capacity(length);
+    for _ in 0..length {
+        buffer.push(io.read_u64::<LittleEndian>()? as usize);
+    }
+    Ok(buffer)
+}
