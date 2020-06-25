@@ -129,3 +129,81 @@ pub mod errors {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::problem_desc::{trove, poly_mult};
+    use crate::operators::swizzle::{xform,rotate};
+    use crate::operators::load::{load_rep,broadcast};
+    use crate::operators::{identity_gather, transpose_gather};
+    use crate::state::{ProgState, Domain, Value};
+
+    fn fixed_solution_from_scalar_8x3<'d>(d: &'d Domain) -> ProgState<'d> {
+        let initial = ProgState::linear(d, 1, &[24]);
+        let shape = [8, 3];
+        let s0 = initial.gather_by(&load_rep(&[24], &[8, 3]).unwrap()
+                                   .gathers().unwrap()[0]);
+        let s1 = s0.gather_by(&xform(&shape, 1, 0, 1, 2, 1, 8, None, false));
+        let s2 = s1.gather_by(&rotate(&shape, 1, 0, 1, 0, None));
+        let s3 = s2.gather_by(&xform(&shape, 0, 1, 0, 3, 1, 3, None, false));
+        let s4 = s3.gather_by(&rotate(&shape, 0, 1, 0, 0, None));
+        s4
+    }
+
+    #[test]
+    fn trove_solution_works() {
+        let symbols: ndarray::Array1<Value> = (0u16..24u16).map(Value::Symbol).collect();
+        let symbols = symbols.into_dyn();
+        let domain = Domain::new(symbols.view());
+        let spec = ProgState::new_from_spec(&domain, trove(8, 3), "trove").unwrap();
+        let solution = fixed_solution_from_scalar_8x3(&domain);
+        println!("spec {}\n solution {}", spec, solution);
+        assert_eq!(spec, solution);
+    }
+
+    #[test]
+    fn poly_mult_works() {
+        use ndarray::ArrayD;
+        use itertools::iproduct;
+        use crate::operators::select::{cond_keep_gather,Op, BinOp};
+        let f1 = xform(&[4, 4], 1, 0, 1, 1, 0, 4, None, false);
+        let r1 = rotate(&[4, 4], 1, 0, 1, 0, None);
+        let f2 = xform(&[4, 4], 0, 1, 1, 1, -1, 4, None, false);
+        let r2 = rotate(&[4, 4], 1, 0, 1, 0, None);
+        let broadcast = broadcast(&[4, 4], &[4, 2, 4], 1).unwrap().gathers().unwrap()[0].clone();
+        let spec = poly_mult(4);
+        let domain = Domain::new(spec.view());
+        let arr1 = iproduct!(0..4, 0..4).map(|(_i, j)| crate::state::Value::Symbol(j)).collect();
+        let arr1 = ArrayD::from_shape_vec(vec![4, 4], arr1).unwrap();
+        let state = ProgState::new_from_spec(&domain, arr1, "init").unwrap();
+        let s1 = state.gather_by(&f1);
+        let s2 = s1.gather_by(&r1);
+
+        let arr2 = iproduct!(0..4, 0..4).map(|(_i, j)| crate::state::Value::Symbol(4 + j)).collect();
+        let arr2 = ArrayD::from_shape_vec(vec![4, 4], arr2).unwrap();
+        let state2 = ProgState::new_from_spec(&domain, arr2, "init").unwrap();
+        let s3 = state2.gather_by(&f2);
+        let s4 = s3.gather_by(&r2);
+
+        let m = ProgState::stack_folding(&[&s2, &s4]).unwrap();
+        let b = m.gather_by(&broadcast);
+
+        let mut retain = std::collections::BTreeMap::new();
+        retain.insert(1, 0);
+        let c1 = cond_keep_gather(&[4, 2, 4], 2, 0, 0,
+                                  BinOp::Plus, Op::Leq, &retain);
+        let d1 = b.gather_by(&c1);
+
+        retain.insert(1, 1);
+        let c2 = cond_keep_gather(&[4, 2, 4], 2, 0, 0,
+                                  BinOp::Plus, Op::Gt, &retain);
+        let d2 = d1.gather_fold_by(&c2).unwrap();
+
+        let tr = transpose_gather(&[4, 2], &[2, 4]);
+        let transposed = d2.gather_by(&tr);
+        let reshape = identity_gather(&[8]);
+        let result = transposed.gather_by(&reshape);
+        let spec_state = ProgState::new_from_spec(&domain, spec, "spec").unwrap();
+        assert_eq!(result, spec_state);
+    }
+}
