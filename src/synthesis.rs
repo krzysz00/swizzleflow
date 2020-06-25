@@ -247,7 +247,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                 let ret = search(new_states, target, levels, expected_syms,
                                  current_level + 1, stats, mode, caches,
                                  print, print_pruned, prune_fuel);
-                if level.prune {
+                if !ret && level.prune {
                     let mut cache = cache.write().unwrap();
                     cache.insert(r.clone(), ret);
                 }
