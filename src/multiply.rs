@@ -71,12 +71,12 @@ pub fn bool_mul(a: &Matrix, b: &Matrix)
     }
     match (a, b) {
         (Matrix::RowSparse(a), Matrix::Dense(b)) => {
-            println!("mul_stats:: b_sparse=false");
+            println!("mul_stats:: b_sparse=false;");
             let c = sparse_dense_mul(a, b);
             c.into()
         },
         (Matrix::RowSparse(a), Matrix::RowSparse(b)) => {
-            println!("mul_stats:: b_sparse=true");
+            println!("mul_stats:: b_sparse=true;");
             let c = sparse_sparse_mul(a, b);
             c.into()
         },
