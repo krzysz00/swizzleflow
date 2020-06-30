@@ -134,7 +134,6 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
               expected_syms: &[DomRef],
               _cache: &ResultMap<'d>, tracker: &SearchLevelStats,
               level: usize, print_pruned: bool, prune_fuel: usize) -> bool {
-    let mut did_lookup = false;
     let mut value_checks = 0;
     for (i, a) in expected_syms.iter().copied().enumerate() {
         for b in (&expected_syms[(i+1)..]).iter().copied().chain(std::iter::once(a)).take(prune_fuel) {
@@ -162,24 +161,6 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
                     return false;
                 }
             }
-        }
-        // Why don't we check the cache right away?
-        // Because, if the pruning rule fails before for (0, k) for some k,
-        // we'll have done about fewer memory accesses than we would have for
-        // the hash and equality testing needed to do the hash lookup
-        // Therefore, we put this off a bit, to let the fast pruning pass go first
-        //
-        // This could probably be a tuneable parameter,
-        // letting you control how aggressively you cache,
-        // but I can't think of a good way to expose that.
-        if !did_lookup {
-            // TODO: disable cache because it's causing correctness issues
-            // let probe = {cache.read().unwrap().get(current).copied()};
-            // if let Some(v) = probe {
-            //     tracker.cache_hit();
-            //     return v;
-            // }
-            did_lookup = true;
         }
     }
     true
