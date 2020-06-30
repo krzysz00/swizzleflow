@@ -155,9 +155,6 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
                         v
                     });
                 if !result {
-                    // if did_lookup {
-                    //     cache.write().unwrap().insert(current.clone(), false);
-                    // }
                     tracker.pruned();
                     tracker.record_value_checks(value_checks);
                     if print_pruned {
