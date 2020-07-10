@@ -176,7 +176,7 @@ pub fn hvx_2x1(in_shape: &[Ix], out_shape: &[Ix],
         ret.insert(vshuffo(r, in_shape, out_shape));
         ret.insert(vshuffe(r, in_shape, out_shape));
 
-        for i in 1..n {
+        for i in 0..n {
             ret.insert(valign(r, in_shape, out_shape, i));
             ret.insert(vlalign(r, in_shape, out_shape, i));
         }

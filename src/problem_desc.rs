@@ -62,6 +62,8 @@ fn parse_hvx_opts(options: Option<&OptionMap>, inplace: bool, fresh: bool,
     let all = !inplace && !fresh;
 
     let fixed_ins = options.and_then(|m| m.get("in"));
+    let in_lim = int_option(options, "in_lim").map(|v| v as usize)
+        .unwrap_or(in_shape[0]);
     let fixed_outs = options.and_then(|m| m.get("out"));
 
     let n_in = in_shape[0];
@@ -76,7 +78,7 @@ fn parse_hvx_opts(options: Option<&OptionMap>, inplace: bool, fresh: bool,
                 us.chunks(2).map(|s| (s[0] as usize, Some(s[1] as usize))).collect()
             }
             else {
-                iproduct![0..n_in, 0..n_in].map(|(u, v)| (u, Some(v))).collect()
+                iproduct![0..in_lim, 0..in_lim].map(|(u, v)| (u, Some(v))).collect()
             }
         }
         else {
@@ -84,7 +86,7 @@ fn parse_hvx_opts(options: Option<&OptionMap>, inplace: bool, fresh: bool,
                 us.iter().copied().map(|i| (i as usize, None)).collect()
             }
             else {
-                (0..n_in).map(|i| (i, None)).collect()
+                (0..in_lim).map(|i| (i, None)).collect()
             }
         };
 
@@ -109,7 +111,7 @@ fn parse_hvx_opts(options: Option<&OptionMap>, inplace: bool, fresh: bool,
                     .collect()
             }
             else {
-                (0..delta).map(|i| (i, None)).collect()
+                (0..delta).map(|i| (n_in + i, None)).collect()
             }
         }
         else if let Some(ds) = fixed_outs {

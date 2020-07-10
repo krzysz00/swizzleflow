@@ -1,0 +1,20 @@
+spec:specs/hvx_conv/fresh_regs_fixed_setup.json
+load:matrices/16-reshape-8,2 density=0.00390625; time=0.000025415;
+load:matrices/16-reshape_8,2-rot_idx{r[1]}-2,3,8 density=0.00390625; time=0.000291609;
+load:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add-8,8 density=0.002197265625; time=0.000482242;
+load:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add_8,8-hvx_2x1{fresh]in_lim[4]}-7,8 density=0.03384088010204082; time=0.000372901;
+load:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add_8,8-hvx_2x1{fresh]in_lim[4]}_7,8-hvx_2x1{fresh]in_lim[4]}-6,8 density=0.2967664930555556; time=0.00028858;
+load:matrices/16-reshape_8,2-rot_idx{r[1]}_2,3,8-setup_add_8,8-hvx_2x1{fresh]in_lim[4]}_7,8-hvx_2x1{fresh]in_lim[4]}_6,8-hvx_2x1{fresh]in_lim[4]}-5,8 density=0.680625; time=0.000188717;
+Begin search
+solution:init;setup;valign(4:=0,0, 0);valign(5:=0,1, 0);vlalign(6:=1,2, 1);valign(7:=3,0, 1);setup_add;rot_idx_r(1);id
+solution:init;setup;valign(4:=0,1, 0);valign(5:=0,0, 0);vlalign(6:=1,2, 1);valign(7:=3,0, 1);setup_add;rot_idx_r(1);id
+stats:0 name=hvx_conv_load; lane=0; pruning=false; tested=1; failed=0; pruned=0; continued=1; in_solution=1;
+stats:1 name=hvx_2x1{fresh]in_lim[4]}; lane=0; pruning=true; tested=149; failed=0; pruned=0; continued=149; in_solution=2;
+stats:2 name=hvx_2x1{fresh]in_lim[4]}; lane=0; pruning=true; tested=22201; failed=0; pruned=22199; continued=2; in_solution=2;
+stats:3 name=hvx_2x1{fresh]in_lim[4]}; lane=0; pruning=true; tested=298; failed=0; pruned=296; continued=2; in_solution=2;
+stats:4 name=hvx_2x1{fresh]in_lim[4]}; lane=0; pruning=true; tested=298; failed=0; pruned=296; continued=2; in_solution=2;
+stats:5 name=setup_add; lane=0; pruning=true; tested=2; failed=0; pruned=0; continued=2; in_solution=2;
+stats:6 name=rot_idx{r[1]}; lane=0; pruning=false; tested=2; failed=0; pruned=0; continued=2; in_solution=2;
+stats:7 name=reshape; lane=0; pruning=false; tested=2; failed=0; pruned=0; continued=2; in_solution=2;
+stats:8 name=(last); lane=0; pruning=false; tested=2; failed=0; pruned=0; continued=2; in_solution=2;
+search:specs/hvx_conv/fresh_regs_fixed_setup.json success=true; mode=All; prune_fuel=18; time=0.036731016;
