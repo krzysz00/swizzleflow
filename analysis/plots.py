@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 import sys
 
-SWINV_TIMEOUTS = ['l3/trove-rcr-3', 'l3/trove-rcr-5', 'l3/trove-rcr-7', 'l3/2d-stencil-7']
+SWINV_TIMEOUTS = ['l3/trove-rcr-3', 'l3/trove-rcr-5', 'l3/trove-rcr-7', 'l3/2d-stencil-7', 'l3/trove-cr_sum-7']
 
 def process_data(swizzleflow_raw, loads_raw, swinv_times):
     swizzleflow_info = extraction.humanize_names(swizzleflow_raw)
