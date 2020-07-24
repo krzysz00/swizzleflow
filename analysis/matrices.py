@@ -130,7 +130,8 @@ def label_row(idx: int, dims: Sequence[int]) -> str:
 def to_tick_label(i: int, dims: Sequence[int]) -> str:
     return label_row(i, dims)
 
-def visualize_slice(mat: TransitionMatrix, d1: int, d2: int, fixed_dim='target') -> plt.Figure:
+def visualize_slice(mat: TransitionMatrix, d1: int, d2: int, fixed_dim='target',
+                    skip=None) -> plt.Figure:
     # The other fixed_dim is 'current
     if fixed_dim not in ['current', 'target']:
         raise ArgumentError("Invalid fixed_dim, must be 'current' or 'target")
@@ -147,14 +148,15 @@ def visualize_slice(mat: TransitionMatrix, d1: int, d2: int, fixed_dim='target')
     data = (mat.matrix.data[:, slice] if slice_target
             else mat.matrix.data[slice, :]).reshape((extent, extent))
     dims = mat.current_dims if slice_target else mat.target_dims
-    last_dim = dims[-1]
+    if skip is None:
+        skip = dims[-1]
 
     fig = plt.Figure()
     ax = fig.add_subplot(1, 1, 1)
 
     ax.imshow(data, cmap=plt.cm.gray.reversed(), interpolation='nearest')
 
-    ticks = np.arange(0, extent, last_dim)
+    ticks = np.arange(0, extent, skip)
     ax.set_xticks(ticks - 0.5)
     ax.set_xticklabels(map(lambda i: to_tick_label(i, dims), ticks))
     ax.set_yticks(ticks - 0.5)
