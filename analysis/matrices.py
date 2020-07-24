@@ -14,6 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import numpy as np
+import matplotlib.pyplot as plt
+
+import collections
 from typing import Sequence, List
 
 def read_u32(f):
@@ -55,9 +58,10 @@ class Matrix:
                 for j in range(io_len):
                     data = read_u32(file)
                     for jj in range(BIT_WIDTH):
-                        if jj + BIT_WIDTH * j < n:
-                            ret.set(i, jj + BIT_WIDTH * j,
-                                    (data & (1 << j)) != 0)
+                        idx = jj + BIT_WIDTH * j
+                        if idx < n:
+                            ret.set(i, idx,
+                                    (data & (1 << jj)) != 0)
         elif tag == ROW_SPARSE_MATRIX_TAG:
             for i in range(m):
                 row_length = read_u64(file)
@@ -106,3 +110,66 @@ class TransitionMatrix:
         target_dims = read_sequence(file)
         matrix = Matrix.load(file)
         return TransitionMatrix(current_dims, target_dims, matrix)
+
+    @staticmethod
+    def from_file(filename) -> 'TransitionMatrix':
+        with open(filename, 'rb') as f:
+            return TransitionMatrix.load(f)
+
+def de_row_major(idx: int, dims: Sequence[int]) -> List[int]:
+    ret = []
+    for d in reversed(dims):
+        ret.append(idx % d)
+        idx = idx // d
+    ret.reverse()
+    return ret
+
+def label_row(idx: int, dims: Sequence[int]) -> str:
+    return f"({','.join(map(str, de_row_major(idx, dims)))})"
+
+def to_tick_label(i: int, dims: Sequence[int]) -> str:
+    return label_row(i, dims)
+
+def visualize_slice(mat: TransitionMatrix, d1: int, d2: int, fixed_dim='target') -> plt.Figure:
+    # The other fixed_dim is 'current
+    if fixed_dim not in ['current', 'target']:
+        raise ArgumentError("Invalid fixed_dim, must be 'current' or 'target")
+    slice_target = (fixed_dim == 'target')
+    off_dims, off_len = (mat.target_dims, mat.target_len) if slice_target\
+        else (mat.current_dims, mat.current_len)
+    if isinstance(d1, collections.Sequence):
+        d1 = row_major(d1, off_dims)
+    if isinstance(d2, collections.Sequence):
+        d2 = row_major(d2, off_dims)
+
+    slice = d2 + (off_len * d1)
+    extent = mat.current_len if slice_target else mat.target_len
+    data = (mat.matrix.data[:, slice] if slice_target
+            else mat.matrix.data[slice, :]).reshape((extent, extent))
+    dims = mat.current_dims if slice_target else mat.target_dims
+    last_dim = dims[-1]
+
+    fig = plt.Figure()
+    ax = fig.add_subplot(1, 1, 1)
+
+    ax.imshow(data, cmap=plt.cm.gray.reversed(), interpolation='nearest')
+
+    ticks = np.arange(0, extent, last_dim)
+    ax.set_xticks(ticks - 0.5)
+    ax.set_xticklabels(map(lambda i: to_tick_label(i, dims), ticks))
+    ax.set_yticks(ticks - 0.5)
+    ax.set_yticklabels(map(lambda i: to_tick_label(i, dims), ticks))
+
+    ax.grid(which='major', color='0.35')
+
+    ax.minorticks_on()
+    minor_ticks = np.arange(0, extent) - 0.5
+    ax.set_xticks(minor_ticks, minor=True)
+    ax.set_yticks(minor_ticks, minor=True)
+    ax.grid(which='minor', color='0.8')
+
+    ax.set_title(f"First/second location {'reaches' if slice_target else 'can come from'} {label_row(d1, off_dims)} and {label_row(d2, off_dims)}, respectively")
+    ax.set_ylabel("First location")
+    ax.set_xlabel("Second location in pair")
+
+    return fig
