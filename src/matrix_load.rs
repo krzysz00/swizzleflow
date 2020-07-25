@@ -169,11 +169,11 @@ pub fn add_matrices(directory: &Path, levels: &mut [SynthesisLevel],
     for (idx, level) in levels.iter_mut().enumerate().rev()
         .filter(|(i, l)| *i >= first_prunes[l.lane])
     {
+        let lane = level.lane;
         if level.prune {
-            level.matrix = prev_mats[level.lane].clone();
+            level.matrix = prev_mats[lane].clone();
         }
 
-        let lane = level.lane;
         if idx == first_prunes[lane] {
             prev_mats[lane] = None;
             continue;

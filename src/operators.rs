@@ -21,12 +21,14 @@ use crate::errors::*;
 
 use crate::state::{Gather,to_opt_ix};
 use crate::transition_matrix::{TransitionMatrix};
-use crate::misc::ShapeVec;
+use crate::misc::{ShapeVec,time_since};
 
 use smallvec::SmallVec;
 
 use std::borrow::Cow;
+use std::cmp::{min, max};
 use std::num::NonZeroUsize;
+use std::time::Instant;
 
 use ndarray::Ix;
 
@@ -195,6 +197,8 @@ pub fn rot_idx_l(in_shape: &[Ix],
 pub struct SynthesisLevel {
     pub ops: OpSet,
     pub matrix: Option<TransitionMatrix>,
+    // min and max, if computed and distinct
+    pub copy_bounds: Option<(Vec<u32>, Vec<u32>)>,
     pub lane: usize,
     pub expected_syms: usize,
     pub prune: bool,
@@ -202,8 +206,98 @@ pub struct SynthesisLevel {
 
 impl SynthesisLevel {
     pub fn new(ops: OpSet, lane: usize, expected_syms: usize, prune: bool) -> Self {
-        Self {ops , matrix: None, lane, expected_syms, prune }
+        Self {ops , matrix: None, copy_bounds: None, lane, expected_syms, prune }
     }
+}
+
+pub fn add_copy_bounds(levels: &mut [SynthesisLevel], max_lanes: usize) -> Result<()> {
+    let mut prev_bounds: Vec<Option<(Vec<u32>, Vec<u32>)>> = vec![None; max_lanes];
+    let output_length = levels[levels.len() - 1].ops.out_shape.iter().product();
+    let output_counts = vec![1u32; output_length];
+    prev_bounds[levels[levels.len() - 1].lane] = Some((output_counts.clone(), output_counts));
+
+    let mut first_prunes = vec![levels.len(); max_lanes];
+    for (idx, l) in levels.iter().enumerate().rev() {
+        if l.prune {
+            first_prunes[l.lane] = idx;
+        }
+    }
+
+    let start = Instant::now();
+    for (_idx, level) in levels.iter_mut().enumerate().rev()
+        .filter(|(i, l)| *i >= first_prunes[l.lane])
+    {
+        let lane = level.lane;
+        if level.prune {
+            // Store data for after
+            level.copy_bounds = prev_bounds[lane].clone();
+            println!("prune_bounds[{}][0] = {:?}", _idx, level.copy_bounds.as_ref()
+                     .map(|(small, big)| (small[0], big[0])));
+        }
+
+        let old_bounds = prev_bounds[lane].take().unwrap();
+        let in_length = level.ops.in_shape.iter().product();
+        let fold_dim: Option<usize> = level.ops.fold_dim.map(|v| v.into());
+        match level.ops.ops {
+            OpSetKind::Gathers(ref swizzles, _) => {
+                let mut mins = vec![u32::MAX; in_length];
+                let mut maxs = vec![0; in_length];
+                for gather in swizzles {
+                    let (this_min, this_max) = gather.min_max_copies(
+                        in_length, &old_bounds.0, &old_bounds.1, fold_dim);
+                    mins.iter_mut().zip(this_min.into_iter())
+                        .for_each(|(v, e)| *v = min(*v, e));
+                    maxs.iter_mut().zip(this_max.into_iter())
+                        .for_each(|(v, e)| *v = max(*v, e));
+
+                }
+                let new_bounds = (mins, maxs);
+                if new_bounds == old_bounds {
+                    level.copy_bounds = None;
+                }
+                prev_bounds[lane] = Some(new_bounds);
+            },
+            OpSetKind::Stack(ref from, _to) => {
+                level.copy_bounds = None;
+                if fold_dim.is_some() {
+                    for lane in from.iter().copied() {
+                            prev_bounds[lane] = Some(old_bounds.clone());
+                    }
+                }
+                else {
+                    let (old_mins, old_maxs) = old_bounds;
+                    let chunk_length = old_mins.len() / from.len();
+                    assert_eq!(old_maxs.len(), from.len() * chunk_length);
+                    for (lane, (min_chunk, max_chunk)) in from.iter().copied()
+                        .zip(old_mins.chunks(chunk_length).zip(old_maxs.chunks(chunk_length)))
+                    {
+                        prev_bounds[lane] = Some((min_chunk.to_owned(), max_chunk.to_owned()));
+                    }
+                }
+            },
+            OpSetKind::Split(from, ref to) => {
+                level.copy_bounds = None;
+                let mut new_mins = vec![0; in_length];
+                let mut new_maxs = vec![0; in_length];
+                for lane in to.iter().copied() {
+                    {
+                        let bounds = if lane == from {
+                            &old_bounds
+                        } else {
+                            prev_bounds[lane].as_ref().unwrap()
+                        };
+                        new_mins.iter_mut().zip(bounds.0.iter()).for_each(|(v, e)| *v += e);
+                        new_maxs.iter_mut().zip(bounds.1.iter()).for_each(|(v, e)| *v += e);
+                    }
+                    prev_bounds[lane] = None;
+                }
+                prev_bounds[from] = Some((new_mins, new_maxs));
+            }
+        }
+    }
+    let dur = time_since(start);
+    println!("copy_counts:this time={};", dur);
+    Ok(())
 }
 
 #[cfg(test)]

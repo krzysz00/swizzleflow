@@ -440,6 +440,21 @@ impl Gather {
             .iter().copied().enumerate()
             .all(|(i, v)| i as isize == v)
     }
+
+    pub fn min_max_copies(&self, input_bound: usize, mins_out: &[u32], maxs_out: &[u32],
+                          fold_factor: Option<usize>) -> (Vec<u32>, Vec<u32>) {
+        let signed_bound = input_bound as isize;
+        let mut mins_ret = vec![0; input_bound];
+        let mut maxs_ret = vec![0; input_bound];
+
+        for (i, e) in self.data.iter().copied().enumerate().filter(|&(_, e)| e >= 0 && e < signed_bound) {
+            let e = e as usize;
+            let i = if let Some(fold) = fold_factor { i / fold } else { i };
+            mins_ret[e] += mins_out[i];
+            maxs_ret[e] += maxs_out[i];
+        }
+        (mins_ret, maxs_ret)
+    }
 }
 
 impl fmt::Display for Gather {

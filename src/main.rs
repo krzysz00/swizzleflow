@@ -21,6 +21,7 @@ use std::io::BufReader;
 
 use swizzleflow::problem_desc::ProblemDesc;
 use swizzleflow::matrix_load;
+use swizzleflow::operators;
 use swizzleflow::synthesis::{Mode, synthesize};
 use swizzleflow::misc::{open_file,parse_opt_arg};
 
@@ -93,6 +94,7 @@ fn run() -> Result<()> {
             .chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
         let max_lanes = initial.len();
         matrix_load::add_matrices(matrix_dir, &mut levels, max_lanes)?;
+        operators::add_copy_bounds(&mut levels, max_lanes)?;
         let max_syms = expected_syms.iter().map(|l| l.len()).max().unwrap_or(1);
         let fuel_arg = if let Some(f) = prune_fuel {
             f

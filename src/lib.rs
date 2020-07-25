@@ -18,7 +18,7 @@ pub mod matrix;
 mod transition_matrix;
 pub mod multiply;
 pub mod matrix_load;
-mod operators;
+pub mod operators;
 mod expected_syms_util;
 pub mod problem_desc;
 pub mod synthesis;

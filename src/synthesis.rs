@@ -44,6 +44,7 @@ pub enum Mode {
 struct SearchLevelStats {
     tested: AtomicUsize,
     pruned: AtomicUsize,
+    pruned_copy_count: AtomicUsize,
     failed: AtomicUsize,
     in_solution: AtomicUsize,
     value_checks: Option<Arc<Mutex<BTreeMap<usize, usize>>>>,
@@ -73,6 +74,10 @@ impl SearchLevelStats {
         self.pruned.fetch_add(1, Ordering::Relaxed);
     }
 
+    pub fn pruned_copy_count(&self) {
+        self.pruned_copy_count.fetch_add(1, Ordering::Relaxed);
+    }
+
     pub fn failed(&self) {
         self.failed.fetch_add(1, Ordering::Relaxed);
     }
@@ -94,6 +99,7 @@ impl Clone for SearchLevelStats {
     fn clone(&self) -> Self {
         Self { tested: AtomicUsize::new(self.tested.load(Ordering::SeqCst)),
                pruned: AtomicUsize::new(self.pruned.load(Ordering::SeqCst)),
+               pruned_copy_count: AtomicUsize::new(self.pruned_copy_count.load(Ordering::SeqCst)),
                in_solution: AtomicUsize::new(self.in_solution.load(Ordering::SeqCst)),
                failed: AtomicUsize::new(self.failed.load(Ordering::SeqCst)),
                value_checks: self.value_checks.clone(),
@@ -106,13 +112,14 @@ impl Display for SearchLevelStats {
         // Let's force a memory fence here to be safe
         let tested = self.tested.load(Ordering::SeqCst);
         let pruned = self.pruned.load(Ordering::Relaxed);
+        let pruned_copy_count = self.pruned_copy_count.load(Ordering::Relaxed);
         let failed = self.failed.load(Ordering::Relaxed);
         let in_solution = self.in_solution.load(Ordering::Relaxed);
 
         let continued = tested - pruned - failed;
 
-        write!(f, "tested={}; failed={}; pruned={}; continued={}; in_solution={};",
-               tested, failed, pruned, continued, in_solution)?;
+        write!(f, "tested={}; failed={}; pruned={}; copy_count={}; continued={}; in_solution={};",
+               tested, failed, pruned, pruned_copy_count, continued, in_solution)?;
 
         if COLLECT_STATS {
             if let Some(ref lock) = self.value_checks {
@@ -131,7 +138,7 @@ type States<'d, 'l> = SmallVec<[Option<&'l ProgState<'d>>; 4]>;
 
 // Invariant: any level with pruning enabled has a corresponding pruning matrix available
 fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
-              expected_syms: &[DomRef],
+              copy_bounds: Option<(&[u32], &[u32])>, expected_syms: &[DomRef],
               _cache: &ResultMap<'d>, tracker: &SearchLevelStats,
               level: usize, print_pruned: bool, prune_fuel: usize) -> bool {
     let mut value_checks = 0;
@@ -159,6 +166,27 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
                                  t1, t2);
                     }
                     return false;
+                }
+            }
+        }
+        if i == 0 {
+            if let Some((mins, maxs)) = copy_bounds {
+                for v in expected_syms.iter().copied() {
+                    let actual = target.inv_state[v].len() as u32;
+                    let min_copies: u32 = current.inv_state[v].iter()
+                        .copied().map(|i| mins[i]).sum();
+                    let max_copies: u32 = current.inv_state[v].iter()
+                        .copied().map(|i| maxs[i]).sum();
+                    if min_copies > actual || max_copies < actual {
+                        tracker.pruned();
+                        tracker.pruned_copy_count();
+                        if print_pruned {
+                            println!("pruned (copies) @ {}\n{}", level, current);
+                            println!("v = {}, actual = {}, min = {}, max = {}",
+                                 target.domain.get_value(v), actual, min_copies, max_copies);
+                        }
+                        return false;
+                    }
                 }
             }
         }
@@ -209,6 +237,8 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                 if level.prune {
                     if !viable(r, target,
                                level.matrix.as_ref().unwrap(),
+                               level.copy_bounds.as_ref()
+                                   .map(|(s, b)| (s.as_slice(), b.as_slice())),
                                &expected_syms[level.expected_syms],
                                cache.as_ref(), &tracker,
                                current_level, print_pruned, prune_fuel) {
@@ -303,6 +333,8 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                     if level.prune {
                         if !viable(state, target,
                                    level.matrix.as_ref().unwrap(),
+                                   level.copy_bounds.as_ref()
+                                       .map(|(s, b)| (s.as_slice(), b.as_slice())),
                                    &expected_syms[level.expected_syms],
                                    cache.as_ref(), &tracker,
                                    current_level, print_pruned, prune_fuel) {
