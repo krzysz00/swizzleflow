@@ -108,7 +108,12 @@ pub fn reg_select_gather(shape: &[Ix], operand1: usize, operand2: usize, c: isiz
 
 pub fn cond_keep_gather(shape: &[Ix], operand1: usize, operand2: usize, c: isize, combine: BinOp,
                         op: Op, restrict: &BTreeMap<usize, Ix>) -> Gather {
-    let name = format!("keep_if(d{} {} {} {} d{})", operand1, op.name(), c, combine.name(), operand2);
+    let name =
+        if c != 0 {
+            format!("keep_if(d{} {} {} {} d{})", operand1, op.name(), c, combine.name(), operand2)
+        } else {
+            format!("keep_if(d{} {} {}d{})", operand1, op.name(), combine.name(), operand2)
+        };
     Gather::new(shape,
                 |idxs: &[Ix]| {
                     let v2 = combine.perform(c, idxs[operand2] as isize);
@@ -141,8 +146,18 @@ pub fn reg_select(shape: &[Ix], consts: &[isize]) -> Result<OpSetKind> {
 pub fn cond_keep(shape: &[Ix], consts: &[isize],
                  restrict: &BTreeMap<usize, usize>) -> Result<OpSetKind> {
     let mut ret = HashSet::new();
-
     let op_len = shape.len();
+
+    let first_op = (0..op_len).filter(|d| !restrict.contains_key(d)).next()
+        .expect("Conditional keep needs at least one dimension that can be used");
+    let mut keep_all = cond_keep_gather(shape, first_op, first_op, 0, BinOp::Plus, Op::Eq, restrict);
+    keep_all.name = "keep_if(true)".to_owned();
+    ret.insert(keep_all);
+
+    let mut keep_none = cond_keep_gather(shape, first_op, first_op, 0, BinOp::Plus, Op::Neq, restrict);
+    keep_none.name = "keep_if(false)".to_owned();
+    ret.insert(keep_none);
+
     ret.extend(iproduct!(consts.iter(),
                          &[BinOp::Plus, BinOp::Minus],
                          (0..op_len).filter(|d| !restrict.contains_key(d)),
