@@ -15,6 +15,7 @@
 extern crate swizzleflow;
 
 use clap::clap_app;
+use std::cmp;
 use std::path::Path;
 use std::io::BufReader;
 
@@ -89,10 +90,10 @@ fn run() -> Result<()> {
         let domain = desc.make_domain(spec.view());
         let mut levels = desc.get_levels()
             .chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
-        let (initial, target, expected_syms) =
+        let (initials, target, expected_syms) =
             desc.build_problem(&domain, &levels, spec)
             .chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
-        let max_lanes = initial.len();
+        let max_lanes = initials.len();
         matrix_load::add_matrices(matrix_dir, &mut levels, max_lanes)?;
         operators::add_copy_bounds(&mut levels, max_lanes)?;
         let max_syms = expected_syms.iter().map(|l| l.len()).max().unwrap_or(1);
@@ -103,9 +104,9 @@ fn run() -> Result<()> {
         } else {
             max_syms
         };
-        let fuel = std::cmp::min(fuel_arg, max_syms);
+        let fuel = cmp::min(fuel_arg, max_syms);
         println!("Begin search");
-        synthesize(initial.clone(), &target, &levels, &expected_syms, synthesis_mode,
+        synthesize(initials.clone(), &target, &levels, &expected_syms, synthesis_mode,
                    print, print_pruned, fuel,  &name);
         matrix_load::remove_matrices(&mut levels);
     }

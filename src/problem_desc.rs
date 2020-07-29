@@ -159,6 +159,24 @@ fn parse_hvx_opts(options: Option<&OptionMap>, inplace: bool, fresh: bool,
     Ok((ret, permutations))
 }
 
+fn parse_swizzle_options(options: Option<&OptionMap>) -> Result<(usize, usize, usize)> {
+    let main_idx = int_option(options, "main")
+        .ok_or_else(|| ErrorKind::MissingOption("main".to_string()))?
+        as usize;
+    let second_idx = int_option(options, "second")
+        .ok_or_else(|| ErrorKind::MissingOption("second".to_string()))?
+        as usize;
+    let out_idx = int_option(options, "out")
+        .ok_or_else(|| ErrorKind::MissingOption("out".to_string()))?
+        as usize;
+    Ok((main_idx, second_idx, out_idx))
+}
+
+fn equal_except<T: Eq>(a: &[T], b: &[T], idx: usize) -> bool {
+    a.iter().zip(b.iter()).enumerate()
+        .all(|(i, (x, y))| i == idx || x == y)
+}
+
 impl GathersDesc {
     pub fn to_opset_kind(&self, in_shape: &[usize], out_shape: &[usize],
                          options: Option<&OptionMap>) -> Result<OpSetKind> {
@@ -228,104 +246,55 @@ impl GathersDesc {
                         let group = int_option(options, "group").unwrap_or(0);
                         broadcast(in_shape, out_shape, group as usize)
                     },
-                    "rots_no_group" | "rots" => {
-                        if out_shape != in_shape {
+                    "xforms_no_group" | "xforms" |
+                    "row_xforms_no_group" | "row_xforms" |
+                    "col_xforms_no_group" | "col_xforms "=> {
+                        let params =
+                            if options.is_some() {
+                                parse_swizzle_options(options)
+                            } else if s.starts_with("row_") {
+                                Ok((1, 0, 1))
+                            } else if s.starts_with("col_") {
+                                Ok((0, 1, 0))
+                            } else {
+                                Err(ErrorKind::MissingOption("main".to_string()).into())
+                            };
+                        let (main_idx, second_idx, out_idx) = params?;
+                        if !equal_except(in_shape, out_shape, out_idx) {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
-                        if options.is_some() {
-                            let main_idx = int_option(options, "main")
-                                .ok_or_else(|| ErrorKind::MissingOption("main".to_string()))?
-                                as usize;
-                            let second_idx = int_option(options, "second")
-                                .ok_or_else(|| ErrorKind::MissingOption("second".to_string()))?
-                                as usize;
-                            let out_idx = int_option(options, "out")
-                                .ok_or_else(|| ErrorKind::MissingOption("out".to_string()))?
-                                as usize;
-                            if s == "rots_no_group" {
-                                simple_rotations(out_shape, main_idx, second_idx, out_idx)
-                            }
-                            else {
-                                all_rotations(out_shape, main_idx, second_idx, out_idx)
-                            }
+
+                        if s.ends_with("_no_group") {
+                            simple_xforms(in_shape, out_shape, main_idx, second_idx, out_idx)
                         }
                         else {
-                            Err(ErrorKind::MissingOption("main".to_string()).into())
+                            all_xforms(in_shape, out_shape, main_idx, second_idx, out_idx)
                         }
                     },
-                   "xforms_no_group" | "xforms" => {
-                        if out_shape != in_shape {
+                    "rots_no_group" | "rots" |
+                    "row_rots_no_group" | "row_rots" |
+                    "col_rots_no_group" | "col_rots "=> {
+                        let params =
+                            if options.is_some() {
+                                parse_swizzle_options(options)
+                            } else if s.starts_with("row_") {
+                                Ok((1, 0, 1))
+                            } else if s.starts_with("col_") {
+                                Ok((0, 1, 0))
+                            } else {
+                                Err(ErrorKind::MissingOption("main".to_string()).into())
+                            };
+                        let (main_idx, second_idx, out_idx) = params?;
+                        if !equal_except(in_shape, out_shape, out_idx) {
                             return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
                         }
-                        if options.is_some() {
-                            let main_idx = int_option(options, "main")
-                                .ok_or_else(|| ErrorKind::MissingOption("main".to_string()))?
-                                as usize;
-                            let second_idx = int_option(options, "second")
-                                .ok_or_else(|| ErrorKind::MissingOption("second".to_string()))?
-                                as usize;
-                            let out_idx = int_option(options, "out")
-                                .ok_or_else(|| ErrorKind::MissingOption("out".to_string()))?
-                                as usize;
-                            if s == "xforms_no_group" {
-                                simple_xforms(out_shape, main_idx, second_idx, out_idx)
-                            }
-                            else {
-                                all_xforms(out_shape, main_idx, second_idx, out_idx)
-                            }
+
+                        if s.ends_with("_no_group") {
+                            simple_rotations(in_shape, out_shape, main_idx, second_idx, out_idx)
                         }
                         else {
-                            Err(ErrorKind::MissingOption("main".to_string()).into())
+                            all_rotations(in_shape, out_shape, main_idx, second_idx, out_idx)
                         }
-                    },
-                    "row_rots_no_group" => {
-                        if out_shape != in_shape {
-                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
-                        }
-                        // This is a compatibility alias
-                        simple_rotations(out_shape, 1, 0, 1)
-                    },
-                    "col_rots_no_group" => {
-                        if out_shape != in_shape {
-                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
-                        }
-                        simple_rotations(out_shape, 0, 1, 0)
-                    },
-                    "row_xforms_no_group" => {
-                        if out_shape != in_shape {
-                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
-                        }
-                        simple_xforms(out_shape, 1, 0, 1)
-                    },
-                    "col_xforms_no_group" => {
-                        if out_shape != in_shape {
-                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
-                        }
-                        simple_xforms(out_shape, 0, 1, 0)
-                    },
-                    "row_rots" => {
-                        if out_shape != in_shape {
-                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
-                        }
-                        all_rotations(out_shape, 1, 0, 1)
-                    },
-                    "col_rots" => {
-                        if out_shape != in_shape {
-                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
-                        }
-                        all_rotations(out_shape, 0, 1, 0)
-                    },
-                    "row_xforms" => {
-                        if out_shape != in_shape {
-                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
-                        }
-                        all_xforms(out_shape, 1, 0, 1)
-                    },
-                    "col_xforms" => {
-                        if out_shape != in_shape {
-                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
-                        }
-                        all_xforms(out_shape, 0, 1, 0)
                     },
                     "reg_select_no_consts" | "reg_select" => {
                         if out_shape[0..out_shape.len()-1] != in_shape[0..in_shape.len()-1] {
@@ -975,10 +944,12 @@ impl ProblemDesc {
                                         ProgState<'d>,
                                         Vec<Vec<DomRef>>)>
     {
-        let mut initials = Vec::<Option<ProgState<'d>>>::new();
+        let max_lanes = levels.iter().map(|s| s.lane + 1).max().unwrap_or(0);
+        let mut initials: Vec<Option<ProgState<'d>>> = vec![None; max_lanes];
         let mut expected_syms_idxs = Vec::<Option<usize>>::new();
         let mut expected_syms_sets = Vec::<BTreeSet<DomRef>>::new();
 
+        let mut n_initials = 0;
         for (idx, step) in self.steps.iter().enumerate() {
             let lane = step.lane as usize;
             if step.is_initial() {
@@ -992,9 +963,10 @@ impl ProblemDesc {
                 extending_set(&mut initials, lane, Some(state));
                 extending_set(&mut expected_syms_idxs, lane, Some(expected_syms_sets.len()));
                 expected_syms_sets.push(symbols);
+                n_initials += 1;
             }
             else {
-                let level = &levels[idx - initials.len()]; // Initial steps aren't synthesis levels
+                let level = &levels[idx - n_initials]; // Initial steps aren't synthesis levels
                 update_expected_syms(&level, domain, &mut expected_syms_idxs,
                                      &mut expected_syms_sets);
             }
@@ -1077,7 +1049,7 @@ mod tests {
         assert_eq!(ops.in_shape, trove_shape);
         assert_eq!(ops.out_shape, trove_shape);
         assert_eq!(ops.ops.gathers().unwrap().iter().collect::<HashSet<_>>(),
-                   swizzle::simple_rotations(&[3, 4], 1, 0, 1).unwrap()
+                   swizzle::simple_rotations(&[3, 4], &[3, 4], 1, 0, 1).unwrap()
                    .gathers().unwrap()
                    .iter().collect::<HashSet<_>>());
     }

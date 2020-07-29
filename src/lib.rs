@@ -143,10 +143,10 @@ mod tests {
         let shape = [8, 3];
         let s0 = initial.gather_by(&load_rep(&[24], &[8, 3]).unwrap()
                                    .gathers().unwrap()[0]);
-        let s1 = s0.gather_by(&xform(&shape, 1, 0, 1, 2, 1, 8, None, false));
-        let s2 = s1.gather_by(&rotate(&shape, 1, 0, 1, 0, None));
-        let s3 = s2.gather_by(&xform(&shape, 0, 1, 0, 3, 1, 3, None, false));
-        let s4 = s3.gather_by(&rotate(&shape, 0, 1, 0, 0, None));
+        let s1 = s0.gather_by(&xform(&shape, &shape, 1, 0, 1, 2, 1, 8, None, false));
+        let s2 = s1.gather_by(&rotate(&shape, &shape, 1, 0, 1, 0, None));
+        let s3 = s2.gather_by(&xform(&shape, &shape, 0, 1, 0, 3, 1, 3, None, false));
+        let s4 = s3.gather_by(&rotate(&shape, &shape, 0, 1, 0, 0, None));
         s4
     }
 
@@ -166,10 +166,10 @@ mod tests {
         use ndarray::ArrayD;
         use itertools::iproduct;
         use crate::operators::select::{cond_keep_gather,Op, BinOp};
-        let f1 = xform(&[4, 4], 1, 0, 1, 1, 0, 4, None, false);
-        let r1 = rotate(&[4, 4], 1, 0, 1, 0, None);
-        let f2 = xform(&[4, 4], 0, 1, 1, 1, -1, 4, None, false);
-        let r2 = rotate(&[4, 4], 1, 0, 1, 0, None);
+        let f1 = xform(&[4, 4], &[4, 4], 1, 0, 1, 1, 0, 4, None, false);
+        let r1 = rotate(&[4, 4], &[4, 4], 1, 0, 1, 0, None);
+        let f2 = xform(&[4, 4], &[4, 4], 0, 1, 1, 1, -1, 4, None, false);
+        let r2 = rotate(&[4, 4], &[4, 4], 1, 0, 1, 0, None);
         let broadcast = broadcast(&[4, 4], &[4, 2, 4], 1).unwrap().gathers().unwrap()[0].clone();
         let spec = poly_mult(4);
         let domain = Domain::new(spec.view());

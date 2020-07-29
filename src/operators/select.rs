@@ -85,7 +85,12 @@ impl BinOp {
 
 pub fn reg_select_gather(shape: &[Ix], operand1: usize, operand2: usize, c: isize, combine: BinOp,
                          op: Op) -> Gather {
-    let name = format!("select(d{} {} {} {} d{})", operand1, op.name(), c, combine.name(), operand2);
+    let name =
+        if c != 0 {
+            format!("keep_if(d{} {} {} {} d{})", operand1, op.name(), c, combine.name(), operand2)
+        } else {
+            format!("keep_if(d{} {} {}d{})", operand1, op.name(), combine.name(), operand2)
+        };
     let copy_idx = shape.len() - 1;
 
     let mut in_shape = shape.to_vec();
@@ -174,7 +179,11 @@ pub fn general_select_gather(in_shape: &[Ix], out_shape: &[Ix],
                              conds: &[Operator], axis: usize) -> Gather {
     let mut name = "select(".to_owned();
     for (a, b, c, binop, op) in conds {
-        let name_part = format!("d{} {} {} {} d{}, ", a, op.name(), c, binop.name(), b);
+        let name_part = if *c != 0 {
+            format!("keep_if(d{} {} {} {} d{})", a, op.name(), c, binop.name(), b)
+        } else {
+            format!("keep_if(d{} {} {}d{})", a, op.name(), binop.name(), b)
+        };
         name.push_str(&name_part);
     }
     name.push(')');

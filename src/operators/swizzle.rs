@@ -25,9 +25,10 @@ use std::collections::HashSet;
 
 use itertools::iproduct;
 
-pub fn xform(shape: &[Ix], main_axis: Ix, second_axis: Ix, swizzle_axis: Ix,
-           cf: Ixs, cr: Ixs, dr: Ix, group: Option<Ix>, wrap: bool) -> Gather {
-    let len_of_stable = shape[main_axis];
+pub fn xform(in_shape: &[Ix], out_shape: &[Ix],
+             main_axis: Ix, second_axis: Ix, swizzle_axis: Ix,
+             cf: Ixs, cr: Ixs, dr: Ix, group: Option<Ix>, wrap: bool) -> Gather {
+    let len_of_stable = in_shape[main_axis];
     let group = group.unwrap_or(len_of_stable);
     let wrap_name = if wrap { "_wrap" } else { "" };
     let name = if group != len_of_stable {
@@ -38,7 +39,7 @@ pub fn xform(shape: &[Ix], main_axis: Ix, second_axis: Ix, swizzle_axis: Ix,
     };
     let gcd = group.gcd(&(cf.abs() as usize));
     let df = group / gcd;
-    Gather::new(&shape,
+    Gather::new(&out_shape,
                 move |idxs: &[Ix]| {
                     let mut out = ShapeVec::from_slice(idxs);
                     let i = idxs[main_axis];
@@ -54,20 +55,21 @@ pub fn xform(shape: &[Ix], main_axis: Ix, second_axis: Ix, swizzle_axis: Ix,
                     let get_from = (fan_loc + rot_loc).mod_floor(&(group as isize))
                         as usize + ((i / group) * group);
                     out[swizzle_axis] = get_from;
-                    to_opt_ix(out.as_slice(), &shape)
+                    to_opt_ix(out.as_slice(), &in_shape)
                 }, name)
 }
 
-pub fn rotate(shape: &[Ix], main_axis: Ix, _second_axis: Ix, swizzle_axis: Ix,
+pub fn rotate(in_shape: &[Ix],out_shape: &[Ix],
+              main_axis: Ix, _second_axis: Ix, swizzle_axis: Ix,
               shift: Ixs, group: Option<Ix>) -> Gather {
-    let len_of_stable = shape[main_axis];
+    let len_of_stable = in_shape[main_axis];
     let group = group.unwrap_or(len_of_stable);
     let name = if group != len_of_stable {
         format!("grouped(rot({}),{})", shift, group)
     } else {
         format!("rot({})", shift)
     };
-    Gather::new(shape,
+    Gather::new(out_shape,
                 move |idxs: &[Ix]| {
                     let mut out = ShapeVec::from_slice(idxs);
                     let i = idxs[main_axis];
@@ -76,61 +78,57 @@ pub fn rotate(shape: &[Ix], main_axis: Ix, _second_axis: Ix, swizzle_axis: Ix,
                     let get_from = loc.mod_floor(&(group as isize)) as usize
                         + ((i / group) * group);
                     out[swizzle_axis] = get_from;
-                    to_opt_ix(out.as_slice(), shape)
+                    to_opt_ix(out.as_slice(), in_shape)
                 }, name)
 }
 
-pub fn simple_xforms(shape: &[Ix], main_axis: Ix, second_axis: Ix,
+pub fn simple_xforms(in_shape: &[Ix], out_shape: &[Ix],
+                     main_axis: Ix, second_axis: Ix,
                      swizzle_axis: Ix) -> Result<OpSetKind> {
     let mut ret = HashSet::new();
 
-    if shape[main_axis] != shape[swizzle_axis] {
-        return Err(ErrorKind::AxisLengthMismatch(main_axis, shape[main_axis],
-                                                 swizzle_axis, shape[swizzle_axis]).into());
+    if in_shape == out_shape {
+        ret.insert(identity_gather(out_shape));
     }
-
-    ret.insert(identity_gather(shape));
-    let cf_bound = shape[main_axis] as isize;
+    let cf_bound = in_shape[main_axis] as isize;
     let cr_bound = cf_bound;
-    let dr_bound = shape[second_axis];
+    let dr_bound = in_shape[second_axis];
     ret.extend(iproduct!((2..=dr_bound).filter(|i| dr_bound % i == 0).rev(),
                          (0..cr_bound).chain(-1..0),
                          (0..cf_bound).chain(-1..0))
-               .map(|(dr, cr, cf)| xform(shape, main_axis, second_axis, swizzle_axis,
+               .map(|(dr, cr, cf)| xform(in_shape, out_shape,
+                                         main_axis, second_axis, swizzle_axis,
                                          cf, cr, dr, None, false)));
     Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 
-pub fn simple_rotations(shape: &[Ix], main_axis: Ix, second_axis: Ix,
+pub fn simple_rotations(in_shape: &[Ix], out_shape: &[Ix],
+                        main_axis: Ix, second_axis: Ix,
                         swizzle_axis: Ix) -> Result<OpSetKind> {
     let mut ret = HashSet::new();
 
-    let stable_len = shape[main_axis];
-    if stable_len != shape[swizzle_axis] {
-        return Err(ErrorKind::AxisLengthMismatch(main_axis, stable_len,
-                                                 swizzle_axis, shape[swizzle_axis]).into());
+    if in_shape == out_shape {
+        ret.insert(identity_gather(out_shape));
     }
-
-    ret.insert(identity_gather(shape));
-    let shift_bound = stable_len as isize;
+    let shift_bound = in_shape[main_axis] as isize;
     ret.extend((0..=shift_bound).chain(-shift_bound+1..0)
-               .map(|c| rotate(shape, main_axis, second_axis, swizzle_axis,
+               .map(|c| rotate(in_shape, out_shape,
+                               main_axis, second_axis, swizzle_axis,
                                c, None)));
     Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 
-pub fn all_xforms(shape: &[Ix], main_axis: Ix, second_axis: Ix,
+pub fn all_xforms(in_shape: &[Ix], out_shape: &[Ix],
+                  main_axis: Ix, second_axis: Ix,
                   swizzle_axis: Ix) -> Result<OpSetKind> {
     let mut ret = HashSet::new();
 
-    let stable_len = shape[main_axis];
-    if shape[main_axis] != shape[swizzle_axis] {
-        return Err(ErrorKind::AxisLengthMismatch(main_axis, stable_len,
-                                                 swizzle_axis, shape[swizzle_axis]).into());
+    if in_shape == out_shape {
+        ret.insert(identity_gather(out_shape));
     }
+    let stable_len = in_shape[main_axis];
+    let dr_bound = in_shape[second_axis];
 
-    let dr_bound = shape[second_axis];
-    ret.insert(identity_gather(shape));
     for g in (2..=stable_len).rev().filter(|i| stable_len % i == 0) {
         let gs = g as isize;
         let cf_bound = gs;
@@ -140,26 +138,27 @@ pub fn all_xforms(shape: &[Ix], main_axis: Ix, second_axis: Ix,
                              (0..cr_bound).chain(-1..0),
                              (0..cf_bound).chain(-1..0))
                    .map(|(wrap, dr, cr, cf)|
-                        xform(shape, main_axis, second_axis, swizzle_axis,
+                        xform(in_shape, out_shape,
+                              main_axis, second_axis, swizzle_axis,
                               cf, cr, dr, Some(g), *wrap)));
     }
     Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 
-pub fn all_rotations(shape: &[Ix], main_axis: Ix, second_axis: Ix,
+pub fn all_rotations(in_shape: &[Ix], out_shape: &[Ix],
+                     main_axis: Ix, second_axis: Ix,
                      swizzle_axis: Ix) -> Result<OpSetKind> {
     let mut ret = HashSet::new();
-    let stable_len = shape[main_axis];
-    if stable_len != shape[swizzle_axis] {
-        return Err(ErrorKind::AxisLengthMismatch(main_axis, stable_len,
-                                                 swizzle_axis, shape[swizzle_axis]).into());
-    }
+    let stable_len = in_shape[main_axis];
 
-    ret.insert(identity_gather(shape));
+    if in_shape == out_shape {
+        ret.insert(identity_gather(out_shape));
+    }
     for g in (2..=stable_len).rev().filter(|i| stable_len % i == 0) {
         let gs = g as isize;
         ret.extend((0..gs).chain(-gs+1..0)
-                   .map(|c| rotate(shape, main_axis, second_axis, swizzle_axis,
+                   .map(|c| rotate(in_shape, out_shape,
+                                   main_axis, second_axis, swizzle_axis,
                                    c, Some(g))));
     }
     Ok(ret.into_iter().collect::<Vec<_>>().into())
