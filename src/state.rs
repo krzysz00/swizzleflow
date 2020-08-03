@@ -318,6 +318,7 @@ impl<'d> ProgState<'d> {
         let mut name = self.name.to_owned();
         name.push_str(";");
         name.push_str(&gather.name);
+        name.push_str("[Σ]");
         Some(Self::making_inverse(self.domain, array, name))
     }
 

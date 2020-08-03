@@ -122,9 +122,15 @@ fn vmux(regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix],
 
 // These encode rotates by way of align(a <- a, a)
 fn valign(regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix], m: usize) -> Gather {
+    let name = if m == 0 {
+        let new_regs = HvxRegs {v: None, u: regs.v.unwrap(), ..*regs};
+        format!("mov({})", new_regs)
+    } else {
+        format!("valign({}, {})", regs, m)
+    };
     generalize_instr(|_r, i, n| if i >= n - m { (0, i - (n - m)) } else { (1, i + m) },
                      regs, in_shape, out_shape,
-                     format!("valign({}, {})", regs, m))
+                     name)
 }
 
 fn vlalign(regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix], m: usize) -> Gather {
