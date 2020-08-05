@@ -103,6 +103,22 @@ fn vshuffoe(regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
         regs, in_shape, out_shape, format!("vshuffoe({})", regs))
 }
 
+fn vdeal(regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
+    match (regs.v.is_some(), regs.dd.is_some()) {
+        (true, true) =>
+            generalize_instr(|r, i, n|
+                             if i >= n/2 { (1, 2 * (i - n/2) + r) }
+                             else { (0, 2 * i + r) },
+                             regs, in_shape, out_shape,
+                             format!("vdeal({})", regs)),
+        (false, false) =>
+            generalize_instr(|r, i, n| (r, if i >= n / 2 { 2 * (i - n/2) + 1} else { 2 * i }),
+                             regs, in_shape, out_shape,
+                             format!("vdeal({})", regs)),
+        _ => panic!("Unsupported vdeal() format")
+    }
+}
+
 fn vswap(regs: &HvxRegs, in_shape: &[Ix], out_shape: &[Ix],
          mask: usize) -> Gather {
     // If the i-th bit of the mask is 1, register 0 in the destination gets
@@ -160,6 +176,7 @@ pub fn hvx_2x2(in_shape: &[Ix], out_shape: &[Ix],
     ret.insert(identity_gather(in_shape));
     for r in regs {
         ret.insert(vshuffoe(r, in_shape, out_shape));
+        ret.insert(vdeal(r, in_shape, out_shape));
         if Some(r.u) == r.dd && r.v == Some(r.d) {
             ret.insert(swap_regs(r, in_shape, out_shape));
         }
@@ -167,6 +184,9 @@ pub fn hvx_2x2(in_shape: &[Ix], out_shape: &[Ix],
         if swaps {
             ret.extend((0..(1 << n)).map(|i| vswap(r, in_shape, out_shape, i)));
         }
+    }
+    for g in &ret {
+        println!("{}", g);
     }
     return Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
@@ -193,4 +213,5 @@ pub fn hvx_2x1(in_shape: &[Ix], out_shape: &[Ix],
     return Ok(ret.into_iter().collect::<Vec<_>>().into())
 }
 
+// TODO 1x1 vdeal
 // TODO, get the 1x1 permutation network thing working
