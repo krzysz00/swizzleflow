@@ -230,39 +230,31 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
     let lane = level.lane;
     let current: &ProgState<'d> = curr_states[lane].unwrap();
     let cache = caches[current_level].clone();
-    let proceed = |c: Option<&ProgState<'d>>| {
+    let proceed = |r: &ProgState<'d>| {
         tracker.checking();
-        match c {
-            Some(r) => {
-                if level.prune {
-                    if !viable(r, target,
-                               level.matrix.as_ref().unwrap(),
-                               level.copy_bounds.as_ref()
-                                   .map(|(s, b)| (s.as_slice(), b.as_slice())),
-                               &expected_syms[level.expected_syms],
-                               cache.as_ref(), &tracker,
-                               current_level, print_pruned, prune_fuel) {
-                        return false;
-                    }
-                }
-                let new_states = copy_replacing(&curr_states,
-                                                lane, c);
-                let ret = search(new_states, target, levels, expected_syms,
-                                 current_level + 1, stats, mode, caches,
-                                 print, print_pruned, prune_fuel);
-                if ret {
-                    tracker.success();
-                    if print {
-                        println!("success_path [level {} @ lane {}]\n{}", current_level, lane, c.unwrap())
-                    }
-                }
-                ret
-            },
-            None => {
-                tracker.failed();
-                false
+        if level.prune {
+            if !viable(&r, target,
+                       level.matrix.as_ref().unwrap(),
+                       level.copy_bounds.as_ref()
+                       .map(|(s, b)| (s.as_slice(), b.as_slice())),
+                       &expected_syms[level.expected_syms],
+                       cache.as_ref(), &tracker,
+                       current_level, print_pruned, prune_fuel) {
+                return false;
             }
         }
+        let new_states = copy_replacing(&curr_states,
+                                        lane, Some(&r));
+        let ret = search(new_states, target, levels, expected_syms,
+                         current_level + 1, stats, mode, caches,
+                         print, print_pruned, prune_fuel);
+        if ret {
+            tracker.success();
+            if print {
+                println!("success_path [level {} @ lane {}]\n{}", current_level, lane, r)
+            }
+        }
+        ret
     };
 
     let ops = &level.ops.ops; // Get at the actual vector of gathers
@@ -275,7 +267,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                             gathers.iter().map(
                                 |o| {
                                     let res = current.gather_fold_by(o);
-                                    proceed(res.as_ref())
+                                    proceed(&res)
                                 })
                                 .fold(false, |acc, new| new || acc)
                         }
@@ -283,7 +275,7 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                             gathers.iter().any(
                                 |o| {
                                     let res = current.gather_fold_by(o);
-                                    proceed(res.as_ref())
+                                    proceed(&res)
                                 })
                         }
                     }
@@ -294,16 +286,16 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                             // Yep, this is meant not to be short-circuiting
                             gathers.iter().map(
                                 |o| {
-                                    let res = Some(current.gather_by(o));
-                                    proceed(res.as_ref())
+                                    let res = current.gather_by(o);
+                                    proceed(&res)
                                 })
                                 .fold(false, |acc, new| new || acc)
                         }
                         Mode::First => {
                             gathers.iter().any(
                                 |o| {
-                                    let res = Some(current.gather_by(o));
-                                    proceed(res.as_ref())
+                                    let res = current.gather_by(o);
+                                    proceed(&res)
                                 })
                         }
                     }
@@ -319,40 +311,38 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
                     if level.ops.has_fold() {
                         ProgState::stack_folding(&to_stack)
                     } else {
-                        Some(ProgState::stack(&to_stack))
+                        ProgState::stack(&to_stack)
                     };
-                if let Some(ref state) = next {
-                    let mut new_states = copy_replacing(&curr_states,
-                                                        to, next.as_ref());
-                    for i in from.iter().copied() {
-                        if i != to {
-                            new_states[i] = None
-                        }
+                let mut new_states = copy_replacing(&curr_states,
+                                                    to, Some(&next));
+                for i in from.iter().copied() {
+                    if i != to {
+                        new_states[i] = None
                     }
+                }
 
-                    if level.prune {
-                        if !viable(state, target,
-                                   level.matrix.as_ref().unwrap(),
-                                   level.copy_bounds.as_ref()
-                                       .map(|(s, b)| (s.as_slice(), b.as_slice())),
-                                   &expected_syms[level.expected_syms],
-                                   cache.as_ref(), &tracker,
-                                   current_level, print_pruned, prune_fuel) {
-                            return false;
-                        }
+                if level.prune {
+                    if !viable(&next, target,
+                               level.matrix.as_ref().unwrap(),
+                               level.copy_bounds.as_ref()
+                               .map(|(s, b)| (s.as_slice(), b.as_slice())),
+                               &expected_syms[level.expected_syms],
+                               cache.as_ref(), &tracker,
+                               current_level, print_pruned, prune_fuel) {
+                        return false;
                     }
+                }
 
-                    let ret = search(new_states, target, levels, expected_syms,
-                                     current_level + 1, stats, mode, caches,
-                                     print, print_pruned, prune_fuel);
-                    if ret {
-                        tracker.success();
-                        if print {
-                            println!("success_path [level {} @ lane {}]\n{}", current_level, lane, state)
-                        }
+                let ret = search(new_states, target, levels, expected_syms,
+                                 current_level + 1, stats, mode, caches,
+                                 print, print_pruned, prune_fuel);
+                if ret {
+                    tracker.success();
+                    if print {
+                        println!("success_path [level {} @ lane {}]\n{}", current_level, lane, next)
                     }
-                    ret
-                } else { tracker.failed(); false }
+                }
+                ret
             }
             OpSetKind::Split(into, copies) => {
                 tracker.checking();

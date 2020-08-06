@@ -49,7 +49,7 @@
       "lane": 0,
       "options": { "main": [1], "second": [0], "out": [1] },
       "out_shape": [4, 8],
-      "prune": false,
+      "prune": true,
       "then_fold": false
     },
     {
@@ -57,7 +57,7 @@
       "lane": 0,
       "options": { "main": [1], "second": [0], "out": [1] },
       "out_shape": [4, 4],
-      "prune": false,
+      "prune": true,
       "then_fold": false
     },
     {
@@ -65,7 +65,7 @@
       "lane": 1,
       "options": { "main": [1], "second": [0], "out": [1] },
       "out_shape": [4, 8],
-      "prune": false,
+      "prune": true,
       "then_fold": false
     },
     {
@@ -73,7 +73,7 @@
       "lane": 1,
       "options": { "main": [1], "second": [0], "out": [1] },
       "out_shape": [4, 4],
-      "prune": false,
+      "prune": true,
       "then_fold": false
     },
     {
@@ -117,7 +117,7 @@
       "lane": 2,
       "options": { "main": [1], "second": [0], "out": [1] },
       "out_shape": [4, 8],
-      "prune": false,
+      "prune": true,
       "then_fold": false
     },
     {
@@ -125,7 +125,7 @@
       "lane": 2,
       "options": { "main": [1], "second": [0], "out": [1] },
       "out_shape": [4, 4],
-      "prune": false,
+      "prune": true,
       "then_fold": false
     },
     {
@@ -133,7 +133,7 @@
       "lane": 3,
       "options": { "main": [1], "second": [0], "out": [1] },
       "out_shape": [4, 8],
-      "prune": false,
+      "prune": true,
       "then_fold": false
     },
     {
@@ -141,7 +141,7 @@
       "lane": 3,
       "options": { "main": [1], "second": [0], "out": [1] },
       "out_shape": [4, 4],
-      "prune": false,
+      "prune": true,
       "then_fold": false
     },
     {

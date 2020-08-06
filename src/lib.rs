@@ -185,7 +185,7 @@ mod tests {
         let s3 = state2.gather_by(&f2);
         let s4 = s3.gather_by(&r2);
 
-        let m = ProgState::stack_folding(&[&s2, &s4]).unwrap();
+        let m = ProgState::stack_folding(&[&s2, &s4]);
         let b = m.gather_by(&broadcast);
 
         let mut retain = std::collections::BTreeMap::new();
@@ -197,7 +197,7 @@ mod tests {
         retain.insert(1, 1);
         let c2 = cond_keep_gather(&[4, 2, 4], 2, 0, 0,
                                   BinOp::Plus, Op::Gt, &retain);
-        let d2 = d1.gather_fold_by(&c2).unwrap();
+        let d2 = d1.gather_fold_by(&c2);
 
         let tr = transpose_gather(&[4, 2], &[2, 4]);
         let transposed = d2.gather_by(&tr);

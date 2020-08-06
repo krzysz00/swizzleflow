@@ -248,7 +248,7 @@ impl GathersDesc {
                     },
                     "xforms_no_group" | "xforms" |
                     "row_xforms_no_group" | "row_xforms" |
-                    "col_xforms_no_group" | "col_xforms "=> {
+                    "col_xforms_no_group" | "col_xforms" => {
                         let params =
                             if options.is_some() {
                                 parse_swizzle_options(options)
@@ -273,7 +273,7 @@ impl GathersDesc {
                     },
                     "rots_no_group" | "rots" |
                     "row_rots_no_group" | "row_rots" |
-                    "col_rots_no_group" | "col_rots "=> {
+                    "col_rots_no_group" | "col_rots" => {
                         let params =
                             if options.is_some() {
                                 parse_swizzle_options(options)

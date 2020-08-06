@@ -292,11 +292,11 @@ impl<'d> ProgState<'d> {
         Self::making_inverse(self.domain, array, name)
     }
 
-    pub fn gather_fold_by(&self, gather: &Gather) -> Option<Self> {
+    pub fn gather_fold_by(&self, gather: &Gather) -> Self {
         let mut elements: SmallVec<[DomRef; 6]> =
             SmallVec::with_capacity(gather.data.shape()[gather.data.ndim()-1]);
         let slice = self.state.as_slice().unwrap();
-        let result: Option<Vec<DomRef>> =
+        let result: Vec<DomRef> =
             gather.data.genrows().into_iter()
             .map(|data| {
                 let data = data.as_slice().unwrap();
@@ -307,11 +307,10 @@ impl<'d> ProgState<'d> {
                                     else { slice.get(idx as usize).copied() })
                         .filter(|x| *x != 0));
                 elements.sort_unstable();
-                let ret = self.domain.find_fold(&elements);
+                let ret = self.domain.find_fold(&elements).unwrap_or(0);
                 elements.clear();
                 ret
             }).collect();
-        let result = result?;
         let array = ArrayD::from_shape_vec(&gather.data.shape()[0..gather.data.ndim()-1],
                                            result).unwrap();
 
@@ -319,7 +318,7 @@ impl<'d> ProgState<'d> {
         name.push_str(";");
         name.push_str(&gather.name);
         name.push_str("[Σ]");
-        Some(Self::making_inverse(self.domain, array, name))
+        Self::making_inverse(self.domain, array, name)
     }
 
     pub fn stack(states: &[&ProgState<'d>]) -> Self {
@@ -333,27 +332,26 @@ impl<'d> ProgState<'d> {
         Self::making_inverse(states[0].domain, array, name)
     }
 
-    pub fn stack_folding(states: &[&ProgState<'d>]) -> Option<Self> {
+    pub fn stack_folding(states: &[&ProgState<'d>]) -> Self {
         let slices: SmallVec<[&[DomRef]; 6]> =
             states.into_iter().map(|s| s.state.as_slice().unwrap())
             .collect();
         let len = slices[0].len();
         let domain = states[0].domain;
         let mut elements: SmallVec<[DomRef; 6]> = SmallVec::with_capacity(len);
-        let result: Option<Vec<DomRef>> = (0..len).map(
+        let result: Vec<DomRef> = (0..len).map(
             |i| {
                 elements.extend(slices.iter().map(|s| s[i]).filter(|v| *v != 0));
                 elements.sort_unstable();
-                let ret = domain.find_fold(&elements);
+                let ret = domain.find_fold(&elements).unwrap_or(0);
                 elements.clear();
                 ret
             }).collect();
-        let result = result?;
         let array = ArrayD::from_shape_vec(states[0].state.shape(),
                                            result).unwrap();
         let name = format!("stack_fold[{}]",
                            states.iter().map(|s| s.name.clone()).join(","));
-        Some(Self::making_inverse(domain, array, name))
+        Self::making_inverse(domain, array, name)
     }
 }
 
