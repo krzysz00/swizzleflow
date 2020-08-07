@@ -31,7 +31,8 @@ pub type Symbolic = u16;
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum Value {
-    Garbage,
+    Empty,
+    NotInDomain,
     Symbol(Symbolic),
     // Note: as an invariant, these are sorted
     Fold(Vec<Value>),
@@ -49,7 +50,8 @@ impl Display for Value {
                 }
                 write!(f, ")")
             }
-            Garbage => write!(f, "⊥")
+            Empty => write!(f, "∅"),
+            NotInDomain => write!(f, "⊥"),
         }
     }
 }
@@ -57,7 +59,7 @@ impl Display for Value {
 impl Value {
     pub fn fold(mut terms: Vec<Value>) -> Self {
         if terms.is_empty() {
-            Value::Garbage
+            Value::Empty
         }
         else {
             terms.sort();
@@ -67,9 +69,20 @@ impl Value {
 
     pub fn collect_subterms(&self, store: &mut Vec<BTreeSet<Value>>) -> usize {
         match self {
-            Value::Garbage => {
+            Value::Empty => {
                 if store.len() == 0 {
                     store.push(BTreeSet::new())
+                }
+                store[0].insert(self.clone());
+                0
+            }
+            Value::NotInDomain => {
+                if store.len() == 0 {
+                    store.push(BTreeSet::new())
+                }
+                // Defensive coding
+                if !store[0].contains(&Value::Empty) {
+                    store[0].insert(Value::Empty);
                 }
                 store[0].insert(self.clone());
                 0
@@ -105,7 +118,8 @@ impl Value {
 pub type DomRef = usize;
 
 // Invariants on Domains
-// - Domain reference 0 is to Garbage, which is the only term at level 0
+// - Domain reference 0 is to Empty, reference 1 is NotInDomain
+// - these are the only terms at level 0
 // - DomRefs are sorted: id1 < id1 implies that the corresponding v1 < v2
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Domain {
@@ -120,7 +134,8 @@ pub struct Domain {
 impl Domain {
     pub fn new(spec: ArrayViewD<Value>) -> Self {
         let mut store: Vec<BTreeSet<Value>> = Vec::new();
-        Value::Garbage.collect_subterms(&mut store);
+        Value::Empty.collect_subterms(&mut store);
+        Value::NotInDomain.collect_subterms(&mut store);
 
         for e in spec {
             e.collect_subterms(&mut store);
@@ -148,7 +163,7 @@ impl Domain {
         // Must exist due to base symbols
         for (i, e) in elements.iter().enumerate() {
             match e {
-                Value::Garbage | Value::Symbol(_) =>
+                Value::Empty | Value::NotInDomain | Value::Symbol(_) =>
                     (),
                 Value::Fold(v) => {
                     for subterm in v {
@@ -174,7 +189,7 @@ impl Domain {
                 } else { None }
             }).collect::<HashMap<Vec<DomRef>, DomRef>>();
         // Semantics of empty fold
-        fold_ref_map.insert(vec![], *element_map.get(&Value::Garbage).unwrap());
+        fold_ref_map.insert(vec![], *element_map.get(&Value::Empty).unwrap());
         Domain { elements, element_map, subterms_of, fold_ref_map,
                  imm_subterms, imm_superterms }
     }
@@ -307,7 +322,8 @@ impl<'d> ProgState<'d> {
                                     else { slice.get(idx as usize).copied() })
                         .filter(|x| *x != 0));
                 elements.sort_unstable();
-                let ret = self.domain.find_fold(&elements).unwrap_or(0);
+                // Bad folds -> NotInDomain
+                let ret = self.domain.find_fold(&elements).unwrap_or(1);
                 elements.clear();
                 ret
             }).collect();
@@ -343,7 +359,7 @@ impl<'d> ProgState<'d> {
             |i| {
                 elements.extend(slices.iter().map(|s| s[i]).filter(|v| *v != 0));
                 elements.sort_unstable();
-                let ret = domain.find_fold(&elements).unwrap_or(0);
+                let ret = domain.find_fold(&elements).unwrap_or(1);
                 elements.clear();
                 ret
             }).collect();
