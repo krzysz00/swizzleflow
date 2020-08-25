@@ -24,8 +24,8 @@ def fetch_swizzle_inventor(dataset):
         parsing.parse_swizzle_inventor_file(f"../results/{dataset}"))
 
 PROBLEM_NAMES = {
-    '1d-conv': 'Convolution (weights, k=3)',
-    '1d-stencil': 'Convolution (no weights, k=3)',
+    '1d-conv': '1D stencil (k=3)',
+    '1d-stencil': 'Convolution (k=3)',
     'trove-crc-1': 'Trove (CRC, s=1)',
     'trove-crc-2': 'Trove (CRC, s=2)',
     'trove-crc-3': 'Trove (CRC, s=3)',

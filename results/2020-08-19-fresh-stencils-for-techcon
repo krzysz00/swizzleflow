@@ -1,0 +1,275 @@
+spec:specs/swinv_like_big/l1/2d-stencil-7.json
+build:matrices/4,4-identity-4,4,7,7 density=0.00390625; time=0.039318671;
+Using newly-built matrices/4,4-identity-4,4,7,7
+build:matrices/4,4,7,7-2s-rnc{main[1]out[1]second[3]}-4,4,7,7 density=0.000006507705122865473; time=0.068851683;
+mul_stats:: b_sparse=true;
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}-4,4,7,7 density=0.015625; time=0.055119283;
+build:matrices/4,4,7,7-2s-xfnc{main[1]out[1]second[3]}-4,4,7,7 density=0.000011156065924912239; time=0.2550391;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}-4,4,7,7 density=0.05181760204081633; time=0.072240983;
+build:matrices/4,4,7,7-2s-gnc{axis[3]dims[1|3]}-4,4,7,3 density=0.00006561935998889352; time=1.10179059;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}_4,4,7,7-2s-gnc{axis[3]dims[1|3]}-4,4,7,3 density=0.0625; time=0.051868463;
+build:matrices/4,4,7,3-2s-rnc{main[0]out[0]second[2]}-4,4,7,3 density=0.000035430839002267575; time=0.00934745;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}_4,4,7,7-2s-gnc{axis[3]dims[1|3]}_4,4,7,3-2s-rnc{main[0]out[0]second[2]}-4,4,7,3 density=0.25; time=0.007479843;
+build:matrices/4,4,7,3-2s-xfnc{main[0]out[0]second[2]}-4,4,7,3 density=0.00006073858114674441; time=0.041404372;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,7,7-2s-rnc{main[1]out[1]second[3]}_4,4,7,7-2s-xfnc{main[1]out[1]second[3]}_4,4,7,7-2s-gnc{axis[3]dims[1|3]}_4,4,7,3-2s-rnc{main[0]out[0]second[2]}_4,4,7,3-2s-xfnc{main[0]out[0]second[2]}-4,4,7,3 density=0.8290816326530612; time=0.013788337;
+prune_bounds[7][0] = Some((1, 1))
+prune_bounds[6][0] = Some((1, 1))
+prune_bounds[5][0] = Some((1, 1))
+prune_bounds[4][0] = Some((0, 7))
+prune_bounds[3][0] = Some((0, 7))
+prune_bounds[2][0] = Some((0, 7))
+copy_counts:this time=0.000690814;
+Begin search
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=0;
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=0;
+stats:2 name=2s-gnc{axis[2]dims[0|2]}; lane=0; pruning=true; tested=93; failed=0; pruned=93; copy_count=0; continued=0; in_solution=0;
+stats:3 name=2s-xfnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=0; failed=0; pruned=0; copy_count=0; continued=0; in_solution=0;
+stats:4 name=2s-rnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=0; failed=0; pruned=0; copy_count=0; continued=0; in_solution=0;
+stats:5 name=2s-gnc{axis[3]dims[1|3]}; lane=0; pruning=true; tested=0; failed=0; pruned=0; copy_count=0; continued=0; in_solution=0;
+stats:6 name=2s-xfnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=0; failed=0; pruned=0; copy_count=0; continued=0; in_solution=0;
+stats:7 name=2s-rnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=0; failed=0; pruned=0; copy_count=0; continued=0; in_solution=0;
+stats:8 name=identity; lane=0; pruning=false; tested=0; failed=0; pruned=0; copy_count=0; continued=0; in_solution=0;
+stats:9 name=(last); lane=0; pruning=false; tested=0; failed=0; pruned=0; copy_count=0; continued=0; in_solution=0;
+search:specs/swinv_like_big/l1/2d-stencil-7.json success=false; mode=All; prune_fuel=100; time=0.000581277;
+spec:specs/swinv_like/l1/1d-stencil.json
+build:matrices/32-cond_keep_no_consts-32,3 density=0.0009765625; time=0.001452564;
+Using newly-built matrices/32-cond_keep_no_consts-32,3
+build:matrices/32,3-col_rots_no_group-32,3 density=0.003472222222222222; time=0.007111589;
+mul_stats:: b_sparse=true;
+mul:matrices/32-cond_keep_no_consts_32,3-col_rots_no_group-32,3 density=0.03125; time=0.013232393;
+build:matrices/32,3-col_xforms_no_group-32,3 density=0.043589650848765434; time=0.644054615;
+mul_stats:: b_sparse=false;
+mul:matrices/32-cond_keep_no_consts_32,3-col_rots_no_group_32,3-col_xforms_no_group-32,3 density=0.8824598524305556; time=0.135788051;
+prune_bounds[3][0] = Some((0, 1))
+prune_bounds[2][0] = Some((0, 1))
+prune_bounds[1][0] = Some((0, 1))
+copy_counts:this time=0.000715441;
+Begin search
+solution:init;load_trunc;keep_if(d0 >= +d1);xform(0,1,3);id;keep_if(true)[Σ]
+stats:0 name=load_trunc; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:1 name=reg_select_no_consts; lane=0; pruning=true; tested=14; failed=0; pruned=13; copy_count=2; continued=1; in_solution=1;
+stats:2 name=col_xforms_no_group; lane=0; pruning=true; tested=992; failed=0; pruned=991; copy_count=0; continued=1; in_solution=1;
+stats:3 name=col_rots_no_group; lane=0; pruning=true; tested=32; failed=0; pruned=31; copy_count=0; continued=1; in_solution=1;
+stats:4 name=cond_keep_no_consts; lane=0; pruning=false; tested=14; failed=0; pruned=0; copy_count=0; continued=14; in_solution=1;
+stats:5 name=(last); lane=0; pruning=false; tested=14; failed=13; pruned=0; copy_count=0; continued=1; in_solution=1;
+search:specs/swinv_like/l1/1d-stencil.json success=true; mode=All; prune_fuel=34; time=0.003261452;
+spec:specs/swinv_like/l1/2d-stencil-3.json
+build:matrices/4,4-identity-4,4,3,3 density=0.00390625; time=0.000903429;
+Using newly-built matrices/4,4-identity-4,4,3,3
+build:matrices/4,4,3,3-2s-rnc{main[1]out[1]second[3]}-4,4,3,3 density=0.00019290123456790122; time=0.001725755;
+mul_stats:: b_sparse=true;
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}-4,4,3,3 density=0.015625; time=0.001462942;
+build:matrices/4,4,3,3-2s-xfnc{main[1]out[1]second[3]}-4,4,3,3 density=0.0003054269547325103; time=0.003909295;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}-4,4,3,3 density=0.04991319444444445; time=0.002095137;
+build:matrices/4,4,3,3-2s-gnc{axis[3]dims[1|3]}-4,4,3,2 density=0.0003918306327160494; time=0.003162808;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}_4,4,3,3-2s-gnc{axis[3]dims[1|3]}-4,4,3,2 density=0.0625; time=0.000979808;
+build:matrices/4,4,3,2-2s-rnc{main[0]out[0]second[2]}-4,4,3,2 density=0.00043402777777777775; time=0.000602637;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}_4,4,3,3-2s-gnc{axis[3]dims[1|3]}_4,4,3,2-2s-rnc{main[0]out[0]second[2]}-4,4,3,2 density=0.25; time=0.000506142;
+build:matrices/4,4,3,2-2s-xfnc{main[0]out[0]second[2]}-4,4,3,2 density=0.0006872106481481482; time=0.001626675;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,3,3-2s-rnc{main[1]out[1]second[3]}_4,4,3,3-2s-xfnc{main[1]out[1]second[3]}_4,4,3,3-2s-gnc{axis[3]dims[1|3]}_4,4,3,2-2s-rnc{main[0]out[0]second[2]}_4,4,3,2-2s-xfnc{main[0]out[0]second[2]}-4,4,3,2 density=0.7986111111111112; time=0.000839285;
+prune_bounds[7][0] = Some((1, 1))
+prune_bounds[6][0] = Some((1, 1))
+prune_bounds[5][0] = Some((1, 1))
+prune_bounds[4][0] = Some((0, 3))
+prune_bounds[3][0] = Some((0, 3))
+prune_bounds[2][0] = Some((0, 3))
+copy_counts:this time=0.000082486;
+Begin search
+solution:init;id;load_grid_2d;select(keep_if(d0 >= +d2));xform(0,1,3);id;select(keep_if(d1 >= +d3));xform(0,1,3);id;id[Σ]
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:2 name=2s-gnc{axis[2]dims[0|2]}; lane=0; pruning=true; tested=14; failed=0; pruned=13; copy_count=2; continued=1; in_solution=1;
+stats:3 name=2s-xfnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=12; failed=0; pruned=11; copy_count=0; continued=1; in_solution=1;
+stats:4 name=2s-rnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=4; failed=0; pruned=3; copy_count=0; continued=1; in_solution=1;
+stats:5 name=2s-gnc{axis[3]dims[1|3]}; lane=0; pruning=true; tested=14; failed=0; pruned=13; copy_count=2; continued=1; in_solution=1;
+stats:6 name=2s-xfnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=12; failed=0; pruned=11; copy_count=0; continued=1; in_solution=1;
+stats:7 name=2s-rnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=4; failed=0; pruned=3; copy_count=0; continued=1; in_solution=1;
+stats:8 name=identity; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:9 name=(last); lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+search:specs/swinv_like/l1/2d-stencil-3.json success=true; mode=All; prune_fuel=36; time=0.002748558;
+spec:specs/swinv_like/l1/2d-stencil-5.json
+build:matrices/4,4-identity-4,4,5,5 density=0.00390625; time=0.007931202;
+Using newly-built matrices/4,4-identity-4,4,5,5
+build:matrices/4,4,5,5-2s-rnc{main[1]out[1]second[3]}-4,4,5,5 density=0.000025; time=0.01454175;
+mul_stats:: b_sparse=true;
+mul:matrices/4,4-identity_4,4,5,5-2s-rnc{main[1]out[1]second[3]}-4,4,5,5 density=0.015625; time=0.010930383;
+build:matrices/4,4,5,5-2s-xfnc{main[1]out[1]second[3]}-4,4,5,5 density=0.000040875; time=0.061755042;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,5,5-2s-rnc{main[1]out[1]second[3]}_4,4,5,5-2s-xfnc{main[1]out[1]second[3]}-4,4,5,5 density=0.05109375; time=0.01661084;
+build:matrices/4,4,5,5-2s-gnc{axis[3]dims[1|3]}-4,4,5,2 density=0.000140625; time=0.027784922;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,5,5-2s-rnc{main[1]out[1]second[3]}_4,4,5,5-2s-xfnc{main[1]out[1]second[3]}_4,4,5,5-2s-gnc{axis[3]dims[1|3]}-4,4,5,2 density=0.0625; time=0.006324398;
+build:matrices/4,4,5,2-2s-rnc{main[0]out[0]second[2]}-4,4,5,2 density=0.00015625; time=0.002251082;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,5,5-2s-rnc{main[1]out[1]second[3]}_4,4,5,5-2s-xfnc{main[1]out[1]second[3]}_4,4,5,5-2s-gnc{axis[3]dims[1|3]}_4,4,5,2-2s-rnc{main[0]out[0]second[2]}-4,4,5,2 density=0.25; time=0.001897908;
+build:matrices/4,4,5,2-2s-xfnc{main[0]out[0]second[2]}-4,4,5,2 density=0.00025546875; time=0.004777132;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,5,5-2s-rnc{main[1]out[1]second[3]}_4,4,5,5-2s-xfnc{main[1]out[1]second[3]}_4,4,5,5-2s-gnc{axis[3]dims[1|3]}_4,4,5,2-2s-rnc{main[0]out[0]second[2]}_4,4,5,2-2s-xfnc{main[0]out[0]second[2]}-4,4,5,2 density=0.8175; time=0.00284321;
+prune_bounds[7][0] = Some((1, 1))
+prune_bounds[6][0] = Some((1, 1))
+prune_bounds[5][0] = Some((1, 1))
+prune_bounds[4][0] = Some((0, 5))
+prune_bounds[3][0] = Some((0, 5))
+prune_bounds[2][0] = Some((0, 5))
+copy_counts:this time=0.000296858;
+Begin search
+solution:init;id;load_grid_2d;select(keep_if(d0 >= +d2));xform(0,1,5);id;select(keep_if(d1 >= +d3));xform(0,1,5);id;id[Σ]
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:2 name=2s-gnc{axis[2]dims[0|2]}; lane=0; pruning=true; tested=14; failed=0; pruned=13; copy_count=4; continued=1; in_solution=1;
+stats:3 name=2s-xfnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=12; failed=0; pruned=11; copy_count=0; continued=1; in_solution=1;
+stats:4 name=2s-rnc{main[0]out[0]second[2]}; lane=0; pruning=true; tested=4; failed=0; pruned=3; copy_count=0; continued=1; in_solution=1;
+stats:5 name=2s-gnc{axis[3]dims[1|3]}; lane=0; pruning=true; tested=14; failed=0; pruned=13; copy_count=4; continued=1; in_solution=1;
+stats:6 name=2s-xfnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=12; failed=0; pruned=11; copy_count=0; continued=1; in_solution=1;
+stats:7 name=2s-rnc{main[1]out[1]second[3]}; lane=0; pruning=true; tested=4; failed=0; pruned=3; copy_count=0; continued=1; in_solution=1;
+stats:8 name=identity; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:9 name=(last); lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+search:specs/swinv_like/l1/2d-stencil-5.json success=true; mode=All; prune_fuel=64; time=0.039268021;
+spec:specs/swinv_like_big/l3/2d-stencil-7.json
+load:matrices/4,4-identity-4,4,7,7 density=0.00390625; time=0.036062786;
+build:matrices/4,4,7,7-2s-r{main[1]out[1]second[3]}-4,4,7,7 density=0.0000073211682632236566; time=0.062222499;
+mul_stats:: b_sparse=true;
+mul:matrices/4,4-identity_4,4,7,7-2s-r{main[1]out[1]second[3]}-4,4,7,7 density=0.017578125; time=0.049476497;
+build:matrices/4,4,7,7-2s-xf{main[1]out[1]second[3]}-4,4,7,7 density=0.000011654104582274392; time=0.267990542;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,7,7-2s-r{main[1]out[1]second[3]}_4,4,7,7-2s-xf{main[1]out[1]second[3]}-4,4,7,7 density=0.05253507653061224; time=0.063968591;
+build:matrices/4,4,7,7-2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}-4,4,7,3 density=0.00007741457552408718; time=44.460615866;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,7,7-2s-r{main[1]out[1]second[3]}_4,4,7,7-2s-xf{main[1]out[1]second[3]}_4,4,7,7-2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}-4,4,7,3 density=0.0625; time=0.268871392;
+build:matrices/4,4,7,3-2s-r{main[0]out[0]second[2]}-4,4,7,3 density=0.00003985969387755102; time=0.013551228;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,7,7-2s-r{main[1]out[1]second[3]}_4,4,7,7-2s-xf{main[1]out[1]second[3]}_4,4,7,7-2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}_4,4,7,3-2s-r{main[0]out[0]second[2]}-4,4,7,3 density=0.28125; time=0.01008258;
+build:matrices/4,4,7,3-2s-xf{main[0]out[0]second[2]}-4,4,7,3 density=0.00006345012494793836; time=0.055037751;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,7,7-2s-r{main[1]out[1]second[3]}_4,4,7,7-2s-xf{main[1]out[1]second[3]}_4,4,7,7-2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}_4,4,7,3-2s-r{main[0]out[0]second[2]}_4,4,7,3-2s-xf{main[0]out[0]second[2]}-4,4,7,3 density=0.8405612244897959; time=0.018544607;
+prune_bounds[7][0] = Some((1, 1))
+prune_bounds[6][0] = Some((1, 1))
+prune_bounds[5][0] = Some((1, 1))
+prune_bounds[4][0] = Some((0, 7))
+prune_bounds[3][0] = Some((0, 7))
+prune_bounds[2][0] = Some((0, 7))
+copy_counts:this time=0.011618761;
+Begin search
+solution:init;id;load_grid_2d;select(keep_if(d0 >= +d2)keep_if(d2 <= 4 + d0));xform(0,1,7);id;select(keep_if(d1 >= +d3)keep_if(d3 > 4 - d3));xform(0,1,7);id;id[Σ]
+solution:init;id;load_grid_2d;select(keep_if(d0 >= +d2)keep_if(d2 <= 4 + d0));xform(0,1,7);id;select(keep_if(d1 >= +d3)keep_if(d3 <= 4 + d1));xform(0,1,7);id;id[Σ]
+solution:init;id;load_grid_2d;select(keep_if(d0 >= +d2)keep_if(d2 > 4 - d2));xform(0,1,7);id;select(keep_if(d1 >= +d3)keep_if(d3 > 4 - d3));xform(0,1,7);id;id[Σ]
+solution:init;id;load_grid_2d;select(keep_if(d0 >= +d2)keep_if(d2 > 4 - d2));xform(0,1,7);id;select(keep_if(d1 >= +d3)keep_if(d3 <= 4 + d1));xform(0,1,7);id;id[Σ]
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:2 name=2s-g{axis[2]consts[0|1|-1|4|-4]dims[0|2]}; lane=0; pruning=true; tested=1469; failed=0; pruned=1462; copy_count=101; continued=7; in_solution=2;
+stats:3 name=2s-xf{main[0]out[0]second[2]}; lane=0; pruning=true; tested=98; failed=0; pruned=96; copy_count=0; continued=2; in_solution=2;
+stats:4 name=2s-r{main[0]out[0]second[2]}; lane=0; pruning=true; tested=10; failed=0; pruned=8; copy_count=0; continued=2; in_solution=2;
+stats:5 name=2s-g{axis[3]consts[0|1|-1|4|-4]dims[1|3]}; lane=0; pruning=true; tested=2938; failed=0; pruned=2934; copy_count=212; continued=4; in_solution=4;
+stats:6 name=2s-xf{main[1]out[1]second[3]}; lane=0; pruning=true; tested=56; failed=0; pruned=52; copy_count=0; continued=4; in_solution=4;
+stats:7 name=2s-r{main[1]out[1]second[3]}; lane=0; pruning=true; tested=20; failed=0; pruned=16; copy_count=0; continued=4; in_solution=4;
+stats:8 name=identity; lane=0; pruning=false; tested=4; failed=0; pruned=0; copy_count=0; continued=4; in_solution=4;
+stats:9 name=(last); lane=0; pruning=false; tested=4; failed=0; pruned=0; copy_count=0; continued=4; in_solution=4;
+search:specs/swinv_like_big/l3/2d-stencil-7.json success=true; mode=All; prune_fuel=100; time=1.6513111980000001;
+spec:specs/swinv_like/l3/1d-stencil.json
+build:matrices/32-cond_keep-32,3 density=0.0009765625; time=0.010962637;
+Using newly-built matrices/32-cond_keep-32,3
+build:matrices/32,3-col_rots-32,3 density=0.004523383246527778; time=0.050833643;
+mul_stats:: b_sparse=true;
+mul:matrices/32-cond_keep_32,3-col_rots-32,3 density=0.04071044921875; time=0.032254845;
+build:matrices/32,3-col_xforms-32,3 density=0.046303513609332804; time=1.233427223;
+mul_stats:: b_sparse=false;
+mul:matrices/32-cond_keep_32,3-col_rots_32,3-col_xforms-32,3 density=0.9083069695366753; time=0.25598718;
+prune_bounds[3][0] = Some((0, 1))
+prune_bounds[2][0] = Some((0, 1))
+prune_bounds[1][0] = Some((0, 1))
+copy_counts:this time=0.001703323;
+Begin search
+solution:init;load_trunc;keep_if(d0 >= +d1);xform(0,1,3);id;keep_if(true)[Σ]
+solution:init;load_trunc;keep_if(d0 > 1 - d1);xform(0,31,3);rot(2);keep_if(true)[Σ]
+stats:0 name=load_trunc; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:1 name=reg_select; lane=0; pruning=true; tested=38; failed=0; pruned=36; copy_count=4; continued=2; in_solution=2;
+stats:2 name=col_xforms; lane=0; pruning=true; tested=2694; failed=0; pruned=2692; copy_count=0; continued=2; in_solution=2;
+stats:3 name=col_rots; lane=0; pruning=true; tested=116; failed=0; pruned=114; copy_count=0; continued=2; in_solution=2;
+stats:4 name=cond_keep; lane=0; pruning=false; tested=76; failed=0; pruned=0; copy_count=0; continued=76; in_solution=2;
+stats:5 name=(last); lane=0; pruning=false; tested=76; failed=74; pruned=0; copy_count=0; continued=2; in_solution=2;
+search:specs/swinv_like/l3/1d-stencil.json success=true; mode=All; prune_fuel=34; time=0.015681192;
+spec:specs/swinv_like/l3/2d-stencil-3.json
+load:matrices/4,4-identity-4,4,3,3 density=0.00390625; time=0.002145229;
+build:matrices/4,4,3,3-2s-r{main[1]out[1]second[3]}-4,4,3,3 density=0.00021701388888888888; time=0.003062962;
+mul_stats:: b_sparse=true;
+mul:matrices/4,4-identity_4,4,3,3-2s-r{main[1]out[1]second[3]}-4,4,3,3 density=0.017578125; time=0.002715259;
+build:matrices/4,4,3,3-2s-xf{main[1]out[1]second[3]}-4,4,3,3 density=0.0003154738940329218; time=0.009376512;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,3,3-2s-r{main[1]out[1]second[3]}_4,4,3,3-2s-xf{main[1]out[1]second[3]}-4,4,3,3 density=0.050455729166666664; time=0.003792066;
+build:matrices/4,4,3,3-2s-g{axis[3]dims[1|3]}-4,4,3,2 density=0.00041594328703703704; time=0.018973102;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,3,3-2s-r{main[1]out[1]second[3]}_4,4,3,3-2s-xf{main[1]out[1]second[3]}_4,4,3,3-2s-g{axis[3]dims[1|3]}-4,4,3,2 density=0.0625; time=0.00178869;
+build:matrices/4,4,3,2-2s-r{main[0]out[0]second[2]}-4,4,3,2 density=0.00048828125; time=0.0013522;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,3,3-2s-r{main[1]out[1]second[3]}_4,4,3,3-2s-xf{main[1]out[1]second[3]}_4,4,3,3-2s-g{axis[3]dims[1|3]}_4,4,3,2-2s-r{main[0]out[0]second[2]}-4,4,3,2 density=0.28125; time=0.001141541;
+build:matrices/4,4,3,2-2s-xf{main[0]out[0]second[2]}-4,4,3,2 density=0.0007098162615740741; time=0.003059474;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,3,3-2s-r{main[1]out[1]second[3]}_4,4,3,3-2s-xf{main[1]out[1]second[3]}_4,4,3,3-2s-g{axis[3]dims[1|3]}_4,4,3,2-2s-r{main[0]out[0]second[2]}_4,4,3,2-2s-xf{main[0]out[0]second[2]}-4,4,3,2 density=0.8072916666666666; time=0.001364646;
+prune_bounds[7][0] = Some((1, 1))
+prune_bounds[6][0] = Some((1, 1))
+prune_bounds[5][0] = Some((1, 1))
+prune_bounds[4][0] = Some((0, 3))
+prune_bounds[3][0] = Some((0, 3))
+prune_bounds[2][0] = Some((0, 3))
+copy_counts:this time=0.000223848;
+Begin search
+solution:init;id;load_grid_2d;select(keep_if(d0 > 1 - d2));xform(0,3,3);rot(2);select(keep_if(d1 > 1 - d3));xform(0,3,3);rot(2);id[Σ]
+solution:init;id;load_grid_2d;select(keep_if(d0 > 1 - d2));xform(0,3,3);rot(2);select(keep_if(d1 >= +d3));xform(0,1,3);id;id[Σ]
+solution:init;id;load_grid_2d;select(keep_if(d0 >= +d2));xform(0,1,3);id;select(keep_if(d1 > 1 - d3));xform(0,3,3);rot(2);id[Σ]
+solution:init;id;load_grid_2d;select(keep_if(d0 >= +d2));xform(0,1,3);id;select(keep_if(d1 >= +d3));xform(0,1,3);id;id[Σ]
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:2 name=2s-g{axis[2]dims[0|2]}; lane=0; pruning=true; tested=38; failed=0; pruned=36; copy_count=5; continued=2; in_solution=2;
+stats:3 name=2s-xf{main[0]out[0]second[2]}; lane=0; pruning=true; tested=28; failed=0; pruned=26; copy_count=0; continued=2; in_solution=2;
+stats:4 name=2s-r{main[0]out[0]second[2]}; lane=0; pruning=true; tested=10; failed=0; pruned=8; copy_count=0; continued=2; in_solution=2;
+stats:5 name=2s-g{axis[3]dims[1|3]}; lane=0; pruning=true; tested=76; failed=0; pruned=72; copy_count=10; continued=4; in_solution=4;
+stats:6 name=2s-xf{main[1]out[1]second[3]}; lane=0; pruning=true; tested=56; failed=0; pruned=52; copy_count=0; continued=4; in_solution=4;
+stats:7 name=2s-r{main[1]out[1]second[3]}; lane=0; pruning=true; tested=20; failed=0; pruned=16; copy_count=0; continued=4; in_solution=4;
+stats:8 name=identity; lane=0; pruning=false; tested=4; failed=0; pruned=0; copy_count=0; continued=4; in_solution=4;
+stats:9 name=(last); lane=0; pruning=false; tested=4; failed=0; pruned=0; copy_count=0; continued=4; in_solution=4;
+search:specs/swinv_like/l3/2d-stencil-3.json success=true; mode=All; prune_fuel=36; time=0.01679366;
+spec:specs/swinv_like/l3/2d-stencil-5.json
+load:matrices/4,4-identity-4,4,5,5 density=0.00390625; time=0.016180947;
+build:matrices/4,4,5,5-2s-r{main[1]out[1]second[3]}-4,4,5,5 density=0.000028125; time=0.02570036;
+mul_stats:: b_sparse=true;
+mul:matrices/4,4-identity_4,4,5,5-2s-r{main[1]out[1]second[3]}-4,4,5,5 density=0.017578125; time=0.022046192;
+build:matrices/4,4,5,5-2s-xf{main[1]out[1]second[3]}-4,4,5,5 density=0.00004228125; time=0.108616197;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,5,5-2s-r{main[1]out[1]second[3]}_4,4,5,5-2s-xf{main[1]out[1]second[3]}-4,4,5,5 density=0.051875; time=0.029375137;
+build:matrices/4,4,5,5-2s-g{axis[3]dims[1|3]}-4,4,5,2 density=0.0001515625; time=0.142065538;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,5,5-2s-r{main[1]out[1]second[3]}_4,4,5,5-2s-xf{main[1]out[1]second[3]}_4,4,5,5-2s-g{axis[3]dims[1|3]}-4,4,5,2 density=0.0625; time=0.012379131;
+build:matrices/4,4,5,2-2s-r{main[0]out[0]second[2]}-4,4,5,2 density=0.00017578125; time=0.004012984;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,5,5-2s-r{main[1]out[1]second[3]}_4,4,5,5-2s-xf{main[1]out[1]second[3]}_4,4,5,5-2s-g{axis[3]dims[1|3]}_4,4,5,2-2s-r{main[0]out[0]second[2]}-4,4,5,2 density=0.28125; time=0.002757941;
+build:matrices/4,4,5,2-2s-xf{main[0]out[0]second[2]}-4,4,5,2 density=0.0002642578125; time=0.010460644;
+mul_stats:: b_sparse=false;
+mul:matrices/4,4-identity_4,4,5,5-2s-r{main[1]out[1]second[3]}_4,4,5,5-2s-xf{main[1]out[1]second[3]}_4,4,5,5-2s-g{axis[3]dims[1|3]}_4,4,5,2-2s-r{main[0]out[0]second[2]}_4,4,5,2-2s-xf{main[0]out[0]second[2]}-4,4,5,2 density=0.83; time=0.004283335;
+prune_bounds[7][0] = Some((1, 1))
+prune_bounds[6][0] = Some((1, 1))
+prune_bounds[5][0] = Some((1, 1))
+prune_bounds[4][0] = Some((0, 5))
+prune_bounds[3][0] = Some((0, 5))
+prune_bounds[2][0] = Some((0, 5))
+copy_counts:this time=0.000358124;
+Begin search
+solution:init;id;load_grid_2d;select(keep_if(d0 >= +d2));xform(0,1,5);id;select(keep_if(d1 >= +d3));xform(0,1,5);id;id[Σ]
+stats:0 name=reshape; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:1 name=load_grid_2d; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:2 name=2s-g{axis[2]dims[0|2]}; lane=0; pruning=true; tested=36; failed=0; pruned=35; copy_count=8; continued=1; in_solution=1;
+stats:3 name=2s-xf{main[0]out[0]second[2]}; lane=0; pruning=true; tested=14; failed=0; pruned=13; copy_count=0; continued=1; in_solution=1;
+stats:4 name=2s-r{main[0]out[0]second[2]}; lane=0; pruning=true; tested=5; failed=0; pruned=4; copy_count=0; continued=1; in_solution=1;
+stats:5 name=2s-g{axis[3]dims[1|3]}; lane=0; pruning=true; tested=36; failed=0; pruned=35; copy_count=8; continued=1; in_solution=1;
+stats:6 name=2s-xf{main[1]out[1]second[3]}; lane=0; pruning=true; tested=14; failed=0; pruned=13; copy_count=0; continued=1; in_solution=1;
+stats:7 name=2s-r{main[1]out[1]second[3]}; lane=0; pruning=true; tested=5; failed=0; pruned=4; copy_count=0; continued=1; in_solution=1;
+stats:8 name=identity; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:9 name=(last); lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+search:specs/swinv_like/l3/2d-stencil-5.json success=true; mode=All; prune_fuel=64; time=0.063835782;
