@@ -139,7 +139,7 @@ mod tests {
     use crate::state::{ProgState, Domain, Value};
 
     fn fixed_solution_from_scalar_8x3<'d>(d: &'d Domain) -> ProgState<'d> {
-        let initial = ProgState::linear(d, 1, &[24]);
+        let initial = ProgState::linear(d, 2, &[24]);
         let shape = [8, 3];
         let s0 = initial.gather_by(&load_rep(&[24], &[8, 3]).unwrap()
                                    .gathers().unwrap()[0]);
