@@ -32,6 +32,7 @@ pub enum TokenType {
     Colon,
     Question,
     Comma,
+    Annot,
     Fold,
     Define,
     Range,
@@ -55,6 +56,7 @@ impl fmt::Display for TokenType {
             Colon => write!(f, ":"),
             Question => write!(f, "?"),
             Comma => write!(f, ","),
+            Annot => write!(f, "@"),
             Fold => write!(f, "fold"),
             Define => write!(f, "define"),
             Range => write!(f, "range"),
@@ -68,11 +70,6 @@ pub struct Token {
     pub t: TokenType,
     pub line: usize,
     pub col: usize,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum LexMode {
-    Normal, Ident, String,
 }
 
 
@@ -101,11 +98,18 @@ fn char_to_taken(c: char) -> Option<TokenType> {
         ':' => Some(Colon),
         '?' => Some(Question),
         ',' => Some(Comma),
+        '@' => Some(Annot),
         '+' => Some(Fold),
         '*' => Some(Fold),
         _ => None,
     }
 }
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum LexMode {
+    Normal, Ident, String, Comment,
+}
+
 pub fn lex(input: &str) -> Result<Vec<Token>> {
     use TokenType::*;
 
@@ -138,6 +142,7 @@ pub fn lex(input: &str) -> Result<Vec<Token>> {
                 mode = LexMode::Normal;
             }
         }
+        else if mode == LexMode::Comment { }
         else if let Some(t) = char_to_taken(c) {
             if let Some(t2) = maybe_deident(start_pos, pos, mode) {
                 ret.push(Token {t: t2, line: start_line, col: start_col});
@@ -150,6 +155,12 @@ pub fn lex(input: &str) -> Result<Vec<Token>> {
                 ret.push(Token {t, line: start_line, col: start_col});
                 mode = LexMode::Normal;
             }
+        }
+        else if c == '#' {
+            if let Some(t) = maybe_deident(start_pos, pos, mode) {
+                ret.push(Token {t, line: start_line, col: start_col});
+            }
+            mode = LexMode::Comment;
         }
         else if c == '"' {
             if let Some(t) = maybe_deident(start_pos, pos, mode) {
@@ -171,6 +182,9 @@ pub fn lex(input: &str) -> Result<Vec<Token>> {
         if c == '\n' {
             line += 1;
             col = 0;
+            if mode == LexMode::Comment {
+                mode = LexMode::Normal;
+            }
         }
         else {
             col += 1;
@@ -196,11 +210,11 @@ mod tests {
 
     #[test]
     fn token_split() {
-        let input = "a b?c:d,e[f]g(h)i{j}+k*l";
+        let input = "a b?c:d,e[f]g(h)i{j}+k*l@m";
         let tokens = lex(input).unwrap();
         // a to l is 12 letters with 10 separators (space doesn't count)
         println!("{:?}", tokens);
-        assert_eq!(tokens.len(), 23);
+        assert_eq!(tokens.len(), 25);
     }
 
     #[test]
@@ -210,5 +224,12 @@ mod tests {
         let tokens = lex(input).unwrap().iter().map(|tok| tok.t.clone()).collect::<Vec<_>>();
         assert_eq!(&tokens, &[Fold, Define, Ident("foo".to_owned()),
                               Target, Str("foo\"".to_owned()), Range]);
+    }
+
+    #[test]
+    fn test_comments() {
+        let input = "foo#bar\nbaz";
+        let tokens = lex(input).unwrap();
+        assert_eq!(tokens.len(), 2);
     }
 }
