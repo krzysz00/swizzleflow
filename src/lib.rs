@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pub mod misc;
+pub mod lexer;
 mod state;
 pub mod matrix;
 mod transition_matrix;
@@ -33,6 +34,10 @@ pub mod errors {
         }
 
         errors {
+            UnclonedString(line: usize, col: usize) {
+                description("Unclosed string")
+                display("Unclosed string starting at line {}, column {}", line, col)
+            }
             FileOpFailure(p: std::path::PathBuf) {
                 description("couldn't open or create file")
                 display("couldn't open or create file: {}", p.display())
