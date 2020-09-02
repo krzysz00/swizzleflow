@@ -22,6 +22,7 @@ pub enum TokenType {
     Ident(String),
     Str(String),
     Number(i64),
+    EOF,
     LParen,
     RParen,
     LSquare,
@@ -33,10 +34,22 @@ pub enum TokenType {
     Question,
     Comma,
     Annot,
+    Arrow,
     Fold,
     Define,
     Range,
-    Target,
+    Goal,
+}
+
+impl TokenType {
+    pub fn matches(&self, other: &Self) -> bool {
+        use TokenType::*;
+        match (self, other) {
+            (Ident(_), Ident(_)) => true,
+            (Str(_), Str(_)) => true,
+            (t, u) => t == u,
+        }
+    }
 }
 
 impl fmt::Display for TokenType {
@@ -46,6 +59,7 @@ impl fmt::Display for TokenType {
             Ident(s) => write!(f, "{}", s),
             Str(s) => write!(f, "\"{}\"", s.replace("\"", "\\\"")),
             Number(n) => write!(f, "{}", n),
+            EOF => write!(f, "<eof>"),
             LParen => write!(f, "("),
             RParen => write!(f, ")"),
             LSquare => write!(f, "["),
@@ -57,10 +71,11 @@ impl fmt::Display for TokenType {
             Question => write!(f, "?"),
             Comma => write!(f, ","),
             Annot => write!(f, "@"),
+            Arrow => write!(f, "->"),
             Fold => write!(f, "fold"),
             Define => write!(f, "define"),
             Range => write!(f, "range"),
-            Target => write!(f, "target"),
+            Goal => write!(f, "goal"),
         }
     }
 }
@@ -81,7 +96,8 @@ fn finish_ident(s: &str) -> TokenType {
         "fold" => TokenType::Fold,
         "define" => TokenType::Define,
         "range" => TokenType::Range,
-        "target" => TokenType::Target,
+        "goal" => TokenType::Goal,
+        "->" => TokenType::Arrow,
         _ => TokenType::Ident(s.to_owned()),
     }
 }
@@ -99,6 +115,7 @@ fn char_to_taken(c: char) -> Option<TokenType> {
         '?' => Some(Question),
         ',' => Some(Comma),
         '@' => Some(Annot),
+        '=' => Some(Equal),
         '+' => Some(Fold),
         '*' => Some(Fold),
         _ => None,
@@ -190,6 +207,7 @@ pub fn lex(input: &str) -> Result<Vec<Token>> {
             col += 1;
         }
     }
+    ret.push(Token {t: TokenType::EOF, line, col});
     if mode == LexMode::String {
         Err(ErrorKind::UnclonedString(start_line, start_col).into())
     }
@@ -212,24 +230,24 @@ mod tests {
     fn token_split() {
         let input = "a b?c:d,e[f]g(h)i{j}+k*l@m";
         let tokens = lex(input).unwrap();
-        // a to l is 12 letters with 10 separators (space doesn't count)
+        // a to l is 13 letters with 10 separators (space doesn't count) + 1 EOF
         println!("{:?}", tokens);
-        assert_eq!(tokens.len(), 25);
+        assert_eq!(tokens.len(), 26);
     }
 
     #[test]
     fn word_test() {
         use TokenType::*;
-        let input = "fold define\nfoo\ttarget \"foo\\\"\" range";
+        let input = "fold define\nfoo\tgoal \"foo\\\"\" range";
         let tokens = lex(input).unwrap().iter().map(|tok| tok.t.clone()).collect::<Vec<_>>();
         assert_eq!(&tokens, &[Fold, Define, Ident("foo".to_owned()),
-                              Target, Str("foo\"".to_owned()), Range]);
+                              Goal, Str("foo\"".to_owned()), Range, EOF]);
     }
 
     #[test]
     fn test_comments() {
         let input = "foo#bar\nbaz";
         let tokens = lex(input).unwrap();
-        assert_eq!(tokens.len(), 2);
+        assert_eq!(tokens.len(), 3);
     }
 }

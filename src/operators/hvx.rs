@@ -15,7 +15,7 @@
 use crate::errors::*;
 
 use crate::state::{Gather,to_opt_ix};
-use crate::operators::{OpSetKind, identity_gather};
+use crate::operators::{identity_gather};
 
 use ndarray::Ix;
 
@@ -169,7 +169,7 @@ fn hvx_errs(in_shape: &[Ix], out_shape: &[Ix]) -> Result<()> {
 }
 
 pub fn hvx_2x2(in_shape: &[Ix], out_shape: &[Ix],
-               regs: &[HvxRegs], swaps: bool) -> Result<OpSetKind> {
+               regs: &[HvxRegs], swaps: bool) -> Result<Vec<Gather>> {
     hvx_errs(in_shape, out_shape)?;
     let n = in_shape[1];
     let mut ret = HashSet::new();
@@ -188,11 +188,11 @@ pub fn hvx_2x2(in_shape: &[Ix], out_shape: &[Ix],
     for g in &ret {
         println!("{}", g);
     }
-    return Ok(ret.into_iter().collect::<Vec<_>>().into())
+    return Ok(ret.into_iter().collect::<Vec<_>>())
 }
 
 pub fn hvx_2x1(in_shape: &[Ix], out_shape: &[Ix],
-               regs: &[HvxRegs], swaps: bool) -> Result<OpSetKind> {
+               regs: &[HvxRegs], swaps: bool) -> Result<Vec<Gather>> {
     hvx_errs(in_shape, out_shape)?;
 
     let n = in_shape[1];
@@ -210,7 +210,7 @@ pub fn hvx_2x1(in_shape: &[Ix], out_shape: &[Ix],
             ret.extend((0..(1 << n)).map(|i| vmux(r, in_shape, out_shape, i)));
         }
     }
-    return Ok(ret.into_iter().collect::<Vec<_>>().into())
+    return Ok(ret.into_iter().collect::<Vec<_>>())
 }
 
 // TODO 1x1 vdeal

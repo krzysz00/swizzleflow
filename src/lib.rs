@@ -12,8 +12,11 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#![recursion_limit="256"]
 pub mod misc;
 pub mod lexer;
+mod builtins;
+pub mod parser;
 mod state;
 pub mod matrix;
 mod transition_matrix;
@@ -42,7 +45,22 @@ pub mod errors {
                 description("couldn't open or create file")
                 display("couldn't open or create file: {}", p.display())
             }
-            ParseError(p: std::path::PathBuf) {
+            BadArrayLen(len: usize, expected: usize, token: crate::lexer::Token) {
+                description("wrong number of elements in array")
+                display("Starting at line {}, column {}, expected {} elements in array, got {}",
+                        token.line, token.col, len, expected)
+            }
+            InvalidRange(lower: i64, upper: i64, token: crate::lexer::Token) {
+                description("invalid range literal"),
+                display("At line {}, column {}: invalid range literal range({}, {})",
+                        token.line, token.col, lower, upper)
+            }
+            ParseError(got: crate::lexer::Token, expected: &'static str) {
+                description("unexpected token")
+                display("expected {} but got {} at line {}, column {}",
+                        expected, got.t, got.line, got.col)
+            }
+            FileParseError(p: std::path::PathBuf) {
                 description("couldn't parse spec")
                 display("couldn't parse spec: {}", p.display())
             }
@@ -137,7 +155,7 @@ pub mod errors {
 
 #[cfg(test)]
 mod tests {
-    use crate::problem_desc::{trove, poly_mult};
+    use crate::builtins::{trove, poly_mult};
     use crate::operators::swizzle::{xform,rotate};
     use crate::operators::load::{load_rep,broadcast};
     use crate::operators::{identity_gather, transpose_gather};
@@ -146,8 +164,7 @@ mod tests {
     fn fixed_solution_from_scalar_8x3<'d>(d: &'d Domain) -> ProgState<'d> {
         let initial = ProgState::linear(d, 2, &[24]);
         let shape = [8, 3];
-        let s0 = initial.gather_by(&load_rep(&[24], &[8, 3]).unwrap()
-                                   .gathers().unwrap()[0]);
+        let s0 = initial.gather_by(&load_rep(&[24], &[8, 3]).unwrap()[0]);
         let s1 = s0.gather_by(&xform(&shape, &shape, 1, 0, 1, 2, 1, 8, None, false));
         let s2 = s1.gather_by(&rotate(&shape, &shape, 1, 0, 1, 0, None));
         let s3 = s2.gather_by(&xform(&shape, &shape, 0, 1, 0, 3, 1, 3, None, false));
@@ -175,7 +192,7 @@ mod tests {
         let r1 = rotate(&[4, 4], &[4, 4], 1, 0, 1, 0, None);
         let f2 = xform(&[4, 4], &[4, 4], 0, 1, 1, 1, -1, 4, None, false);
         let r2 = rotate(&[4, 4], &[4, 4], 1, 0, 1, 0, None);
-        let broadcast = broadcast(&[4, 4], &[4, 2, 4], 1).unwrap().gathers().unwrap()[0].clone();
+        let broadcast = broadcast(&[4, 4], &[4, 2, 4], 1).unwrap()[0].clone();
         let spec = poly_mult(4);
         let domain = Domain::new(spec.view());
         let arr1 = iproduct!(0..4, 0..4).map(|(_i, j)| crate::state::Value::Symbol(j)).collect();

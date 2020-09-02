@@ -48,20 +48,24 @@ pub enum OpSetKind {
     Split(usize, IdxVec),
 }
 
-impl OpSetKind {
-    pub fn new_gathers(gathers: Vec<Gather>) -> Self {
-        let summary = if gathers.is_empty() {
-            None
+pub fn summarize(gathers: &[Gather]) -> Option<Gather> {
+    if gathers.is_empty() {
+        None
+    }
+    else {
+        let mut all_merged = gathers[0].clone();
+        if (&gathers[1..]).iter().fold(true, |acc, g| acc && all_merged.merge_with(g)) {
+            Some(all_merged)
         }
         else {
-            let mut all_merged = gathers[0].clone();
-            if (&gathers[1..]).iter().fold(true, |acc, g| acc && all_merged.merge_with(g)) {
-                Some(all_merged)
-            }
-            else {
-                None
-            }
-        };
+            None
+        }
+    }
+}
+
+impl OpSetKind {
+    pub fn new_gathers(gathers: Vec<Gather>) -> Self {
+        let summary = summarize(&gathers);
         Self::Gathers(gathers, summary)
     }
 
@@ -159,18 +163,18 @@ pub fn stack_adapter_gather(out_shape: &[Ix], index: Ix) -> Gather {
                 format!("(stack){}", index))
 }
 
-pub fn identity(shape: &[Ix]) -> Result<OpSetKind> {
-    Ok(OpSetKind::new_gathers(vec![identity_gather(shape)]))
+pub fn identity(shape: &[Ix]) -> Result<Vec<Gather>> {
+    Ok(vec![identity_gather(shape)])
 }
 
-pub fn transpose(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSetKind> {
-    Ok(OpSetKind::new_gathers(vec![transpose_gather(in_shape, out_shape)]))
+pub fn transpose(in_shape: &[Ix], out_shape: &[Ix]) -> Result<Vec<Gather>> {
+    Ok(vec![transpose_gather(in_shape, out_shape)])
 }
 
 
 
 pub fn rot_idx_r(in_shape: &[Ix],
-                 out_shape: &[Ix], rot: Ix) -> Result<OpSetKind> {
+                 out_shape: &[Ix], rot: Ix) -> Result<Vec<Gather>> {
     let gather =
         Gather::new(out_shape, |idxs| {
             let mut idxs = ShapeVec::from_slice(idxs);
@@ -179,18 +183,18 @@ pub fn rot_idx_r(in_shape: &[Ix],
             idxs.rotate_left(rot);
             to_opt_ix(&idxs, in_shape)
         }, format!("rot_idx_r({})", rot));
-    Ok(OpSetKind::new_gathers(vec![gather]))
+    Ok(vec![gather])
 }
 
 pub fn rot_idx_l(in_shape: &[Ix],
-                 out_shape: &[Ix], rot: Ix) -> Result<OpSetKind> {
+                 out_shape: &[Ix], rot: Ix) -> Result<Vec<Gather>> {
     let gather =
         Gather::new(out_shape, |idxs| {
             let mut idxs = ShapeVec::from_slice(idxs);
             idxs.rotate_right(rot);
             to_opt_ix(&idxs, in_shape)
         }, format!("rot_idx_l({})", rot));
-    Ok(OpSetKind::new_gathers(vec![gather]))
+    Ok(vec![gather])
 }
 
 #[derive(Debug)]
@@ -305,8 +309,8 @@ mod test {
     #[test]
     fn summary_one() {
         let gather = super::identity(&[3, 3]).unwrap();
-        assert_eq!(&gather.gathers().unwrap()[0],
-                   gather.summary().unwrap());
+        let summary = super::summarize(&gather).unwrap();
+        assert_eq!(&gather[0], &summary);
     }
 
     #[test]
@@ -319,10 +323,13 @@ mod test {
 
     #[test]
     fn summary_passes() {
+        use crate::state::Gather;
         let map = std::collections::BTreeMap::new();
-        let cond_keep = super::select::cond_keep(&[4, 3], &[0, 1, -1],
-                                                 &map).unwrap();
+        let cond_keep: Vec<Gather> =
+            super::select::cond_keep(&[4, 3], &[0, 1, -1],
+                                     &map).unwrap();
+        let summary = super::summarize(&cond_keep);
         let identity = super::identity_gather(&[4, 3]);
-        assert_eq!(cond_keep.summary(), Some(&identity));
+        assert_eq!(summary, Some(identity));
     }
 }

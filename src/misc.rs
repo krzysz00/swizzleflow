@@ -98,3 +98,8 @@ pub fn read_length_tagged_idxs<T: Read>(io: &mut T) -> std::io::Result<ShapeVec>
     }
     Ok(buffer)
 }
+
+pub fn equal_except<T: Eq>(a: &[T], b: &[T], idx: usize) -> bool {
+    a.iter().zip(b.iter()).enumerate()
+        .all(|(i, (x, y))| i == idx || x == y)
+}

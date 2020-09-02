@@ -15,7 +15,6 @@
 use crate::errors::*;
 
 use crate::state::{Gather,to_opt_ix};
-use crate::operators::OpSetKind;
 
 use std::cmp::min;
 
@@ -29,7 +28,7 @@ enum Mode {
     Trunc,
 }
 
-fn load(in_shape: &[Ix], out_shape: &[Ix], mode: Mode) -> Result<OpSetKind> {
+fn load(in_shape: &[Ix], out_shape: &[Ix], mode: Mode) -> Result<Vec<Gather>> {
     let name = match mode {
         Mode::Rep => "load_rep",
         Mode::Trunc => "load_trunc",
@@ -58,18 +57,18 @@ fn load(in_shape: &[Ix], out_shape: &[Ix], mode: Mode) -> Result<OpSetKind> {
                         storage.extend((&out_idxs[out_split..]).iter().copied());
                         to_opt_ix(&storage, &in_shape)
                     }, name);
-    Ok(vec![gather].into())
+    Ok(vec![gather])
 }
 
-pub fn load_rep(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSetKind> {
+pub fn load_rep(in_shape: &[Ix], out_shape: &[Ix]) -> Result<Vec<Gather>> {
     load(in_shape, out_shape, Mode::Rep)
 }
 
-pub fn load_trunc(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSetKind> {
+pub fn load_trunc(in_shape: &[Ix], out_shape: &[Ix]) -> Result<Vec<Gather>> {
     load(in_shape, out_shape, Mode::Trunc)
 }
 
-pub fn broadcast(in_shape: &[Ix], out_shape: &[Ix], group: Ix) -> Result<OpSetKind> {
+pub fn broadcast(in_shape: &[Ix], out_shape: &[Ix], group: Ix) -> Result<Vec<Gather>> {
     let name = "broadcast";
     let out_split = out_shape.len() - in_shape.len() + group;
 
@@ -84,10 +83,10 @@ pub fn broadcast(in_shape: &[Ix], out_shape: &[Ix], group: Ix) -> Result<OpSetKi
                         idxs.extend_from_slice(&out_idxs[out_split..]);
                         to_opt_ix(&idxs, in_shape)
                     }, name);
-    Ok(vec![gather].into())
+    Ok(vec![gather])
 }
 
-pub fn load_grid_2d(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSetKind> {
+pub fn load_grid_2d(in_shape: &[Ix], out_shape: &[Ix]) -> Result<Vec<Gather>> {
     if in_shape.len() != 2 {
         return Err(ErrorKind::InvalidShapeDim(in_shape.to_vec(), 2).into());
     }
@@ -104,5 +103,5 @@ pub fn load_grid_2d(in_shape: &[Ix], out_shape: &[Ix]) -> Result<OpSetKind> {
                         to_opt_ix(&[i, j], in_shape)
                     },
         "load_grid_2d");
-    Ok(vec![gather].into())
+    Ok(vec![gather])
 }

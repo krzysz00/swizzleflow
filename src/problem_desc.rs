@@ -14,40 +14,21 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::errors::*;
 
-use crate::operators::{SynthesisLevel,OpSet, OpSetKind,
-                       identity, transpose, rot_idx_r, rot_idx_l};
+use crate::operators::{SynthesisLevel,OpSet, OpSetKind};
 use crate::state::{ProgState, Domain, Value, Symbolic, DomRef,
                    Gather, to_opt_ix};
-
-use crate::operators::swizzle::{simple_xforms, simple_rotations,
-                                all_xforms, all_rotations};
-use crate::operators::select::{reg_select, cond_keep, general_select};
-use crate::operators::load::{load_rep, load_trunc, load_grid_2d, broadcast};
-use crate::operators::hvx::{hvx_2x2, hvx_2x1, HvxRegs};
 
 use crate::expected_syms_util::fold_expected;
 use crate::misc::{ShapeVec, extending_set};
 
-use std::collections::{BTreeSet, BTreeMap, HashMap, HashSet};
-use std::iter::FromIterator;
+use std::collections::{BTreeSet, BTreeMap, HashMap};
 use std::num::NonZeroUsize;
 
 use serde::{Serialize, Deserialize};
 
-use ndarray::{Array, ArrayD, Ix};
-
-use smallvec::SmallVec;
-
-use itertools::iproduct;
+use ndarray::{ArrayD, Ix};
 
 type OptionMap = BTreeMap<String, Vec<isize>>;
-fn int_option(options: Option<&OptionMap>, key: &str) -> Option<isize> {
-    options.and_then(|m| m.get(key)).and_then(|o| o.get(0).copied())
-}
-
-fn bool_option(options: Option<&OptionMap>, key: &str) -> bool {
-    options.map(|m| m.contains_key(key)).unwrap_or(false)
-}
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum GathersDesc {
@@ -55,354 +36,17 @@ pub enum GathersDesc {
     Custom(Vec<(String, Vec<u64>)>)
 }
 
-fn parse_hvx_opts(options: Option<&OptionMap>, inplace: bool, fresh: bool,
-                  in_shape: &[Ix], out_shape: &[Ix],
-                  two_in: bool, two_out: bool) -> Result<(Vec<HvxRegs>, bool)> {
-    let permutations = bool_option(options, "swaps");
-    let all = !inplace && !fresh;
-
-    let fixed_ins = options.and_then(|m| m.get("in"));
-    let in_lim = int_option(options, "in_lim").map(|v| v as usize)
-        .unwrap_or(in_shape[0]);
-    let fixed_outs = options.and_then(|m| m.get("out"));
-
-    let n_in = in_shape[0];
-    let n_out = out_shape[0];
-
-    let ins: Vec<(usize, Option<usize>)> =
-        if two_in {
-            if let Some(us) = fixed_ins {
-                if us.len() % 2 != 0 {
-                    return Err(ErrorKind::BadOptionLength("in".into(), us.len() + 1).into());
-                }
-                us.chunks(2).map(|s| (s[0] as usize, Some(s[1] as usize))).collect()
-            }
-            else {
-                iproduct![0..in_lim, 0..in_lim].map(|(u, v)| (u, Some(v))).collect()
-            }
-        }
-        else {
-            if let Some(us) = fixed_ins {
-                us.iter().copied().map(|i| (i as usize, None)).collect()
-            }
-            else {
-                (0..in_lim).map(|i| (i, None)).collect()
-            }
-        };
-
-    let outs: Vec<(usize, Option<usize>)> =
-        if fresh {
-            if n_out <= n_in {
-                let mut wanted_shape = out_shape.to_vec();
-                wanted_shape[0] = n_in + (if two_out { 2 + n_in % 2 } else { 1 });
-                return Err(ErrorKind::ShapeMismatch(out_shape.to_vec(),
-                                                    wanted_shape).into());
-            }
-            let delta = n_out - n_in;
-            if two_out {
-                if delta % 2 != 0 {
-                    let mut wanted_shape = in_shape.to_vec();
-                    wanted_shape[0] += 1;
-                    return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(),
-                                                        wanted_shape).into());
-                }
-                (0..delta/2).map(|i| (n_in + 2 * i,
-                                      Some(n_in + 2 * i + 1)))
-                    .collect()
-            }
-            else {
-                (0..delta).map(|i| (n_in + i, None)).collect()
-            }
-        }
-        else if let Some(ds) = fixed_outs {
-            if two_out {
-                if ds.len() % 2 != 0 {
-                    return Err(ErrorKind::BadOptionLength("out".into(),
-                                                          ds.len() + 1).into());
-                }
-                ds.chunks(2).map(|s| (s[0] as usize, Some(s[1] as usize))).collect()
-            }
-            else {
-                ds.iter().copied().map(|i| (i as usize, None)).collect()
-            }
-        }
-        else if all {
-            if two_out {
-                (0..n_out/2).map(|i| (2 * i, Some(2 * i + 1))).collect()
-            }
-            else {
-                (0..n_out).map(|i| (i, None)).collect()
-            }
-        }
-        else { vec![] };
-
-    // The +1 is for inplace, and is added always just to be safe
-    let mut ret = Vec::with_capacity(ins.len() * (outs.len() + 1));
-    for (u, v) in ins {
-        if inplace {
-            if !two_out || u % 2 == 0 {
-                let d = u;
-                let dd = if two_out { Some(u + 1) } else { None };
-                ret.push(HvxRegs { u, v, d, dd });
-            }
-            if let Some(d) = v {
-                if !two_out || d % 2 == 0 {
-                    let dd = if two_out { Some(d + 1) } else { None };
-                    ret.push(HvxRegs { u, v, d, dd })
-                }
-            }
-        }
-        for &(d, dd) in &outs {
-            ret.push(HvxRegs {u, v, d, dd });
-        }
-    }
-    Ok((ret, permutations))
-}
-
-fn parse_swizzle_options(options: Option<&OptionMap>) -> Result<(usize, usize, usize)> {
-    let main_idx = int_option(options, "main")
-        .ok_or_else(|| ErrorKind::MissingOption("main".to_string()))?
-        as usize;
-    let second_idx = int_option(options, "second")
-        .ok_or_else(|| ErrorKind::MissingOption("second".to_string()))?
-        as usize;
-    let out_idx = int_option(options, "out")
-        .ok_or_else(|| ErrorKind::MissingOption("out".to_string()))?
-        as usize;
-    Ok((main_idx, second_idx, out_idx))
-}
-
-fn equal_except<T: Eq>(a: &[T], b: &[T], idx: usize) -> bool {
-    a.iter().zip(b.iter()).enumerate()
-        .all(|(i, (x, y))| i == idx || x == y)
-}
 
 impl GathersDesc {
     pub fn to_opset_kind(&self, in_shape: &[usize], out_shape: &[usize],
-                         options: Option<&OptionMap>) -> Result<OpSetKind> {
+                         _options: Option<&OptionMap>) -> Result<OpSetKind> {
         use GathersDesc::*;
         match self {
             Builtin(s) => {
-                match s.as_ref() {
-                    "identity" | "reshape" => {
-                        let out_prod: usize = out_shape.iter().product();
-                        let in_prod: usize = in_shape.iter().product();
-                        if out_prod != in_prod {
-                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
-                        }
-                        identity(out_shape)
-                    },
-                    "transpose" => {
-                        if out_shape.iter().rev().zip(in_shape.iter()).any(|(a, b)| a != b) {
-                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
-                        }
-                        transpose(in_shape, out_shape)
-                    },
-                    "rot_idx" => {
-                        if let Some(r) = int_option(options, "r") {
-                            if int_option(options, "l").is_some() {
-                                return Err(ErrorKind::BadOptionLength("l".into(), 0).into());
-                            }
-                            let r = r as Ix;
-                            let split = in_shape.len() - r;
-                            if in_shape[split..] != out_shape[..r]
-                                || in_shape[..split] != out_shape[r..] {
-                                    let mut expected_out = in_shape.to_vec();
-                                    expected_out.rotate_right(r);
-                                    return Err(ErrorKind::ShapeMismatch(out_shape.to_vec(),
-                                                                        expected_out)
-                                               .into());
-                                }
-                            rot_idx_r(in_shape, out_shape, r)
-                        }
-                        else if let Some(l) = int_option(options, "l") {
-                            let l = l as Ix;
-                            let split = in_shape.len() - l;
-                            if in_shape[..l] != out_shape[split..]
-                                || in_shape[l..] != out_shape[..split] {
-                                    let mut expected_out = in_shape.to_vec();
-                                    expected_out.rotate_left(l);
-                                    return Err(ErrorKind::ShapeMismatch(out_shape.to_vec(),
-                                                                        expected_out)
-                                               .into());
-                                }
-
-                            rot_idx_l(in_shape, out_shape, l)
-                        }
-                        else {
-                            Err(ErrorKind::MissingOption("l or r".into()).into())
-                        }
-                    },
-                    "load_rep" => {
-                        load_rep(in_shape, out_shape)
-                    },
-                    "load_trunc" => {
-                        load_trunc(in_shape, out_shape)
-                    },
-                    "load_grid_2d" => {
-                        load_grid_2d(in_shape, out_shape)
-                    },
-                    "broadcast" => {
-                        let group = int_option(options, "group").unwrap_or(0);
-                        broadcast(in_shape, out_shape, group as usize)
-                    },
-                    "xforms_no_group" | "xforms" |
-                    "row_xforms_no_group" | "row_xforms" |
-                    "col_xforms_no_group" | "col_xforms" => {
-                        let params =
-                            if options.is_some() {
-                                parse_swizzle_options(options)
-                            } else if s.starts_with("row_") {
-                                Ok((1, 0, 1))
-                            } else if s.starts_with("col_") {
-                                Ok((0, 1, 0))
-                            } else {
-                                Err(ErrorKind::MissingOption("main".to_string()).into())
-                            };
-                        let (main_idx, second_idx, out_idx) = params?;
-                        if !equal_except(in_shape, out_shape, out_idx) {
-                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
-                        }
-
-                        if s.ends_with("_no_group") {
-                            simple_xforms(in_shape, out_shape, main_idx, second_idx, out_idx)
-                        }
-                        else {
-                            all_xforms(in_shape, out_shape, main_idx, second_idx, out_idx)
-                        }
-                    },
-                    "rots_no_group" | "rots" |
-                    "row_rots_no_group" | "row_rots" |
-                    "col_rots_no_group" | "col_rots" => {
-                        let params =
-                            if options.is_some() {
-                                parse_swizzle_options(options)
-                            } else if s.starts_with("row_") {
-                                Ok((1, 0, 1))
-                            } else if s.starts_with("col_") {
-                                Ok((0, 1, 0))
-                            } else {
-                                Err(ErrorKind::MissingOption("main".to_string()).into())
-                            };
-                        let (main_idx, second_idx, out_idx) = params?;
-                        if !equal_except(in_shape, out_shape, out_idx) {
-                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
-                        }
-
-                        if s.ends_with("_no_group") {
-                            simple_rotations(in_shape, out_shape, main_idx, second_idx, out_idx)
-                        }
-                        else {
-                            all_rotations(in_shape, out_shape, main_idx, second_idx, out_idx)
-                        }
-                    },
-                    "reg_select_no_consts" | "reg_select" => {
-                        if out_shape[0..out_shape.len()-1] != in_shape[0..in_shape.len()-1] {
-                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
-                        }
-                        if in_shape[in_shape.len()-1] != 2 {
-                            let mut correct_shape = in_shape.to_vec();
-                            correct_shape[in_shape.len()-1] = 2;
-                            return Err(ErrorKind::ShapeMismatch(correct_shape, in_shape.to_vec()).into());
-                        }
-                        let n = out_shape[0] as isize;
-                        // As in Swizzle Inventor
-                        let default_consts = [0, 1, -1, n, -n];
-                        let consts = if s == "reg_select_no_consts" {
-                            &[0]
-                        } else {
-                            options.and_then(|m| m.get("consts").map(|v| v.as_slice()))
-                                .unwrap_or(&default_consts)
-                        };
-                        reg_select(out_shape, consts)
-                    },
-                    "cond_keep_no_consts" | "cond_keep" => {
-                        if out_shape != in_shape {
-                            return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
-                        }
-                        let n = out_shape[0] as isize;
-                        // As is Swizzle Inventor
-                        let default_consts = [0, 1, -1, n, -n];
-                        let consts = if s == "cond_keep_no_consts" {
-                            &[0]
-                        } else {
-                            options.and_then(|m| m.get("consts").map(|v| v.as_slice()))
-                                .unwrap_or(&default_consts)
-                        };
-                        let mut restrict = std::collections::BTreeMap::new();
-                        if let Some(v) = options.and_then(|m| m.get("restrict")) {
-                            for s in v.chunks(2) {
-                                restrict.insert(s[0] as usize, s[1] as usize);
-                            }
-                        }
-                        cond_keep(out_shape, consts, &restrict)
-                    },
-                    "general_select_no_consts" | "general_select" => {
-                        let axis = int_option(options, "axis")
-                            .ok_or_else(|| ErrorKind::MissingOption("axis".to_string()))?
-                            as usize;
-                        let n = out_shape[axis] as isize;
-                        // As in Swizzle Inventor
-                        let default_consts = [0, 1, -1, n, -n];
-                        let consts = if s == "general_select_no_consts" {
-                            &[0]
-                        } else {
-                            options.and_then(|m| m.get("consts").map(|v| v.as_slice()))
-                                .unwrap_or(&default_consts)
-                        };
-                        let dims: Vec<usize> =
-                            options.and_then(|m| m.get("dims")
-                                             .map(|v| v.iter().copied()
-                                                  .map(|i| i as usize).collect()))
-                            .unwrap_or_else(|| (0..out_shape.len()).collect());
-                        general_select(in_shape, out_shape, axis,
-                                       consts, &dims)
-                    },
-                    "hvx_2x2" => {
-                        let (regs, swaps) =
-                            parse_hvx_opts(options,
-                                           bool_option(options, "inplace"),
-                                           bool_option(options, "fresh"),
-                                           in_shape, out_shape,
-                                           true, true)?;
-                        hvx_2x2(in_shape, out_shape, &regs, swaps)
-                    },
-                    "hvx_2x1" => {
-                        let (regs, swaps) =
-                            parse_hvx_opts(options,
-                                           bool_option(options, "inplace"),
-                                           bool_option(options, "fresh"),
-                                           in_shape, out_shape,
-                                           true, false)?;
-                        hvx_2x1(in_shape, out_shape, &regs, swaps)
-                    },
-                    "hvx_inplace" => {
-                        let (regs_2_2, swaps) =
-                            parse_hvx_opts(options,
-                                           true, false,
-                                           in_shape, out_shape,
-                                           true, true)?;
-                        let (regs_2_1, _) =
-                            parse_hvx_opts(options,
-                                           true, false,
-                                           in_shape, out_shape,
-                                           true, false)?;
-                        let g2_2 = hvx_2x2(in_shape, out_shape, &regs_2_2, swaps)?;
-                        let g2_1 = hvx_2x1(in_shape, out_shape, &regs_2_1, swaps)?;
-                        if let (OpSetKind::Gathers(v2_2, _),
-                                OpSetKind::Gathers(v2_1, _)) = (g2_2, g2_1) {
-                            let mut ret = HashSet::<Gather>::from_iter(v2_2.into_iter());
-                            ret.extend(v2_1.into_iter());
-                            Ok(ret.into_iter().collect::<Vec<_>>().into())
-                        }
-                        else {
-                            panic!("Basis sets aren't gathers at HVX union")
-                        }
-                    },
-                    other => {
-                        return Err(ErrorKind::UnknownBasisType(other.to_owned()).into())
-                    }
-                }
+                let in_shapes = vec![ShapeVec::from_slice(in_shape)];
+                // TODO, vague stub
+                crate::builtins::gather(s, &in_shapes, &out_shape, None)
+                    .map(|g| OpSetKind::new_gathers(g))
             },
             Custom(gathers) => {
                 gathers.iter().map(
@@ -644,80 +288,6 @@ impl SynthesisLevelDesc {
     }
 }
 
-pub fn trove(m: Ix, n: Ix) -> ArrayD<Value> {
-    Array::from_shape_fn((m, n),
-                         move |(i, j)|
-                         Value::Symbol((j + i * n) as Symbolic))
-        .into_dyn()
-}
-
-pub fn trove_sum(m: Ix, n: Ix) -> ArrayD<Value> {
-    let arr: ndarray::Array1<Value> =
-        (0..m).map(|i|
-                   (0..n).map(|j| Value::Symbol((j + i * n) as Symbolic)).collect())
-        .map(Value::fold).collect();
-    arr.into_dyn()
-}
-
-fn convolve_dealg(width: Ix, k: Ix) -> ArrayD<Value> {
-    Array::from_shape_fn((width, k),
-                         move |(i, j)| Value::Symbol((i + j)  as Symbolic))
-        .into_dyn()
-}
-
-fn convolve(width: Ix, k: Ix) -> ArrayD<Value> {
-    // Hopefully u16 is enough for everyone
-    let width = width as Symbolic;
-    let k = k as Symbolic;
-    let arr: ndarray::Array1<Value> =
-        (0..width).map(|w|
-                       (0..k).map(|i| Value::Symbol(w + i)).collect())
-        .map(Value::fold).collect();
-    arr.into_dyn()
-}
-
-fn weighted_convolve(width: Ix, k: Ix) -> ArrayD<Value> {
-    // Hopefully u16 is enough for everyone
-    let width = width as Symbolic;
-    let k = k as Symbolic;
-    let weight_min = width + k - 1;
-    let arr: ndarray::Array1<Value> =
-        (0..width).map(|w|
-                       (0..k).map(|i| Value::fold(vec![Value::Symbol(w + i),
-                                                       Value::Symbol(weight_min + i)]))
-                       .collect())
-        .map(Value::fold).collect();
-    arr.into_dyn()
-}
-
-fn stencil_2d(width: Ix, k: Ix) -> ArrayD<Value> {
-    let n = width + k - 1;
-    let source: Vec<Value> =
-        (0..(n * n)).map(|i| Value::Symbol(i as Symbolic)).collect();
-    let arr =
-        ndarray::Array2::from_shape_fn(
-            (width, width),
-            |(i, j)| Value::fold(
-                iproduct!(0..k, 0..k).map(|(ii, jj)| source[j + jj + n * (i + ii)].clone())
-                    .collect()));
-    arr.into_dyn()
-}
-
-pub fn poly_mult(n: Ix) -> ArrayD<Value> {
-    let ns = n as Symbolic;
-    let arr: ndarray::Array1<Value> =
-        (0..ns).map(|i| Value::fold(
-            (0..=i).map(
-                |j| Value::fold(vec![Value::Symbol(j), Value::Symbol(ns + i - j)]))
-                .collect()))
-        .chain((0..ns).map(|i| Value::fold(
-            ((i + 1)..ns).map(
-                |j| Value::fold(vec![Value::Symbol(j), Value::Symbol(ns + ns + i - j)]))
-                .collect())))
-        .collect();
-    arr.into_dyn()
-}
-
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum TargetDesc {
     Builtin(String),
@@ -835,62 +405,16 @@ fn update_expected_syms(level: &SynthesisLevel, domain: &Domain,
 impl ProblemDesc {
     pub fn get_spec(&self) -> Result<ArrayD<Value>> {
         let target_info = self.target_info.iter().copied().map(|x| x as usize)
-            .collect::<SmallVec<[usize; 4]>>();
+            .collect::<ShapeVec>();
         match &self.target {
-            TargetDesc::Builtin(name) =>
-                match name.as_str() {
-                    "trove" => {
-                        match target_info.as_slice() {
-                            &[m, n] => Ok(trove(m, n)),
-                            other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
-                        }
-                    }
-                    "trove_sum" => {
-                        match target_info.as_slice() {
-                            &[m, n] => Ok(trove_sum(m, n)),
-                            other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
-                        }
-                    }
-                    "conv_dealg" => {
-                        match target_info.as_slice() {
-                            &[width, k] => Ok(convolve_dealg(width, k)),
-                            other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
-                        }
-                    }
-                    "conv" => {
-                        match target_info.as_slice() {
-                            &[width, k] => Ok(convolve(width, k)),
-                            other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
-                        }
-
-                    }
-                    "weight_conv" => {
-                        match target_info.as_slice() {
-                            &[width, k] => Ok(weighted_convolve(width, k)),
-                            other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
-                        }
-
-                    }
-                    "stencil_2d" => {
-                        match target_info.as_slice() {
-                            &[width, k] => Ok(stencil_2d(width, k)),
-                            other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 2).into())
-                        }
-
-                    }
-                    "poly_mult" => {
-                        match target_info.as_slice() {
-                            &[n] => Ok(poly_mult(n)),
-                            other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 1).into())
-                        }
-                    }
-                    other => Err(ErrorKind::UnknownProblem(other.to_owned()).into())
-                },
-                TargetDesc::Custom { data, n_folds } => {
-                    let n_folds = *n_folds as usize;
-                    custom_target(data, &target_info, n_folds)
-                }
+            TargetDesc::Builtin(name) => {
+                crate::builtins::goal(name, target_info.as_slice(), None)
+            },
+            TargetDesc::Custom { data, n_folds } => {
+                let n_folds = *n_folds as usize;
+                custom_target(data, &target_info, n_folds)
             }
+        }
     }
 
     pub fn make_domain(&self, spec: ndarray::ArrayViewD<Value>) -> Domain {
@@ -988,29 +512,7 @@ impl ProblemDesc {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::state::{Value};
-
-    #[test]
-    pub fn trove_works() {
-        let trove_spec: [Symbolic; 12] = [0, 1, 2,
-                                          3, 4, 5,
-                                          6, 7, 8,
-                                          9, 10, 11];
-        let trove_spec: Vec<Value> = (&trove_spec).iter().copied().map(Value::Symbol).collect();
-        let trove_spec_arr = Array::from_shape_vec((3, 4), trove_spec).unwrap().into_dyn();
-        assert_eq!(trove_spec_arr, trove(3, 4));
-    }
-
-    #[test]
-    pub fn conv_1d_end_works() {
-        let conv_final: [Symbolic; 4 * 3] = [0, 1, 2,
-                                             1, 2, 3,
-                                             2, 3, 4,
-                                             3, 4, 5];
-        let conv_final = (&conv_final).iter().copied().map(Value::Symbol).collect();
-        let conv_final_arr = Array::from_shape_vec((4, 3), conv_final).unwrap().into_dyn();
-        assert_eq!(conv_final_arr, convolve_dealg(4, 3));
-    }
+    use crate::builtins::{trove};
 
     #[test]
     pub fn can_construct() {
@@ -1050,7 +552,6 @@ mod tests {
         assert_eq!(ops.out_shape, trove_shape);
         assert_eq!(ops.ops.gathers().unwrap().iter().collect::<HashSet<_>>(),
                    swizzle::simple_rotations(&[3, 4], &[3, 4], 1, 0, 1).unwrap()
-                   .gathers().unwrap()
                    .iter().collect::<HashSet<_>>());
     }
 }

@@ -76,7 +76,7 @@ fn run() -> Result<()> {
                     let name = path.to_string_lossy().into_owned();
                     let file = open_file(path)?;
                     serde_json::from_reader(BufReader::new(file))
-                        .chain_err(|| ErrorKind::ParseError(path.into()))
+                        .chain_err(|| ErrorKind::FileParseError(path.into()))
                         .map(|v| (v, name))
                 }).collect::<Result<Vec<_>>>()?
         },

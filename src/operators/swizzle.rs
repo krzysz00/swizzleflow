@@ -14,7 +14,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::misc::ShapeVec;
 use crate::state::{Gather, to_opt_ix};
-use super::OpSetKind;
 use super::identity_gather;
 use crate::errors::*;
 
@@ -84,7 +83,7 @@ pub fn rotate(in_shape: &[Ix],out_shape: &[Ix],
 
 pub fn simple_xforms(in_shape: &[Ix], out_shape: &[Ix],
                      main_axis: Ix, second_axis: Ix,
-                     swizzle_axis: Ix) -> Result<OpSetKind> {
+                     swizzle_axis: Ix) -> Result<Vec<Gather>> {
     let mut ret = HashSet::new();
 
     if in_shape == out_shape {
@@ -99,12 +98,12 @@ pub fn simple_xforms(in_shape: &[Ix], out_shape: &[Ix],
                .map(|(dr, cr, cf)| xform(in_shape, out_shape,
                                          main_axis, second_axis, swizzle_axis,
                                          cf, cr, dr, None, false)));
-    Ok(ret.into_iter().collect::<Vec<_>>().into())
+    Ok(ret.into_iter().collect::<Vec<_>>())
 }
 
 pub fn simple_rotations(in_shape: &[Ix], out_shape: &[Ix],
                         main_axis: Ix, second_axis: Ix,
-                        swizzle_axis: Ix) -> Result<OpSetKind> {
+                        swizzle_axis: Ix) -> Result<Vec<Gather>> {
     let mut ret = HashSet::new();
 
     if in_shape == out_shape {
@@ -115,12 +114,12 @@ pub fn simple_rotations(in_shape: &[Ix], out_shape: &[Ix],
                .map(|c| rotate(in_shape, out_shape,
                                main_axis, second_axis, swizzle_axis,
                                c, None)));
-    Ok(ret.into_iter().collect::<Vec<_>>().into())
+    Ok(ret.into_iter().collect::<Vec<_>>())
 }
 
 pub fn all_xforms(in_shape: &[Ix], out_shape: &[Ix],
                   main_axis: Ix, second_axis: Ix,
-                  swizzle_axis: Ix) -> Result<OpSetKind> {
+                  swizzle_axis: Ix) -> Result<Vec<Gather>> {
     let mut ret = HashSet::new();
 
     if in_shape == out_shape {
@@ -142,12 +141,12 @@ pub fn all_xforms(in_shape: &[Ix], out_shape: &[Ix],
                               main_axis, second_axis, swizzle_axis,
                               cf, cr, dr, Some(g), *wrap)));
     }
-    Ok(ret.into_iter().collect::<Vec<_>>().into())
+    Ok(ret.into_iter().collect::<Vec<_>>())
 }
 
 pub fn all_rotations(in_shape: &[Ix], out_shape: &[Ix],
                      main_axis: Ix, second_axis: Ix,
-                     swizzle_axis: Ix) -> Result<OpSetKind> {
+                     swizzle_axis: Ix) -> Result<Vec<Gather>> {
     let mut ret = HashSet::new();
     let stable_len = in_shape[main_axis];
 
@@ -161,5 +160,5 @@ pub fn all_rotations(in_shape: &[Ix], out_shape: &[Ix],
                                    main_axis, second_axis, swizzle_axis,
                                    c, Some(g))));
     }
-    Ok(ret.into_iter().collect::<Vec<_>>().into())
+    Ok(ret.into_iter().collect::<Vec<_>>())
 }

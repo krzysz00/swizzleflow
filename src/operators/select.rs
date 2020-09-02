@@ -13,7 +13,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::state::{Gather,to_opt_ix};
-use super::OpSetKind;
 
 use crate::errors::*;
 
@@ -134,7 +133,7 @@ pub fn cond_keep_gather(shape: &[Ix], operand1: usize, operand2: usize, c: isize
                 }, name)
 }
 
-pub fn reg_select(shape: &[Ix], consts: &[isize]) -> Result<OpSetKind> {
+pub fn reg_select(shape: &[Ix], consts: &[isize]) -> Result<Vec<Gather>> {
     let mut ret = HashSet::new();
 
     let op_len = shape.len();
@@ -145,11 +144,11 @@ pub fn reg_select(shape: &[Ix], consts: &[isize]) -> Result<OpSetKind> {
                .map(move |(c, binop, idx1, idx2, op)|
                     reg_select_gather(shape, idx1, idx2, *c, *binop, *op)));
 
-    Ok(ret.into_iter().collect::<Vec<_>>().into())
+    Ok(ret.into_iter().collect::<Vec<_>>())
 }
 
 pub fn cond_keep(shape: &[Ix], consts: &[isize],
-                 restrict: &BTreeMap<usize, usize>) -> Result<OpSetKind> {
+                 restrict: &BTreeMap<usize, usize>) -> Result<Vec<Gather>> {
     let mut ret = HashSet::new();
     let op_len = shape.len();
 
@@ -171,7 +170,7 @@ pub fn cond_keep(shape: &[Ix], consts: &[isize],
                .map(move |(c, binop, idx1, idx2, op)|
                     cond_keep_gather(shape, idx1, idx2, *c, *binop, *op, restrict)));
 
-    Ok(ret.into_iter().collect::<Vec<_>>().into())
+    Ok(ret.into_iter().collect::<Vec<_>>())
 }
 
 pub type Operator = (usize, usize, isize, BinOp, Op);
@@ -228,7 +227,7 @@ fn combinations(n: usize, k: usize) -> Vec<Vec<usize>> {
 }
 
 pub fn general_select(in_shape: &[Ix], out_shape: &[Ix], axis: usize,
-                      consts: &[isize], dims: &[Ix]) -> Result<OpSetKind> {
+                      consts: &[isize], dims: &[Ix]) -> Result<Vec<Gather>> {
     let mut ret = HashSet::new();
 
     let n = in_shape[axis] - 1;
@@ -246,5 +245,5 @@ pub fn general_select(in_shape: &[Ix], out_shape: &[Ix], axis: usize,
         storage.clear();
         ret
     }));
-    Ok(ret.into_iter().collect::<Vec<_>>().into())
+    Ok(ret.into_iter().collect::<Vec<_>>())
 }
