@@ -12,16 +12,18 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use crate::misc::in_bounds;
+use crate::misc::{in_bounds,ShapeVec};
 
 use ndarray::{Array,ArrayViewD,ArrayD,Ix,Axis};
 use ndarray::{Dimension,Zip,FoldWhile};
 
+use std::borrow::Cow;
+use std::cmp::{PartialEq,Eq};
+use std::collections::{HashMap,BTreeSet};
 use std::fmt;
 use std::fmt::{Display,Formatter};
-use std::cmp::{PartialEq,Eq};
 use std::hash::{Hash,Hasher};
-use std::collections::{HashMap,BTreeSet};
+use std::num::{NonZeroUsize};
 
 use smallvec::SmallVec;
 
@@ -116,6 +118,8 @@ impl Value {
 }
 
 pub type DomRef = usize;
+pub const ZERO: DomRef = 0;
+pub const NOT_IN_DOMAIN: DomRef = 1;
 
 // Invariants on Domains
 // - Domain reference 0 is to Empty, reference 1 is NotInDomain
@@ -231,15 +235,15 @@ impl Domain {
 // A value can continue, if for each pair of values v1, v2, we have c ->'(v1) t and c ->'(v2) t
 // Program states
 #[derive(Debug)]
-pub struct ProgState<'d> {
+pub struct ProgState<'d, 't> {
     pub domain: &'d Domain,
-    pub(crate) state: ArrayD<DomRef>,
+    pub(crate) state: Vec<Cow<'t, Option<ArrayD<DomRef>>>>,
     // We store row-major indices into matrix dimensions for effeciency
-    pub(crate) inv_state: Vec<Vec<Ix>>,
+    pub(crate) inv_state: Vec<Vec<(Ix, Ix)>>,
     pub name: String
 }
 
-impl Clone for ProgState<'_> {
+impl Clone for ProgState<'_, '_> {
     fn clone(&self) -> Self {
         ProgState { domain: self.domain,
                     state: self.state.clone(),
@@ -247,133 +251,155 @@ impl Clone for ProgState<'_> {
                     name: self.name.clone() }
     }
 }
-impl PartialEq for ProgState<'_> {
+impl PartialEq for ProgState<'_, '_> {
     fn eq(&self, other: &ProgState) -> bool {
         self.state == other.state
     }
 }
 
-impl Eq for ProgState<'_> {}
+impl Eq for ProgState<'_, '_> {}
 
-impl Hash for ProgState<'_> {
+impl Hash for ProgState<'_, '_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.state.hash(state);
     }
 }
 
-impl<'d> ProgState<'d> {
-    fn making_inverse(domain: &'d Domain, state: ArrayD<DomRef>,
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct Operation {
+    pub fns: Vec<Gather>,
+    pub fns_summary: Option<Gather>,
+
+    pub fold_len: Option<NonZeroUsize>,
+
+    pub in_shapes: Vec<ShapeVec>,
+    pub in_bounds: Vec<usize>,
+    // Already accounts for fold
+    pub out_shape: ShapeVec,
+
+    pub var: String,
+    pub arg_string: String,
+
+    pub in_lanes: Vec<usize>,
+    pub out_lane: usize,
+    pub drop_lanes: Vec<usize>,
+}
+
+
+impl<'d, 't> ProgState<'d, 't> {
+    fn making_inverse(domain: &'d Domain, state: Vec<Cow<'t, Option<ArrayD<DomRef>>>>,
                       name: String) -> Self {
         let mut inverse: Vec<Vec<Ix>> = (0..domain.size()).map(|_| Vec::with_capacity(16)).collect();
-        let slice = state.as_slice().unwrap();
-        for (idx, elem) in slice.iter().copied().enumerate() {
-            for s in domain.subterms_of(elem) {
-                inverse[*s].push(idx)
+        for (lane, data) in state.iter().enumerate().filter_map(|(i, x)| x.as_ref().map(|v| (i, v))) {
+            let slice = data.as_slice().unwrap();
+            for (idx, elem) in slice.iter().copied().enumerate() {
+                for s in domain.subterms_of(elem) {
+                    inverse[*s].push((lane, idx))
+                }
             }
         }
         Self { domain, state, name, inv_state: inverse }
     }
 
-    pub fn new(domain: &'d Domain, state: ArrayD<DomRef>,
+    pub fn new(domain: &'d Domain, state: Vec<Option<ArrayD<DomRef>>>,
                name: impl Into<String>) -> Self {
+        let state = state.into_iter().map(|x| Cow::Owned(x));
         Self::making_inverse(domain, state, name.into())
     }
 
-    pub fn new_from_spec(domain: &'d Domain, state: ArrayD<Value>,
-                         name: impl Into<String>) -> Option<Self> {
-        let ref_vec: Option<Vec<DomRef>> = state.as_slice().unwrap()
-            .iter().map(|v| domain.find_value(v))
-            .collect();
-        let ref_vec = ref_vec?;
-        let ref_mat = ArrayD::from_shape_vec(state.shape(), ref_vec).unwrap();
-        Some(Self::new(domain, ref_mat, name))
+    pub fn new_from_spec(domain: &'d Domain, vars: Vec<Option<ArrayD<Value>>>,
+                         name: impl Into<String>) -> Self {
+        let ref_state = vars.into_iter()
+            .map(|mv| Cow::Owned(ms.map(|var|
+            var.map(|v| domain.find_value(v).unwrap_or(NOT_IN_DOMAIN)))));
+        Self::making_inverse(domain, ref_state, name.into())
     }
 
     pub fn linear(domain: &'d Domain, start: Ix, shape: &[Ix]) -> Self {
         let shape_len: usize = shape.iter().copied().product();
         let array = (start..start+shape_len).collect();
-        Self::making_inverse(domain, Array::from_shape_vec(shape, array).unwrap(),
+        Self::making_inverse(domain,
+                             vec![Cow::Owned(Some(Array::from_shape_vec(shape, array).unwrap()))],
                              "id".to_owned())
     }
 
-    pub fn gather_by(&self, gather: &Gather) -> Self {
-        // Read off the edge to get the "garbage" value
-        let slice = self.state.as_slice().unwrap();
-        let array = gather.data.mapv(move |v| if v < 0 { 0 }
-                                     else { slice.get(v as usize).copied().unwrap_or(0) });
-        let mut name = self.name.to_owned();
-        name.push_str(";");
-        name.push_str(&gather.name);
-        Self::making_inverse(self.domain, array, name)
+    fn emplace<'u: 't>(&self, value: ArrayD<DomRef>, op: &Operation,
+                       gather_name: &str) -> ProgState<'d, 'u> {
+        let mut state = self.state.clone();
+        state[op.out_lane] = Cow::Owned(Some(value));
+        for l in op.drop_lanes {
+            state[l] = Cow::Owned(None);
+        }
+        let name = format!(" {} = {}{};", op.name, gather_name, op.arg_string);
+        Self::making_inverse(self.domain, state, name)
     }
 
-    pub fn gather_fold_by(&self, gather: &Gather) -> Self {
+    pub fn gather_by<'u: 't>(&self, gather: &Gather, op: &Operation)
+                             -> ProgState<'d, 'u> {
+        // Read off the edge to get \bot
+        // Read past the arguments to get 0
+        let slices: SmallVec<[&[usize]; 3]> =
+            op.in_lanes.iter().copied().map(|l| self.state[l]
+                                            .as_slice().unwrap())
+            .collect();
+        // 0 = 0
+        // 1 = \bot
+        let array = gather.data.mapv(move |(arg, idx)|
+                                     slices.get(arg)
+                                     .map(|s|
+                                          if idx < 0 { NOT_IN_DOMAIN }
+                                          else { s.get(idx as usize).copied().unwrap_or(NOT_IN_DOMAIN) })
+                                     .unwrap_or(ZERO));
+        self.emplace(array, op, gather.name)
+    }
+
+    #[inline]
+    fn fold_find(&self, data: &[(Ix, OptIx)],
+                 elements: &mut SmallVec<[DomRef; 6]>,
+                 slices: &[&[usize]]) -> DomRef {
+        for (arg, idx) in data.iter().copied() {
+            if let Some(s) = slices.get(arg).as_ref() {
+                let val =
+                    if idx < 0 { NOT_IN_DOMAIN }
+                    else { s.get(idx as usize).copied().unwrap_or(NOT_IN_DOMAIN) };
+                elements.push(val);
+            }
+        }
+        elements.sort_unstable();
+        let ret = self.domain.find_fold(&elements).unwrap_or(NOT_IN_DOMAIN);
+        elements.clear();
+        ret
+    }
+
+    pub fn gather_fold_by<'u: 't>(&self, gather: &Gather, op: &Operation)
+                                  -> ProgState<'d, 'u> {
+        let slices: SmallVec<[&[usize]; 3]> =
+            op.in_lanes.iter().copied().map(|l| self.state[l]
+                                            .as_slice().unwrap())
+            .collect();
+
         let mut elements: SmallVec<[DomRef; 6]> =
             SmallVec::with_capacity(gather.data.shape()[gather.data.ndim()-1]);
+        let axis = Axis(gather.data.ndims() - 1);
         let slice = self.state.as_slice().unwrap();
-        let result: Vec<DomRef> =
-            gather.data.genrows().into_iter()
-            .map(|data| {
-                let data = data.as_slice().unwrap();
-                elements.extend(
-                    data.iter().copied()
-                        .filter_map(|idx|
-                                    if idx < 0 { None }
-                                    else { slice.get(idx as usize).copied() })
-                        .filter(|x| *x != 0));
-                elements.sort_unstable();
-                // Bad folds -> NotInDomain
-                let ret = self.domain.find_fold(&elements).unwrap_or(1);
-                elements.clear();
-                ret
-            }).collect();
-        let array = ArrayD::from_shape_vec(&gather.data.shape()[0..gather.data.ndim()-1],
-                                           result).unwrap();
-
-        let mut name = self.name.to_owned();
-        name.push_str(";");
-        name.push_str(&gather.name);
-        name.push_str("[Σ]");
-        Self::making_inverse(self.domain, array, name)
-    }
-
-    pub fn stack(states: &[&ProgState<'d>]) -> Self {
-        let axis_number = Axis(states[0].state.ndim());
-        let views: SmallVec<[ArrayViewD<DomRef>; 6]> =
-            states.into_iter().map(|s| s.state.view().insert_axis(axis_number))
-            .collect();
-        let array = ndarray::stack(axis_number, &views).unwrap();
-        let name = format!("stack[{}]",
-                               states.iter().map(|s| s.name.clone()).join(","));
-        Self::making_inverse(states[0].domain, array, name)
-    }
-
-    pub fn stack_folding(states: &[&ProgState<'d>]) -> Self {
-        let slices: SmallVec<[&[DomRef]; 6]> =
-            states.into_iter().map(|s| s.state.as_slice().unwrap())
-            .collect();
-        let len = slices[0].len();
-        let domain = states[0].domain;
-        let mut elements: SmallVec<[DomRef; 6]> = SmallVec::with_capacity(len);
-        let result: Vec<DomRef> = (0..len).map(
-            |i| {
-                elements.extend(slices.iter().map(|s| s[i]).filter(|v| *v != 0));
-                elements.sort_unstable();
-                let ret = domain.find_fold(&elements).unwrap_or(1);
-                elements.clear();
-                ret
-            }).collect();
-        let array = ArrayD::from_shape_vec(states[0].state.shape(),
-                                           result).unwrap();
-        let name = format!("stack_fold[{}]",
-                           states.iter().map(|s| s.name.clone()).join(","));
-        Self::making_inverse(domain, array, name)
+        let array: ArrayD<DomRef> =
+            gather.data.map_axis(
+                axis,
+                |data| {
+                    let data = data.as_slice().unwrap();
+                    self.fold_find(data, &mut elements, slices.as_slice())
+                });
+        self.emplace(array, op, gather.name)
     }
 }
 
-impl Display for ProgState<'_> {
+impl Display for ProgState<'_, '_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "{}:\n{}", self.name, self.state.mapv(|r| self.domain.get_value(r)))
+        write!(f, "{}:\n{}", self.name,
+               self.state.iter()
+               .filter_map(|s| s.as_ref().map(
+                   |a| a.mapv(|r| self.domain.get_value(r)))
+               .join("")))
     }
 }
 
@@ -395,7 +421,7 @@ pub fn to_opt_ix(index: &[Ix], shape: &[Ix]) -> OptIx {
 
 #[derive(Clone, Debug)]
 pub struct Gather {
-    pub data: ArrayD<OptIx>,
+    pub data: ArrayD<(Ix, OptIx)>,
     pub name: String,
 }
 
@@ -416,35 +442,35 @@ impl Hash for Gather {
 impl Gather {
     pub fn new<F>(dest_shape: &[Ix],
                   builder: F, name: impl Into<String>) -> Self
-    where F: Fn(&[Ix]) -> isize {
+    where F: Fn(&[Ix]) -> (Ix, OptIx) {
         let array = ArrayD::from_shape_fn(dest_shape, |v| builder(v.slice()));
         Self { data: array,  name: name.into() }
     }
 
-    pub fn new_raw(data: ArrayD<OptIx>, name: String) -> Self {
+    pub fn new_raw(data: ArrayD<(Ix, OptIx)>, name: String) -> Self {
         Self { data, name }
     }
 
     pub fn new_blank(dest_shape: &[Ix], name: Option<String>) -> Self {
-        let array = ArrayD::from_elem(dest_shape, -1);
+        let array = ArrayD::from_elem(dest_shape, (1, 0));
         Self { data: array, name: name.unwrap_or("forget".into()) }
     }
 
-    pub fn merge_with(&mut self, other: &Gather) -> bool {
+    pub fn merge_with(&mut self, other: &Gather, n_args: usize) -> bool {
         let ret =
             Zip::from(self.data.view_mut()).and(other.data.view())
             .fold_while((), |_, s, o| {
-                if *s >= 0 {
-                    if *o < 0 || s == o {
+                if *s.0 >= n_args {
+                    *s = *o;
+                    FoldWhile::Continue(())
+                }
+                else {
+                    if s == o || *o.0 >= n_args {
                         FoldWhile::Continue(())
                     }
                     else {
                         FoldWhile::Done(())
                     }
-                }
-                else {
-                    *s = *o;
-                    FoldWhile::Continue(())
                 }
             });
         !ret.is_done() // No early return -> successful merge
@@ -453,20 +479,22 @@ impl Gather {
     pub fn is_identity(&self) -> bool {
         self.data.as_slice().unwrap()
             .iter().copied().enumerate()
-            .all(|(i, v)| i as isize == v)
+            .all(|(i, (a, v))| i as isize == v || a == 0)
     }
 
-    pub fn min_max_copies(&self, input_bound: usize, mins_out: &[u32], maxs_out: &[u32],
-                          fold_factor: Option<usize>) -> (Vec<u32>, Vec<u32>) {
-        let signed_bound = input_bound as isize;
-        let mut mins_ret = vec![0; input_bound];
-        let mut maxs_ret = vec![0; input_bound];
+    pub fn min_max_copies(&self, input_bounds: &[usize],
+                          mins_out: &[u32], maxs_out: &[u32],
+                          fold_factor: Option<usize>) -> (Vec<Vec<u32>>, Vec<Vec<u32>>) {
+        let n_inputs = input_bounds.len();
+        let mut mins_ret = input_bounds.iter().copied().map(|b| vec![0; b]);
+        let mut maxs_ret = input_bounds.iter().copied().map(|b| vec![0; b]);
 
-        for (i, e) in self.data.iter().copied().enumerate().filter(|&(_, e)| e >= 0 && e < signed_bound) {
+        for (i, (a, e)) in self.data.iter().copied().enumerate()
+            .filter(|&(_, (a, e))| a < n_inputs && e >= 0 && e < (input_bounds[a] as isize)) {
             let e = e as usize;
             let i = if let Some(fold) = fold_factor { i / fold } else { i };
-            mins_ret[e] += mins_out[i];
-            maxs_ret[e] += maxs_out[i];
+            mins_ret[a][e] += mins_out[i];
+            maxs_ret[a][e] += maxs_out[i];
         }
         (mins_ret, maxs_ret)
     }

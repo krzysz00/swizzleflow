@@ -29,12 +29,12 @@ pub fn xform(in_shape: &[Ix], out_shape: &[Ix],
              cf: Ixs, cr: Ixs, dr: Ix, group: Option<Ix>, wrap: bool) -> Gather {
     let len_of_stable = in_shape[main_axis];
     let group = group.unwrap_or(len_of_stable);
-    let wrap_name = if wrap { "_wrap" } else { "" };
+    let wrap_name = if wrap { "wrap," } else { "" };
     let name = if group != len_of_stable {
-        format!("grouped(xform{}({},{},{}),{})", wrap_name, cf, cr, dr, group)
+        format!("xform[group={},{}cf={},cr={},dr={}]", group, wrap_name, cf, cr, dr)
     }
     else {
-        format!("xform{}({},{},{})", wrap_name, cf, cr, dr)
+        format!("xform[{}cf={},cr={},dr={}]", wrap_name, cf, cr, dr)
     };
     let gcd = group.gcd(&(cf.abs() as usize));
     let df = group / gcd;
@@ -54,7 +54,7 @@ pub fn xform(in_shape: &[Ix], out_shape: &[Ix],
                     let get_from = (fan_loc + rot_loc).mod_floor(&(group as isize))
                         as usize + ((i / group) * group);
                     out[swizzle_axis] = get_from;
-                    to_opt_ix(out.as_slice(), &in_shape)
+                    (0, to_opt_ix(out.as_slice(), &in_shape))
                 }, name)
 }
 
@@ -64,9 +64,9 @@ pub fn rotate(in_shape: &[Ix],out_shape: &[Ix],
     let len_of_stable = in_shape[main_axis];
     let group = group.unwrap_or(len_of_stable);
     let name = if group != len_of_stable {
-        format!("grouped(rot({}),{})", shift, group)
+        format!("rot[group={},shift={}]", shift, group)
     } else {
-        format!("rot({})", shift)
+        format!("rot[shift={}]", shift)
     };
     Gather::new(out_shape,
                 move |idxs: &[Ix]| {
@@ -77,18 +77,24 @@ pub fn rotate(in_shape: &[Ix],out_shape: &[Ix],
                     let get_from = loc.mod_floor(&(group as isize)) as usize
                         + ((i / group) * group);
                     out[swizzle_axis] = get_from;
-                    to_opt_ix(out.as_slice(), in_shape)
+                    (0, to_opt_ix(out.as_slice(), in_shape))
                 }, name)
 }
 
-pub fn simple_xforms(in_shape: &[Ix], out_shape: &[Ix],
+pub fn simple_xforms(in_shapes: &[ShapeVec], out_shape: &[Ix],
                      main_axis: Ix, second_axis: Ix,
                      swizzle_axis: Ix) -> Result<Vec<Gather>> {
     let mut ret = HashSet::new();
 
+    if in_shapes.len() != 1 {
+        return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
+    }
+    let in_shape: &[usize] = in_shapes[0].as_slice();
+
     if in_shape == out_shape {
         ret.insert(identity_gather(out_shape));
     }
+
     let cf_bound = in_shape[main_axis] as isize;
     let cr_bound = cf_bound;
     let dr_bound = in_shape[second_axis];
@@ -106,6 +112,11 @@ pub fn simple_rotations(in_shape: &[Ix], out_shape: &[Ix],
                         swizzle_axis: Ix) -> Result<Vec<Gather>> {
     let mut ret = HashSet::new();
 
+    if in_shapes.len() != 1 {
+        return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
+    }
+    let in_shape: &[usize] = in_shapes[0].as_slice();
+
     if in_shape == out_shape {
         ret.insert(identity_gather(out_shape));
     }
@@ -121,6 +132,11 @@ pub fn all_xforms(in_shape: &[Ix], out_shape: &[Ix],
                   main_axis: Ix, second_axis: Ix,
                   swizzle_axis: Ix) -> Result<Vec<Gather>> {
     let mut ret = HashSet::new();
+
+    if in_shapes.len() != 1 {
+        return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
+    }
+    let in_shape: &[usize] = in_shapes[0].as_slice();
 
     if in_shape == out_shape {
         ret.insert(identity_gather(out_shape));
@@ -148,6 +164,12 @@ pub fn all_rotations(in_shape: &[Ix], out_shape: &[Ix],
                      main_axis: Ix, second_axis: Ix,
                      swizzle_axis: Ix) -> Result<Vec<Gather>> {
     let mut ret = HashSet::new();
+
+    if in_shapes.len() != 1 {
+        return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
+    }
+    let in_shape: &[usize] = in_shapes[0].as_slice();
+
     let stable_len = in_shape[main_axis];
 
     if in_shape == out_shape {

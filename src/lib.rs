@@ -104,10 +104,6 @@ pub mod errors {
                 description("unknown problem")
                 display("unknown problem: {}", problem)
             }
-            SymbolsNotInSpec {
-                description("symbols not in spec")
-                display("symbols not in spec")
-            }
             MissingOption(key: String) {
                 description("missing options")
                 display("missing options: {}", key)
@@ -116,17 +112,9 @@ pub mod errors {
                 description("bad option length")
                 display("bad option length for {}, expected {}", key, expected)
             }
-            NoSplitFolds {
-                description("can't fold after splits")
-                display("can't fold after splits")
-            }
-            NoSplitPrune {
-                description("can't prune after splits")
-                display("can't prune after splits")
-            }
-            FinalLane(lane: usize) {
-                description("lane of last step must be 0")
-                display("lane of last step must be 0 but is {}", lane)
+            WrongArity(got: usize, expected: usize) {
+                description("wrong number of arguments for bulitin function"),
+                display("wrong number of arguments for bulitin function: got {}, expceted {}", got, expected)
             }
             ZeroFoldDimension {
                 description("cannot fold on length 0 dimensions")

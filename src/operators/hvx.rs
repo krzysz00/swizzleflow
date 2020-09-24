@@ -62,16 +62,16 @@ where T: Fn(Ix, Ix, Ix) -> (Ix, Ix) {
             let is_d = r == d;
             let is_d2 = opt_eq(dd, r);
             if !is_d && !is_d2 {
-                to_opt_ix(coords, in_shape)
+                (0, to_opt_ix(coords, in_shape))
             }
             else {
                 let (r_src, i_src) = map(if is_d { 0 } else { 1 }, i, n);
                 if r_src == 0 {
-                    to_opt_ix(&[u, i_src], in_shape)
+                    (0, to_opt_ix(&[u, i_src], in_shape))
                 }
                 else if r_src == 1 {
-                    to_opt_ix(&[v.expect("Two source registers should have v"),
-                                i_src], in_shape)
+                    (0, to_opt_ix(&[v.expect("Two source registers should have v"),
+                                    i_src], in_shape))
                 }
                 else {
                     panic!("HVX instruction template accessed too many inputs");

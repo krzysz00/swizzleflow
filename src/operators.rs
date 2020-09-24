@@ -19,7 +19,7 @@ pub mod hvx;
 
 use crate::errors::*;
 
-use crate::state::{Gather,to_opt_ix};
+use crate::state::{Gather,to_opt_ix,Operation};
 use crate::transition_matrix::{TransitionMatrix};
 use crate::misc::{ShapeVec,time_since};
 
@@ -32,116 +32,15 @@ use std::time::Instant;
 
 use ndarray::Ix;
 
-pub type IdxVec = SmallVec<[usize; 3]>;
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum OpSetKind {
-    // gathers, summary - choose one of the gathers in gathers
-    // Summary is optionally a gather that is a superset of the behavior of all the `gathers`
-    // if one exists (that is, if the gathers in the vector only differ by whether they don't perform
-    // certain reads)
-    Gathers(Vec<Gather>, Option<Gather>),
-    // [from, ...], to - merge the `from` lanes into the `to` lanes,
-    // stacking the tensors on top of each ohter
-    Stack(IdxVec, usize),
-    // from, [to ...] - copy lane `from` to the `to` lanes
-    Split(usize, IdxVec),
-}
-
-pub fn summarize(gathers: &[Gather]) -> Option<Gather> {
-    if gathers.is_empty() {
-        None
-    }
-    else {
-        let mut all_merged = gathers[0].clone();
-        if (&gathers[1..]).iter().fold(true, |acc, g| acc && all_merged.merge_with(g)) {
-            Some(all_merged)
-        }
-        else {
-            None
-        }
-    }
-}
-
-impl OpSetKind {
-    pub fn new_gathers(gathers: Vec<Gather>) -> Self {
-        let summary = summarize(&gathers);
-        Self::Gathers(gathers, summary)
-    }
-
-    pub fn gathers(&self) -> Option<&[Gather]> {
-        use OpSetKind::*;
-        match self {
-            Gathers(vec, _) => Some(vec),
-            Stack(_, _) | Split(_, _) => None,
-        }
-    }
-
-    pub fn summary(&self) -> Option<&Gather> {
-        use OpSetKind::*;
-        match self {
-            Gathers(_, summary) => summary.as_ref(),
-            Stack(_, _) | Split(_, _) => None,
-        }
-    }
-
-    pub fn stack_target(&self) -> Option<usize> {
-        use OpSetKind::*;
-        match self {
-            Stack(_, to) => Some(*to),
-            Gathers(_, _) | Split(_, _) => None,
-        }
-    }
-}
-
-impl From<Vec<Gather>> for OpSetKind {
-    fn from(gathers: Vec<Gather>) -> OpSetKind {
-        OpSetKind::new_gathers(gathers)
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct OpSet {
-    pub name: Cow<'static, str>,
-    pub ops: OpSetKind,
-    pub in_shape: ShapeVec,
-    pub out_shape: ShapeVec,
-    pub fold_dim: Option<NonZeroUsize>,
-}
-
-impl OpSet {
-    pub fn new<T>(name: T, ops: OpSetKind, in_shape: ShapeVec, out_shape: ShapeVec,
-                  fold_dim: Option<NonZeroUsize>) -> Self
-    where T: Into<Cow<'static, str>> {
-        Self { name: name.into(), ops, in_shape, out_shape, fold_dim }
-    }
-
-    #[inline(always)]
-    pub fn has_fold(&self) -> bool {
-        self.fold_dim.is_some()
-    }
-
-    pub fn prunes_like_identity(&self) -> bool {
-        use OpSetKind::*;
-        if self.has_fold() { return false; }
-
-        match &self.ops {
-            Gathers(_, summary) => summary.as_ref()
-                .map(|g| g.is_identity()).unwrap_or(false),
-            Stack(from, to) => from.len() == 1 && from[0] == *to,
-            Split(from, to) => to.len() == 1 && *from == to[0],
-        }
-    }
-
-    pub fn to_name(&self) -> String {
-        let in_strings: SmallVec<[String; 4]> = self.in_shape.iter().map(|v| v.to_string()).collect();
-        let out_strings: SmallVec<[String; 4]> = self.out_shape.iter().map(|v| v.to_string()).collect();
-        format!("{}-{}-{}", out_strings.join(","), self.name, in_strings.join(","))
-    }
-}
+    // pub fn to_name(&self) -> String {
+    //     let in_strings: SmallVec<[String; 4]> = self.in_shape.iter().map(|v| v.to_string()).collect();
+    //     let out_strings: SmallVec<[String; 4]> = self.out_shape.iter().map(|v| v.to_string()).collect();
+    //     format!("{}-{}-{}", out_strings.join(","), self.name, in_strings.join(","))
+    // }
 
 pub fn identity_gather(shape: &[Ix]) -> Gather {
-    Gather::new(shape, |idxs| to_opt_ix(idxs, shape), "id")
+    Gather::new(shape, |idxs| (0, to_opt_ix(idxs, shape)), "id")
 }
 
 pub fn transpose_gather(in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
@@ -150,67 +49,116 @@ pub fn transpose_gather(in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
         for (idx, scale) in idxs.iter().rev().zip(in_shape.iter()) {
             ret = ret * scale + idx;
         }
-        ret as isize
+        (0, ret as isize)
     }, "tr")
 }
 
-pub fn stack_adapter_gather(out_shape: &[Ix], index: Ix) -> Gather {
+pub fn stack_gather(in_shapes: &[ShapeVec], out_shape: &[Ix]) -> Gather {
     let last = out_shape.len() - 1;
     let in_shape = &out_shape[0..last];
     Gather::new(out_shape, |idxs|
-                if idxs[last] != index { -1 }
-                else { to_opt_ix(&idxs[0..last], in_shape) },
-                format!("(stack){}", index))
+                (idxs[last], to_opt_ix(&idxs[0..last], in_shapes[last].as_slice())),
+                "stack")
 }
 
-pub fn identity(shape: &[Ix]) -> Result<Vec<Gather>> {
-    Ok(vec![identity_gather(shape)])
+pub fn identity(in_shapes: &[ShapeVec], out_shape: &[Ix]) -> Result<Vec<Gather>> {
+    if in_shapes.len() != 1 {
+        return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
+    }
+
+    let in_shape: &[usize] = in_shapes[0].as_slice();
+    let out_prod: usize = out_shape.iter().product();
+    let in_prod: usize = in_shape.iter().product();
+    if out_prod != in_prod {
+        return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
+    }
+
+    Ok(vec![identity_gather(out_shape)])
 }
 
 pub fn transpose(in_shape: &[Ix], out_shape: &[Ix]) -> Result<Vec<Gather>> {
+    if in_shapes.len() != 1 {
+        return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
+    }
+    let in_shape = in_shapes[0].as_slice();
+    if out_shape.iter().rev().zip(in_shape.iter()).any(|(a, b)| a != b) {
+        return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
+    }
+
     Ok(vec![transpose_gather(in_shape, out_shape)])
 }
 
+pub fn stack(in_shapes: &[ShapeVec], out_shape: &ShapeVec) -> Result<Vec<Gather>> {
+    for s in in_shapes {
+        if s != out_shape[0..out_shape.len()-2] {
+            return Err(ErrorKind::ShapeMismatch(out_shape.to_owned()))
+        }
+    }
+    stack_gather(in_shapes, out_shape.as_slice())
+}
 
-
-pub fn rot_idx_r(in_shape: &[Ix],
+pub fn rot_idx_r(in_shapes: &[ShapeVec],
                  out_shape: &[Ix], rot: Ix) -> Result<Vec<Gather>> {
+    if in_shapes.len() != 1 {
+        return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
+    }
+    let in_shape = in_shapes[0].as_slice();
+    let split = in_shape.len() - rot;
+    if in_shape[split..] != out_shape[..rot] || in_shape[..split] != out_shape[rot..] {
+        let mut expected_out = in_shape.to_vec();
+        expected_out.rotate_right(rot);
+        return Err(ErrorKind::ShapeMismatch(out_shape.to_vec(),
+                                            expected_out)
+                   .into());
+    }
+
     let gather =
         Gather::new(out_shape, |idxs| {
             let mut idxs = ShapeVec::from_slice(idxs);
             // The shape is rotated right, here we need the inverse
             // operation to get the original indices
             idxs.rotate_left(rot);
-            to_opt_ix(&idxs, in_shape)
-        }, format!("rot_idx_r({})", rot));
+            (0, to_opt_ix(&idxs, in_shape))
+        }, format!("rot_idx{{r={}}}", rot));
     Ok(vec![gather])
 }
 
-pub fn rot_idx_l(in_shape: &[Ix],
+pub fn rot_idx_l(in_shapes: &[ShapeVec],
                  out_shape: &[Ix], rot: Ix) -> Result<Vec<Gather>> {
+    if in_shapes.len() != 1 {
+        return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
+    }
+    let in_shape = in_shapes[0].as_slice();
+    let split = in_shape.len() - rot;
+    if in_shape[..rot] != out_shape[split..] || in_shape[rot..] != out_shape[..split] {
+        let mut expected_out = in_shape.to_vec();
+        expected_out.rotate_left(rot);
+        return Err(ErrorKind::ShapeMismatch(out_shape.to_vec(),
+                                            expected_out)
+                   .into());
+    }
+
     let gather =
         Gather::new(out_shape, |idxs| {
             let mut idxs = ShapeVec::from_slice(idxs);
             idxs.rotate_right(rot);
-            to_opt_ix(&idxs, in_shape)
-        }, format!("rot_idx_l({})", rot));
+            (0, to_opt_ix(&idxs, in_shape))
+        }, format!("rot_idx{{l={}}}", rot));
     Ok(vec![gather])
 }
 
 #[derive(Debug)]
-pub struct SynthesisLevel {
-    pub ops: OpSet,
+pub struct SearchStep {
+    pub op: Operation,
     pub matrix: Option<TransitionMatrix>,
     // min and max, if computed and distinct
     pub copy_bounds: Option<(Vec<u32>, Vec<u32>)>,
-    pub lane: usize,
-    pub expected_syms: usize,
     pub prune: bool,
 }
 
-impl SynthesisLevel {
-    pub fn new(ops: OpSet, lane: usize, expected_syms: usize, prune: bool) -> Self {
-        Self {ops , matrix: None, copy_bounds: None, lane, expected_syms, prune }
+impl SearchStep {
+    pub fn new(op: Operation, prune: bool) -> Self {
+        Self {op , matrix: None, copy_bounds: None, prune }
     }
 }
 

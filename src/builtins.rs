@@ -18,7 +18,7 @@ use crate::errors::*;
 use crate::misc::{ShapeVec, equal_except};
 use crate::state::{Gather, Value, Symbolic};
 
-use crate::operators::{identity, transpose, rot_idx_r, rot_idx_l};
+use crate::operators::{identity, transpose, stack, rot_idx_r, rot_idx_l};
 use crate::operators::swizzle::{simple_xforms, simple_rotations,
                                 all_xforms, all_rotations};
 use crate::operators::select::{reg_select, cond_keep, general_select};
@@ -184,73 +184,53 @@ fn parse_swizzle_options(options: Option<&OptMap>) -> Result<(usize, usize, usiz
 
 pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
               options: Option<&OptMap>) -> Result<Vec<Gather>> {
-    let in_shape: &[usize] = in_shapes[0].as_slice();
     match name {
         "id" | "identity" | "reshape" => {
-            let out_prod: usize = out_shape.iter().product();
-            let in_prod: usize = in_shape.iter().product();
-            if out_prod != in_prod {
-                return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
-            }
-            identity(out_shape)
+            identity(in_shapes, out_shape)
         },
         "transpose" => {
-            if out_shape.iter().rev().zip(in_shape.iter()).any(|(a, b)| a != b) {
-                return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
-            }
-            transpose(in_shape, out_shape)
+            transpose(in_shapes, out_shape)
         },
+        "stack" => {
+            stack(in_shapes, out_shape)
+        }
         "rot_idx" => {
             if let Some(r) = int_option(options, "r") {
                 if int_option(options, "l").is_some() {
                     return Err(ErrorKind::BadOptionLength("l".into(), 0).into());
                 }
                 let r = r as Ix;
-                let split = in_shape.len() - r;
-                if in_shape[split..] != out_shape[..r]
-                    || in_shape[..split] != out_shape[r..] {
-                        let mut expected_out = in_shape.to_vec();
-                        expected_out.rotate_right(r);
-                        return Err(ErrorKind::ShapeMismatch(out_shape.to_vec(),
-                                                            expected_out)
-                                   .into());
-                    }
-                rot_idx_r(in_shape, out_shape, r)
+                rot_idx_r(in_shapes, out_shape, r)
             }
             else if let Some(l) = int_option(options, "l") {
                 let l = l as Ix;
-                let split = in_shape.len() - l;
-                if in_shape[..l] != out_shape[split..]
-                    || in_shape[l..] != out_shape[..split] {
-                        let mut expected_out = in_shape.to_vec();
-                        expected_out.rotate_left(l);
-                        return Err(ErrorKind::ShapeMismatch(out_shape.to_vec(),
-                                                            expected_out)
-                                   .into());
-                    }
-
-                rot_idx_l(in_shape, out_shape, l)
+                rot_idx_l(in_shapes, out_shape, l)
             }
             else {
                 Err(ErrorKind::MissingOption("l or r".into()).into())
             }
         },
         "load_rep" => {
-            load_rep(in_shape, out_shape)
+            load_rep(in_shapes, out_shape)
         },
         "load_trunc" => {
-            load_trunc(in_shape, out_shape)
+            load_trunc(in_shapes, out_shape)
         },
         "load_grid_2d" => {
-            load_grid_2d(in_shape, out_shape)
+            load_grid_2d(in_shapes, out_shape)
         },
         "broadcast" => {
             let group = int_option(options, "group").unwrap_or(0);
-            broadcast(in_shape, out_shape, group as usize)
+            broadcast(in_shapes, out_shape, group as usize)
         },
         "xforms_no_group" | "xforms" |
         "row_xforms_no_group" | "row_xforms" |
         "col_xforms_no_group" | "col_xforms" => {
+            if in_shapes.len() != 1 {
+                return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
+            }
+            let in_shape: &[usize] = in_shapes[0].as_slice();
+
             let params =
                 if options.is_some() {
                     parse_swizzle_options(options)
@@ -276,6 +256,11 @@ pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
         "rots_no_group" | "rots" |
         "row_rots_no_group" | "row_rots" |
         "col_rots_no_group" | "col_rots" => {
+            if in_shapes.len() != 1 {
+                return Err(ErrorKind::WrongArity(in_shapes.len(), 1),into());
+            }
+            let in_shape: &[usize] = in_shapes[0].as_slice();
+
             let params =
                 if options.is_some() {
                     parse_swizzle_options(options)
@@ -299,6 +284,11 @@ pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
             }
         },
         "reg_select_no_consts" | "reg_select" => {
+            if in_shapes.len() != 1 {
+                return Err(ErrorKind::WrongArity(in_shapes.len(), 1),into());
+            }
+            let in_shape: &[usize] = in_shapes[0].as_slice();
+
             if out_shape[0..out_shape.len()-1] != in_shape[0..in_shape.len()-1] {
                 return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into());
             }
@@ -318,8 +308,12 @@ pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
             reg_select(out_shape, consts)
         },
         "cond_keep_no_consts" | "cond_keep" => {
-            if out_shape != in_shape {
-                return Err(ErrorKind::ShapeMismatch(in_shape.to_vec(), out_shape.to_vec()).into())
+            if in_shapes.len() != 1 {
+                return Err(ErrorKind::WrongArity(in_shapes.len(), 1),into());
+            }
+
+            if out_shape != in_shapes[0].as_slice() {
+                return Err(ErrorKind::ShapeMismatch(in_shapes[0].to_vec(), out_shape.to_vec()).into())
             }
             let n = out_shape[0] as isize;
             // As is Swizzle Inventor
@@ -352,10 +346,15 @@ pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
                 .map(|v| v.iter().copied()
                      .map(|i| i as usize).collect())
                 .unwrap_or_else(|| (0..out_shape.len()).collect());
-            general_select(in_shape, out_shape, axis,
+            general_select(in_shapes, out_shape, axis,
                            consts, &dims)
         },
         "hvx_2x2" => {
+            if in_shapes.len() != 1 {
+                return Err(ErrorKind::WrongArity(in_shapes.len(), 1),into());
+            }
+            let in_shape: &[usize] = in_shapes[0].as_slice();
+
             let (regs, swaps) =
                 parse_hvx_opts(options,
                                bool_option(options, "inplace"),
@@ -365,6 +364,11 @@ pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
             hvx_2x2(in_shape, out_shape, &regs, swaps)
         },
         "hvx_2x1" => {
+            if in_shapes.len() != 1 {
+                return Err(ErrorKind::WrongArity(in_shapes.len(), 1),into());
+            }
+            let in_shape: &[usize] = in_shapes[0].as_slice();
+
             let (regs, swaps) =
                 parse_hvx_opts(options,
                                bool_option(options, "inplace"),
@@ -374,6 +378,11 @@ pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
             hvx_2x1(in_shape, out_shape, &regs, swaps)
         },
         "hvx_inplace" => {
+            if in_shapes.len() != 1 {
+                return Err(ErrorKind::WrongArity(in_shapes.len(), 1),into());
+            }
+            let in_shape: &[usize] = in_shapes[0].as_slice();
+
             let (regs_2_2, swaps) =
                 parse_hvx_opts(options,
                                true, false,

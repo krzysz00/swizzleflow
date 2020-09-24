@@ -17,7 +17,7 @@ use crate::errors::*;
 use crate::misc::{ShapeVec};
 use crate::lexer::{Token,TokenType};
 use crate::builtins::{Opt,OptMap};
-use crate::state::{Value, Symbolic};
+use crate::state::{Value, Symbolic,Gather};
 
 use std::collections::{HashSet,HashMap,BTreeMap};
 use std::convert::TryInto;
@@ -376,9 +376,8 @@ fn parse_gather_array(shapes: &[ShapeVec], out_shape: &ShapeVec,
     Ok((arr, pos))
 }
 
-type ParseGather = (String, ArrayD<(Ix, Ixs)>);
 fn parse_one_gather(shapes: &[ShapeVec], out_shape: &ShapeVec,
-                    toks: &[Token], pos: usize) -> Result<(ParseGather, usize)> {
+                    toks: &[Token], pos: usize) -> Result<(Gather, usize)> {
     let name = match &toks[pos].t {
         Ident(s) => Ok(s.clone()),
         Str(s) => Ok(s.clone()),
@@ -387,13 +386,13 @@ fn parse_one_gather(shapes: &[ShapeVec], out_shape: &ShapeVec,
     let name = name?;
     let (_, pos) = (recognize(Equal, "="))(toks, pos + 1)?;
     let (arr, pos) = parse_gather_array(shapes, out_shape, toks, pos)?;
-    let gather = (name, arr);
+    let gather = Gather::new_raw(arr, name);
     Ok((gather, pos))
 }
 
 
 fn parse_many_gathers(shapes: &[ShapeVec], out_shape: &ShapeVec,
-                      toks: &[Token], pos: usize) -> Result<(Vec<ParseGather>, usize)> {
+                      toks: &[Token], pos: usize) -> Result<(Vec<Gather>, usize)> {
     parse_seq(recognize(LCurly, "{"),
               |t, p| parse_one_gather(shapes, out_shape, t, p),
               recognize(RCurly, ", or }"),
@@ -405,7 +404,7 @@ fn parse_many_gathers(shapes: &[ShapeVec], out_shape: &ShapeVec,
 
 const STATEMENT_START_ERR: &'static str = "'goal', 'define', or identifier";
 fn parse_define(toks: &[Token], pos: usize) ->
-    Result<((String, Vec<ShapeVec>, ShapeVec, Vec<ParseGather>), usize)>
+    Result<((String, Vec<ShapeVec>, ShapeVec, Vec<Gather>), usize)>
 {
     let (_, pos) = recognize(Define, STATEMENT_START_ERR)(toks, pos)?;
     let (name, pos) = parse_ident(toks, pos)?;
@@ -442,7 +441,7 @@ fn parse_goal(toks: &[Token], pos: usize) -> Result<(ArrayD<Value>, usize)> {
 #[derive(Clone, Debug)]
 enum OpType {
     Initial(ArrayD<Value>),
-    Gathers(Vec<ParseGather>, Option<NonZeroUsize>)
+    Gathers(Vec<Gather>, Option<NonZeroUsize>)
 }
 
 #[derive(Clone, Debug)]
@@ -457,7 +456,7 @@ pub struct Statement {
     prune: bool,
 }
 
-type DefsMap = HashMap<(String, Vec<ShapeVec>, ShapeVec), Vec<ParseGather>>;
+type DefsMap = HashMap<(String, Vec<ShapeVec>, ShapeVec), Vec<Gather>>;
 type VarMap = HashMap<String, usize>;
 
 fn parse_call<'t>(custom_fns: &DefsMap, var_map: &VarMap, vars: &mut [Statement],
@@ -512,23 +511,13 @@ fn parse_call<'t>(custom_fns: &DefsMap, var_map: &VarMap, vars: &mut [Statement]
     let gathers =
         if var_map.contains_key(&lookup.0) {
             // Variable copy
-            let gathers = crate::operators::identity(out_shape)?;
-            // TODO, temporary hack to make all this work
-            gathers.into_iter().map(
-                |crate::state::Gather {name, data}|
-                (name,
-                 data.mapv(|ix| (0, ix)))).collect::<Vec<ParseGather>>()
+            crate::operators::identity(&[out_shape], out_shape.as_slice());
         }
         else if let Some(g) = custom_fns.get(&lookup) {
             g.clone()
         } else {
             let (ref name, ref in_shapes, ref out_shape) = lookup;
-            let gathers = crate::builtins::gather(name, in_shapes, out_shape, options.as_ref())?;
-            // TODO, temporary hack to make all this work
-            gathers.into_iter().map(
-                |crate::state::Gather {name, data}|
-                (name,
-                 data.mapv(|ix| (0, ix)))).collect::<Vec<ParseGather>>()
+            crate::builtins::gather(name, in_shapes, out_shape, options.as_ref())?
         };
     let (mut name, in_shapes, _) = lookup;
     if let Some(m) = options {

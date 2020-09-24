@@ -12,9 +12,10 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use crate::state::{Gather,to_opt_ix};
-
 use crate::errors::*;
+
+use crate::state::{Gather,to_opt_ix};
+use crate::misc::ShapeVec;
 
 use ndarray::Ix;
 
@@ -86,9 +87,9 @@ pub fn reg_select_gather(shape: &[Ix], operand1: usize, operand2: usize, c: isiz
                          op: Op) -> Gather {
     let name =
         if c != 0 {
-            format!("keep_if(d{} {} {} {} d{})", operand1, op.name(), c, combine.name(), operand2)
+            format!("keep_if[d{} {} {} {} d{}]", operand1, op.name(), c, combine.name(), operand2)
         } else {
-            format!("keep_if(d{} {} {}d{})", operand1, op.name(), combine.name(), operand2)
+            format!("keep_if[d{} {} {}d{}]", operand1, op.name(), combine.name(), operand2)
         };
     let copy_idx = shape.len() - 1;
 
@@ -106,7 +107,7 @@ pub fn reg_select_gather(shape: &[Ix], operand1: usize, operand2: usize, c: isiz
                     else {
                         storage.push(1);
                     }
-                    to_opt_ix(&storage, &in_shape)
+                    (0, to_opt_ix(&storage, &in_shape))
                 }, name)
 }
 
@@ -114,21 +115,21 @@ pub fn cond_keep_gather(shape: &[Ix], operand1: usize, operand2: usize, c: isize
                         op: Op, restrict: &BTreeMap<usize, Ix>) -> Gather {
     let name =
         if c != 0 {
-            format!("keep_if(d{} {} {} {} d{})", operand1, op.name(), c, combine.name(), operand2)
+            format!("keep_if[d{} {} {} {} d{}]", operand1, op.name(), c, combine.name(), operand2)
         } else {
-            format!("keep_if(d{} {} {}d{})", operand1, op.name(), combine.name(), operand2)
+            format!("keep_if[d{} {} {}d{}]", operand1, op.name(), combine.name(), operand2)
         };
     Gather::new(shape,
                 |idxs: &[Ix]| {
                     let v2 = combine.perform(c, idxs[operand2] as isize);
                     if restrict.iter().any(|(&d, &n)| idxs[d] != n) {
-                        to_opt_ix(idxs, shape)
+                        (0, to_opt_ix(idxs, shape))
                     }
                     else if op.perform(idxs[operand1] as isize, v2) {
-                        to_opt_ix(idxs, shape)
+                        (0, to_opt_ix(idxs, shape))
                     }
                     else {
-                        -1
+                        (1, 0) // Read a 0
                     }
                 }, name)
 }
@@ -176,16 +177,16 @@ pub fn cond_keep(shape: &[Ix], consts: &[isize],
 pub type Operator = (usize, usize, isize, BinOp, Op);
 pub fn general_select_gather(in_shape: &[Ix], out_shape: &[Ix],
                              conds: &[Operator], axis: usize) -> Gather {
-    let mut name = "select(".to_owned();
+    let mut name = "general_select[".to_owned();
     for (a, b, c, binop, op) in conds {
         let name_part = if *c != 0 {
-            format!("keep_if(d{} {} {} {} d{})", a, op.name(), c, binop.name(), b)
+            format!("d{} {} {} {} d{}, ", a, op.name(), c, binop.name(), b)
         } else {
-            format!("keep_if(d{} {} {}d{})", a, op.name(), binop.name(), b)
+            format!("d{} {} {}d{}, ", a, op.name(), binop.name(), b)
         };
         name.push_str(&name_part);
     }
-    name.push(')');
+    name.push(']');
 
     Gather::new(out_shape,
                 |idxs: &[Ix]| {
@@ -199,7 +200,7 @@ pub fn general_select_gather(in_shape: &[Ix], out_shape: &[Ix],
                             return to_opt_ix(&storage, in_shape);
                         }
                     }
-                    to_opt_ix(&storage, in_shape)
+                    (0, to_opt_ix(&storage, in_shape))
                 }, name)
 }
 
@@ -226,9 +227,14 @@ fn combinations(n: usize, k: usize) -> Vec<Vec<usize>> {
     }
 }
 
-pub fn general_select(in_shape: &[Ix], out_shape: &[Ix], axis: usize,
+pub fn general_select(in_shapes: &[ShapeVec], out_shape: &[Ix], axis: usize,
                       consts: &[isize], dims: &[Ix]) -> Result<Vec<Gather>> {
     let mut ret = HashSet::new();
+
+    if in_shapes.len() != 1 {
+        return Err(ErrorKind::WrongArity(in_shapes.len(), 1),into());
+    }
+    let in_shape: &[usize] = in_shapes[0].as_slice();
 
     let n = in_shape[axis] - 1;
     let operators: Vec<Operator> =

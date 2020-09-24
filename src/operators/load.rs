@@ -15,6 +15,7 @@
 use crate::errors::*;
 
 use crate::state::{Gather,to_opt_ix};
+use crate::misc::ShapeVec;
 
 use std::cmp::min;
 
@@ -28,7 +29,12 @@ enum Mode {
     Trunc,
 }
 
-fn load(in_shape: &[Ix], out_shape: &[Ix], mode: Mode) -> Result<Vec<Gather>> {
+fn load(in_shapes: &[ShapeVec], out_shape: &[Ix], mode: Mode) -> Result<Vec<Gather>> {
+    if in_shapes.len() != 1 {
+        return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
+    }
+    let in_shape: &[usize] = in_shapes[0].as_slice();
+
     let name = match mode {
         Mode::Rep => "load_rep",
         Mode::Trunc => "load_trunc",
@@ -55,7 +61,7 @@ fn load(in_shape: &[Ix], out_shape: &[Ix], mode: Mode) -> Result<Vec<Gather>> {
                         let mut storage = SmallVec::<[usize; 4]>::new();
                         storage.push(linear_idx);
                         storage.extend((&out_idxs[out_split..]).iter().copied());
-                        to_opt_ix(&storage, &in_shape)
+                        (0, to_opt_ix(&storage, &in_shape))
                     }, name);
     Ok(vec![gather])
 }
@@ -68,7 +74,12 @@ pub fn load_trunc(in_shape: &[Ix], out_shape: &[Ix]) -> Result<Vec<Gather>> {
     load(in_shape, out_shape, Mode::Trunc)
 }
 
-pub fn broadcast(in_shape: &[Ix], out_shape: &[Ix], group: Ix) -> Result<Vec<Gather>> {
+pub fn broadcast(in_shapes: &[ShapeVec], out_shape: &[Ix], group: Ix) -> Result<Vec<Gather>> {
+    if in_shapes.len() != 1 {
+        return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
+    }
+    let in_shape: &[usize] = in_shapes[0].as_slice();
+
     let name = "broadcast";
     let out_split = out_shape.len() - in_shape.len() + group;
 
@@ -81,12 +92,17 @@ pub fn broadcast(in_shape: &[Ix], out_shape: &[Ix], group: Ix) -> Result<Vec<Gat
                         let mut idxs = Vec::with_capacity(8);
                         idxs.extend_from_slice(&out_idxs[..group]);
                         idxs.extend_from_slice(&out_idxs[out_split..]);
-                        to_opt_ix(&idxs, in_shape)
+                        (0, to_opt_ix(&idxs, in_shape))
                     }, name);
     Ok(vec![gather])
 }
 
-pub fn load_grid_2d(in_shape: &[Ix], out_shape: &[Ix]) -> Result<Vec<Gather>> {
+pub fn load_grid_2d(in_shapes: &[ShapeVec], out_shape: &[Ix]) -> Result<Vec<Gather>> {
+    if in_shapes.len() != 1 {
+        return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
+    }
+    let in_shape: &[usize] = in_shapes[0].as_slice();
+
     if in_shape.len() != 2 {
         return Err(ErrorKind::InvalidShapeDim(in_shape.to_vec(), 2).into());
     }
@@ -100,7 +116,7 @@ pub fn load_grid_2d(in_shape: &[Ix], out_shape: &[Ix]) -> Result<Vec<Gather>> {
                     move |idxs: &[Ix]| {
                         let j = idxs[1] + nj * idxs[3];
                         let i = idxs[0] + ni * idxs[2];
-                        to_opt_ix(&[i, j], in_shape)
+                        (0, to_opt_ix(&[i, j], in_shape))
                     },
         "load_grid_2d");
     Ok(vec![gather])
