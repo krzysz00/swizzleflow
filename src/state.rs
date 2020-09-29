@@ -247,6 +247,11 @@ impl Domain {
     pub fn terms_in_level(&self, level: usize) -> Range<DomRef> {
         self.level_ranges[level].clone()
     }
+
+    pub fn longest_level_len(&self) -> usize {
+        self.level_ranges.iter().map(|Range { start, end }| end - start)
+            .max().unwrap_or(self.elements.len())
+    }
 }
 
 // Ok, the general pruning rule is this:

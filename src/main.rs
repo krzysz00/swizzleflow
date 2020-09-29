@@ -17,19 +17,35 @@ extern crate swizzleflow;
 use clap::clap_app;
 use std::cmp;
 use std::path::Path;
-use std::io::BufReader;
+use std::io::{BufReader,Read};
+use std::time::Instant;
 
-
-use swizzleflow::matrix_load;
-use swizzleflow::operators;
+use swizzleflow::state::{Value, Operation, Domain};
+use swizzleflow::{lexer, parser, abstractions, program_transforms};
 use swizzleflow::synthesis::{Mode, synthesize};
-use swizzleflow::misc::{open_file,parse_opt_arg};
+use swizzleflow::misc::{parse_opt_arg, time_since};
 
 use swizzleflow::errors::*;
+
+use ndarray::ArrayD;
 
 const DEFAULT_MATRIX_DIR: &str = "matrices/";
 const PRUNE_FUEL_ARG_REQS: &'static str = "a positive integer";
 const PRUNE_FUEL_FRAC_ARG_REQS: &'static str = "a floating point number in (0, 1]";
+
+fn process_program(program: String, name: String)
+                   -> Result<((Vec<Option<ArrayD<Value>>>, Vec<Operation>,
+                               Vec<ArrayD<Value>>, usize), String)>
+{
+    let lexed = lexer::lex(&program)
+        .chain_err(|| ErrorKind::FileParseError(name.clone()))?;
+    let (statements, goals) = parser::parse(&lexed)
+        .chain_err(|| ErrorKind::FileParseError(name.clone()))?;
+    let statements = program_transforms::bring_literals_up(statements);
+    let (initials, ops, max_lanes) =
+        program_transforms::to_program(statements);
+    Ok(((initials, ops, goals, max_lanes), name))
+}
 
 fn run() -> Result<()> {
     let args =
@@ -68,46 +84,53 @@ fn run() -> Result<()> {
     }
 
     let matrix_dir = Path::new(args.value_of_os("matrix_dir").unwrap()); // We have a default
-    let specs: Vec<(ProblemDesc, String)> = match args.values_of_os("specs") {
+    let programs: Vec<(String, String)> = match args.values_of_os("specs") {
         Some(iter) => {
             iter.map(
                 |path| {
                     let name = path.to_string_lossy().into_owned();
-                    let file = open_file(path)?;
-                    serde_json::from_reader(BufReader::new(file))
-                        .chain_err(|| ErrorKind::FileParseError(path.into()))
-                        .map(|v| (v, name))
+                    let program = std::fs::read_to_string(path)?;
+                    Ok((program, name))
                 }).collect::<Result<Vec<_>>>()?
         },
-        None => vec![(serde_json::from_reader(BufReader::new(std::io::stdin().lock()))?,
-                      "stdin".into())]
+        None => {
+            let stdin_handle = std::io::stdin();
+            let stdin_locked = stdin_handle.lock();
+            let mut reader = BufReader::new(stdin_locked);
+            let mut input = String::new();
+            reader.read_to_string(&mut input)?;
+            vec![(input, "stdin".to_owned())]
+        },
     };
+    let parse_start = Instant::now();
+    let specs: Result<Vec<_>> =
+        programs.into_iter().map(|(p, n)| process_program(p, n)).collect();
+    let specs = specs?;
+    let parse_dur = time_since(parse_start);
+    println!("construction:all time={}", parse_dur);
 
-    for (desc, name) in specs {
+    for ((initials, ops, goals, max_lanes), name) in specs {
         println!("spec:{}", name);
-        let spec = desc.get_spec().chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
-        let domain = desc.make_domain(spec.view());
-        let mut levels = desc.get_levels()
-            .chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
-        let (initials, target, expected_syms) =
-            desc.build_problem(&domain, &levels, spec)
-            .chain_err(|| ErrorKind::BadSpec(desc.clone()))?;
-        let max_lanes = initials.len();
-        matrix_load::add_matrices(matrix_dir, &mut levels, max_lanes)?;
-        operators::add_copy_bounds(&mut levels, max_lanes)?;
-        let max_syms = expected_syms.iter().map(|l| l.len()).max().unwrap_or(1);
-        let fuel_arg = if let Some(f) = prune_fuel {
-            f
-        } else if let Some(frac) = prune_fuel_frac {
-            (frac * (max_syms as f64)).ceil() as u64 as usize
-        } else {
-            max_syms
-        };
-        let fuel = cmp::min(fuel_arg, max_syms);
-        println!("Begin search");
-        synthesize(initials.clone(), &target, &levels, &expected_syms, synthesis_mode,
-                   print, print_pruned, fuel,  &name);
-        matrix_load::remove_matrices(&mut levels);
+        for goal in goals {
+            let domain = Domain::new(goal.view(), max_lanes);
+            let (initial, mut steps, goal, target_shape) =
+                program_transforms::to_search_problem(&domain, &initials, &ops, goal)?;
+            abstractions::add_matrices(matrix_dir, &mut steps, &target_shape)?;
+            abstractions::add_copy_bounds(&mut steps, &target_shape)?;
+            let max_syms = domain.longest_level_len();
+            let fuel_arg = if let Some(f) = prune_fuel {
+                f
+            } else if let Some(frac) = prune_fuel_frac {
+                (frac * (max_syms as f64)).ceil() as u64 as usize
+            } else {
+                max_syms
+            };
+            let fuel = cmp::min(fuel_arg, max_syms);
+            println!("Begin search");
+            synthesize(&initial, &goal, &steps, synthesis_mode,
+                       print, print_pruned, fuel, &name);
+            abstractions::remove_matrices(&mut steps);
+        }
     }
     Ok(())
 }

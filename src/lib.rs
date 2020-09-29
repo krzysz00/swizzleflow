@@ -58,9 +58,9 @@ pub mod errors {
                 display("expected {} but got {} at line {}, column {}",
                         expected, got.t, got.line, got.col)
             }
-            FileParseError(p: std::path::PathBuf) {
+            FileParseError(p: String) {
                 description("couldn't parse spec")
-                display("couldn't parse spec: {}", p.display())
+                display("couldn't parse spec: {}", p)
             }
             NotAMatrix {
                 description("not a matrix")
