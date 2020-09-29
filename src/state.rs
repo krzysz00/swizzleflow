@@ -339,7 +339,7 @@ impl<'d, 't> ProgState<'d, 't> {
         for l in op.drop_lanes.iter().copied() {
             state[l] = Cow::Owned(None);
         }
-        let name = format!(" {} = {}{}; ", op.var, gather_name, op.arg_string);
+        let name = format!("{} {} = {}{};", self.name, op.var, gather_name, op.arg_string);
         ProgState::making_inverse(self.domain, state, name)
     }
 

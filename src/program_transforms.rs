@@ -40,9 +40,12 @@ fn remap_refs(stmt: &mut Statement, map: &[usize]) {
 pub fn bring_literals_up(parsed: Vec<Statement>) -> Vec<Statement> {
     let n_ops = parsed.len();
 
-    let (inits, ops) = parsed.into_iter().enumerate()
+    let (inits, mut ops) = parsed.into_iter().enumerate()
         .partition::<Vec<_>, _>(|(_, s)| s.op.is_initial());
 
+    // Shut off pruning on final operation
+    let last_op = ops.len() - 1;
+    ops[last_op].1.prune = false;
     let mut map = vec![None; n_ops];
     for (new, &(old, _)) in inits.iter().enumerate() {
         map[old] = Some(new);
@@ -170,7 +173,7 @@ pub fn to_search_problem<'d>(
                ProgState<'d, 'static>, Vec<Option<ShapeVec>>)>
 {
     let steps = operations.iter().map(|o| SearchStep::new(o.clone())).collect();
-    let init = ProgState::new_from_spec(domain, initials.to_owned(), "[init]");
+    let init = ProgState::new_from_spec(domain, initials.to_owned(), "[init];");
     let last_op = &operations[operations.len()-1];
     let target_shape = ShapeVec::from_slice(target.shape());
     let mut target_vec = vec![None; last_op.lane_in_lens.len()];

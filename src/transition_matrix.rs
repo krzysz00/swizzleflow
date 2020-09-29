@@ -373,7 +373,7 @@ fn shapes_to_string(shapes: &[Option<ShapeVec>]) -> String {
 
 pub fn op_matrix_name(op: &Operation, out_shape: &[Option<ShapeVec>]) -> String {
     format!(
-        "{}-[{}>{}{}{}]{}{}",
+        "{}-[{}>{}{}{}]{}-{}",
         shapes_to_string(&op.lane_in_shapes),
         op.in_lanes.iter().map(|i| i.to_string()).join(","),
         op.out_lane,

@@ -50,7 +50,7 @@ fn process_program(program: String, name: String)
 fn run() -> Result<()> {
     let args =
         clap_app!(swizzleflow =>
-                  (version: "0.5.0")
+                  (version: "0.6.0")
                   (author: "Krzysztof Drewniak <krzysd@cs.washington.edu> et al.")
                   (about: "Tool for synthesizing high-performance kernels from dataflow graph sketches")
                   (@arg matrix_dir: -m --("matrix-dir") +takes_value value_name("MATRIX_DIR")
@@ -107,7 +107,7 @@ fn run() -> Result<()> {
         programs.into_iter().map(|(p, n)| process_program(p, n)).collect();
     let specs = specs?;
     let parse_dur = time_since(parse_start);
-    println!("construction:all time={}", parse_dur);
+    println!("construction:all time={};", parse_dur);
 
     for ((initials, ops, goals, max_lanes), name) in specs {
         println!("spec:{}", name);

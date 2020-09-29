@@ -83,7 +83,6 @@ impl SearchStepStats {
 
     #[cfg(feature = "stats")]
     pub fn record_value_checks(&self, count: usize) {
-        use crate::misc::loghist;
         if let Some(ref lock) = self.value_checks {
             let mut map = lock.lock().unwrap();
             *map.entry(count).or_insert(0) += 1;

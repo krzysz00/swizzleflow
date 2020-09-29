@@ -610,7 +610,7 @@ fn parse_statement(custom_fns: &mut DefsMap, var_map: &mut VarMap,
                 None
             };
             let n_folds = &toks[pos..].iter().take_while(|t| t.t == Fold).count();
-            if toks[pos+n_folds].t == LSquare {
+            if toks[pos+n_folds].t == LSquare || toks[pos+n_folds].t == Range {
                 let (literal, pos) = parse_literal(Some(&out_shape), toks, pos)?;
                 var_map.insert(var.clone(), vars.len());
                 let statement = Statement { var, in_shapes: vec![], out_shape,

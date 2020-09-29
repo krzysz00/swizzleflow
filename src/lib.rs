@@ -55,7 +55,7 @@ pub mod errors {
             }
             ParseError(got: crate::lexer::Token, expected: &'static str) {
                 description("unexpected token")
-                display("expected {} but got {} at line {}, column {}",
+                display("expected {} but got {:?} at line {}, column {}",
                         expected, got.t, got.line, got.col)
             }
             FileParseError(p: String) {
