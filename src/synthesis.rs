@@ -12,12 +12,10 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use crate::state::{DomRef,ProgState};
-use crate::transition_matrix::{TransitionMatrix};
-use crate::operators::SynthesisLevel;
-use crate::operators::OpSetKind;
-
 use crate::misc::{time_since, COLLECT_STATS};
+use crate::state::{ProgState};
+use crate::transition_matrix::{TransitionMatrix};
+use crate::operators::SearchStep;
 
 use std::collections::{HashMap,BTreeMap};
 
@@ -25,14 +23,12 @@ use std::time::Instant;
 
 use std::fmt;
 use std::fmt::{Display,Formatter};
+use std::ops::Range;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, RwLock, Mutex};
-use std::iter::FromIterator;
 
 use itertools::Itertools;
 use itertools::iproduct;
-
-use smallvec::SmallVec;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Mode {
@@ -41,7 +37,7 @@ pub enum Mode {
 }
 
 #[derive(Debug, Default)]
-struct SearchLevelStats {
+struct SearchStepStats {
     tested: AtomicUsize,
     pruned: AtomicUsize,
     pruned_copy_count: AtomicUsize,
@@ -50,7 +46,7 @@ struct SearchLevelStats {
     value_checks: Option<Arc<Mutex<BTreeMap<usize, usize>>>>,
 }
 
-impl SearchLevelStats {
+impl SearchStepStats {
     pub fn new() -> Self {
         if COLLECT_STATS {
             let mut ret = Self::default();
@@ -95,7 +91,7 @@ impl SearchLevelStats {
     }
 }
 
-impl Clone for SearchLevelStats {
+impl Clone for SearchStepStats {
     fn clone(&self) -> Self {
         Self { tested: AtomicUsize::new(self.tested.load(Ordering::SeqCst)),
                pruned: AtomicUsize::new(self.pruned.load(Ordering::SeqCst)),
@@ -107,7 +103,7 @@ impl Clone for SearchLevelStats {
     }
 }
 
-impl Display for SearchLevelStats {
+impl Display for SearchStepStats {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         // Let's force a memory fence here to be safe
         let tested = self.tested.load(Ordering::SeqCst);
@@ -132,18 +128,19 @@ impl Display for SearchLevelStats {
     }
 }
 
-type ResultMap<'d> = RwLock<HashMap<ProgState<'d>, bool>>;
+type ResultMap<'d> = RwLock<HashMap<ProgState<'d, 'static>, bool>>;
 type SearchResultCache<'d> = Arc<ResultMap<'d>>;
-type States<'d, 'l> = SmallVec<[Option<&'l ProgState<'d>>; 4]>;
 
 // Invariant: any level with pruning enabled has a corresponding pruning matrix available
-fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &TransitionMatrix,
-              copy_bounds: Option<(&[u32], &[u32])>, expected_syms: &[DomRef],
-              _cache: &ResultMap<'d>, tracker: &SearchLevelStats,
-              level: usize, print_pruned: bool, prune_fuel: usize) -> bool {
+fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
+                  matrix: &TransitionMatrix,
+                  copy_bounds: Option<&(Vec<Vec<u32>>, Vec<Vec<u32>>)>,
+                  Range {start: term_start, end: term_end }: Range<usize>,
+                  _cache: &ResultMap<'d>, tracker: &SearchStepStats,
+                  step: usize, print_pruned: bool, prune_fuel: usize) -> bool {
     let mut value_checks = 0;
-    for (i, a) in expected_syms.iter().copied().enumerate() {
-        for b in (&expected_syms[(i+1)..]).iter().copied().chain(std::iter::once(a)).take(prune_fuel) {
+    for (i, a) in (term_start..term_end).enumerate() {
+        for b in (a+1..term_end).chain(std::iter::once(a)).take(prune_fuel) {
             value_checks += 1;
             for (t1, t2) in iproduct!(target.inv_state[a].iter().copied(),
                                       target.inv_state[b].iter().copied()) {
@@ -160,10 +157,10 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
                     tracker.pruned();
                     tracker.record_value_checks(value_checks);
                     if print_pruned {
-                        println!("pruned @ {}\n{}", level, current);
-                        println!("v1 = {}, v2 = {}, t1 = {}, t2 = {}",
+                        println!("pruned @ {}\n{}", step, current);
+                        println!("v1 = {}, v2 = {}, t1 = ({}, {}), t2 = ({}, {})",
                                  target.domain.get_value(a), target.domain.get_value(b),
-                                 t1, t2);
+                                 t1.0, t1.1, t2.0, t2.1);
                     }
                     return false;
                 }
@@ -171,17 +168,17 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
         }
         if i == 0 {
             if let Some((mins, maxs)) = copy_bounds {
-                for v in expected_syms.iter().copied() {
+                for v in term_start..term_end {
                     let actual = target.inv_state[v].len() as u32;
                     let min_copies: u32 = current.inv_state[v].iter()
-                        .copied().map(|i| mins[i]).sum();
+                        .copied().map(|(a, e)| mins[a][e]).sum();
                     let max_copies: u32 = current.inv_state[v].iter()
-                        .copied().map(|i| maxs[i]).sum();
+                        .copied().map(|(a, e)| maxs[a][e]).sum();
                     if min_copies > actual || max_copies < actual {
                         tracker.pruned();
                         tracker.pruned_copy_count();
                         if print_pruned {
-                            println!("pruned (copies) @ {}\n{}", level, current);
+                            println!("pruned (copies) @ {}\n{}", step, current);
                             println!("v = {}, actual = {}, min = {}, max = {}",
                                  target.domain.get_value(v), actual, min_copies, max_copies);
                         }
@@ -194,29 +191,20 @@ fn viable<'d>(current: &ProgState<'d>, target: &ProgState<'d>, matrix: &Transiti
     true
 }
 
-fn copy_replacing<'d, 'm, 'l: 'm>(s: &States<'d, 'l>, idx: usize,
-                                  elem: Option<&'m ProgState<'d>>) -> States<'d, 'm> {
-    let mut ret: States<'d, 'm> = s.iter().copied().map(|e| e ).collect();
-    ret[idx] = elem;
-    ret
-}
-
-fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
-                      levels: &'f [SynthesisLevel], expected_syms: &'f [Vec<DomRef>],
-                      current_level: usize,
-                      stats: &'f [SearchLevelStats], mode: Mode,
+fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
+                      steps: &'f [SearchStep], current_step: usize,
+                      stats: &'f [SearchStepStats], mode: Mode,
                       caches: &'f [SearchResultCache<'d>],
                       print: bool, print_pruned: bool, prune_fuel: usize) -> bool {
-    let tracker = &stats[current_level];
+    let tracker = &stats[current_step];
 
-    if current_level == levels.len() {
+    if current_step == steps.len() {
         tracker.checking();
-        let current = curr_states[0].unwrap();
         if current == target {
             tracker.success();
             println!("solution:{}", &current.name);
             if print {
-                println!("success_path [level {} @ lane 0]\n{}", current_level, current);
+                println!("success_path [step {}]\n{}", current_step, current);
             }
             return true;
         }
@@ -226,167 +214,81 @@ fn search<'d, 'l, 'f>(curr_states: States<'d, 'l>, target: &ProgState<'d>,
         }
     }
 
-    let level = &levels[current_level];
-    let lane = level.lane;
-    let current: &ProgState<'d> = curr_states[lane].unwrap();
-    let cache = caches[current_level].clone();
-    let proceed = |r: &ProgState<'d>| {
+    let step = &steps[current_step];
+    let op = &step.op;
+    let gathers = &step.op.fns;
+    let cache = caches[current_step].clone();
+
+    let proceed = |new_state: &ProgState<'d, '_>| {
         tracker.checking();
-        if level.prune {
-            if !viable(&r, target,
-                       level.matrix.as_ref().unwrap(),
-                       level.copy_bounds.as_ref()
-                       .map(|(s, b)| (s.as_slice(), b.as_slice())),
-                       &expected_syms[level.expected_syms],
+        if op.prune {
+            if !viable(new_state, target,
+                       step.matrix.as_ref().expect("Pruning matrix to be in place"),
+                       step.copy_bounds.as_ref(),
+                       new_state.domain.terms_in_level(op.term_level),
                        cache.as_ref(), &tracker,
-                       current_level, print_pruned, prune_fuel) {
+                       current_step, print_pruned, prune_fuel) {
                 return false;
             }
         }
-        let new_states = copy_replacing(&curr_states,
-                                        lane, Some(&r));
-        let ret = search(new_states, target, levels, expected_syms,
-                         current_level + 1, stats, mode, caches,
+        let ret = search(new_state, target, steps,
+                         current_step + 1, stats, mode, caches,
                          print, print_pruned, prune_fuel);
         if ret {
             tracker.success();
             if print {
-                println!("success_path [level {} @ lane {}]\n{}", current_level, lane, r)
+                println!("success_path [step {}]\n{}", current_step, new_state);
             }
         }
         ret
     };
-
-    let ops = &level.ops.ops; // Get at the actual vector of gathers
     let ret =
-        match ops {
-            OpSetKind::Gathers(gathers, _) => {
-                if level.ops.has_fold() {
-                    match mode {
-                        Mode::All => {
-                            gathers.iter().map(
-                                |o| {
-                                    let res = current.gather_fold_by(o);
-                                    proceed(&res)
-                                })
-                                .fold(false, |acc, new| new || acc)
-                        }
-                        Mode::First => {
-                            gathers.iter().any(
-                                |o| {
-                                    let res = current.gather_fold_by(o);
-                                    proceed(&res)
-                                })
-                        }
-                    }
-                }
-                else {
-                    match mode {
-                        Mode::All => {
-                            // Yep, this is meant not to be short-circuiting
-                            gathers.iter().map(
-                                |o| {
-                                    let res = current.gather_by(o);
-                                    proceed(&res)
-                                })
-                                .fold(false, |acc, new| new || acc)
-                        }
-                        Mode::First => {
-                            gathers.iter().any(
-                                |o| {
-                                    let res = current.gather_by(o);
-                                    proceed(&res)
-                                })
-                        }
-                    }
-                }
-            },
-            OpSetKind::Stack(from, to) => {
-                tracker.checking();
-                let to = *to;
-                let to_stack: SmallVec<[&ProgState; 6]> =
-                    from.iter().copied().map(
-                        |idx| curr_states[idx].unwrap()).collect();
-                let next =
-                    if level.ops.has_fold() {
-                        ProgState::stack_folding(&to_stack)
-                    } else {
-                        ProgState::stack(&to_stack)
-                    };
-                let mut new_states = copy_replacing(&curr_states,
-                                                    to, Some(&next));
-                for i in from.iter().copied() {
-                    if i != to {
-                        new_states[i] = None
-                    }
-                }
-
-                if level.prune {
-                    if !viable(&next, target,
-                               level.matrix.as_ref().unwrap(),
-                               level.copy_bounds.as_ref()
-                               .map(|(s, b)| (s.as_slice(), b.as_slice())),
-                               &expected_syms[level.expected_syms],
-                               cache.as_ref(), &tracker,
-                               current_level, print_pruned, prune_fuel) {
-                        return false;
-                    }
-                }
-
-                let ret = search(new_states, target, levels, expected_syms,
-                                 current_level + 1, stats, mode, caches,
-                                 print, print_pruned, prune_fuel);
-                if ret {
-                    tracker.success();
-                    if print {
-                        println!("success_path [level {} @ lane {}]\n{}", current_level, lane, next)
-                    }
-                }
-                ret
+        match mode {
+            Mode::All => {
+                gathers.iter().map(
+                    |f| {
+                        let res = current.gather_by(f, op);
+                        proceed(&res)
+                    })
+                    // Yep, this is meant not to be short-circuiting
+                    .fold(false, |acc, new| new || acc)
             }
-            OpSetKind::Split(into, copies) => {
-                tracker.checking();
-                let mut new_states = curr_states.clone();
-                let to_copy = curr_states[*into];
-                for i in copies.iter().copied() {
-                    new_states[i] = to_copy;
-                }
-                search(new_states, target, levels, expected_syms,
-                       current_level + 1, stats, mode, caches,
-                       print, print_pruned, prune_fuel)
+            Mode::First => {
+                gathers.iter().any(
+                    |f| {
+                        let res = current.gather_by(f, op);
+                        proceed(&res)
+                    })
             }
         };
     ret
 }
 
-pub fn synthesize(start: Vec<Option<ProgState>>, target: &ProgState,
-                  levels: &[SynthesisLevel],
-                  expected_syms: &[Vec<DomRef>],
-                  mode: Mode,
-                  print: bool,
-                  print_pruned: bool,
-                  prune_fuel: usize,
+pub fn synthesize<'d, 'l>(start: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
+                  steps: &[SearchStep],
+                  mode: Mode, print: bool, print_pruned: bool, prune_fuel: usize,
                   spec_name: &str) -> bool {
-    let n_levels = levels.len();
-    let stats = (0..n_levels+1).map(|_| SearchLevelStats::new()).collect::<Vec<_>>();
+    let n_steps = steps.len();
+    let stats = (0..n_steps+1).map(|_| SearchStepStats::new()).collect::<Vec<_>>();
     let caches: Vec<SearchResultCache>
-        = (0..n_levels).map(|_| Arc::new(RwLock::new(HashMap::new()))).collect();
+        = (0..n_steps).map(|_| Arc::new(RwLock::new(HashMap::new()))).collect();
 
-    let states: States = SmallVec::from_iter(start.iter().map(|e| e.as_ref()));
     let start_time = Instant::now();
-    let ret = search(states, target, levels, expected_syms, 0, &stats,
+    let ret = search(start, target, steps, 0, &stats,
                      mode, &caches, print, print_pruned, prune_fuel);
     let dur = time_since(start_time);
 
     for (idx, stats) in (&stats).iter().enumerate() {
         if COLLECT_STATS {
             println!("stats:: n_syms={};",
-                     levels.get(idx).map_or(0, |l| expected_syms[l.expected_syms].len()));
+                     steps.get(idx).map_or(0, |step| {
+                         let range = target.domain.terms_in_level(step.op.term_level);
+                         range.end - range.start
+                     }));
         }
-        println!("stats:{} name={}; lane={}; pruning={}; {}", idx,
-                 levels.get(idx).map_or(&"(last)".into(), |x| &x.ops.name),
-                 levels.get(idx).map_or(0, |x| x.lane),
-                 levels.get(idx).map_or(false, |l| l.prune),
+        println!("stats:{} name={}; pruning={}; {}", idx,
+                 steps.get(idx).map_or(&"(last)".into(), |step| &step.op.op_name),
+                 steps.get(idx).map_or(false, |l| l.op.prune),
                  stats);
     }
     println!("search:{} success={}; mode={:?}; prune_fuel={}; time={};",

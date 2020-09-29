@@ -20,7 +20,6 @@ use std::path::Path;
 use std::io::BufReader;
 
 
-use swizzleflow::problem_desc::ProblemDesc;
 use swizzleflow::matrix_load;
 use swizzleflow::operators;
 use swizzleflow::synthesis::{Mode, synthesize};

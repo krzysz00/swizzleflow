@@ -17,28 +17,36 @@ use ndarray::{Ix};
 use std::io::{Write,Read,BufReader,BufWriter};
 use std::path::Path;
 
-use crate::operators::OpSet;
+use crate::state::Operation;
 use crate::matrix::{MatrixOps, Matrix};
 use crate::misc::{ShapeVec,open_file,create_file,
                   write_length_tagged_idxs,
                   read_length_tagged_idxs};
 use crate::errors::*;
 
+use byteorder::{LittleEndian,WriteBytesExt,ReadBytesExt};
+use smallvec::SmallVec;
+
+use itertools::{Itertools,iproduct};
+
+type OffsetsVec = SmallVec<[Ix; 4]>;
+
 #[derive(Clone, Debug)]
 pub struct GenTransitionMatrix<T: MatrixOps> {
-    target_shape: ShapeVec,
-    current_shape: ShapeVec,
-    current_len: usize,
-    target_len: usize,
+    target_shapes: Vec<ShapeVec>,
+    current_shapes: Vec<ShapeVec>,
+    current_lane_offs: OffsetsVec,
+    target_lane_offs: OffsetsVec,
+    current_len: Ix,
+    target_len: Ix,
     pub mat: T,
 }
 
 pub type TransitionMatrix = GenTransitionMatrix<Matrix>;
 
-fn to_index(c1: &[Ix], c2: &[Ix], shape: &ShapeVec) -> Ix {
+fn to_index_part(idx: &[Ix], shape: &ShapeVec) -> Ix {
     let mut ret = 0;
-    for (v, scale) in c1.iter().zip(shape.iter()).chain(
-        c2.iter().zip(shape.iter())) {
+    for (v, scale) in idx.iter().zip(shape.iter()) {
         // ret starts at 0 so the initial case is fine
         ret = (ret * scale) + v
     }
@@ -46,100 +54,178 @@ fn to_index(c1: &[Ix], c2: &[Ix], shape: &ShapeVec) -> Ix {
 }
 
 #[inline(always)]
-fn to_raw_index(c1: Ix, c2: Ix, shape: Ix) -> Ix {
-    c2 + (shape * c1)
+fn to_index(lane1: Ix, idx1: Ix, lane2: Ix, idx2: Ix,
+            offsets: &[Ix], len: Ix) -> Ix {
+    (idx2 + offsets[lane2]) + (len * (idx1 + offsets[lane1]))
+}
+
+#[inline]
+fn shapes_to_offsets(shapes: &[Option<ShapeVec>]) -> OffsetsVec {
+    std::iter::once(0).chain(
+        shapes.iter().map(|ms| ms.as_ref().as_ref()
+                          .map_or(0, |s| s.iter().copied().product()))
+            .scan(0, |s, l| { *s += l; Some(*s) }))
+        .collect()
 }
 
 impl<T: MatrixOps> GenTransitionMatrix<T> {
-    pub fn new(current_shape: &[Ix], target_shape: &[Ix], mat: T) -> Self {
-        let current_len: usize = current_shape.iter().copied().product();
-        let target_len: usize = target_shape.iter().copied().product();
+    pub fn new(current_shapes: &[Option<ShapeVec>], target_shapes: &[Option<ShapeVec>], mat: T) -> Self {
+        let current_lane_offs = shapes_to_offsets(current_shapes);
+        let target_lane_offs = shapes_to_offsets(target_shapes);
+        let current_shapes = current_shapes.iter().map(
+            |x| x.as_ref().map_or_else(|| ShapeVec::new(), |s| s.clone())).collect();
+        let target_shapes = target_shapes.iter().map(
+            |x| x.as_ref().map_or_else(|| ShapeVec::new(), |s| s.clone())).collect();
+        let current_len = current_lane_offs[current_lane_offs.len()-1];
+        let target_len = target_lane_offs[target_lane_offs.len()-1];
         let n_rows = current_len.pow(2);
         let n_cols = target_len.pow(2);
         assert_eq!((n_rows, n_cols), mat.dims());
-        Self { mat, current_len, target_len,
-               current_shape: ShapeVec::from_slice(current_shape),
-               target_shape: ShapeVec::from_slice(target_shape) }
+        Self { mat, current_shapes, target_shapes,
+               current_len, target_len,
+               current_lane_offs, target_lane_offs, }
     }
 
-    pub fn new_with<F>(current_shape: &[Ix], target_shape: &[Ix],
+    pub fn new_no_option(current_shapes: &[ShapeVec], target_shapes: &[ShapeVec], mat: T) -> Self {
+        let option_current_shapes = current_shapes.iter()
+            .map(|s| if s.is_empty() { None } else { Some(s.to_owned()) })
+            .collect::<Vec<Option<ShapeVec>>>();
+        let option_target_shapes = current_shapes.iter()
+            .map(|s| if s.is_empty() { None } else { Some(s.to_owned()) })
+            .collect::<Vec<Option<ShapeVec>>>();
+        let current_lane_offs = shapes_to_offsets(&option_current_shapes);
+        let target_lane_offs = shapes_to_offsets(&option_target_shapes);
+        let current_len = current_lane_offs[current_lane_offs.len()-1];
+        let target_len = target_lane_offs[target_lane_offs.len()-1];
+        let n_rows = current_len.pow(2);
+        let n_cols = target_len.pow(2);
+        assert_eq!((n_rows, n_cols), mat.dims());
+        Self { mat,
+               current_shapes: current_shapes.to_owned(),
+               target_shapes: target_shapes.to_owned(),
+               current_len, target_len,
+               current_lane_offs, target_lane_offs, }
+    }
+
+    pub fn new_with<F>(current_shapes: &[Option<ShapeVec>], target_shapes: &[Option<ShapeVec>],
                        mat_fn: F) -> Self
-        where F: FnOnce(usize, usize) -> T {
-        let current_len: usize = current_shape.iter().copied().product();
-        let target_len: usize = target_shape.iter().copied().product();
+    where F: FnOnce(usize, usize) -> T {
+        let current_lane_offs = shapes_to_offsets(current_shapes);
+        let target_lane_offs = shapes_to_offsets(target_shapes);
+        let current_shapes = current_shapes.iter().map(
+            |x| x.as_ref().map_or_else(|| ShapeVec::new(), |s| s.clone())).collect();
+        let target_shapes = target_shapes.iter().map(
+            |x| x.as_ref().map_or_else(|| ShapeVec::new(), |s| s.clone())).collect();
+        let current_len = current_lane_offs[current_lane_offs.len()-1];
+        let target_len = target_lane_offs[target_lane_offs.len()-1];
         let n_rows = current_len.pow(2);
         let n_cols = target_len.pow(2);
         let mat = mat_fn(n_rows, n_cols);
-        Self { mat, current_len, target_len,
-               current_shape: ShapeVec::from_slice(current_shape),
-               target_shape: ShapeVec::from_slice(target_shape) }
-
+        Self { mat, current_shapes, target_shapes,
+               current_len, target_len,
+               current_lane_offs, target_lane_offs, }
     }
 
-    pub fn empty(current_shape: &[Ix], target_shape: &[Ix]) -> Self {
-        Self::new_with(current_shape, target_shape, |m, n| T::empty(m, n))
+    pub fn empty(current_shapes: &[Option<ShapeVec>],
+                 target_shapes: &[Option<ShapeVec>]) -> Self {
+        Self::new_with(current_shapes, target_shapes, |m, n| T::empty(m, n))
     }
 
-    pub fn with_row_size_hint(current_shape: &[Ix], target_shape: &[Ix], hint: usize) -> Self {
-        Self::new_with(current_shape, target_shape,
+    pub fn with_row_size_hint(current_shapes: &[Option<ShapeVec>],
+                              target_shapes: &[Option<ShapeVec>], hint: usize) -> Self {
+        Self::new_with(current_shapes, target_shapes,
                        move |m, n| T::with_row_size_hint(m, n, hint))
     }
 
-    pub fn general_with_row_size_hint(current_shape: &[Ix],
-                                      target_shape: &[Ix], hint: usize)
+    pub fn general_with_row_size_hint(current_shapes: &[Option<ShapeVec>],
+                                      target_shapes: &[Option<ShapeVec>], hint: usize)
                                       -> TransitionMatrix {
-        TransitionMatrix::new_with(current_shape, target_shape,
+        TransitionMatrix::new_with(current_shapes, target_shapes,
                                    move |m, n| T::with_row_size_hint(m, n, hint).into())
 
     }
 
-    pub fn get(&self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix]) -> bool {
-        let i = to_index(current1, current2, &self.current_shape);
-        let j = to_index(target1, target2, &self.target_shape);
+    pub fn get(&self, (current_lane1, current1): (Ix, &[Ix]),
+               (current_lane2, current2): (Ix, &[Ix]),
+               (target_lane1, target1): (Ix, &[Ix]),
+               (target_lane2, target2): (Ix, &[Ix])) -> bool {
+        let i1 = to_index_part(current1, &self.current_shapes[current_lane1]);
+        let i2 = to_index_part(current2, &self.current_shapes[current_lane2]);
+        let i = to_index(current_lane1, i1, current_lane2, i2,
+                         &self.current_lane_offs, self.current_len);
+        let j1 = to_index_part(target1, &self.target_shapes[target_lane1]);
+        let j2 = to_index_part(target2, &self.target_shapes[target_lane2]);
+        let j = to_index(target_lane1, j1, target_lane2, j2,
+                         &self.target_lane_offs, self.target_len);
         self.mat.get(i, j)
     }
 
-    pub fn get_cur_pos(&self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix]) -> bool {
-        let i = to_raw_index(current1, current2, self.current_len);
-        let j = to_index(target1, target2, &self.target_shape);
+    pub fn get_cur_pos(&self, (current_lane1, current1): (Ix, Ix),
+                       (current_lane2, current2): (Ix, Ix),
+                       (target_lane1, target1): (Ix, &[Ix]),
+                       (target_lane2, target2): (Ix, &[Ix])) -> bool {
+        let i = to_index(current_lane1, current1, current_lane2, current2,
+                         &self.current_lane_offs, self.current_len);
+        let j1 = to_index_part(target1, &self.target_shapes[target_lane1]);
+        let j2 = to_index_part(target2, &self.target_shapes[target_lane2]);
+        let j = to_index(target_lane1, j1, target_lane2, j2,
+                         &self.target_lane_offs, self.target_len);
         self.mat.get(i, j)
     }
 
-    pub fn get_idxs(&self, current1: Ix, current2: Ix, target1: Ix, target2: Ix) -> bool {
-        let i = to_raw_index(current1, current2, self.current_len);
-        let j = to_raw_index(target1, target2, self.target_len);
+    pub fn get_idxs(&self, (current_lane1, current1): (Ix, Ix),
+                    (current_lane2, current2): (Ix, Ix),
+                    (target_lane1, target1): (Ix, Ix),
+                    (target_lane2, target2): (Ix, Ix)) -> bool {
+        let i = to_index(current_lane1, current1, current_lane2, current2,
+                         &self.current_lane_offs, self.current_len);
+        let j = to_index(target_lane1, target1, target_lane2, target2,
+                         &self.target_lane_offs, self.target_len);
         self.mat.get(i, j)
     }
 
-    pub fn set(&mut self, current1: &[Ix], current2: &[Ix], target1: &[Ix], target2: &[Ix], value: bool) {
-        let i = to_index(current1, current2, &self.current_shape);
-        let j = to_index(target1, target2, &self.target_shape);
+    pub fn set(&mut self, (current_lane1, current1): (Ix, &[Ix]),
+               (current_lane2, current2): (Ix, &[Ix]),
+               (target_lane1, target1): (Ix, &[Ix]),
+               (target_lane2, target2): (Ix, &[Ix]), value: bool)  {
+        let i1 = to_index_part(current1, &self.current_shapes[current_lane1]);
+        let i2 = to_index_part(current2, &self.current_shapes[current_lane2]);
+        let i = to_index(current_lane1, i1, current_lane2, i2,
+                         &self.current_lane_offs, self.current_len);
+        let j1 = to_index_part(target1, &self.target_shapes[target_lane1]);
+        let j2 = to_index_part(target2, &self.target_shapes[target_lane2]);
+        let j = to_index(target_lane1, j1, target_lane2, j2,
+                         &self.target_lane_offs, self.target_len);
         self.mat.set(i, j, value)
     }
 
-    pub fn set_cur_pos(&mut self, current1: Ix, current2: Ix, target1: &[Ix], target2: &[Ix], value: bool) {
-        let i = to_raw_index(current1, current2, self.current_len);
-        let j = to_index(target1, target2, &self.target_shape);
+    pub fn set_cur_pos(&mut self, (current_lane1, current1): (Ix, Ix),
+                       (current_lane2, current2): (Ix, Ix),
+                       (target_lane1, target1): (Ix, &[Ix]),
+                       (target_lane2, target2): (Ix, &[Ix]), value: bool) {
+        let i = to_index(current_lane1, current1, current_lane2, current2,
+                         &self.current_lane_offs, self.current_len);
+        let j1 = to_index_part(target1, &self.target_shapes[target_lane1]);
+        let j2 = to_index_part(target2, &self.target_shapes[target_lane2]);
+        let j = to_index(target_lane1, j1, target_lane2, j2,
+                         &self.target_lane_offs, self.target_len);
         self.mat.set(i, j, value)
     }
 
-    pub fn set_idxs(&mut self, current1: Ix, current2: Ix, target1: Ix, target2: Ix, value: bool) {
-        let i = to_raw_index(current1, current2, self.current_len);
-        let j = to_raw_index(target1, target2, self.target_len);
+    pub fn set_idxs(&mut self, (current_lane1, current1): (Ix, Ix),
+                    (current_lane2, current2): (Ix, Ix),
+                    (target_lane1, target1): (Ix, Ix),
+                    (target_lane2, target2): (Ix, Ix), value: bool) {
+        let i = to_index(current_lane1, current1, current_lane2, current2,
+                         &self.current_lane_offs, self.current_len);
+        let j = to_index(target_lane1, target1, target_lane2, target2,
+                         &self.target_lane_offs, self.target_len);
         self.mat.set(i, j, value)
     }
 
     pub fn slots(&self) -> (usize, usize) {
         (self.current_len, self.target_len)
     }
-
-    pub fn get_current_shape(&self) -> &[Ix] {
-        self.current_shape.as_slice()
-    }
-    pub fn get_target_shape(&self) -> &[Ix] {
-        self.target_shape.as_slice()
-    }
-
     pub fn n_ones(&self) -> usize {
         self.mat.n_ones()
     }
@@ -147,10 +233,20 @@ impl<T: MatrixOps> GenTransitionMatrix<T> {
         self.mat.n_elements()
     }
 
-    pub fn reinterpret_current_shape(&self, new_shape: ShapeVec) -> Self {
+    pub fn get_current_shapes(&self) -> &[ShapeVec] {
+        self.current_shapes.as_slice()
+    }
+
+    pub fn get_target_shapes(&self) -> &[ShapeVec] {
+        self.target_shapes.as_slice()
+    }
+
+    pub fn reinterpret_current_shapes(&self, new_shapes: &[Option<ShapeVec>]) -> Self {
         let mut ret = self.clone();
-        ret.current_len = new_shape.iter().copied().product();
-        ret.current_shape = new_shape;
+        ret.current_lane_offs = shapes_to_offsets(new_shapes);
+        ret.current_shapes = new_shapes.iter().map(
+            |x| x.as_ref().map_or_else(|| ShapeVec::new(), |s| s.clone())).collect();
+        ret.current_len = ret.current_lane_offs[ret.current_lane_offs.len()-1];
 
         if ret.current_len != self.current_len {
             panic!("Incompatible input lengths in reinterpret: {} -> {}",
@@ -160,60 +256,94 @@ impl<T: MatrixOps> GenTransitionMatrix<T> {
     }
 
     pub fn write<U: Write>(&self, io: &mut U) -> Result<()> {
-        write_length_tagged_idxs(io, &self.current_shape)?;
-        write_length_tagged_idxs(io, &self.target_shape)?;
+        io.write_u64::<LittleEndian>(self.current_shapes.len() as u64)?;
+        for shape in self.current_shapes.iter() {
+            write_length_tagged_idxs(io, shape)?;
+        }
+        io.write_u64::<LittleEndian>(self.target_shapes.len() as u64)?;
+        for shape in self.target_shapes.iter() {
+            write_length_tagged_idxs(io, shape)?;
+        }
         self.mat.write(io)
     }
 
     pub fn read<U: Read>(io: &mut U) -> Result<Self> {
-        let current_shape = read_length_tagged_idxs(io)?;
-        let target_shape = read_length_tagged_idxs(io)?;
-        let current_len: usize = current_shape.iter().copied().product();
-        let target_len: usize = target_shape.iter().copied().product();
+        let n_current_lanes = io.read_u64::<LittleEndian>()?;
+        let current_shapes: Result<Vec<ShapeVec>> =
+            (0..n_current_lanes).map(
+                |_| read_length_tagged_idxs(io).map_err(Error::from))
+            .collect();
+        let current_shapes = current_shapes?;
+        let n_target_lanes = io.read_u64::<LittleEndian>()?;
+        let target_shapes: Result<Vec<ShapeVec>> =
+            (0..n_target_lanes).map(
+                |_| read_length_tagged_idxs(io).map_err(Error::from))
+            .collect();
+        let target_shapes = target_shapes?;
         let mat = T::read(io)?;
-        Ok(Self { current_shape, target_shape,
-                  current_len, target_len, mat })
-
+        Ok(Self::new_no_option(&current_shapes, &target_shapes, mat))
     }
-
 }
 
-pub fn build_mat<T: MatrixOps>(ops: &OpSet) -> TransitionMatrix {
-    let out_shape = ops.out_shape.to_owned();
+pub fn build_mat<T: MatrixOps>(op: &Operation, out_shape: &[Option<ShapeVec>])
+                               -> TransitionMatrix {
+    let fold_dim = op.fold_len.map_or(1, |x| x.get());
+    let has_fold = op.fold_len.is_some();
+    let out_lane = op.out_lane;
 
-    let in_slots: usize = ops.in_shape.iter().product();
-    let in_bound = in_slots as isize;
+    // Preserved lanes need to be passed through
+    let preserved_lanes = (0..op.lane_in_shapes.len()).filter(
+        |&i| i != op.out_lane && !op.drop_lanes.contains(&i) && op.lane_in_shapes[i].is_some())
+        .map(|i| (i, op.lane_in_lens[i]))
+        .collect::<SmallVec<[(usize, usize); 3]>>();
+    let n_args = op.in_lanes.len();
+    let arg_lanes = &op.in_lanes;
 
-    // Get actual last dimension
-    let fold_dim = ops.fold_dim.map(|x| x.get()).unwrap_or(1);
-    let has_fold = ops.has_fold();
-
-    let gathers = ops.ops.gathers().unwrap();
-    let n_ops = gathers.len();
+    let n_ops = op.fns.len();
 
     let mut ret = GenTransitionMatrix::<T>::general_with_row_size_hint(
-        &ops.in_shape, &out_shape,n_ops);
-    for op in gathers {
-        for (output1, input1) in op.data.into_iter().copied()
-            .enumerate().filter(|&(_, i)| i >= 0 && i < in_bound) {
-                for (output2, input2) in op.data.into_iter().copied()
-                    .enumerate().filter(|&(_, i)| i >= 0 && i < in_bound) {
-                        // Remove fold dimension if needed
-                        let output1 = if has_fold {
-                            output1 / fold_dim
-                        } else {
-                            output1
-                        };
-                        let output2 = if has_fold {
-                            output2 / fold_dim
-                        } else {
-                            output2
-                        };
-                        ret.set_idxs(input1 as usize, input2 as usize,
-                                     output1, output2,
-                                     true);
-                    }
+        &op.lane_in_shapes, &out_shape, n_ops);
+    for fun in &op.fns {
+        for (output1, (a1, e1)) in fun.data.into_iter().copied().enumerate()
+            .filter(|&(_, (a, e))| a < n_args && e >= 0
+                    && (e as usize) < op.lane_in_lens[arg_lanes[a]])
+        {
+            let output1 = (out_lane, if has_fold {
+                output1 / fold_dim
+            } else {
+                output1
+            });
+            let input1 = (arg_lanes[a1], e1 as usize);
+            for (output2, (a2, e2)) in fun.data.into_iter().copied().enumerate()
+                .filter(|&(_, (a, e))| a < n_args && e >= 0
+                        && (e as usize) < op.lane_in_lens[arg_lanes[a]])
+            {
+                // Remove fold dimension if needed
+                let output2 = (out_lane, if has_fold {
+                    output2 / fold_dim
+                } else {
+                    output2
+                });
+                let input2 = (arg_lanes[a2], e2 as usize);
+                ret.set_idxs(input1, input2, output1, output2, true);
             }
+
+            // Add implicit identity function on preserved lanes
+            for &(l, len) in preserved_lanes.iter() {
+                for i in 0..len {
+                    ret.set_idxs(input1, (l, i), output1, (l, i), true);
+                    ret.set_idxs((l, i), input1, (l, i), output1, true);
+                }
+            }
+        }
+    }
+    // Scribble identity in the appropriate places
+    for &(l1, len1) in preserved_lanes.iter() {
+        for &(l2, len2) in preserved_lanes.iter() {
+            for (i1, i2) in iproduct![0..len1, 0..len2] {
+                ret.set_idxs((l1, i1), (l2, i2), (l1, i1), (l2, i2), true)
+            }
+        }
     }
     ret
 }
@@ -234,6 +364,25 @@ impl TransitionMatrix {
 
 }
 
+fn shapes_to_string(shapes: &[Option<ShapeVec>]) -> String {
+    shapes.iter()
+        .map(|ms|
+             ms.as_ref().map_or_else(|| String::new(), |s| s.iter().map(|i| i.to_string()).join("x")))
+        .join(",")
+}
+
+pub fn op_matrix_name(op: &Operation, out_shape: &[Option<ShapeVec>]) -> String {
+    format!(
+        "{}-[{}>{}{}{}]{}{}",
+        shapes_to_string(&op.lane_in_shapes),
+        op.in_lanes.iter().map(|i| i.to_string()).join(","),
+        op.out_lane,
+        if op.drop_lanes.is_empty() { "" } else { "- "},
+        op.drop_lanes.iter().map(|i| i.to_string()).join("-"),
+        op.op_name,
+        shapes_to_string(out_shape)
+    )
+}
 
 pub fn density<T: MatrixOps>(matrix: &GenTransitionMatrix<T>) -> f64 {
     (matrix.n_ones() as f64) / (matrix.n_elements() as f64)

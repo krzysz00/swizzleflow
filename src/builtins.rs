@@ -257,7 +257,7 @@ pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
         "row_rots_no_group" | "row_rots" |
         "col_rots_no_group" | "col_rots" => {
             if in_shapes.len() != 1 {
-                return Err(ErrorKind::WrongArity(in_shapes.len(), 1),into());
+                return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
             }
             let in_shape: &[usize] = in_shapes[0].as_slice();
 
@@ -285,7 +285,7 @@ pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
         },
         "reg_select_no_consts" | "reg_select" => {
             if in_shapes.len() != 1 {
-                return Err(ErrorKind::WrongArity(in_shapes.len(), 1),into());
+                return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
             }
             let in_shape: &[usize] = in_shapes[0].as_slice();
 
@@ -309,7 +309,7 @@ pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
         },
         "cond_keep_no_consts" | "cond_keep" => {
             if in_shapes.len() != 1 {
-                return Err(ErrorKind::WrongArity(in_shapes.len(), 1),into());
+                return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
             }
 
             if out_shape != in_shapes[0].as_slice() {
@@ -351,7 +351,7 @@ pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
         },
         "hvx_2x2" => {
             if in_shapes.len() != 1 {
-                return Err(ErrorKind::WrongArity(in_shapes.len(), 1),into());
+                return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
             }
             let in_shape: &[usize] = in_shapes[0].as_slice();
 
@@ -365,7 +365,7 @@ pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
         },
         "hvx_2x1" => {
             if in_shapes.len() != 1 {
-                return Err(ErrorKind::WrongArity(in_shapes.len(), 1),into());
+                return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
             }
             let in_shape: &[usize] = in_shapes[0].as_slice();
 
@@ -379,7 +379,7 @@ pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
         },
         "hvx_inplace" => {
             if in_shapes.len() != 1 {
-                return Err(ErrorKind::WrongArity(in_shapes.len(), 1),into());
+                return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
             }
             let in_shape: &[usize] = in_shapes[0].as_slice();
 

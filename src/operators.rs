@@ -19,16 +19,9 @@ pub mod hvx;
 
 use crate::errors::*;
 
-use crate::state::{Gather,to_opt_ix,Operation};
+use crate::state::{Gather, to_opt_ix, Operation};
 use crate::transition_matrix::{TransitionMatrix};
-use crate::misc::{ShapeVec,time_since};
-
-use smallvec::SmallVec;
-
-use std::borrow::Cow;
-use std::cmp::{min, max};
-use std::num::NonZeroUsize;
-use std::time::Instant;
+use crate::misc::{ShapeVec};
 
 use ndarray::Ix;
 
@@ -55,7 +48,6 @@ pub fn transpose_gather(in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
 
 pub fn stack_gather(in_shapes: &[ShapeVec], out_shape: &[Ix]) -> Gather {
     let last = out_shape.len() - 1;
-    let in_shape = &out_shape[0..last];
     Gather::new(out_shape, |idxs|
                 (idxs[last], to_opt_ix(&idxs[0..last], in_shapes[last].as_slice())),
                 "stack")
@@ -76,7 +68,7 @@ pub fn identity(in_shapes: &[ShapeVec], out_shape: &[Ix]) -> Result<Vec<Gather>>
     Ok(vec![identity_gather(out_shape)])
 }
 
-pub fn transpose(in_shape: &[Ix], out_shape: &[Ix]) -> Result<Vec<Gather>> {
+pub fn transpose(in_shapes: &[ShapeVec], out_shape: &[Ix]) -> Result<Vec<Gather>> {
     if in_shapes.len() != 1 {
         return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
     }
@@ -88,13 +80,13 @@ pub fn transpose(in_shape: &[Ix], out_shape: &[Ix]) -> Result<Vec<Gather>> {
     Ok(vec![transpose_gather(in_shape, out_shape)])
 }
 
-pub fn stack(in_shapes: &[ShapeVec], out_shape: &ShapeVec) -> Result<Vec<Gather>> {
+pub fn stack(in_shapes: &[ShapeVec], out_shape: &[Ix]) -> Result<Vec<Gather>> {
     for s in in_shapes {
-        if s != out_shape[0..out_shape.len()-2] {
-            return Err(ErrorKind::ShapeMismatch(out_shape.to_owned()))
+        if s.as_slice() != &out_shape[0..out_shape.len()-1] {
+            return Err(ErrorKind::ShapeMismatch(out_shape.to_vec(), s.to_vec()).into());
         }
     }
-    stack_gather(in_shapes, out_shape.as_slice())
+    Ok(vec![stack_gather(in_shapes, out_shape)])
 }
 
 pub fn rot_idx_r(in_shapes: &[ShapeVec],
@@ -152,121 +144,34 @@ pub struct SearchStep {
     pub op: Operation,
     pub matrix: Option<TransitionMatrix>,
     // min and max, if computed and distinct
-    pub copy_bounds: Option<(Vec<u32>, Vec<u32>)>,
-    pub prune: bool,
+    pub copy_bounds: Option<(Vec<Vec<u32>>, Vec<Vec<u32>>)>,
 }
 
 impl SearchStep {
-    pub fn new(op: Operation, prune: bool) -> Self {
-        Self {op , matrix: None, copy_bounds: None, prune }
+    pub fn new(op: Operation) -> Self {
+        Self {op , matrix: None, copy_bounds: None }
     }
-}
-
-pub fn add_copy_bounds(levels: &mut [SynthesisLevel], max_lanes: usize) -> Result<()> {
-    let mut prev_bounds: Vec<Option<(Vec<u32>, Vec<u32>)>> = vec![None; max_lanes];
-    let output_length = levels[levels.len() - 1].ops.out_shape.iter().product();
-    let output_counts = vec![1u32; output_length];
-    prev_bounds[levels[levels.len() - 1].lane] = Some((output_counts.clone(), output_counts));
-
-    let mut first_prunes = vec![levels.len(); max_lanes];
-    for (idx, l) in levels.iter().enumerate().rev() {
-        if l.prune {
-            first_prunes[l.lane] = idx;
-        }
-    }
-
-    let start = Instant::now();
-    for (_idx, level) in levels.iter_mut().enumerate().rev()
-        .filter(|(i, l)| *i >= first_prunes[l.lane])
-    {
-        let lane = level.lane;
-        if level.prune {
-            // Store data for after
-            level.copy_bounds = prev_bounds[lane].clone();
-            println!("prune_bounds[{}][0] = {:?}", _idx, level.copy_bounds.as_ref()
-                     .map(|(small, big)| (small[0], big[0])));
-        }
-
-        let old_bounds = prev_bounds[lane].take().unwrap();
-        let in_length = level.ops.in_shape.iter().product();
-        let fold_dim: Option<usize> = level.ops.fold_dim.map(|v| v.into());
-        match level.ops.ops {
-            OpSetKind::Gathers(ref swizzles, _) => {
-                let mut mins = vec![u32::MAX; in_length];
-                let mut maxs = vec![0; in_length];
-                for gather in swizzles {
-                    let (this_min, this_max) = gather.min_max_copies(
-                        in_length, &old_bounds.0, &old_bounds.1, fold_dim);
-                    mins.iter_mut().zip(this_min.into_iter())
-                        .for_each(|(v, e)| *v = min(*v, e));
-                    maxs.iter_mut().zip(this_max.into_iter())
-                        .for_each(|(v, e)| *v = max(*v, e));
-
-                }
-                let new_bounds = (mins, maxs);
-                if new_bounds == old_bounds {
-                    level.copy_bounds = None;
-                }
-                prev_bounds[lane] = Some(new_bounds);
-            },
-            OpSetKind::Stack(ref from, _to) => {
-                level.copy_bounds = None;
-                if fold_dim.is_some() {
-                    for lane in from.iter().copied() {
-                            prev_bounds[lane] = Some(old_bounds.clone());
-                    }
-                }
-                else {
-                    let (old_mins, old_maxs) = old_bounds;
-                    let chunk_length = old_mins.len() / from.len();
-                    assert_eq!(old_maxs.len(), from.len() * chunk_length);
-                    for (lane, (min_chunk, max_chunk)) in from.iter().copied()
-                        .zip(old_mins.chunks(chunk_length).zip(old_maxs.chunks(chunk_length)))
-                    {
-                        prev_bounds[lane] = Some((min_chunk.to_owned(), max_chunk.to_owned()));
-                    }
-                }
-            },
-            OpSetKind::Split(from, ref to) => {
-                level.copy_bounds = None;
-                let mut new_mins = vec![0; in_length];
-                let mut new_maxs = vec![0; in_length];
-                for lane in to.iter().copied() {
-                    {
-                        let bounds = if lane == from {
-                            &old_bounds
-                        } else {
-                            prev_bounds[lane].as_ref().unwrap()
-                        };
-                        new_mins.iter_mut().zip(bounds.0.iter()).for_each(|(v, e)| *v += e);
-                        new_maxs.iter_mut().zip(bounds.1.iter()).for_each(|(v, e)| *v += e);
-                    }
-                    prev_bounds[lane] = None;
-                }
-                prev_bounds[from] = Some((new_mins, new_maxs));
-            }
-        }
-    }
-    let dur = time_since(start);
-    println!("copy_counts:this time={};", dur);
-    Ok(())
 }
 
 #[cfg(test)]
 mod test {
+    use crate::state::summarize;
+    use smallvec::smallvec;
+
     #[test]
     fn summary_one() {
-        let gather = super::identity(&[3, 3]).unwrap();
-        let summary = super::summarize(&gather).unwrap();
+        let shape = vec![smallvec![3, 3]];
+        let gather = super::identity(&shape, &[3, 3]).unwrap();
+        let summary = summarize(&gather, 1).unwrap();
         assert_eq!(&gather[0], &summary);
     }
 
     #[test]
     fn summary_fails() {
-        let gathers = super::OpSetKind::new_gathers(
+        let gathers =
             vec![super::identity_gather(&[2, 3]),
-                 super::transpose_gather(&[3, 2], &[2, 3])]);
-        assert_eq!(gathers.summary(), None)
+                 super::transpose_gather(&[3, 2], &[2, 3])];
+        assert_eq!(summarize(&gathers, 1), None)
     }
 
     #[test]
@@ -276,7 +181,7 @@ mod test {
         let cond_keep: Vec<Gather> =
             super::select::cond_keep(&[4, 3], &[0, 1, -1],
                                      &map).unwrap();
-        let summary = super::summarize(&cond_keep);
+        let summary = summarize(&cond_keep, 1);
         let identity = super::identity_gather(&[4, 3]);
         assert_eq!(summary, Some(identity));
     }

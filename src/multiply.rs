@@ -87,5 +87,5 @@ pub fn bool_mul(a: &Matrix, b: &Matrix)
 pub fn transition_mul(a: &TransitionMatrix, b: &TransitionMatrix)
                       -> TransitionMatrix {
     let ret = bool_mul(&a.mat, &b.mat);
-    TransitionMatrix::new(a.get_current_shape(), b.get_target_shape(), ret)
+    TransitionMatrix::new_no_option(a.get_current_shapes(), b.get_target_shapes(), ret)
 }

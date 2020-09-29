@@ -17,14 +17,13 @@ pub mod misc;
 pub mod lexer;
 mod builtins;
 pub mod parser;
-mod state;
+pub mod program_transforms;
+pub mod state;
 pub mod matrix;
 mod transition_matrix;
 pub mod multiply;
-pub mod matrix_load;
-pub mod operators;
-mod expected_syms_util;
-pub mod problem_desc;
+pub mod abstractions;
+mod operators;
 pub mod synthesis;
 
 pub mod errors {
@@ -32,7 +31,6 @@ pub mod errors {
     error_chain! {
         foreign_links {
             Io(std::io::Error);
-            Json(serde_json::Error);
             Ndarray(ndarray::ShapeError);
         }
 
@@ -120,100 +118,28 @@ pub mod errors {
                 description("cannot fold on length 0 dimensions")
                 display("cannot fold on length 0 dimensions")
             }
+            BadGoalShape(program: Vec<Option<crate::misc::ShapeVec>>,
+                         goal: Vec<Option<crate::misc::ShapeVec>>) {
+                description("goal doesn't have appropriate shape"),
+                display("goal doesn't have appropriate shape: program computes {:?}, goal has {:?}",
+                        program, goal)
+            }
             MatrixLoad(p: std::path::PathBuf) {
                 description("couldn't read matrix file")
                 display("couldn't read matrix file: {}", p.display())
             }
-            LevelBuild(step: Box<crate::problem_desc::SynthesisLevelDesc>) {
+            LevelBuild(step: ()) {
                 description("couldn't create level")
-                display("couldn't create level: {}", serde_json::to_string(&step)
-                        .unwrap_or_else(|_| "couldn't print".to_owned()))
+                display("couldn't create level")
             }
-            BadSpec(spec: crate::problem_desc::ProblemDesc) {
+            BadSpec(spec: ()) {
                 description("bad specification")
-                display("bad specification: {:#?}", spec)
+                display("bad specification")
             }
             InvalidCmdArg(name: &'static str, reqs: &'static str) {
                 description("argument is not valid")
                 display("value for {} is not valid (must be {})", name, reqs)
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::builtins::{trove, poly_mult};
-    use crate::operators::swizzle::{xform,rotate};
-    use crate::operators::load::{load_rep,broadcast};
-    use crate::operators::{identity_gather, transpose_gather};
-    use crate::state::{ProgState, Domain, Value};
-
-    fn fixed_solution_from_scalar_8x3<'d>(d: &'d Domain) -> ProgState<'d> {
-        let initial = ProgState::linear(d, 2, &[24]);
-        let shape = [8, 3];
-        let s0 = initial.gather_by(&load_rep(&[24], &[8, 3]).unwrap()[0]);
-        let s1 = s0.gather_by(&xform(&shape, &shape, 1, 0, 1, 2, 1, 8, None, false));
-        let s2 = s1.gather_by(&rotate(&shape, &shape, 1, 0, 1, 0, None));
-        let s3 = s2.gather_by(&xform(&shape, &shape, 0, 1, 0, 3, 1, 3, None, false));
-        let s4 = s3.gather_by(&rotate(&shape, &shape, 0, 1, 0, 0, None));
-        s4
-    }
-
-    #[test]
-    fn trove_solution_works() {
-        let symbols: ndarray::Array1<Value> = (0u16..24u16).map(Value::Symbol).collect();
-        let symbols = symbols.into_dyn();
-        let domain = Domain::new(symbols.view());
-        let spec = ProgState::new_from_spec(&domain, trove(8, 3), "trove").unwrap();
-        let solution = fixed_solution_from_scalar_8x3(&domain);
-        println!("spec {}\n solution {}", spec, solution);
-        assert_eq!(spec, solution);
-    }
-
-    #[test]
-    fn poly_mult_works() {
-        use ndarray::ArrayD;
-        use itertools::iproduct;
-        use crate::operators::select::{cond_keep_gather,Op, BinOp};
-        let f1 = xform(&[4, 4], &[4, 4], 1, 0, 1, 1, 0, 4, None, false);
-        let r1 = rotate(&[4, 4], &[4, 4], 1, 0, 1, 0, None);
-        let f2 = xform(&[4, 4], &[4, 4], 0, 1, 1, 1, -1, 4, None, false);
-        let r2 = rotate(&[4, 4], &[4, 4], 1, 0, 1, 0, None);
-        let broadcast = broadcast(&[4, 4], &[4, 2, 4], 1).unwrap()[0].clone();
-        let spec = poly_mult(4);
-        let domain = Domain::new(spec.view());
-        let arr1 = iproduct!(0..4, 0..4).map(|(_i, j)| crate::state::Value::Symbol(j)).collect();
-        let arr1 = ArrayD::from_shape_vec(vec![4, 4], arr1).unwrap();
-        let state = ProgState::new_from_spec(&domain, arr1, "init").unwrap();
-        let s1 = state.gather_by(&f1);
-        let s2 = s1.gather_by(&r1);
-
-        let arr2 = iproduct!(0..4, 0..4).map(|(_i, j)| crate::state::Value::Symbol(4 + j)).collect();
-        let arr2 = ArrayD::from_shape_vec(vec![4, 4], arr2).unwrap();
-        let state2 = ProgState::new_from_spec(&domain, arr2, "init").unwrap();
-        let s3 = state2.gather_by(&f2);
-        let s4 = s3.gather_by(&r2);
-
-        let m = ProgState::stack_folding(&[&s2, &s4]);
-        let b = m.gather_by(&broadcast);
-
-        let mut retain = std::collections::BTreeMap::new();
-        retain.insert(1, 0);
-        let c1 = cond_keep_gather(&[4, 2, 4], 2, 0, 0,
-                                  BinOp::Plus, Op::Leq, &retain);
-        let d1 = b.gather_by(&c1);
-
-        retain.insert(1, 1);
-        let c2 = cond_keep_gather(&[4, 2, 4], 2, 0, 0,
-                                  BinOp::Plus, Op::Gt, &retain);
-        let d2 = d1.gather_fold_by(&c2);
-
-        let tr = transpose_gather(&[4, 2], &[2, 4]);
-        let transposed = d2.gather_by(&tr);
-        let reshape = identity_gather(&[8]);
-        let result = transposed.gather_by(&reshape);
-        let spec_state = ProgState::new_from_spec(&domain, spec, "spec").unwrap();
-        assert_eq!(result, spec_state);
     }
 }

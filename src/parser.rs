@@ -415,7 +415,7 @@ fn parse_define(toks: &[Token], pos: usize) ->
     let (_, pos) = recognize(Equal, "=")(toks, pos)?;
     let main_result = match toks[pos].t {
         LSquare => parse_gather_array(&shapes, &out_shape, toks, pos)
-            .map(|(g, p)| (vec![(name.clone(), g)], p)),
+            .map(|(g, p)| (vec![Gather::new_raw(g, name.clone())], p)),
         LCurly => parse_many_gathers(&shapes, &out_shape, toks, pos),
         _ => error(&toks[pos], "gather or set of gathers ([ or {])"),
     };
@@ -439,21 +439,31 @@ fn parse_goal(toks: &[Token], pos: usize) -> Result<(ArrayD<Value>, usize)> {
 }
 
 #[derive(Clone, Debug)]
-enum OpType {
+pub enum OpType {
     Initial(ArrayD<Value>),
     Gathers(Vec<Gather>, Option<NonZeroUsize>)
 }
 
+impl OpType {
+    pub fn is_initial(&self) -> bool {
+        match self {
+            OpType::Initial(_) => true,
+            _ => false,
+        }
+    }
+}
+
+
 #[derive(Clone, Debug)]
 pub struct Statement {
-    op: OpType,
-    var: String,
-    args: Vec<usize>,
-    in_shapes: Vec<ShapeVec>,
-    out_shape: ShapeVec,
-    name: String,
-    used_at: Vec<usize>,
-    prune: bool,
+    pub op: OpType,
+    pub var: String,
+    pub args: Vec<usize>,
+    pub in_shapes: Vec<ShapeVec>,
+    pub out_shape: ShapeVec,
+    pub name: String,
+    pub used_at: Vec<usize>,
+    pub prune: bool,
 }
 
 type DefsMap = HashMap<(String, Vec<ShapeVec>, ShapeVec), Vec<Gather>>;
@@ -511,7 +521,7 @@ fn parse_call<'t>(custom_fns: &DefsMap, var_map: &VarMap, vars: &mut [Statement]
     let gathers =
         if var_map.contains_key(&lookup.0) {
             // Variable copy
-            crate::operators::identity(&[out_shape], out_shape.as_slice());
+            crate::operators::identity(&[out_shape.clone()], out_shape.as_slice())?
         }
         else if let Some(g) = custom_fns.get(&lookup) {
             g.clone()

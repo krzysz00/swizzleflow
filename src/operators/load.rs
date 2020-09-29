@@ -66,12 +66,12 @@ fn load(in_shapes: &[ShapeVec], out_shape: &[Ix], mode: Mode) -> Result<Vec<Gath
     Ok(vec![gather])
 }
 
-pub fn load_rep(in_shape: &[Ix], out_shape: &[Ix]) -> Result<Vec<Gather>> {
-    load(in_shape, out_shape, Mode::Rep)
+pub fn load_rep(in_shapes: &[ShapeVec], out_shape: &[Ix]) -> Result<Vec<Gather>> {
+    load(in_shapes, out_shape, Mode::Rep)
 }
 
-pub fn load_trunc(in_shape: &[Ix], out_shape: &[Ix]) -> Result<Vec<Gather>> {
-    load(in_shape, out_shape, Mode::Trunc)
+pub fn load_trunc(in_shapes: &[ShapeVec], out_shape: &[Ix]) -> Result<Vec<Gather>> {
+    load(in_shapes, out_shape, Mode::Trunc)
 }
 
 pub fn broadcast(in_shapes: &[ShapeVec], out_shape: &[Ix], group: Ix) -> Result<Vec<Gather>> {

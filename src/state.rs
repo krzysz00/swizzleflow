@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::misc::{in_bounds,ShapeVec};
 
-use ndarray::{Array,ArrayViewD,ArrayD,Ix,Axis};
+use ndarray::{ArrayViewD,ArrayD,Ix,Axis};
 use ndarray::{Dimension,Zip,FoldWhile};
 
 use std::borrow::Cow;
@@ -24,6 +24,7 @@ use std::fmt;
 use std::fmt::{Display,Formatter};
 use std::hash::{Hash,Hasher};
 use std::num::{NonZeroUsize};
+use std::ops::Range;
 
 use smallvec::SmallVec;
 
@@ -115,6 +116,16 @@ impl Value {
             }
         }
     }
+
+    pub fn level(&self) -> usize {
+        match self {
+            Value::Empty => 0,
+            Value::NotInDomain => 0,
+            Value::Symbol(_) => 1,
+            Value::Fold(args) => args.iter().map(|t| t.level() + 1)
+                .max().unwrap_or(0)
+        }
+    }
 }
 
 pub type DomRef = usize;
@@ -129,14 +140,16 @@ pub const NOT_IN_DOMAIN: DomRef = 1;
 pub struct Domain {
     elements: Vec<Value>,
     element_map: HashMap<Value, DomRef>,
+    level_ranges: Vec<Range<DomRef>>,
     subterms_of: Vec<Vec<DomRef>>,
     imm_superterms: Vec<Vec<DomRef>>,
     imm_subterms: Vec<BTreeSet<DomRef>>,
     fold_ref_map: HashMap<Vec<DomRef>, DomRef>,
+    max_lanes: usize,
 }
 
 impl Domain {
-    pub fn new(spec: ArrayViewD<Value>) -> Self {
+    pub fn new(spec: ArrayViewD<Value>, max_lanes: usize) -> Self {
         let mut store: Vec<BTreeSet<Value>> = Vec::new();
         Value::Empty.collect_subterms(&mut store);
         Value::NotInDomain.collect_subterms(&mut store);
@@ -146,8 +159,10 @@ impl Domain {
         }
 
         let mut elements: Vec<Value> = Vec::new();
+        let mut level_ranges: Vec<Range<usize>> = Vec::with_capacity(store.len());
         for level in store.into_iter() {
             // Returned in sorted order
+            level_ranges.push(elements.len()..(elements.len() + level.len()));
             for e in level.into_iter() {
                 elements.push(e)
             }
@@ -194,8 +209,8 @@ impl Domain {
             }).collect::<HashMap<Vec<DomRef>, DomRef>>();
         // Semantics of empty fold
         fold_ref_map.insert(vec![], *element_map.get(&Value::Empty).unwrap());
-        Domain { elements, element_map, subterms_of, fold_ref_map,
-                 imm_subterms, imm_superterms }
+        Domain { elements, level_ranges, element_map, subterms_of, fold_ref_map,
+                 imm_subterms, imm_superterms, max_lanes }
     }
 
     pub fn find_value(&self, value: &Value) -> Option<DomRef> {
@@ -225,6 +240,12 @@ impl Domain {
 
     pub fn imm_superterms(&self, elem: DomRef) -> &[DomRef] {
         &self.imm_superterms[elem]
+    }
+
+    pub fn max_lanes(&self) -> usize { self.max_lanes }
+
+    pub fn terms_in_level(&self, level: usize) -> Range<DomRef> {
+        self.level_ranges[level].clone()
     }
 }
 
@@ -265,32 +286,13 @@ impl Hash for ProgState<'_, '_> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct Operation {
-    pub fns: Vec<Gather>,
-    pub fns_summary: Option<Gather>,
-
-    pub fold_len: Option<NonZeroUsize>,
-
-    pub in_shapes: Vec<ShapeVec>,
-    pub in_bounds: Vec<usize>,
-    // Already accounts for fold
-    pub out_shape: ShapeVec,
-
-    pub var: String,
-    pub arg_string: String,
-
-    pub in_lanes: Vec<usize>,
-    pub out_lane: usize,
-    pub drop_lanes: Vec<usize>,
-}
-
-
 impl<'d, 't> ProgState<'d, 't> {
     fn making_inverse(domain: &'d Domain, state: Vec<Cow<'t, Option<ArrayD<DomRef>>>>,
                       name: String) -> Self {
-        let mut inverse: Vec<Vec<Ix>> = (0..domain.size()).map(|_| Vec::with_capacity(16)).collect();
-        for (lane, data) in state.iter().enumerate().filter_map(|(i, x)| x.as_ref().map(|v| (i, v))) {
+        let mut inverse: Vec<Vec<(Ix, Ix)>> = (0..domain.size()).map(|_| Vec::with_capacity(16)).collect();
+        for (lane, data) in state.iter().enumerate()
+            .filter_map(|(i, x)| x.as_ref().as_ref().map(|v| (i, v)))
+        {
             let slice = data.as_slice().unwrap();
             for (idx, elem) in slice.iter().copied().enumerate() {
                 for s in domain.subterms_of(elem) {
@@ -303,43 +305,48 @@ impl<'d, 't> ProgState<'d, 't> {
 
     pub fn new(domain: &'d Domain, state: Vec<Option<ArrayD<DomRef>>>,
                name: impl Into<String>) -> Self {
-        let state = state.into_iter().map(|x| Cow::Owned(x));
+        let state = state.into_iter().map(|x| Cow::Owned(x)).collect();
         Self::making_inverse(domain, state, name.into())
     }
 
     pub fn new_from_spec(domain: &'d Domain, vars: Vec<Option<ArrayD<Value>>>,
                          name: impl Into<String>) -> Self {
         let ref_state = vars.into_iter()
-            .map(|mv| Cow::Owned(ms.map(|var|
-            var.map(|v| domain.find_value(v).unwrap_or(NOT_IN_DOMAIN)))));
+            .map(|mv|
+                 Cow::Owned(mv.map(
+                     |var| var.map(|v| domain.find_value(v).unwrap_or(NOT_IN_DOMAIN)))))
+            .collect();
         Self::making_inverse(domain, ref_state, name.into())
     }
 
-    pub fn linear(domain: &'d Domain, start: Ix, shape: &[Ix]) -> Self {
-        let shape_len: usize = shape.iter().copied().product();
-        let array = (start..start+shape_len).collect();
-        Self::making_inverse(domain,
-                             vec![Cow::Owned(Some(Array::from_shape_vec(shape, array).unwrap()))],
-                             "id".to_owned())
+    pub fn deep_clone(&self) -> ProgState<'d, 'static> {
+        ProgState { name: self.name.clone(),
+                    state: self.state.iter().map(|s| Cow::Owned(s.as_ref().as_ref().cloned())).collect(),
+                    inv_state: self.inv_state.iter().map(|v| v.clone()).collect(),
+                    domain: self.domain
+        }
     }
 
-    fn emplace<'u: 't>(&self, value: ArrayD<DomRef>, op: &Operation,
-                       gather_name: &str) -> ProgState<'d, 'u> {
+    fn emplace(&self, value: ArrayD<DomRef>, op: &Operation,
+               gather_name: &str) -> Self {
         let mut state = self.state.clone();
         state[op.out_lane] = Cow::Owned(Some(value));
-        for l in op.drop_lanes {
+        for l in op.drop_lanes.iter().copied() {
             state[l] = Cow::Owned(None);
         }
-        let name = format!(" {} = {}{};", op.name, gather_name, op.arg_string);
-        Self::making_inverse(self.domain, state, name)
+        let name = format!(" {} = {}{}; ", op.var, gather_name, op.arg_string);
+        ProgState::making_inverse(self.domain, state, name)
     }
 
-    pub fn gather_by<'u: 't>(&self, gather: &Gather, op: &Operation)
-                             -> ProgState<'d, 'u> {
+    pub fn gather_by(&self, gather: &Gather, op: &Operation) -> Self {
         // Read off the edge to get \bot
         // Read past the arguments to get 0
+        if op.has_fold() {
+            return self.gather_fold_by(gather, op);
+        }
         let slices: SmallVec<[&[usize]; 3]> =
             op.in_lanes.iter().copied().map(|l| self.state[l]
+                                            .as_ref().as_ref().expect("Args to be populated")
                                             .as_slice().unwrap())
             .collect();
         // 0 = 0
@@ -350,7 +357,7 @@ impl<'d, 't> ProgState<'d, 't> {
                                           if idx < 0 { NOT_IN_DOMAIN }
                                           else { s.get(idx as usize).copied().unwrap_or(NOT_IN_DOMAIN) })
                                      .unwrap_or(ZERO));
-        self.emplace(array, op, gather.name)
+        self.emplace(array, op, &gather.name)
     }
 
     #[inline]
@@ -371,17 +378,16 @@ impl<'d, 't> ProgState<'d, 't> {
         ret
     }
 
-    pub fn gather_fold_by<'u: 't>(&self, gather: &Gather, op: &Operation)
-                                  -> ProgState<'d, 'u> {
+    pub fn gather_fold_by(&self, gather: &Gather, op: &Operation) -> Self {
         let slices: SmallVec<[&[usize]; 3]> =
             op.in_lanes.iter().copied().map(|l| self.state[l]
+                                            .as_ref().as_ref().expect("Args to be populated")
                                             .as_slice().unwrap())
             .collect();
 
         let mut elements: SmallVec<[DomRef; 6]> =
             SmallVec::with_capacity(gather.data.shape()[gather.data.ndim()-1]);
-        let axis = Axis(gather.data.ndims() - 1);
-        let slice = self.state.as_slice().unwrap();
+        let axis = Axis(gather.data.ndim() - 1);
         let array: ArrayD<DomRef> =
             gather.data.map_axis(
                 axis,
@@ -389,17 +395,21 @@ impl<'d, 't> ProgState<'d, 't> {
                     let data = data.as_slice().unwrap();
                     self.fold_find(data, &mut elements, slices.as_slice())
                 });
-        self.emplace(array, op, gather.name)
+        self.emplace(array, op, &gather.name)
     }
 }
 
 impl Display for ProgState<'_, '_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        let blank_shape = [];
         write!(f, "{}:\n{}", self.name,
-               self.state.iter()
-               .filter_map(|s| s.as_ref().map(
-                   |a| a.mapv(|r| self.domain.get_value(r)))
-               .join("")))
+               self.state.iter().enumerate()
+               .map(|(i, s)|
+                    format!("{}: {}", i,
+                           s.as_ref().as_ref().map_or_else(
+                               || ArrayD::from_elem(blank_shape.as_ref(), &Value::NotInDomain),
+                               |a| a.map(|r| self.domain.get_value(*r)))))
+               .join("\n"))
     }
 }
 
@@ -460,12 +470,12 @@ impl Gather {
         let ret =
             Zip::from(self.data.view_mut()).and(other.data.view())
             .fold_while((), |_, s, o| {
-                if *s.0 >= n_args {
+                if s.0 >= n_args {
                     *s = *o;
                     FoldWhile::Continue(())
                 }
                 else {
-                    if s == o || *o.0 >= n_args {
+                    if s == o || o.0 >= n_args {
                         FoldWhile::Continue(())
                     }
                     else {
@@ -482,26 +492,120 @@ impl Gather {
             .all(|(i, (a, v))| i as isize == v || a == 0)
     }
 
-    pub fn min_max_copies(&self, input_bounds: &[usize],
-                          mins_out: &[u32], maxs_out: &[u32],
-                          fold_factor: Option<usize>) -> (Vec<Vec<u32>>, Vec<Vec<u32>>) {
-        let n_inputs = input_bounds.len();
-        let mut mins_ret = input_bounds.iter().copied().map(|b| vec![0; b]);
-        let mut maxs_ret = input_bounds.iter().copied().map(|b| vec![0; b]);
+    pub fn min_max_copies(&self, op: &Operation,
+                          mins_out: &[Vec<u32>], maxs_out: &[Vec<u32>])
+                          -> (Vec<Vec<u32>>, Vec<Vec<u32>>) {
+        let n_inputs = op.in_lanes.len();
+        let fold_factor = op.fold_len;
+        let input_bounds: SmallVec<[usize; 4]> = op.in_lanes.iter().copied()
+            .map(|l| op.lane_in_lens[l]).collect();
+        // Preserved lanes keep their accumulated copies
+        let preserved_lanes = (0..op.lane_in_shapes.len()).filter(
+            |&i| i != op.out_lane && !op.drop_lanes.contains(&i) && op.lane_in_shapes[i].is_some())
+            .collect::<SmallVec<[usize; 4]>>();
+        let mut mins_ret: Vec<Vec<u32>> = op.lane_in_lens.iter().copied().map(|b| vec![0; b]).collect();
+        let mut maxs_ret: Vec<Vec<u32>> = op.lane_in_lens.iter().copied().map(|b| vec![0; b]).collect();
 
         for (i, (a, e)) in self.data.iter().copied().enumerate()
-            .filter(|&(_, (a, e))| a < n_inputs && e >= 0 && e < (input_bounds[a] as isize)) {
+            .filter(|&(_, (a, e))| a < n_inputs && e >= 0 && e < (input_bounds[a] as isize))
+        {
             let e = e as usize;
-            let i = if let Some(fold) = fold_factor { i / fold } else { i };
-            mins_ret[a][e] += mins_out[i];
-            maxs_ret[a][e] += maxs_out[i];
+            let i = if let Some(fold) = fold_factor { i / fold.get() } else { i };
+            mins_ret[a][e] += mins_out[op.out_lane][i];
+            maxs_ret[a][e] += maxs_out[op.out_lane][i];
+        }
+        for l in preserved_lanes {
+            for i in 0..op.lane_in_lens[l] {
+                mins_ret[l][i] += 1;
+                maxs_ret[l][i] += 1;
+            }
         }
         (mins_ret, maxs_ret)
     }
 }
 
+pub fn summarize(gathers: &[Gather], n_args: usize) -> Option<Gather> {
+    if gathers.is_empty() {
+        None
+    }
+    else {
+        let mut all_merged = gathers[0].clone();
+        if (&gathers[1..]).iter()
+            .fold(true,|acc, g| acc && all_merged.merge_with(g, n_args))
+        {
+            Some(all_merged)
+        }
+        else {
+            None
+        }
+    }
+}
+
 impl fmt::Display for Gather {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}:\n{}", self.name, self.data)
+        write!(f, "{}:\n{:?}", self.name, self.data)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct Operation {
+    pub fns: Vec<Gather>,
+    pub fns_summary: Option<Gather>,
+
+    pub fold_len: Option<NonZeroUsize>,
+
+    pub lane_in_shapes: Vec<Option<ShapeVec>>,
+    pub lane_in_lens: Vec<usize>,
+    // Already accounts for fold
+    pub out_shape: ShapeVec,
+
+    pub var: String,
+    pub arg_string: String,
+    pub op_name: String,
+
+    pub in_lanes: Vec<usize>,
+    pub out_lane: usize,
+    pub drop_lanes: Vec<usize>,
+
+    pub prune: bool,
+    pub term_level: usize,
+}
+
+impl Operation {
+    pub fn new(fns: Vec<Gather>, fold_len: Option<NonZeroUsize>,
+               lane_in_shapes: Vec<Option<ShapeVec>>, out_shape: ShapeVec,
+               var: String, arg_string: String, op_name: String,
+               in_lanes: Vec<usize>, out_lane: usize, drop_lanes: Vec<usize>,
+               prune: bool, term_level: usize) -> Self {
+        let fns_summary = summarize(&fns, in_lanes.len());
+        let lane_in_lens = lane_in_shapes.iter().map(
+            |ms| ms.as_ref().map_or(0, |s| s.iter().copied().product()))
+            .collect();
+        Self { fns, fns_summary, fold_len,
+               lane_in_shapes, lane_in_lens, out_shape,
+               var, arg_string, op_name,
+               in_lanes, out_lane, drop_lanes,
+               prune, term_level }
+    }
+
+    pub fn extend_shapes(&mut self, max_lanes: usize) {
+        for _ in self.lane_in_lens.len()..max_lanes {
+            self.lane_in_lens.push(0);
+            self.lane_in_shapes.push(None);
+        }
+    }
+
+    pub fn has_fold(&self) -> bool {
+        self.fold_len.is_some()
+    }
+
+    pub fn prunes_like_identity(&self) -> bool {
+        if self.has_fold() { return false; }
+        if let Some(summary) = self.fns_summary.as_ref() {
+            summary.is_identity() && self.drop_lanes.is_empty()
+        }
+        else {
+            false
+        }
     }
 }

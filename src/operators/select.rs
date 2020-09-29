@@ -197,7 +197,7 @@ pub fn general_select_gather(in_shape: &[Ix], out_shape: &[Ix],
                         let op2 = binop.perform(*c, idxs[*b] as isize);
                         if op.perform(op1, op2) {
                             storage[axis] = i;
-                            return to_opt_ix(&storage, in_shape);
+                            return (0, to_opt_ix(&storage, in_shape));
                         }
                     }
                     (0, to_opt_ix(&storage, in_shape))
@@ -232,7 +232,7 @@ pub fn general_select(in_shapes: &[ShapeVec], out_shape: &[Ix], axis: usize,
     let mut ret = HashSet::new();
 
     if in_shapes.len() != 1 {
-        return Err(ErrorKind::WrongArity(in_shapes.len(), 1),into());
+        return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
     }
     let in_shape: &[usize] = in_shapes[0].as_slice();
 

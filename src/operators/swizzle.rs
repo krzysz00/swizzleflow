@@ -81,15 +81,10 @@ pub fn rotate(in_shape: &[Ix],out_shape: &[Ix],
                 }, name)
 }
 
-pub fn simple_xforms(in_shapes: &[ShapeVec], out_shape: &[Ix],
+pub fn simple_xforms(in_shape: &[Ix], out_shape: &[Ix],
                      main_axis: Ix, second_axis: Ix,
                      swizzle_axis: Ix) -> Result<Vec<Gather>> {
     let mut ret = HashSet::new();
-
-    if in_shapes.len() != 1 {
-        return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
-    }
-    let in_shape: &[usize] = in_shapes[0].as_slice();
 
     if in_shape == out_shape {
         ret.insert(identity_gather(out_shape));
@@ -111,12 +106,6 @@ pub fn simple_rotations(in_shape: &[Ix], out_shape: &[Ix],
                         main_axis: Ix, second_axis: Ix,
                         swizzle_axis: Ix) -> Result<Vec<Gather>> {
     let mut ret = HashSet::new();
-
-    if in_shapes.len() != 1 {
-        return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
-    }
-    let in_shape: &[usize] = in_shapes[0].as_slice();
-
     if in_shape == out_shape {
         ret.insert(identity_gather(out_shape));
     }
@@ -132,11 +121,6 @@ pub fn all_xforms(in_shape: &[Ix], out_shape: &[Ix],
                   main_axis: Ix, second_axis: Ix,
                   swizzle_axis: Ix) -> Result<Vec<Gather>> {
     let mut ret = HashSet::new();
-
-    if in_shapes.len() != 1 {
-        return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
-    }
-    let in_shape: &[usize] = in_shapes[0].as_slice();
 
     if in_shape == out_shape {
         ret.insert(identity_gather(out_shape));
@@ -164,12 +148,6 @@ pub fn all_rotations(in_shape: &[Ix], out_shape: &[Ix],
                      main_axis: Ix, second_axis: Ix,
                      swizzle_axis: Ix) -> Result<Vec<Gather>> {
     let mut ret = HashSet::new();
-
-    if in_shapes.len() != 1 {
-        return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
-    }
-    let in_shape: &[usize] = in_shapes[0].as_slice();
-
     let stable_len = in_shape[main_axis];
 
     if in_shape == out_shape {
