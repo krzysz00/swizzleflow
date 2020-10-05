@@ -197,7 +197,7 @@ pub fn add_copy_bounds(steps: &mut [SearchStep], out_shape: &[Option<ShapeVec>])
                  i, next_mins.get(1).and_then(|s| s.get(0))
                  , next_maxs.get(1).and_then(|s| s.get(0)));
         if step.op.prune && (mins != next_mins || maxs != next_maxs) {
-            step.copy_bounds = Some((next_mins, next_maxs));
+            step.copy_bounds = Some((next_mins.concat(), next_maxs.concat()));
         }
         next_mins = mins;
         next_maxs = maxs;

@@ -133,7 +133,7 @@ type SearchResultCache<'d> = Arc<ResultMap<'d>>;
 // Invariant: any level with pruning enabled has a corresponding pruning matrix available
 fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
                   matrix: &TransitionMatrix,
-                  copy_bounds: Option<&(Vec<Vec<u32>>, Vec<Vec<u32>>)>,
+                  copy_bounds: Option<&(Vec<u32>, Vec<u32>)>,
                   Range {start: term_start, end: term_end }: Range<usize>,
                   _cache: &ResultMap<'d>, tracker: &SearchStepStats,
                   step: usize, print_pruned: bool, prune_fuel: usize) -> bool {
@@ -146,7 +146,7 @@ fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
                 let result = iproduct!(current.inv_state[a].iter().copied(),
                                        current.inv_state[b].iter().copied())
                     .any(|(c1, c2)| {
-                        let v = matrix.get_idxs(c1, c2, t1, t2);
+                        let v = matrix.get_raw_idxs(c1, c2, t1, t2);
                         v
                     });
                 if !result {
@@ -157,9 +157,9 @@ fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
                     tracker.record_value_checks(value_checks);
                     if print_pruned {
                         println!("pruned @ {}\n{}", step, current);
-                        println!("v1 = {}, v2 = {}, t1 = ({}, {}), t2 = ({}, {})",
+                        println!("v1 = {}, v2 = {}, t1 = {}, t2 = {}",
                                  target.domain.get_value(a), target.domain.get_value(b),
-                                 t1.0, t1.1, t2.0, t2.1);
+                                 t1, t2);
                     }
                     return false;
                 }
@@ -170,9 +170,9 @@ fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
                 for v in term_start..term_end {
                     let actual = target.inv_state[v].len() as u32;
                     let min_copies: u32 = current.inv_state[v].iter()
-                        .copied().map(|(a, e)| mins[a][e]).sum();
+                        .copied().map(|i| mins[i]).sum();
                     let max_copies: u32 = current.inv_state[v].iter()
-                        .copied().map(|(a, e)| maxs[a][e]).sum();
+                        .copied().map(|i| maxs[i]).sum();
                     if min_copies > actual || max_copies < actual {
                         tracker.pruned();
                         tracker.pruned_copy_count();

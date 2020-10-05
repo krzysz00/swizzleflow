@@ -103,3 +103,14 @@ pub fn equal_except<T: Eq>(a: &[T], b: &[T], idx: usize) -> bool {
     a.iter().zip(b.iter()).enumerate()
         .all(|(i, (x, y))| i == idx || x == y)
 }
+
+pub type OffsetsVec = smallvec::SmallVec<[Ix; 4]>;
+#[inline]
+pub fn shapes_to_offsets<'l, I>(shapes: I) -> OffsetsVec
+where I: IntoIterator<Item = &'l Option<ShapeVec>> {
+    std::iter::once(0).chain(
+        shapes.into_iter().map(|ms| ms.as_ref().as_ref()
+                               .map_or(0, |s| s.iter().copied().product()))
+            .scan(0, |s, l| { *s += l; Some(*s) }))
+        .collect()
+}

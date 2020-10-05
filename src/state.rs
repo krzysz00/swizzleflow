@@ -12,7 +12,7 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use crate::misc::{in_bounds,ShapeVec};
+use crate::misc::{in_bounds, ShapeVec, OffsetsVec, shapes_to_offsets};
 
 use ndarray::{ArrayViewD,ArrayD,Ix,Axis};
 use ndarray::{Dimension,Zip,FoldWhile};
@@ -261,7 +261,7 @@ pub struct ProgState<'d, 't> {
     pub domain: &'d Domain,
     pub(crate) state: Vec<Cow<'t, Option<ArrayD<DomRef>>>>,
     // We store row-major indices into matrix dimensions for effeciency
-    pub(crate) inv_state: Vec<Vec<(Ix, Ix)>>,
+    pub(crate) inv_state: Vec<Vec<Ix>>,
     pub name: String
 }
 
@@ -289,15 +289,23 @@ impl Hash for ProgState<'_, '_> {
 
 impl<'d, 't> ProgState<'d, 't> {
     fn making_inverse(domain: &'d Domain, state: Vec<Cow<'t, Option<ArrayD<DomRef>>>>,
-                      name: String) -> Self {
-        let mut inverse: Vec<Vec<(Ix, Ix)>> = (0..domain.size()).map(|_| Vec::with_capacity(16)).collect();
+                      name: String, offsets: Option<&OffsetsVec>) -> Self {
+        let mut inverse: Vec<Vec<Ix>> = (0..domain.size()).map(|_| Vec::with_capacity(16)).collect();
+        let our_offsets: Option<OffsetsVec> = if offsets.is_none() {
+            let shapes: SmallVec<[Option<ShapeVec>; 4]> =
+                state.iter().map(|ma| ma.as_ref().as_ref().map(
+                    |a| ShapeVec::from_slice(a.shape()))).collect();
+            Some(shapes_to_offsets(&shapes))
+        } else { None };
+        let offsets = offsets.or(our_offsets.as_ref())
+            .expect("Both loops can't have failed");
         for (lane, data) in state.iter().enumerate()
             .filter_map(|(i, x)| x.as_ref().as_ref().map(|v| (i, v)))
         {
             let slice = data.as_slice().unwrap();
             for (idx, elem) in slice.iter().copied().enumerate() {
                 for s in domain.subterms_of(elem) {
-                    inverse[*s].push((lane, idx))
+                    inverse[*s].push(offsets[lane] + idx)
                 }
             }
         }
@@ -305,26 +313,26 @@ impl<'d, 't> ProgState<'d, 't> {
     }
 
     pub fn new(domain: &'d Domain, state: Vec<Option<ArrayD<DomRef>>>,
-               name: impl Into<String>) -> Self {
+               name: impl Into<String>, offsets: Option<&OffsetsVec>) -> Self {
         let state = state.into_iter().map(|x| Cow::Owned(x)).collect();
-        Self::making_inverse(domain, state, name.into())
+        Self::making_inverse(domain, state, name.into(), offsets)
     }
 
     pub fn new_from_spec(domain: &'d Domain, vars: Vec<Option<ArrayD<Value>>>,
-                         name: impl Into<String>) -> Self {
+                         name: impl Into<String>, offsets: Option<&OffsetsVec>) -> Self {
         let ref_state = vars.into_iter()
             .map(|mv|
                  Cow::Owned(mv.map(
                      |var| var.map(|v| domain.find_value(v).unwrap_or(NOT_IN_DOMAIN)))))
             .collect();
-        Self::making_inverse(domain, ref_state, name.into())
+        Self::making_inverse(domain, ref_state, name.into(), offsets)
     }
 
     pub fn deep_clone(&self) -> ProgState<'d, 'static> {
         ProgState { name: self.name.clone(),
                     state: self.state.iter().map(|s| Cow::Owned(s.as_ref().as_ref().cloned())).collect(),
                     inv_state: self.inv_state.iter().map(|v| v.clone()).collect(),
-                    domain: self.domain
+                    domain: self.domain,
         }
     }
 
@@ -336,7 +344,8 @@ impl<'d, 't> ProgState<'d, 't> {
             state[l] = Cow::Owned(None);
         }
         let name = format!("{} {} = {}{};", self.name, op.var, gather_name, op.arg_string);
-        ProgState::making_inverse(self.domain, state, name)
+        ProgState::making_inverse(self.domain, state, name,
+                                  Some(&op.lane_out_offsets))
     }
 
     pub fn gather_by(&self, gather: &Gather, op: &Operation) -> Self {
@@ -563,6 +572,7 @@ pub struct Operation {
     pub lane_in_lens: Vec<usize>,
     // Already accounts for fold
     pub out_shape: ShapeVec,
+    pub lane_out_offsets: OffsetsVec,
 
     pub var: String,
     pub arg_string: String,
@@ -586,8 +596,20 @@ impl Operation {
         let lane_in_lens = lane_in_shapes.iter().map(
             |ms| ms.as_ref().map_or(0, |s| s.iter().copied().product()))
             .collect();
+        let the_out_shape = Some(out_shape.clone());
+        let the_none = None;
+        let lane_out_offsets = shapes_to_offsets(
+            lane_in_shapes.iter().enumerate().map(
+                |(i, s)| if i == out_lane {
+                    &the_out_shape
+                } else if drop_lanes.contains(&i) {
+                    &the_none
+                } else {
+                    s
+                }));
         Self { fns, fns_summary, fold_len,
-               lane_in_shapes, lane_in_lens, out_shape,
+               lane_in_shapes, lane_in_lens,
+               out_shape, lane_out_offsets,
                var, arg_string, op_name,
                in_lanes, out_lane, drop_lanes,
                prune, term_level }

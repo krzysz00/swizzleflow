@@ -19,7 +19,8 @@ use std::path::Path;
 
 use crate::state::Operation;
 use crate::matrix::{MatrixOps, Matrix};
-use crate::misc::{ShapeVec,open_file,create_file,
+use crate::misc::{ShapeVec, OffsetsVec, shapes_to_offsets,
+                  open_file, create_file,
                   write_length_tagged_idxs,
                   read_length_tagged_idxs};
 use crate::errors::*;
@@ -28,8 +29,6 @@ use byteorder::{LittleEndian,WriteBytesExt,ReadBytesExt};
 use smallvec::SmallVec;
 
 use itertools::{Itertools,iproduct};
-
-type OffsetsVec = SmallVec<[Ix; 4]>;
 
 #[derive(Clone, Debug)]
 pub struct GenTransitionMatrix<T: MatrixOps> {
@@ -57,15 +56,6 @@ fn to_index_part(idx: &[Ix], shape: &ShapeVec) -> Ix {
 fn to_index(lane1: Ix, idx1: Ix, lane2: Ix, idx2: Ix,
             offsets: &[Ix], len: Ix) -> Ix {
     (idx2 + offsets[lane2]) + (len * (idx1 + offsets[lane1]))
-}
-
-#[inline]
-fn shapes_to_offsets(shapes: &[Option<ShapeVec>]) -> OffsetsVec {
-    std::iter::once(0).chain(
-        shapes.iter().map(|ms| ms.as_ref().as_ref()
-                          .map_or(0, |s| s.iter().copied().product()))
-            .scan(0, |s, l| { *s += l; Some(*s) }))
-        .collect()
 }
 
 impl<T: MatrixOps> GenTransitionMatrix<T> {
@@ -184,6 +174,13 @@ impl<T: MatrixOps> GenTransitionMatrix<T> {
         self.mat.get(i, j)
     }
 
+    pub fn get_raw_idxs(&self, current1: Ix, current2: Ix,
+                        target1: Ix, target2: Ix) -> bool {
+        let i = current2 + self.current_len * current1;
+        let j = target2 + self.target_len * target1;
+        self.mat.get(i, j)
+    }
+
     pub fn set(&mut self, (current_lane1, current1): (Ix, &[Ix]),
                (current_lane2, current2): (Ix, &[Ix]),
                (target_lane1, target1): (Ix, &[Ix]),
@@ -222,6 +219,14 @@ impl<T: MatrixOps> GenTransitionMatrix<T> {
                          &self.target_lane_offs, self.target_len);
         self.mat.set(i, j, value)
     }
+
+    pub fn set_raw_idxs(&mut self, current1: Ix, current2: Ix,
+                        target1: Ix, target2: Ix, value: bool) {
+        let i = current2 + self.current_len * current1;
+        let j = target2 + self.target_len * target1;
+        self.mat.set(i, j, value)
+    }
+
 
     pub fn slots(&self) -> (usize, usize) {
         (self.current_len, self.target_len)

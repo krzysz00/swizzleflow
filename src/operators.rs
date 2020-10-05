@@ -150,7 +150,7 @@ pub struct SearchStep {
     pub op: Operation,
     pub matrix: Option<TransitionMatrix>,
     // min and max, if computed and distinct
-    pub copy_bounds: Option<(Vec<Vec<u32>>, Vec<Vec<u32>>)>,
+    pub copy_bounds: Option<(Vec<u32>, Vec<u32>)>,
 }
 
 impl SearchStep {

@@ -173,12 +173,12 @@ pub fn to_search_problem<'d>(
                ProgState<'d, 'static>, Vec<Option<ShapeVec>>)>
 {
     let steps = operations.iter().map(|o| SearchStep::new(o.clone())).collect();
-    let init = ProgState::new_from_spec(domain, initials.to_owned(), "[init];");
+    let init = ProgState::new_from_spec(domain, initials.to_owned(), "[init];", None);
     let last_op = &operations[operations.len()-1];
     let target_shape = ShapeVec::from_slice(target.shape());
     let mut target_vec = vec![None; last_op.lane_in_lens.len()];
     target_vec[operations[operations.len()-1].out_lane] = Some(target);
-    let target_state = ProgState::new_from_spec(domain, target_vec, "[target]");
+    let target_state = ProgState::new_from_spec(domain, target_vec, "[target]", None);
     let mut last_op_shape = last_op.lane_in_shapes.clone();
     last_op_shape[last_op.out_lane] = Some(target_shape);
     let expected_shape = target_state.state.iter()
