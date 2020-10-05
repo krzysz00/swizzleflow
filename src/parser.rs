@@ -517,17 +517,20 @@ fn parse_call<'t>(custom_fns: &DefsMap, var_map: &VarMap, vars: &mut [Statement]
     let mut gather_out_shape = out_shape.clone();
     if let Some(l) = fold_len { gather_out_shape.push(l.get()) }
 
-    let lookup = (name, in_shapes, gather_out_shape);
+    let mut lookup = (name, in_shapes, gather_out_shape);
     let gathers =
         if var_map.contains_key(&lookup.0) {
             // Variable copy
-            crate::operators::identity(&[out_shape.clone()], out_shape.as_slice())?
+            lookup.0 = "identity".to_owned();
+            crate::operators::identity(&[lookup.2.clone()],
+                                       lookup.2.as_slice())?
         }
         else if let Some(g) = custom_fns.get(&lookup) {
             g.clone()
         } else {
             let (ref name, ref in_shapes, ref out_shape) = lookup;
-            crate::builtins::gather(name, in_shapes, out_shape, options.as_ref())?
+            crate::builtins::gather(name, in_shapes, out_shape, options.as_ref())
+                .chain_err(|| ErrorKind::ParseError(toks[pos].clone(), "valid arguments to call before here"))?
         };
     let (mut name, in_shapes, _) = lookup;
     if let Some(m) = options {

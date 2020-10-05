@@ -87,9 +87,9 @@ pub fn reg_select_gather(shape: &[Ix], operand1: usize, operand2: usize, c: isiz
                          op: Op) -> Gather {
     let name =
         if c != 0 {
-            format!("keep_if[d{} {} {} {} d{}]", operand1, op.name(), c, combine.name(), operand2)
+            format!("first_if[d{} {} {} {} d{}]", operand1, op.name(), c, combine.name(), operand2)
         } else {
-            format!("keep_if[d{} {} {}d{}]", operand1, op.name(), combine.name(), operand2)
+            format!("first_if[d{} {} {}d{}]", operand1, op.name(), combine.name(), operand2)
         };
     let copy_idx = shape.len() - 1;
 

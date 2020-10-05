@@ -1,0 +1,20 @@
+a: [4] = range(0, 4)
+b: [4] = range(4, 8)
+a: [4, 4] = broadcast(a)
+b: [4, 4] = broadcast(b)
+
+a_picked_1: [4, 4] = xforms_no_group{main=0,second=1,out=1}(a)
+a_picked: [4, 4] = rots_no_group{main=0,second=1,out=1}(a_picked_1)
+b_picked_1: [4, 4] = xforms_no_group{main=0,second=1,out=1}(b)
+b_picked: [4, 4] = rots_no_group{main=0,second=1,out=1}(b_picked_1)
+
+combined: [4, 4] = fold stack{fold_len=2}(a_picked, b_picked)
+two_accums: [4, 2, 4] = broadcast{group=1}(combined)
+
+filtered_1: [4, 2, 4] = cond_keep_no_consts{restrict=[1, 0]}(two_accums)
+filtered_2: [4, 2, 4] = cond_keep_no_consts{restrict=[1, 1]}(filtered_1)
+sum: [4, 2, 4] = fold filtered_2
+transposed: [2, 4] = transpose(sum)
+output: [8] = reshape(transposed)
+
+goal: [8] poly_mult {w=4}

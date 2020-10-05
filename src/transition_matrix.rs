@@ -90,7 +90,7 @@ impl<T: MatrixOps> GenTransitionMatrix<T> {
         let option_current_shapes = current_shapes.iter()
             .map(|s| if s.is_empty() { None } else { Some(s.to_owned()) })
             .collect::<Vec<Option<ShapeVec>>>();
-        let option_target_shapes = current_shapes.iter()
+        let option_target_shapes = target_shapes.iter()
             .map(|s| if s.is_empty() { None } else { Some(s.to_owned()) })
             .collect::<Vec<Option<ShapeVec>>>();
         let current_lane_offs = shapes_to_offsets(&option_current_shapes);
@@ -377,7 +377,7 @@ pub fn op_matrix_name(op: &Operation, out_shape: &[Option<ShapeVec>]) -> String 
         shapes_to_string(&op.lane_in_shapes),
         op.in_lanes.iter().map(|i| i.to_string()).join(","),
         op.out_lane,
-        if op.drop_lanes.is_empty() { "" } else { "- "},
+        if op.drop_lanes.is_empty() { "" } else { " -"},
         op.drop_lanes.iter().map(|i| i.to_string()).join("-"),
         op.op_name,
         shapes_to_string(out_shape)

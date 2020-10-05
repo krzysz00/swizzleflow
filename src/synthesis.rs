@@ -266,7 +266,7 @@ fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'stati
 pub fn synthesize<'d, 'l>(start: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
                   steps: &[SearchStep],
                   mode: Mode, print: bool, print_pruned: bool, prune_fuel: usize,
-                  spec_name: &str) -> bool {
+                          spec_name: &str) -> bool {
     let n_steps = steps.len();
     let stats = (0..n_steps+1).map(|_| SearchStepStats::new()).collect::<Vec<_>>();
     let caches: Vec<SearchResultCache>

@@ -115,6 +115,7 @@ pub fn add_matrices(directory: &Path, steps: &mut [SearchStep],
 
     let first_prune = steps.iter().take_while(|l| !l.op.prune).count();
     // Skip last level, we handled it
+    if first_prune >= steps.len() - 1 { return Ok(()); }
     let range = first_prune..(steps.len()-1);
     for (idx, step) in steps[range].iter_mut().enumerate().rev()
     {
@@ -129,8 +130,8 @@ pub fn add_matrices(directory: &Path, steps: &mut [SearchStep],
         }
         else {
             let basis_name = op_matrix_name(&step.op, latest_shape.borrow());
-            name.push('.');
-            name.push_str(&basis_name);
+            name.insert(0, '.');
+            name.insert_str(0, &basis_name);
             hash_file_name(&name, &mut path);
             if path.exists() {
                 matrix = load_matrix(path.as_path())?;
@@ -175,11 +176,13 @@ pub fn add_copy_bounds(steps: &mut [SearchStep], out_shape: &[Option<ShapeVec>])
             |shape| vec![1u32; shape.iter().copied().product()]))
         .collect();
     let first_prune = steps.iter().take_while(|l| !l.op.prune).count();
-    for step in steps[first_prune..].iter_mut() {
+    if first_prune >= steps.len() - 1 { return Ok(()); }
+
+    for (i, step) in steps[first_prune..].iter_mut().enumerate().rev() {
         let mut mins: Vec<Vec<u32>> = step.op.lane_in_lens.iter().copied().
-            map(|len| vec![0u32; len]).collect();
-        let mut maxs: Vec<Vec<u32>> = step.op.lane_in_lens.iter().copied().
             map(|len| vec![u32::MAX; len]).collect();
+        let mut maxs: Vec<Vec<u32>> = step.op.lane_in_lens.iter().copied().
+            map(|len| vec![0u32; len]).collect();
         for gather in &step.op.fns {
             let (this_min, this_max) = gather.min_max_copies(
                 &step.op, &next_mins, &next_maxs);
@@ -190,6 +193,9 @@ pub fn add_copy_bounds(steps: &mut [SearchStep], out_shape: &[Option<ShapeVec>])
                 .for_each(|(va, ea)| va.iter_mut().zip(ea.into_iter())
                           .for_each(|(v, e)| *v = max(*v, e)));
         }
+        println!("Copy bound @ output {}: min (1, 0) = {:?}, max (1, 0) = {:?}",
+                 i, next_mins.get(1).and_then(|s| s.get(0))
+                 , next_maxs.get(1).and_then(|s| s.get(0)));
         if step.op.prune && (mins != next_mins || maxs != next_maxs) {
             step.copy_bounds = Some((next_mins, next_maxs));
         }

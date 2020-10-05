@@ -47,9 +47,10 @@ pub fn transpose_gather(in_shape: &[Ix], out_shape: &[Ix]) -> Gather {
 }
 
 pub fn stack_gather(in_shapes: &[ShapeVec], out_shape: &[Ix]) -> Gather {
-    let last = out_shape.len() - 1;
-    Gather::new(out_shape, |idxs|
-                (idxs[last], to_opt_ix(&idxs[0..last], in_shapes[last].as_slice())),
+    let last = out_shape.len()-1;
+    Gather::new(out_shape, |idxs| {
+        (idxs[last], to_opt_ix(&idxs[0..last], in_shapes[idxs[last]].as_slice()))
+    },
                 "stack")
 }
 
@@ -85,6 +86,11 @@ pub fn stack(in_shapes: &[ShapeVec], out_shape: &[Ix]) -> Result<Vec<Gather>> {
         if s.as_slice() != &out_shape[0..out_shape.len()-1] {
             return Err(ErrorKind::ShapeMismatch(out_shape.to_vec(), s.to_vec()).into());
         }
+    }
+    if in_shapes.len() != out_shape[out_shape.len()-1] {
+        // TODO, better error message
+        return Err(ErrorKind::ShapeMismatch(vec![out_shape[out_shape.len()-1]],
+                                            vec![in_shapes.len()]).into());
     }
     Ok(vec![stack_gather(in_shapes, out_shape)])
 }

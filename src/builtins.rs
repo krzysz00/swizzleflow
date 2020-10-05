@@ -540,7 +540,10 @@ pub fn goal(name: &str, shape: &[Ix],
         }
         "poly_mult" => {
             match shape {
-                &[n] => Ok(poly_mult(n)),
+                &[_n] => {
+                    let w = required_size_option(options, "w")?;
+                    Ok(poly_mult(w))
+                },
                 other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 1).into())
             }
         }

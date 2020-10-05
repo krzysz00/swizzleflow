@@ -1,0 +1,126 @@
+construction:all time=0.002556259;
+spec:specs/swinv_like/l1/mult-32-with-4.swflow
+build:matrices/2x4,-[0>0]reshape-8, density=0.015625; time=0.000006625;
+file_map:dcbb1bf697 raw=4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+build:matrices/4x2,-[0>0]transpose-2x4, density=0.015625; time=0.000004501;
+mul_stats:: b_sparse=true;
+mul:matrices/dcbb1bf697 density=0.015625; time=0.00000543;
+file_map:e03d7d3b9c raw=4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+build:matrices/4x2x4,-[0>0]identity{fold_len=4}-4x2, density=0.015625; time=0.00006342;
+mul_stats:: b_sparse=false;
+mul:matrices/e03d7d3b9c density=0.015625; time=0.000041911;
+file_map:6f546b1239 raw=4x4,-[0>0]broadcast{group=1}-4x2x4,.4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+build:matrices/4x4,-[0>0]broadcast{group=1}-4x2x4, density=0.00390625; time=0.000052969;
+mul_stats:: b_sparse=false;
+mul:matrices/6f546b1239 density=0.0625; time=0.00002007;
+file_map:0f17164d3b raw=4x4,4x4-[0,1>0 -1]stack{fold_len=2}-4x4,.4x4,-[0>0]broadcast{group=1}-4x2x4,.4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+build:matrices/4x4,4x4-[0,1>0 -1]stack{fold_len=2}-4x4, density=0.00390625; time=0.000053176;
+mul_stats:: b_sparse=false;
+mul:matrices/0f17164d3b density=0.0625; time=0.000042;
+file_map:dfee564cca raw=4x4,4x4-[1>1]rots_no_group{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[0,1>0 -1]stack{fold_len=2}-4x4,.4x4,-[0>0]broadcast{group=1}-4x2x4,.4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+build:matrices/4x4,4x4-[1>1]rots_no_group{main=0,out=1,second=1}-4x4,4x4 density=0.00335693359375; time=0.000130423;
+mul_stats:: b_sparse=false;
+mul:matrices/dfee564cca density=0.0625; time=0.000060672;
+file_map:447d8ca8d1 raw=4x4,4x4-[1>1]xforms_no_group{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[1>1]rots_no_group{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[0,1>0 -1]stack{fold_len=2}-4x4,.4x4,-[0>0]broadcast{group=1}-4x2x4,.4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+build:matrices/4x4,4x4-[1>1]xforms_no_group{main=0,out=1,second=1}-4x4,4x4 density=0.004593849182128906; time=0.000350987;
+mul_stats:: b_sparse=false;
+mul:matrices/447d8ca8d1 density=0.0625; time=0.000073053;
+file_map:5ea931b340 raw=4x4,4x4-[0>0]rots_no_group{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[1>1]xforms_no_group{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[1>1]rots_no_group{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[0,1>0 -1]stack{fold_len=2}-4x4,.4x4,-[0>0]broadcast{group=1}-4x2x4,.4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+build:matrices/4x4,4x4-[0>0]rots_no_group{main=0,out=1,second=1}-4x4,4x4 density=0.00335693359375; time=0.000127174;
+mul_stats:: b_sparse=false;
+mul:matrices/5ea931b340 density=0.0625; time=0.0000609;
+copy_counts:this time=0.00006871;
+Begin search
+solution:[init]; a = broadcast(a); b = broadcast(b); a_picked_1 = id(a); a_picked = id(a_picked_1); b_picked_1 = xform[cf=0,cr=3,dr=4](b); b_picked = id(b_picked_1); combined = stack(a_picked, b_picked); two_accums = broadcast(combined); filtered_1 = keep_if[d0 >= +d2](two_accums); filtered_2 = keep_if[d0 < +d2](filtered_1); sum = id(filtered_2); transposed = tr(sum); output = id(transposed);
+solution:[init]; a = broadcast(a); b = broadcast(b); a_picked_1 = xform[cf=0,cr=3,dr=4](a); a_picked = id(a_picked_1); b_picked_1 = id(b); b_picked = id(b_picked_1); combined = stack(a_picked, b_picked); two_accums = broadcast(combined); filtered_1 = keep_if[d0 >= +d2](two_accums); filtered_2 = keep_if[d0 < +d2](filtered_1); sum = id(filtered_2); transposed = tr(sum); output = id(transposed);
+stats:0 name=broadcast; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:1 name=broadcast; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:2 name=xforms_no_group{main=0,out=1,second=1}; pruning=true; tested=25; failed=0; pruned=15; copy_count=0; continued=10; in_solution=2;
+stats:3 name=rots_no_group{main=0,out=1,second=1}; pruning=true; tested=50; failed=0; pruned=40; copy_count=0; continued=10; in_solution=2;
+stats:4 name=xforms_no_group{main=0,out=1,second=1}; pruning=true; tested=250; failed=0; pruned=150; copy_count=0; continued=100; in_solution=2;
+stats:5 name=rots_no_group{main=0,out=1,second=1}; pruning=true; tested=500; failed=0; pruned=400; copy_count=0; continued=100; in_solution=2;
+stats:6 name=stack{fold_len=2}; pruning=true; tested=100; failed=0; pruned=98; copy_count=0; continued=2; in_solution=2;
+stats:7 name=broadcast{group=1}; pruning=false; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+stats:8 name=cond_keep_no_consts{restrict=[1,0]}; pruning=true; tested=28; failed=0; pruned=24; copy_count=0; continued=4; in_solution=2;
+stats:9 name=cond_keep_no_consts{restrict=[1,1]}; pruning=true; tested=56; failed=0; pruned=32; copy_count=0; continued=24; in_solution=2;
+stats:10 name=identity{fold_len=4}; pruning=true; tested=24; failed=0; pruned=22; copy_count=0; continued=2; in_solution=2;
+stats:11 name=transpose; pruning=false; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+stats:12 name=reshape; pruning=false; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+stats:13 name=(last); pruning=false; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+search:specs/swinv_like/l1/mult-32-with-4.swflow success=true; mode=All; prune_fuel=16; time=0.011813366;
+spec:specs/swinv_like/l2/mult-32-with-4.swflow
+load:matrices/2x4,-[0>0]reshape-8, density=0.015625; time=0.000017625;
+file_map:dcbb1bf697 raw=4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+load:matrices/dcbb1bf697 density=0.015625; time=0.000011941;
+file_map:e03d7d3b9c raw=4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+load:matrices/e03d7d3b9c density=0.015625; time=0.000059181;
+file_map:6f546b1239 raw=4x4,-[0>0]broadcast{group=1}-4x2x4,.4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+load:matrices/6f546b1239 density=0.0625; time=0.0000406;
+file_map:0f17164d3b raw=4x4,4x4-[0,1>0 -1]stack{fold_len=2}-4x4,.4x4,-[0>0]broadcast{group=1}-4x2x4,.4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+load:matrices/0f17164d3b density=0.0625; time=0.000069729;
+file_map:dfee564cca raw=4x4,4x4-[1>1]rots_no_group{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[0,1>0 -1]stack{fold_len=2}-4x4,.4x4,-[0>0]broadcast{group=1}-4x2x4,.4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+load:matrices/dfee564cca density=0.0625; time=0.00005902;
+file_map:447d8ca8d1 raw=4x4,4x4-[1>1]xforms_no_group{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[1>1]rots_no_group{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[0,1>0 -1]stack{fold_len=2}-4x4,.4x4,-[0>0]broadcast{group=1}-4x2x4,.4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+load:matrices/447d8ca8d1 density=0.0625; time=0.000058327;
+file_map:5ea931b340 raw=4x4,4x4-[0>0]rots_no_group{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[1>1]xforms_no_group{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[1>1]rots_no_group{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[0,1>0 -1]stack{fold_len=2}-4x4,.4x4,-[0>0]broadcast{group=1}-4x2x4,.4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+load:matrices/5ea931b340 density=0.0625; time=0.000058059;
+copy_counts:this time=0.000081609;
+Begin search
+solution:[init]; a = broadcast(a); b = broadcast(b); a_picked_1 = xform[cf=0,cr=3,dr=4](a); a_picked = id(a_picked_1); b_picked_1 = id(b); b_picked = id(b_picked_1); combined = stack(a_picked, b_picked); two_accums = broadcast(combined); filtered_1 = keep_if[d0 >= +d2](two_accums); filtered_2 = keep_if[d0 < +d2](filtered_1); sum = id(filtered_2); transposed = tr(sum); output = id(transposed);
+solution:[init]; a = broadcast(a); b = broadcast(b); a_picked_1 = id(a); a_picked = id(a_picked_1); b_picked_1 = xform[cf=0,cr=3,dr=4](b); b_picked = id(b_picked_1); combined = stack(a_picked, b_picked); two_accums = broadcast(combined); filtered_1 = keep_if[d0 >= +d2](two_accums); filtered_2 = keep_if[d0 < +d2](filtered_1); sum = id(filtered_2); transposed = tr(sum); output = id(transposed);
+stats:0 name=broadcast; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:1 name=broadcast; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:2 name=xforms_no_group{main=0,out=1,second=1}; pruning=true; tested=25; failed=0; pruned=15; copy_count=0; continued=10; in_solution=2;
+stats:3 name=rots_no_group{main=0,out=1,second=1}; pruning=true; tested=50; failed=0; pruned=40; copy_count=0; continued=10; in_solution=2;
+stats:4 name=xforms_no_group{main=0,out=1,second=1}; pruning=true; tested=250; failed=0; pruned=150; copy_count=0; continued=100; in_solution=2;
+stats:5 name=rots_no_group{main=0,out=1,second=1}; pruning=true; tested=500; failed=0; pruned=400; copy_count=0; continued=100; in_solution=2;
+stats:6 name=stack{fold_len=2}; pruning=true; tested=100; failed=0; pruned=98; copy_count=0; continued=2; in_solution=2;
+stats:7 name=broadcast{group=1}; pruning=false; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+stats:8 name=cond_keep{restrict=[1,0]}; pruning=true; tested=88; failed=0; pruned=80; copy_count=0; continued=8; in_solution=2;
+stats:9 name=cond_keep{restrict=[1,1]}; pruning=true; tested=352; failed=0; pruned=280; copy_count=0; continued=72; in_solution=2;
+stats:10 name=identity{fold_len=4}; pruning=true; tested=72; failed=0; pruned=70; copy_count=0; continued=2; in_solution=2;
+stats:11 name=transpose; pruning=false; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+stats:12 name=reshape; pruning=false; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+stats:13 name=(last); pruning=false; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+search:specs/swinv_like/l2/mult-32-with-4.swflow success=true; mode=All; prune_fuel=16; time=0.012864692;
+spec:specs/swinv_like/l3/mult-32-with-4.swflow
+load:matrices/2x4,-[0>0]reshape-8, density=0.015625; time=0.000015451;
+file_map:dcbb1bf697 raw=4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+load:matrices/dcbb1bf697 density=0.015625; time=0.000008215;
+file_map:e03d7d3b9c raw=4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+load:matrices/e03d7d3b9c density=0.015625; time=0.000104706;
+file_map:6f546b1239 raw=4x4,-[0>0]broadcast{group=1}-4x2x4,.4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+load:matrices/6f546b1239 density=0.0625; time=0.000036121;
+file_map:0f17164d3b raw=4x4,4x4-[0,1>0 -1]stack{fold_len=2}-4x4,.4x4,-[0>0]broadcast{group=1}-4x2x4,.4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+load:matrices/0f17164d3b density=0.0625; time=0.000143392;
+file_map:5d9b0c63a1 raw=4x4,4x4-[1>1]rots{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[0,1>0 -1]stack{fold_len=2}-4x4,.4x4,-[0>0]broadcast{group=1}-4x2x4,.4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+build:matrices/4x4,4x4-[1>1]rots{main=0,out=1,second=1}-4x4,4x4 density=0.00347137451171875; time=0.00019786;
+mul_stats:: b_sparse=false;
+mul:matrices/5d9b0c63a1 density=0.0625; time=0.000113932;
+file_map:75f7bb2cce raw=4x4,4x4-[1>1]xforms{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[1>1]rots{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[0,1>0 -1]stack{fold_len=2}-4x4,.4x4,-[0>0]broadcast{group=1}-4x2x4,.4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+build:matrices/4x4,4x4-[1>1]xforms{main=0,out=1,second=1}-4x4,4x4 density=0.004662513732910156; time=0.000526999;
+mul_stats:: b_sparse=false;
+mul:matrices/75f7bb2cce density=0.0625; time=0.000129504;
+file_map:8d68894b69 raw=4x4,4x4-[0>0]rots{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[1>1]xforms{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[1>1]rots{main=0,out=1,second=1}-4x4,4x4.4x4,4x4-[0,1>0 -1]stack{fold_len=2}-4x4,.4x4,-[0>0]broadcast{group=1}-4x2x4,.4x2x4,-[0>0]identity{fold_len=4}-4x2,.4x2,-[0>0]transpose-2x4,.2x4,-[0>0]reshape-8,
+build:matrices/4x4,4x4-[0>0]rots{main=0,out=1,second=1}-4x4,4x4 density=0.00347137451171875; time=0.000148797;
+mul_stats:: b_sparse=false;
+mul:matrices/8d68894b69 density=0.0625; time=0.000092818;
+copy_counts:this time=0.000078078;
+Begin search
+solution:[init]; a = broadcast(a); b = broadcast(b); a_picked_1 = id(a); a_picked = id(a_picked_1); b_picked_1 = xform[cf=0,cr=3,dr=4](b); b_picked = id(b_picked_1); combined = stack(a_picked, b_picked); two_accums = broadcast(combined); filtered_1 = keep_if[d0 >= +d2](two_accums); filtered_2 = keep_if[d0 < +d2](filtered_1); sum = id(filtered_2); transposed = tr(sum); output = id(transposed);
+solution:[init]; a = broadcast(a); b = broadcast(b); a_picked_1 = xform[cf=0,cr=3,dr=4](a); a_picked = id(a_picked_1); b_picked_1 = id(b); b_picked = id(b_picked_1); combined = stack(a_picked, b_picked); two_accums = broadcast(combined); filtered_1 = keep_if[d0 >= +d2](two_accums); filtered_2 = keep_if[d0 < +d2](filtered_1); sum = id(filtered_2); transposed = tr(sum); output = id(transposed);
+stats:0 name=broadcast; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:1 name=broadcast; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:2 name=xforms{main=0,out=1,second=1}; pruning=true; tested=30; failed=0; pruned=20; copy_count=0; continued=10; in_solution=2;
+stats:3 name=rots{main=0,out=1,second=1}; pruning=true; tested=60; failed=0; pruned=50; copy_count=0; continued=10; in_solution=2;
+stats:4 name=xforms{main=0,out=1,second=1}; pruning=true; tested=300; failed=0; pruned=200; copy_count=0; continued=100; in_solution=2;
+stats:5 name=rots{main=0,out=1,second=1}; pruning=true; tested=600; failed=0; pruned=500; copy_count=0; continued=100; in_solution=2;
+stats:6 name=stack{fold_len=2}; pruning=true; tested=100; failed=0; pruned=98; copy_count=0; continued=2; in_solution=2;
+stats:7 name=broadcast{group=1}; pruning=false; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+stats:8 name=cond_keep{restrict=[1,0]}; pruning=true; tested=88; failed=0; pruned=80; copy_count=0; continued=8; in_solution=2;
+stats:9 name=cond_keep{restrict=[1,1]}; pruning=true; tested=352; failed=0; pruned=280; copy_count=0; continued=72; in_solution=2;
+stats:10 name=identity{fold_len=4}; pruning=true; tested=72; failed=0; pruned=70; copy_count=0; continued=2; in_solution=2;
+stats:11 name=transpose; pruning=false; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+stats:12 name=reshape; pruning=false; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+stats:13 name=(last); pruning=false; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+search:specs/swinv_like/l3/mult-32-with-4.swflow success=true; mode=All; prune_fuel=16; time=0.013050898;

@@ -47,12 +47,8 @@ impl Display for Value {
         match self {
             Symbol(s) => write!(f, "{}", s),
             Fold(v) => {
-                write!(f, "∑(")?;
-                for e in v {
-                    write!(f, "{}, ", e)?;
-                }
-                write!(f, ")")
-            }
+                write!(f, "∑({})", v.iter().join(", "))
+            },
             Empty => write!(f, "∅"),
             NotInDomain => write!(f, "⊥"),
         }
@@ -374,11 +370,14 @@ impl<'d, 't> ProgState<'d, 't> {
                 let val =
                     if idx < 0 { NOT_IN_DOMAIN }
                     else { s.get(idx as usize).copied().unwrap_or(NOT_IN_DOMAIN) };
-                elements.push(val);
+                if val != ZERO {
+                    elements.push(val);
+                }
             }
         }
         elements.sort_unstable();
         let ret = self.domain.find_fold(&elements).unwrap_or(NOT_IN_DOMAIN);
+        if elements.is_empty() && ret != ZERO { panic!{"Zero misbehaving"}; }
         elements.clear();
         ret
     }
@@ -494,7 +493,7 @@ impl Gather {
     pub fn is_identity(&self) -> bool {
         self.data.as_slice().unwrap()
             .iter().copied().enumerate()
-            .all(|(i, (a, v))| i as isize == v || a == 0)
+            .all(|(i, (a, v))| i as isize == v && a == 0)
     }
 
     pub fn min_max_copies(&self, op: &Operation,
@@ -514,6 +513,7 @@ impl Gather {
         for (i, (a, e)) in self.data.iter().copied().enumerate()
             .filter(|&(_, (a, e))| a < n_inputs && e >= 0 && e < (input_bounds[a] as isize))
         {
+            let a = op.in_lanes[a];
             let e = e as usize;
             let i = if let Some(fold) = fold_factor { i / fold.get() } else { i };
             mins_ret[a][e] += mins_out[op.out_lane][i];
@@ -521,8 +521,8 @@ impl Gather {
         }
         for l in preserved_lanes {
             for i in 0..op.lane_in_lens[l] {
-                mins_ret[l][i] += 1;
-                maxs_ret[l][i] += 1;
+                mins_ret[l][i] += mins_out[l][i];
+                maxs_ret[l][i] += maxs_out[l][i];
             }
         }
         (mins_ret, maxs_ret)
