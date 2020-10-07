@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::misc::{time_since, COLLECT_STATS};
-use crate::state::{ProgState};
+use crate::state::{ProgState,DomRef};
 use crate::transition_matrix::{TransitionMatrix};
 use crate::operators::SearchStep;
 
@@ -23,7 +23,6 @@ use std::time::Instant;
 
 use std::fmt;
 use std::fmt::{Display,Formatter};
-use std::ops::Range;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, RwLock, Mutex};
 
@@ -134,12 +133,14 @@ type SearchResultCache<'d> = Arc<ResultMap<'d>>;
 fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
                   matrix: &TransitionMatrix,
                   copy_bounds: Option<&(Vec<u32>, Vec<u32>)>,
-                  Range {start: term_start, end: term_end }: Range<usize>,
+                  terms: &[DomRef],
                   _cache: &ResultMap<'d>, tracker: &SearchStepStats,
                   step: usize, print_pruned: bool, prune_fuel: usize) -> bool {
     let mut value_checks = 0;
-    for (i, a) in (term_start..term_end).enumerate() {
-        for b in (a+1..term_end).chain(std::iter::once(a)).take(prune_fuel) {
+    for (i, a) in terms.iter().copied().enumerate() {
+        for b in (terms[i+1..]).iter().copied()
+            .chain(std::iter::once(a)).take(prune_fuel)
+        {
             value_checks += 1;
             for (t1, t2) in iproduct!(target.inv_state[a].iter().copied(),
                                       target.inv_state[b].iter().copied()) {
@@ -167,7 +168,7 @@ fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
         }
         if i == 0 {
             if let Some((mins, maxs)) = copy_bounds {
-                for v in term_start..term_end {
+                for v in terms.iter().copied() {
                     let actual = target.inv_state[v].len() as u32;
                     let min_copies: u32 = current.inv_state[v].iter()
                         .copied().map(|i| mins[i]).sum();
@@ -281,8 +282,7 @@ pub fn synthesize<'d, 'l>(start: &ProgState<'d, 'l>, target: &ProgState<'d, 'sta
         if COLLECT_STATS {
             println!("stats:: n_syms={};",
                      steps.get(idx).map_or(0, |step| {
-                         let range = target.domain.terms_in_level(step.op.term_level);
-                         range.end - range.start
+                         target.domain.terms_in_level(step.op.term_level).len()
                      }));
         }
         println!("stats:{} name={}; pruning={}; {}", idx,

@@ -24,7 +24,6 @@ use std::fmt;
 use std::fmt::{Display,Formatter};
 use std::hash::{Hash,Hasher};
 use std::num::{NonZeroUsize};
-use std::ops::Range;
 
 use smallvec::SmallVec;
 
@@ -136,7 +135,7 @@ pub const NOT_IN_DOMAIN: DomRef = 1;
 pub struct Domain {
     elements: Vec<Value>,
     element_map: HashMap<Value, DomRef>,
-    level_ranges: Vec<Range<DomRef>>,
+    level_elements: Vec<Vec<DomRef>>,
     subterms_of: Vec<Vec<DomRef>>,
     imm_superterms: Vec<Vec<DomRef>>,
     imm_subterms: Vec<BTreeSet<DomRef>>,
@@ -155,10 +154,14 @@ impl Domain {
         }
 
         let mut elements: Vec<Value> = Vec::new();
-        let mut level_ranges: Vec<Range<usize>> = Vec::with_capacity(store.len());
+        let mut level_elements: Vec<Vec<usize>> = Vec::with_capacity(store.len());
         for level in store.into_iter() {
             // Returned in sorted order
-            level_ranges.push(elements.len()..(elements.len() + level.len()));
+            level_elements.push(Self::level_range_to_elems(
+                elements.len(), elements.len() + level.len()));
+            println!("elements: {:?}, start: {}, end: {}",
+                     level_elements[level_elements.len() - 1],
+                     elements.len(), elements.len() + level.len());
             for e in level.into_iter() {
                 elements.push(e)
             }
@@ -205,10 +208,25 @@ impl Domain {
             }).collect::<HashMap<Vec<DomRef>, DomRef>>();
         // Semantics of empty fold
         fold_ref_map.insert(vec![], *element_map.get(&Value::Empty).unwrap());
-        Domain { elements, level_ranges, element_map, subterms_of, fold_ref_map,
+        Domain { elements, level_elements, element_map, subterms_of, fold_ref_map,
                  imm_subterms, imm_superterms, max_lanes }
     }
 
+    // Spiral through the range in the order 0, 1, 1/2, 1/4, 3/4, 1/8, 3/8, ...
+    fn level_range_to_elems(start: DomRef, end: DomRef) -> Vec<DomRef> {
+        if start >= end { panic!("Empty level: indices {} to {}", start, end)};
+
+        let len = end - start;
+        let rounded = len.next_power_of_two();
+        let log2 = rounded.trailing_zeros() as usize;
+        (std::iter::once(start)).chain(
+            (1..=log2).flat_map(
+                move |log| {
+                    let div = 1 << log;
+                    (1..=div).step_by(2).map(move |i| start + ((len * i) / div))
+                }))
+            .unique().collect::<Vec<DomRef>>()
+    }
     pub fn find_value(&self, value: &Value) -> Option<DomRef> {
         self.element_map.get(value).copied()
     }
@@ -240,12 +258,12 @@ impl Domain {
 
     pub fn max_lanes(&self) -> usize { self.max_lanes }
 
-    pub fn terms_in_level(&self, level: usize) -> Range<DomRef> {
-        self.level_ranges[level].clone()
+    pub fn terms_in_level(&self, level: usize) -> &[DomRef] {
+        &self.level_elements[level]
     }
 
     pub fn longest_level_len(&self) -> usize {
-        self.level_ranges.iter().map(|Range { start, end }| end - start)
+        self.level_elements.iter().map(|r| r.len())
             .max().unwrap_or(self.elements.len())
     }
 }
@@ -336,19 +354,8 @@ impl<'d, 't> ProgState<'d, 't> {
         }
     }
 
-    fn emplace(&self, value: ArrayD<DomRef>, op: &Operation,
-               gather_name: &str) -> Self {
-        let mut state = self.state.clone();
-        state[op.out_lane] = Cow::Owned(Some(value));
-        for l in op.drop_lanes.iter().copied() {
-            state[l] = Cow::Owned(None);
-        }
-        let name = format!("{} {} = {}{};", self.name, op.var, gather_name, op.arg_string);
-        ProgState::making_inverse(self.domain, state, name,
-                                  Some(&op.lane_out_offsets))
-    }
-
-    pub fn gather_by(&self, gather: &Gather, op: &Operation) -> Self {
+    pub fn gather_by<'u: 't, 'r>(&'u self, gather: &'r Gather, op:
+                                 &'r Operation) -> ProgState<'d, 't> {
         // Read off the edge to get \bot
         // Read past the arguments to get 0
         if op.has_fold() {
@@ -367,7 +374,21 @@ impl<'d, 't> ProgState<'d, 't> {
                                           if idx < 0 { NOT_IN_DOMAIN }
                                           else { s.get(idx as usize).copied().unwrap_or(NOT_IN_DOMAIN) })
                                      .unwrap_or(ZERO));
-        self.emplace(array, op, &gather.name)
+        let Self {state, domain, name, inv_state: _inv_state} = self;
+        let mut new_state = vec![];
+        for s in state.into_iter() {
+            match *s {
+                Cow::Borrowed(r) => new_state.push(Cow::Borrowed(r)),
+                Cow::Owned(ref v) => new_state.push(Cow::Borrowed(v)),
+            }
+        };
+        new_state[op.out_lane] = Cow::Owned(Some(array));
+        for l in op.drop_lanes.iter().copied() {
+            new_state[l] = Cow::Owned(None);
+        }
+        let name = format!("{} {} = {}{};", name, op.var, gather.name, op.arg_string);
+        ProgState::making_inverse(domain, new_state, name,
+                                  Some(&op.lane_out_offsets))
     }
 
     #[inline]
@@ -391,7 +412,8 @@ impl<'d, 't> ProgState<'d, 't> {
         ret
     }
 
-    pub fn gather_fold_by(&self, gather: &Gather, op: &Operation) -> Self {
+    pub fn gather_fold_by<'u: 't, 'r>(&'u self, gather: &'r Gather,
+                                      op: &'r Operation) -> ProgState<'d, 't> {
         let slices: SmallVec<[&[usize]; 3]> =
             op.in_lanes.iter().copied().map(|l| self.state[l]
                                             .as_ref().as_ref().expect("Args to be populated")
@@ -408,7 +430,21 @@ impl<'d, 't> ProgState<'d, 't> {
                     let data = data.as_slice().unwrap();
                     self.fold_find(data, &mut elements, slices.as_slice())
                 });
-        self.emplace(array, op, &gather.name)
+                let Self {state, domain, name, inv_state: _inv_state} = self;
+        let mut new_state = vec![];
+        for s in state.into_iter() {
+            match *s {
+                Cow::Borrowed(r) => new_state.push(Cow::Borrowed(r)),
+                Cow::Owned(ref v) => new_state.push(Cow::Borrowed(v)),
+            }
+        };
+        new_state[op.out_lane] = Cow::Owned(Some(array));
+        for l in op.drop_lanes.iter().copied() {
+            new_state[l] = Cow::Owned(None);
+        }
+        let name = format!("{} {} = {}{};", name, op.var, gather.name, op.arg_string);
+        ProgState::making_inverse(domain, new_state, name,
+                                  Some(&op.lane_out_offsets))
     }
 }
 

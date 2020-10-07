@@ -1,0 +1,108 @@
+spec:specs/swinv_like/l1/mult-64-with-16.json
+build:matrices/16-reshape-4,4 density=0.00390625; time=0.000015207;
+Using newly-built matrices/16-reshape-4,4
+build:matrices/4,4-transpose-4,4 density=0.00390625; time=0.00001522;
+mul_stats:: b_sparse=true;
+mul:matrices/16-reshape_4,4-transpose-4,4 density=0.00390625; time=0.000012831;
+build:matrices/4,4-reshape-4,4,4,4 density=0.00390625; time=0.004464594;
+mul_stats:: b_sparse=false;
+mul:matrices/16-reshape_4,4-transpose_4,4-reshape-4,4,4,4 density=0.00390625; time=0.004436687;
+build:matrices/4,4,4,4-broadcast{group[1]}-4,4,4 density=0.000244140625; time=0.002171214;
+mul_stats:: b_sparse=false;
+mul:matrices/16-reshape_4,4-transpose_4,4-reshape_4,4,4,4-broadcast{group[1]}-4,4,4 density=0.0625; time=0.001094766;
+build:matrices/4,4,4-b_dup_mul64-4,4,2 density=0.0009765625; time=0.000193089;
+mul_stats:: b_sparse=false;
+mul:matrices/16-reshape_4,4-transpose_4,4-reshape_4,4,4,4-broadcast{group[1]}_4,4,4-b_dup_mul64-4,4,2 density=0.0625; time=0.000094019;
+build:matrices/4,4,2-(stack)0-4,4 density=0.0009765625; time=0.000010374;
+mul_stats:: b_sparse=false;
+mul:matrices/16-reshape_4,4-transpose_4,4-reshape_4,4,4,4-broadcast{group[1]}_4,4,4-b_dup_mul64_4,4,2-(stack)0-4,4 density=0.0625; time=0.000008478;
+build:matrices/4,4,2-(stack)1-4,4 density=0.0009765625; time=0.000015921;
+mul_stats:: b_sparse=false;
+mul:matrices/16-reshape_4,4-transpose_4,4-reshape_4,4,4,4-broadcast{group[1]}_4,4,4-b_dup_mul64_4,4,2-(stack)1-4,4 density=0.0625; time=0.00000839;
+build:matrices/4,4-rots_no_group{main[0]out[1]second[1]}-4,4 density=0.0185546875; time=0.000054746;
+mul_stats:: b_sparse=false;
+mul:matrices/16-reshape_4,4-transpose_4,4-reshape_4,4,4,4-broadcast{group[1]}_4,4,4-b_dup_mul64_4,4,2-(stack)1_4,4-rots_no_group{main[0]out[1]second[1]}-4,4 density=0.0625; time=0.000041957;
+mul_stats:: b_sparse=false;
+mul:matrices/16-reshape_4,4-transpose_4,4-reshape_4,4,4,4-broadcast{group[1]}_4,4,4-b_dup_mul64_4,4,2-(stack)0_4,4-rots_no_group{main[0]out[1]second[1]}-4,4 density=0.0625; time=0.000027339;
+build:matrices/4,4,4-a_dup_mul64-4,4,2 density=0.0009765625; time=0.000166578;
+mul_stats:: b_sparse=false;
+mul:matrices/16-reshape_4,4-transpose_4,4-reshape_4,4,4,4-broadcast{group[1]}_4,4,4-a_dup_mul64-4,4,2 density=0.0625; time=0.00007848;
+mul_stats:: b_sparse=false;
+mul:matrices/16-reshape_4,4-transpose_4,4-reshape_4,4,4,4-broadcast{group[1]}_4,4,4-a_dup_mul64_4,4,2-(stack)0-4,4 density=0.0625; time=0.000011232;
+mul_stats:: b_sparse=false;
+mul:matrices/16-reshape_4,4-transpose_4,4-reshape_4,4,4,4-broadcast{group[1]}_4,4,4-a_dup_mul64_4,4,2-(stack)1-4,4 density=0.0625; time=0.000015622;
+mul_stats:: b_sparse=false;
+mul:matrices/16-reshape_4,4-transpose_4,4-reshape_4,4,4,4-broadcast{group[1]}_4,4,4-a_dup_mul64_4,4,2-(stack)1_4,4-rots_no_group{main[0]out[1]second[1]}-4,4 density=0.0625; time=0.000019247;
+mul_stats:: b_sparse=false;
+mul:matrices/16-reshape_4,4-transpose_4,4-reshape_4,4,4,4-broadcast{group[1]}_4,4,4-a_dup_mul64_4,4,2-(stack)0_4,4-rots_no_group{main[0]out[1]second[1]}-4,4 density=0.0625; time=0.000020144;
+prune_bounds[34][0] = Some((1, 1))
+prune_bounds[33][0] = Some((1, 1))
+prune_bounds[32][0] = Some((1, 1))
+prune_bounds[31][0] = Some((1, 1))
+prune_bounds[30][0] = Some((1, 1))
+prune_bounds[29][0] = Some((1, 1))
+prune_bounds[28][0] = Some((1, 1))
+prune_bounds[27][0] = Some((1, 1))
+prune_bounds[26][0] = Some((1, 1))
+prune_bounds[25][0] = Some((1, 1))
+prune_bounds[24][0] = Some((1, 1))
+prune_bounds[23][0] = Some((1, 1))
+prune_bounds[22][0] = Some((1, 1))
+prune_bounds[21][0] = Some((1, 1))
+prune_bounds[20][0] = Some((1, 1))
+prune_bounds[19][0] = Some((1, 1))
+prune_bounds[18][0] = Some((1, 1))
+prune_bounds[16][0] = Some((0, 4))
+prune_bounds[15][0] = Some((0, 4))
+prune_bounds[13][0] = Some((0, 8))
+prune_bounds[12][0] = Some((0, 32))
+prune_bounds[11][0] = Some((0, 8))
+prune_bounds[10][0] = Some((0, 32))
+prune_bounds[9][0] = Some((0, 4))
+prune_bounds[7][0] = Some((0, 8))
+prune_bounds[6][0] = Some((0, 32))
+prune_bounds[5][0] = Some((0, 8))
+prune_bounds[4][0] = Some((0, 32))
+copy_counts:this time=0.00043774;
+Begin search
+solution:stack_fold[stack[init;broadcast;xform(0,3,4);id,init;broadcast;xform(0,3,4);id];a_dup_mul64,stack[init;broadcast;id;id,init;broadcast;id;id];b_dup_mul64];broadcast;keep_if(d0 >= +d2);keep_if(d0 < +d2);keep_if(false);keep_if(false);keep_if(false);keep_if(d0 >= +d2);keep_if(d0 < +d2);keep_if(false);keep_if(false);keep_if(d0 >= +d2);keep_if(d0 < +d2);keep_if(false);keep_if(false);keep_if(false);keep_if(d0 >= +d2);keep_if(d0 < +d2);id[Σ];tr;id
+solution:stack_fold[stack[init;broadcast;id;id,init;broadcast;id;id];a_dup_mul64,stack[init;broadcast;xform(0,3,4);id,init;broadcast;xform(0,3,4);id];b_dup_mul64];broadcast;keep_if(d0 >= +d2);keep_if(d0 < +d2);keep_if(false);keep_if(false);keep_if(false);keep_if(d0 >= +d2);keep_if(d0 < +d2);keep_if(false);keep_if(false);keep_if(d0 >= +d2);keep_if(d0 < +d2);keep_if(false);keep_if(false);keep_if(false);keep_if(d0 >= +d2);keep_if(d0 < +d2);id[Σ];tr;id
+stats:0 name=broadcast; lane=0; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:1 name=broadcast; lane=1; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:2 name=broadcast; lane=2; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:3 name=broadcast; lane=3; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1;
+stats:4 name=xforms_no_group{main[0]out[1]second[1]}; lane=0; pruning=true; tested=25; failed=0; pruned=15; copy_count=0; continued=10; in_solution=2;
+stats:5 name=rots_no_group{main[0]out[1]second[1]}; lane=0; pruning=true; tested=50; failed=0; pruned=40; copy_count=0; continued=10; in_solution=2;
+stats:6 name=xforms_no_group{main[0]out[1]second[1]}; lane=1; pruning=true; tested=250; failed=0; pruned=150; copy_count=0; continued=100; in_solution=2;
+stats:7 name=rots_no_group{main[0]out[1]second[1]}; lane=1; pruning=true; tested=500; failed=0; pruned=400; copy_count=0; continued=100; in_solution=2;
+stats:8 name=stack; lane=0; pruning=false; tested=100; failed=0; pruned=0; copy_count=0; continued=100; in_solution=2;
+stats:9 name=a_dup_mul64; lane=0; pruning=true; tested=100; failed=0; pruned=0; copy_count=0; continued=100; in_solution=2;
+stats:10 name=xforms_no_group{main[0]out[1]second[1]}; lane=2; pruning=true; tested=2500; failed=0; pruned=1500; copy_count=0; continued=1000; in_solution=2;
+stats:11 name=rots_no_group{main[0]out[1]second[1]}; lane=2; pruning=true; tested=5000; failed=0; pruned=4000; copy_count=0; continued=1000; in_solution=2;
+stats:12 name=xforms_no_group{main[0]out[1]second[1]}; lane=3; pruning=true; tested=25000; failed=0; pruned=15000; copy_count=0; continued=10000; in_solution=2;
+stats:13 name=rots_no_group{main[0]out[1]second[1]}; lane=3; pruning=true; tested=50000; failed=0; pruned=40000; copy_count=0; continued=10000; in_solution=2;
+stats:14 name=stack; lane=2; pruning=false; tested=10000; failed=0; pruned=0; copy_count=0; continued=10000; in_solution=2;
+stats:15 name=b_dup_mul64; lane=2; pruning=true; tested=10000; failed=0; pruned=0; copy_count=0; continued=10000; in_solution=2;
+stats:16 name=stack_folding; lane=0; pruning=true; tested=10000; failed=0; pruned=9998; copy_count=0; continued=2; in_solution=2;
+stats:17 name=broadcast{group[1]}; lane=0; pruning=false; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+stats:18 name=cond_keep_no_consts{restrict[3|0|1|0]}; lane=0; pruning=true; tested=28; failed=0; pruned=24; copy_count=0; continued=4; in_solution=2;
+stats:19 name=cond_keep_no_consts{restrict[3|0|1|1]}; lane=0; pruning=true; tested=56; failed=0; pruned=54; copy_count=22; continued=2; in_solution=2;
+stats:20 name=cond_keep_no_consts{restrict[3|0|1|2]}; lane=0; pruning=true; tested=28; failed=0; pruned=26; copy_count=26; continued=2; in_solution=2;
+stats:21 name=cond_keep_no_consts{restrict[3|0|1|3]}; lane=0; pruning=true; tested=28; failed=0; pruned=26; copy_count=26; continued=2; in_solution=2;
+stats:22 name=cond_keep_no_consts{restrict[3|1|1|0]}; lane=0; pruning=true; tested=28; failed=0; pruned=0; copy_count=0; continued=28; in_solution=2;
+stats:23 name=cond_keep_no_consts{restrict[3|1|1|1]}; lane=0; pruning=true; tested=392; failed=0; pruned=386; copy_count=50; continued=6; in_solution=2;
+stats:24 name=cond_keep_no_consts{restrict[3|1|1|2]}; lane=0; pruning=true; tested=84; failed=0; pruned=82; copy_count=34; continued=2; in_solution=2;
+stats:25 name=cond_keep_no_consts{restrict[3|1|1|3]}; lane=0; pruning=true; tested=28; failed=0; pruned=26; copy_count=26; continued=2; in_solution=2;
+stats:26 name=cond_keep_no_consts{restrict[3|2|1|0]}; lane=0; pruning=true; tested=28; failed=0; pruned=0; copy_count=0; continued=28; in_solution=2;
+stats:27 name=cond_keep_no_consts{restrict[3|2|1|1]}; lane=0; pruning=true; tested=392; failed=0; pruned=386; copy_count=50; continued=6; in_solution=2;
+stats:28 name=cond_keep_no_consts{restrict[3|2|1|2]}; lane=0; pruning=true; tested=84; failed=0; pruned=82; copy_count=34; continued=2; in_solution=2;
+stats:29 name=cond_keep_no_consts{restrict[3|2|1|3]}; lane=0; pruning=true; tested=28; failed=0; pruned=26; copy_count=26; continued=2; in_solution=2;
+stats:30 name=cond_keep_no_consts{restrict[3|3|1|0]}; lane=0; pruning=true; tested=28; failed=0; pruned=0; copy_count=0; continued=28; in_solution=2;
+stats:31 name=cond_keep_no_consts{restrict[3|3|1|1]}; lane=0; pruning=true; tested=392; failed=0; pruned=274; copy_count=274; continued=118; in_solution=2;
+stats:32 name=cond_keep_no_consts{restrict[3|3|1|2]}; lane=0; pruning=true; tested=1652; failed=0; pruned=1644; copy_count=228; continued=8; in_solution=2;
+stats:33 name=cond_keep_no_consts{restrict[3|3|1|3]}; lane=0; pruning=true; tested=112; failed=0; pruned=110; copy_count=46; continued=2; in_solution=2;
+stats:34 name=reshape; lane=0; pruning=true; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+stats:35 name=transpose; lane=0; pruning=false; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+stats:36 name=reshape; lane=0; pruning=false; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+stats:37 name=(last); lane=0; pruning=false; tested=2; failed=0; pruned=0; copy_count=0; continued=2; in_solution=2;
+search:specs/swinv_like/l1/mult-64-with-16.json success=true; mode=All; prune_fuel=64; time=3.178175328;
