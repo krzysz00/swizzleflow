@@ -1,0 +1,9 @@
+x: [32] = range(0, 32)
+loaded: [32, 1] = load_rep(x)
+s1: [32, 1] = ?col_xforms(loaded)
+s2: [32, 1] = ?col_rots(s1)
+s3: [32, 1] = ?row_xforms(s2)
+s4: [32, 1] = ?row_rots(s3)
+s5: [32, 1] = ?col_xforms(s4)
+s6: [32, 1] = ?col_rots(s5)
+goal: [32, 1] trove

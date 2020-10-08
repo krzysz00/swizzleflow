@@ -262,7 +262,7 @@ pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
             let in_shape: &[usize] = in_shapes[0].as_slice();
 
             let params =
-                if options.is_some() {
+                if options.map_or(false, |m| m.contains_key("main")) {
                     parse_swizzle_options(options)
                 } else if name.starts_with("row_") {
                     Ok((1, 0, 1))
@@ -530,11 +530,13 @@ pub fn goal(name: &str, shape: &[Ix],
         }
         "stencil_2d" => {
             match shape {
-                &[width] => {
+                &[width, width2] => {
+                    if width != width2 {
+                        return Err(ErrorKind::InvalidShapeDim(shape.to_owned(), 1).into());
+                    }
                     let k = required_size_option(options, "k")?;
                     Ok(stencil_2d(width, k))
                 },
-                &[width, k] => Ok(stencil_2d(width, k)),
                 other => Err(ErrorKind::InvalidShapeDim(other.to_owned(), 1).into())
             }
         }

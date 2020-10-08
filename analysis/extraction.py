@@ -57,11 +57,13 @@ def pull_spec_in(tables):
         ret.append(new_df)
     return pd.concat(ret)
 
-_SWINV_SPEC_RE = re.compile("^specs/swinv_like[^/]*/l(\\d)/.*\\.json$")
+_SWINV_SPEC_RE = re.compile("^specs/swinv_like[^/]*/l(\\d)/.*\\.(swflow|json)$")
 def humanize_name(name):
     ret = os.path.basename(name)
     if ret[-5:] == ".json":
         ret = ret[:-5]
+    if ret[-7:] == ".swflow":
+        ret = ret[:-7]
     match = _SWINV_SPEC_RE.match(name)
     if match:
         ret = f"l{match[1]}/{ret}"

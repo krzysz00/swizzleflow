@@ -178,7 +178,7 @@ pub fn add_copy_bounds(steps: &mut [SearchStep], out_shape: &[Option<ShapeVec>])
     let first_prune = steps.iter().take_while(|l| !l.op.prune).count();
     if first_prune >= steps.len() - 1 { return Ok(()); }
 
-    for (i, step) in steps[first_prune..].iter_mut().enumerate().rev() {
+    for step in steps[first_prune..].iter_mut().rev() {
         let mut mins: Vec<Vec<u32>> = step.op.lane_in_lens.iter().copied().
             map(|len| vec![u32::MAX; len]).collect();
         let mut maxs: Vec<Vec<u32>> = step.op.lane_in_lens.iter().copied().
@@ -193,9 +193,6 @@ pub fn add_copy_bounds(steps: &mut [SearchStep], out_shape: &[Option<ShapeVec>])
                 .for_each(|(va, ea)| va.iter_mut().zip(ea.into_iter())
                           .for_each(|(v, e)| *v = max(*v, e)));
         }
-        println!("Copy bound @ output {}: min (1, 0) = {:?}, max (1, 0) = {:?}",
-                 i, next_mins.get(1).and_then(|s| s.get(0))
-                 , next_maxs.get(1).and_then(|s| s.get(0)));
         if step.op.prune && (mins != next_mins || maxs != next_maxs) {
             step.copy_bounds = Some((next_mins.concat(), next_maxs.concat()));
         }

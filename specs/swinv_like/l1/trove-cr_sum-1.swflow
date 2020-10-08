@@ -1,0 +1,7 @@
+x: [32] = range(0, 32)
+loaded: [32, 1] = load_rep(x)
+s1: [32, 1] = ?row_xforms_no_group(loaded)
+s2: [32, 1] = ?row_rots_no_group(s1)
+s3: [32, 1] = ?col_xforms_no_group(s2)
+s4: [32, 1] = fold ?col_rots_no_group(s3)
+goal: [32] trove_sum {n=1}

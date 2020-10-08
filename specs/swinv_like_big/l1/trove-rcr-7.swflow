@@ -1,0 +1,9 @@
+x: [224] = range(0, 224)
+loaded: [32, 7] = load_rep(x)
+s1: [32, 7] = ?col_xforms_no_group(loaded)
+s2: [32, 7] = ?col_rots_no_group(s1)
+s3: [32, 7] = ?row_xforms_no_group(s2)
+s4: [32, 7] = ?row_rots_no_group(s3)
+s5: [32, 7] = ?col_xforms_no_group(s4)
+s6: [32, 7] = ?col_rots_no_group(s5)
+goal: [32, 7] trove

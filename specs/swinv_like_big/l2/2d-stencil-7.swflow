@@ -1,0 +1,11 @@
+goal: [4, 4] stencil_2d {k=7}
+x: [100] = range(0, 100)
+x: [10, 10] = reshape(x)
+loaded: [4, 4, 3, 3] = load_grid_2d(x)
+to_send_x: [4, 4, 7, 3] = ?general_select{axis=2,dims=[0, 2], consts=[0, 1, -1, 4, -4]}(loaded)
+received_x_1: [4, 4, 7, 3] = ?xforms_no_group{main=0,second=2,out=0}(to_send_x)
+received_x: [4, 4, 7, 3] = ?rots_no_group{main=0,second=2,out=0}(received_x_1)
+to_send_y: [4, 4, 7, 7] = ?general_select{axis=3,dims=[1, 3], consts=[0, 1, -1, 4, -4]}(received_x)
+received_y_1: [4, 4, 7, 7] = ?xforms_no_group{main=1,second=3,out=1}(to_send_y)
+received_y: [4, 4, 7, 7] = ?rots_no_group{main=1,second=3,out=1}(received_y_1)
+out: [4, 4] = fold reshape{fold_len=49}(received_y)

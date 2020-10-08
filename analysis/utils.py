@@ -47,7 +47,9 @@ PROBLEM_NAMES = {
     '2d-stencil-3': '2D stencil (k=3)',
     '2d-stencil-5': '2D stencil (k=5)',
     '2d-stencil-7': '2D stencil (k=7)',
-    'mult-32-with-4': 'FFM (w=4)',
+    'mult-32-with-4': 'FFM (w=4, registers)',
+    'mult-64-with-16': 'FFM (w=8, registers)',
+    'mult-64-with-16-shared': 'FFM (w=8, shared mem)'
 }
 
 def split_spec_pretty(df):

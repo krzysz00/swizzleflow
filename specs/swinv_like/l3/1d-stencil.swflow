@@ -1,0 +1,10 @@
+goal: [32] conv {k=3}
+
+x: [34] = range(0, 34)
+
+loaded: [32, 2] = load_trunc(x)
+to_send: [32, 3] = ?reg_select(loaded)
+received_1: [32, 3] = ?col_xforms(to_send)
+received: [32, 3] = ?col_rots(received_1)
+
+out: [32] = fold ?cond_keep{fold_len=3}(received)

@@ -37,6 +37,7 @@ fn process_program(program: String, name: String)
                    -> Result<((Vec<Option<ArrayD<Value>>>, Vec<Operation>,
                                Vec<ArrayD<Value>>, usize), String)>
 {
+    println!("Processing {}", name);
     let lexed = lexer::lex(&program)
         .chain_err(|| ErrorKind::FileParseError(name.clone()))?;
     let (statements, goals) = parser::parse(&lexed)

@@ -39,10 +39,12 @@ fn remap_refs(stmt: &mut Statement, map: &[usize]) {
 
 pub fn bring_literals_up(parsed: Vec<Statement>) -> Vec<Statement> {
     let n_ops = parsed.len();
+    if n_ops == 0 { return parsed; }
 
     let (inits, mut ops) = parsed.into_iter().enumerate()
         .partition::<Vec<_>, _>(|(_, s)| s.op.is_initial());
 
+    if ops.is_empty() { return inits.into_iter().map(|(_, s)| s).collect(); }
     // Shut off pruning on final operation
     let last_op = ops.len() - 1;
     ops[last_op].1.prune = false;

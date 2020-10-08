@@ -1,0 +1,1976 @@
+construction:all time=0.010046801;
+spec:specs/swinv_like/l1/mult-64-with-16-shared.swflow
+elements: [0, 1], start: 0, end: 2
+elements: [2, 10, 6, 14, 4, 8, 12, 16, 3, 5, 7, 9, 11, 13, 15, 17], start: 2, end: 18
+elements: [18, 50, 34, 66, 26, 42, 58, 74, 22, 30, 38, 46, 54, 62, 70, 78, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 57, 59, 61, 63, 65, 67, 69, 71, 73, 75, 77, 79, 81], start: 18, end: 82
+elements: [82, 89, 85, 93, 83, 87, 91, 95, 84, 86, 88, 90, 92, 94, 96], start: 82, end: 97
+load:matrices/4x4,,-[0>0]reshape-16,, n_ones=256; n_elems=65536; in_slots=16; out_slots=16; density=0.00390625; time=0.000030981;
+file_map:b765602b83 raw=4x4,,-[0>0]transpose-4x4,,.4x4,,-[0>0]reshape-16,,
+load:matrices/b765602b83 n_ones=256; n_elems=65536; in_slots=16; out_slots=16; density=0.00390625; time=0.000089448;
+file_map:35f802bcac raw=4x4x4x4,,-[0>0]reshape{fold_len=16}-4x4,,.4x4,,-[0>0]transpose-4x4,,.4x4,,-[0>0]reshape-16,,
+load:matrices/35f802bcac n_ones=65536; n_elems=16777216; in_slots=256; out_slots=16; density=0.00390625; time=0.007686041;
+file_map:2ba238b643 raw=4x4x4,,-[0>0]broadcast{group=1}-4x4x4x4,,.4x4x4x4,,-[0>0]reshape{fold_len=16}-4x4,,.4x4,,-[0>0]transpose-4x4,,.4x4,,-[0>0]reshape-16,,
+load:matrices/2ba238b643 n_ones=65536; n_elems=1048576; in_slots=64; out_slots=16; density=0.0625; time=0.000452014;
+file_map:033e7df52c raw=4x4x4,4x4x4,-[0,1>0 -1]stack{fold_len=2}-4x4x4,,.4x4x4,,-[0>0]broadcast{group=1}-4x4x4x4,,.4x4x4x4,,-[0>0]reshape{fold_len=16}-4x4,,.4x4,,-[0>0]transpose-4x4,,.4x4,,-[0>0]reshape-16,,
+load:matrices/033e7df52c n_ones=262144; n_elems=4194304; in_slots=128; out_slots=16; density=0.0625; time=0.001587566;
+file_map:5dd56b5591 raw=4x4x4,4x4x2,-[1>1]b_dup_mult64-4x4x4,4x4x4,.4x4x4,4x4x4,-[0,1>0 -1]stack{fold_len=2}-4x4x4,,.4x4x4,,-[0>0]broadcast{group=1}-4x4x4x4,,.4x4x4x4,,-[0>0]reshape{fold_len=16}-4x4,,.4x4,,-[0>0]transpose-4x4,,.4x4,,-[0>0]reshape-16,,
+load:matrices/5dd56b5591 n_ones=147456; n_elems=2359296; in_slots=96; out_slots=16; density=0.0625; time=0.000981511;
+file_map:2d132b2405 raw=4x4x4,4x4,4x4-[2,1>1 -2]stack-4x4x4,4x4x2,.4x4x4,4x4x2,-[1>1]b_dup_mult64-4x4x4,4x4x4,.4x4x4,4x4x4,-[0,1>0 -1]stack{fold_len=2}-4x4x4,,.4x4x4,,-[0>0]broadcast{group=1}-4x4x4x4,,.4x4x4x4,,-[0>0]reshape{fold_len=16}-4x4,,.4x4,,-[0>0]transpose-4x4,,.4x4,,-[0>0]reshape-16,,
+load:matrices/2d132b2405 n_ones=147456; n_elems=2359296; in_slots=96; out_slots=16; density=0.0625; time=0.000955037;
+file_map:ecce3112d4 raw=4x4x4,4x8,4x4-[1>1]rots_no_group{main=1,out=1,second=0}-4x4x4,4x4,4x4.4x4x4,4x4,4x4-[2,1>1 -2]stack-4x4x4,4x4x2,.4x4x4,4x4x2,-[1>1]b_dup_mult64-4x4x4,4x4x4,.4x4x4,4x4x4,-[0,1>0 -1]stack{fold_len=2}-4x4x4,,.4x4x4,,-[0>0]broadcast{group=1}-4x4x4x4,,.4x4x4x4,,-[0>0]reshape{fold_len=16}-4x4,,.4x4,,-[0>0]transpose-4x4,,.4x4,,-[0>0]reshape-16,,
+load:matrices/ecce3112d4 n_ones=198656; n_elems=3211264; in_slots=112; out_slots=16; density=0.06186224489795918; time=0.001218138;
+file_map:22fe85f546 raw=4x4x4,4x8,4x4-[1>1]xforms_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x4.4x4x4,4x8,4x4-[1>1]rots_no_group{main=1,out=1,second=0}-4x4x4,4x4,4x4.4x4x4,4x4,4x4-[2,1>1 -2]stack-4x4x4,4x4x2,.4x4x4,4x4x2,-[1>1]b_dup_mult64-4x4x4,4x4x4,.4x4x4,4x4x4,-[0,1>0 -1]stack{fold_len=2}-4x4x4,,.4x4x4,,-[0>0]broadcast{group=1}-4x4x4x4,,.4x4x4x4,,-[0>0]reshape{fold_len=16}-4x4,,.4x4,,-[0>0]transpose-4x4,,.4x4,,-[0>0]reshape-16,,
+load:matrices/22fe85f546 n_ones=200704; n_elems=3211264; in_slots=112; out_slots=16; density=0.0625; time=0.001223108;
+file_map:5092828d8b raw=4x4x4,4x8,4x8-[2>2]rots_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x4.4x4x4,4x8,4x4-[1>1]xforms_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x4.4x4x4,4x8,4x4-[1>1]rots_no_group{main=1,out=1,second=0}-4x4x4,4x4,4x4.4x4x4,4x4,4x4-[2,1>1 -2]stack-4x4x4,4x4x2,.4x4x4,4x4x2,-[1>1]b_dup_mult64-4x4x4,4x4x4,.4x4x4,4x4x4,-[0,1>0 -1]stack{fold_len=2}-4x4x4,,.4x4x4,,-[0>0]broadcast{group=1}-4x4x4x4,,.4x4x4x4,,-[0>0]reshape{fold_len=16}-4x4,,.4x4,,-[0>0]transpose-4x4,,.4x4,,-[0>0]reshape-16,,
+load:matrices/5092828d8b n_ones=260096; n_elems=4194304; in_slots=128; out_slots=16; density=0.06201171875; time=0.002477595;
+file_map:b615b89d2b raw=4x4x4,4x8,-[1>2]xforms_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x8.4x4x4,4x8,4x8-[2>2]rots_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x4.4x4x4,4x8,4x4-[1>1]xforms_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x4.4x4x4,4x8,4x4-[1>1]rots_no_group{main=1,out=1,second=0}-4x4x4,4x4,4x4.4x4x4,4x4,4x4-[2,1>1 -2]stack-4x4x4,4x4x2,.4x4x4,4x4x2,-[1>1]b_dup_mult64-4x4x4,4x4x4,.4x4x4,4x4x4,-[0,1>0 -1]stack{fold_len=2}-4x4x4,,.4x4x4,,-[0>0]broadcast{group=1}-4x4x4x4,,.4x4x4x4,,-[0>0]reshape{fold_len=16}-4x4,,.4x4,,-[0>0]transpose-4x4,,.4x4,,-[0>0]reshape-16,,
+load:matrices/b615b89d2b n_ones=147456; n_elems=2359296; in_slots=96; out_slots=16; density=0.0625; time=0.001087477;
+file_map:7c2fa544c5 raw=4x4x4,8,-[1>1]broadcast-4x4x4,4x8,.4x4x4,4x8,-[1>2]xforms_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x8.4x4x4,4x8,4x8-[2>2]rots_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x4.4x4x4,4x8,4x4-[1>1]xforms_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x4.4x4x4,4x8,4x4-[1>1]rots_no_group{main=1,out=1,second=0}-4x4x4,4x4,4x4.4x4x4,4x4,4x4-[2,1>1 -2]stack-4x4x4,4x4x2,.4x4x4,4x4x2,-[1>1]b_dup_mult64-4x4x4,4x4x4,.4x4x4,4x4x4,-[0,1>0 -1]stack{fold_len=2}-4x4x4,,.4x4x4,,-[0>0]broadcast{group=1}-4x4x4x4,,.4x4x4x4,,-[0>0]reshape{fold_len=16}-4x4,,.4x4,,-[0>0]transpose-4x4,,.4x4,,-[0>0]reshape-16,,
+load:matrices/7c2fa544c5 n_ones=147456; n_elems=1327104; in_slots=72; out_slots=16; density=0.1111111111111111; time=0.000668422;
+file_map:5f60bfffc8 raw=4x4x2,8,-[0>0]a_dup_mult64-4x4x4,8,.4x4x4,8,-[1>1]broadcast-4x4x4,4x8,.4x4x4,4x8,-[1>2]xforms_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x8.4x4x4,4x8,4x8-[2>2]rots_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x4.4x4x4,4x8,4x4-[1>1]xforms_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x4.4x4x4,4x8,4x4-[1>1]rots_no_group{main=1,out=1,second=0}-4x4x4,4x4,4x4.4x4x4,4x4,4x4-[2,1>1 -2]stack-4x4x4,4x4x2,.4x4x4,4x4x2,-[1>1]b_dup_mult64-4x4x4,4x4x4,.4x4x4,4x4x4,-[0,1>0 -1]stack{fold_len=2}-4x4x4,,.4x4x4,,-[0>0]broadcast{group=1}-4x4x4x4,,.4x4x4x4,,-[0>0]reshape{fold_len=16}-4x4,,.4x4,,-[0>0]transpose-4x4,,.4x4,,-[0>0]reshape-16,,
+load:matrices/5f60bfffc8 n_ones=65536; n_elems=409600; in_slots=40; out_slots=16; density=0.16; time=0.000212565;
+file_map:7f0e767501 raw=4x4,8,4x4-[2,0>0 -2]stack-4x4x2,8,.4x4x2,8,-[0>0]a_dup_mult64-4x4x4,8,.4x4x4,8,-[1>1]broadcast-4x4x4,4x8,.4x4x4,4x8,-[1>2]xforms_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x8.4x4x4,4x8,4x8-[2>2]rots_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x4.4x4x4,4x8,4x4-[1>1]xforms_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x4.4x4x4,4x8,4x4-[1>1]rots_no_group{main=1,out=1,second=0}-4x4x4,4x4,4x4.4x4x4,4x4,4x4-[2,1>1 -2]stack-4x4x4,4x4x2,.4x4x4,4x4x2,-[1>1]b_dup_mult64-4x4x4,4x4x4,.4x4x4,4x4x4,-[0,1>0 -1]stack{fold_len=2}-4x4x4,,.4x4x4,,-[0>0]broadcast{group=1}-4x4x4x4,,.4x4x4x4,,-[0>0]reshape{fold_len=16}-4x4,,.4x4,,-[0>0]transpose-4x4,,.4x4,,-[0>0]reshape-16,,
+load:matrices/7f0e767501 n_ones=65536; n_elems=409600; in_slots=40; out_slots=16; density=0.16; time=0.000207095;
+file_map:f81b0a9761 raw=4x8,8,4x4-[0>0]rots_no_group{main=1,out=1,second=0}-4x4,8,4x4.4x4,8,4x4-[2,0>0 -2]stack-4x4x2,8,.4x4x2,8,-[0>0]a_dup_mult64-4x4x4,8,.4x4x4,8,-[1>1]broadcast-4x4x4,4x8,.4x4x4,4x8,-[1>2]xforms_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x8.4x4x4,4x8,4x8-[2>2]rots_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x4.4x4x4,4x8,4x4-[1>1]xforms_no_group{main=1,out=1,second=0}-4x4x4,4x8,4x4.4x4x4,4x8,4x4-[1>1]rots_no_group{main=1,out=1,second=0}-4x4x4,4x4,4x4.4x4x4,4x4,4x4-[2,1>1 -2]stack-4x4x4,4x4x2,.4x4x4,4x4x2,-[1>1]b_dup_mult64-4x4x4,4x4x4,.4x4x4,4x4x4,-[0,1>0 -1]stack{fold_len=2}-4x4x4,,.4x4x4,,-[0>0]broadcast{group=1}-4x4x4x4,,.4x4x4x4,,-[0>0]reshape{fold_len=16}-4x4,,.4x4,,-[0>0]transpose-4x4,,.4x4,,-[0>0]reshape-16,,
+load:matrices/f81b0a9761 n_ones=100352; n_elems=802816; in_slots=56; out_slots=16; density=0.125; time=0.000390527;
+Copy bound @ output 31: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 30: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 29: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 28: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 27: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 26: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 25: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 24: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 23: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 22: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 21: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 20: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 19: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 18: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 17: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 16: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 15: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 14: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 13: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 12: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 11: min (1, 0) = None, max (1, 0) = None
+Copy bound @ output 10: min (1, 0) = Some(0), max (1, 0) = Some(4)
+Copy bound @ output 9: min (1, 0) = Some(0), max (1, 0) = Some(8)
+Copy bound @ output 8: min (1, 0) = Some(0), max (1, 0) = Some(8)
+Copy bound @ output 7: min (1, 0) = Some(0), max (1, 0) = Some(8)
+Copy bound @ output 6: min (1, 0) = Some(0), max (1, 0) = Some(8)
+Copy bound @ output 5: min (1, 0) = Some(0), max (1, 0) = Some(8)
+Copy bound @ output 4: min (1, 0) = Some(0), max (1, 0) = Some(16)
+Copy bound @ output 3: min (1, 0) = Some(0), max (1, 0) = Some(64)
+Copy bound @ output 2: min (1, 0) = Some(0), max (1, 0) = Some(64)
+Copy bound @ output 1: min (1, 0) = Some(0), max (1, 0) = Some(64)
+Copy bound @ output 0: min (1, 0) = Some(0), max (1, 0) = Some(64)
+copy_counts:this time=0.001358646;
+Begin search
+solution:[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(true)(c5); c7 = keep_if(false)(c6); c8 = keep_if(false)(c7); c9 = keep_if(false)(c8); c10 = keep_if[d0 >= +d2](c9); c11 = keep_if(false)(c10); c12 = keep_if[d0 < +d2](c11); c13 = keep_if(false)(c12); c14 = keep_if(false)(c13); c15 = keep_if(true)(c14); c16 = keep_if(false)(c15); thread_by_accum = id(c16); accum_by_thread = tr(thread_by_accum); out = id(accum_by_thread);
+success_path [step 35]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(true)(c5); c7 = keep_if(false)(c6); c8 = keep_if(false)(c7); c9 = keep_if(false)(c8); c10 = keep_if[d0 >= +d2](c9); c11 = keep_if(false)(c10); c12 = keep_if[d0 < +d2](c11); c13 = keep_if(false)(c12); c14 = keep_if(false)(c13); c15 = keep_if(true)(c14); c16 = keep_if(false)(c15); thread_by_accum = id(c16); accum_by_thread = tr(thread_by_accum); out = id(accum_by_thread);:
+0: [∑(∑(0, 8)), ∑(∑(0, 9), ∑(1, 8)), ∑(∑(0, 10), ∑(1, 9), ∑(2, 8)), ∑(∑(0, 11), ∑(1, 10), ∑(2, 9), ∑(3, 8)), ∑(∑(0, 12), ∑(1, 11), ∑(2, 10), ∑(3, 9), ∑(4, 8)), ∑(∑(0, 13), ∑(1, 12), ∑(2, 11), ∑(3, 10), ∑(4, 9), ∑(5, 8)), ∑(∑(0, 14), ∑(1, 13), ∑(2, 12), ∑(3, 11), ∑(4, 10), ∑(5, 9), ∑(6, 8)), ∑(∑(0, 15), ∑(1, 14), ∑(2, 13), ∑(3, 12), ∑(4, 11), ∑(5, 10), ∑(6, 9), ∑(7, 8)), ∑(∑(1, 15), ∑(2, 14), ∑(3, 13), ∑(4, 12), ∑(5, 11), ∑(6, 10), ∑(7, 9)), ∑(∑(2, 15), ∑(3, 14), ∑(4, 13), ∑(5, 12), ∑(6, 11), ∑(7, 10)), ∑(∑(3, 15), ∑(4, 14), ∑(5, 13), ∑(6, 12), ∑(7, 11)), ∑(∑(4, 15), ∑(5, 14), ∑(6, 13), ∑(7, 12)), ∑(∑(5, 15), ∑(6, 14), ∑(7, 13)), ∑(∑(6, 15), ∑(7, 14)), ∑(∑(7, 15)), ∅]
+1: ⊥
+2: ⊥
+success_path [step 34]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(true)(c5); c7 = keep_if(false)(c6); c8 = keep_if(false)(c7); c9 = keep_if(false)(c8); c10 = keep_if[d0 >= +d2](c9); c11 = keep_if(false)(c10); c12 = keep_if[d0 < +d2](c11); c13 = keep_if(false)(c12); c14 = keep_if(false)(c13); c15 = keep_if(true)(c14); c16 = keep_if(false)(c15); thread_by_accum = id(c16); accum_by_thread = tr(thread_by_accum); out = id(accum_by_thread);:
+0: [∑(∑(0, 8)), ∑(∑(0, 9), ∑(1, 8)), ∑(∑(0, 10), ∑(1, 9), ∑(2, 8)), ∑(∑(0, 11), ∑(1, 10), ∑(2, 9), ∑(3, 8)), ∑(∑(0, 12), ∑(1, 11), ∑(2, 10), ∑(3, 9), ∑(4, 8)), ∑(∑(0, 13), ∑(1, 12), ∑(2, 11), ∑(3, 10), ∑(4, 9), ∑(5, 8)), ∑(∑(0, 14), ∑(1, 13), ∑(2, 12), ∑(3, 11), ∑(4, 10), ∑(5, 9), ∑(6, 8)), ∑(∑(0, 15), ∑(1, 14), ∑(2, 13), ∑(3, 12), ∑(4, 11), ∑(5, 10), ∑(6, 9), ∑(7, 8)), ∑(∑(1, 15), ∑(2, 14), ∑(3, 13), ∑(4, 12), ∑(5, 11), ∑(6, 10), ∑(7, 9)), ∑(∑(2, 15), ∑(3, 14), ∑(4, 13), ∑(5, 12), ∑(6, 11), ∑(7, 10)), ∑(∑(3, 15), ∑(4, 14), ∑(5, 13), ∑(6, 12), ∑(7, 11)), ∑(∑(4, 15), ∑(5, 14), ∑(6, 13), ∑(7, 12)), ∑(∑(5, 15), ∑(6, 14), ∑(7, 13)), ∑(∑(6, 15), ∑(7, 14)), ∑(∑(7, 15)), ∅]
+1: ⊥
+2: ⊥
+success_path [step 33]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(true)(c5); c7 = keep_if(false)(c6); c8 = keep_if(false)(c7); c9 = keep_if(false)(c8); c10 = keep_if[d0 >= +d2](c9); c11 = keep_if(false)(c10); c12 = keep_if[d0 < +d2](c11); c13 = keep_if(false)(c12); c14 = keep_if(false)(c13); c15 = keep_if(true)(c14); c16 = keep_if(false)(c15); thread_by_accum = id(c16); accum_by_thread = tr(thread_by_accum);:
+0: [[∑(∑(0, 8)), ∑(∑(0, 9), ∑(1, 8)), ∑(∑(0, 10), ∑(1, 9), ∑(2, 8)), ∑(∑(0, 11), ∑(1, 10), ∑(2, 9), ∑(3, 8))],
+ [∑(∑(0, 12), ∑(1, 11), ∑(2, 10), ∑(3, 9), ∑(4, 8)), ∑(∑(0, 13), ∑(1, 12), ∑(2, 11), ∑(3, 10), ∑(4, 9), ∑(5, 8)), ∑(∑(0, 14), ∑(1, 13), ∑(2, 12), ∑(3, 11), ∑(4, 10), ∑(5, 9), ∑(6, 8)), ∑(∑(0, 15), ∑(1, 14), ∑(2, 13), ∑(3, 12), ∑(4, 11), ∑(5, 10), ∑(6, 9), ∑(7, 8))],
+ [∑(∑(1, 15), ∑(2, 14), ∑(3, 13), ∑(4, 12), ∑(5, 11), ∑(6, 10), ∑(7, 9)), ∑(∑(2, 15), ∑(3, 14), ∑(4, 13), ∑(5, 12), ∑(6, 11), ∑(7, 10)), ∑(∑(3, 15), ∑(4, 14), ∑(5, 13), ∑(6, 12), ∑(7, 11)), ∑(∑(4, 15), ∑(5, 14), ∑(6, 13), ∑(7, 12))],
+ [∑(∑(5, 15), ∑(6, 14), ∑(7, 13)), ∑(∑(6, 15), ∑(7, 14)), ∑(∑(7, 15)), ∅]]
+1: ⊥
+2: ⊥
+success_path [step 32]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(true)(c5); c7 = keep_if(false)(c6); c8 = keep_if(false)(c7); c9 = keep_if(false)(c8); c10 = keep_if[d0 >= +d2](c9); c11 = keep_if(false)(c10); c12 = keep_if[d0 < +d2](c11); c13 = keep_if(false)(c12); c14 = keep_if(false)(c13); c15 = keep_if(true)(c14); c16 = keep_if(false)(c15); thread_by_accum = id(c16);:
+0: [[∑(∑(0, 8)), ∑(∑(0, 12), ∑(1, 11), ∑(2, 10), ∑(3, 9), ∑(4, 8)), ∑(∑(1, 15), ∑(2, 14), ∑(3, 13), ∑(4, 12), ∑(5, 11), ∑(6, 10), ∑(7, 9)), ∑(∑(5, 15), ∑(6, 14), ∑(7, 13))],
+ [∑(∑(0, 9), ∑(1, 8)), ∑(∑(0, 13), ∑(1, 12), ∑(2, 11), ∑(3, 10), ∑(4, 9), ∑(5, 8)), ∑(∑(2, 15), ∑(3, 14), ∑(4, 13), ∑(5, 12), ∑(6, 11), ∑(7, 10)), ∑(∑(6, 15), ∑(7, 14))],
+ [∑(∑(0, 10), ∑(1, 9), ∑(2, 8)), ∑(∑(0, 14), ∑(1, 13), ∑(2, 12), ∑(3, 11), ∑(4, 10), ∑(5, 9), ∑(6, 8)), ∑(∑(3, 15), ∑(4, 14), ∑(5, 13), ∑(6, 12), ∑(7, 11)), ∑(∑(7, 15))],
+ [∑(∑(0, 11), ∑(1, 10), ∑(2, 9), ∑(3, 8)), ∑(∑(0, 15), ∑(1, 14), ∑(2, 13), ∑(3, 12), ∑(4, 11), ∑(5, 10), ∑(6, 9), ∑(7, 8)), ∑(∑(4, 15), ∑(5, 14), ∑(6, 13), ∑(7, 12)), ∅]]
+1: ⊥
+2: ⊥
+success_path [step 31]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(true)(c5); c7 = keep_if(false)(c6); c8 = keep_if(false)(c7); c9 = keep_if(false)(c8); c10 = keep_if[d0 >= +d2](c9); c11 = keep_if(false)(c10); c12 = keep_if[d0 < +d2](c11); c13 = keep_if(false)(c12); c14 = keep_if(false)(c13); c15 = keep_if(true)(c14); c16 = keep_if(false)(c15);:
+0: [[[[∑(0, 8), ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∅],
+   [∅, ∑(3, 9), ∅, ∅],
+   [∅, ∑(2, 10), ∅, ∅],
+   [∅, ∑(1, 11), ∅, ∅]],
+
+  [[∅, ∅, ∅, ∑(4, 12)],
+   [∑(7, 9), ∅, ∅, ∑(3, 13)],
+   [∑(6, 10), ∅, ∅, ∑(2, 14)],
+   [∑(5, 11), ∅, ∅, ∑(1, 15)]],
+
+  [[∅, ∅, ∅, ∅],
+   [∅, ∅, ∑(7, 13), ∅],
+   [∅, ∅, ∑(6, 14), ∅],
+   [∅, ∅, ∑(5, 15), ∅]]],
+
+
+ [[[∑(1, 8), ∅, ∅, ∅],
+   [∑(0, 9), ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∅],
+   [∅, ∑(4, 9), ∑(0, 13), ∅],
+   [∅, ∑(3, 10), ∅, ∅],
+   [∅, ∑(2, 11), ∅, ∅]],
+
+  [[∅, ∅, ∅, ∑(5, 12)],
+   [∅, ∅, ∅, ∑(4, 13)],
+   [∑(7, 10), ∅, ∅, ∑(3, 14)],
+   [∑(6, 11), ∅, ∅, ∑(2, 15)]],
+
+  [[∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∑(7, 14), ∅],
+   [∅, ∅, ∑(6, 15), ∅]]],
+
+
+ [[[∑(2, 8), ∅, ∅, ∅],
+   [∑(1, 9), ∅, ∅, ∅],
+   [∑(0, 10), ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∅],
+   [∅, ∑(5, 9), ∑(1, 13), ∅],
+   [∅, ∑(4, 10), ∑(0, 14), ∅],
+   [∅, ∑(3, 11), ∅, ∅]],
+
+  [[∅, ∅, ∅, ∑(6, 12)],
+   [∅, ∅, ∅, ∑(5, 13)],
+   [∅, ∅, ∅, ∑(4, 14)],
+   [∑(7, 11), ∅, ∅, ∑(3, 15)]],
+
+  [[∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∑(7, 15), ∅]]],
+
+
+ [[[∑(3, 8), ∅, ∅, ∅],
+   [∑(2, 9), ∅, ∅, ∅],
+   [∑(1, 10), ∅, ∅, ∅],
+   [∑(0, 11), ∅, ∅, ∅]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∅],
+   [∅, ∑(6, 9), ∑(2, 13), ∅],
+   [∅, ∑(5, 10), ∑(1, 14), ∅],
+   [∅, ∑(4, 11), ∑(0, 15), ∅]],
+
+  [[∅, ∅, ∅, ∑(7, 12)],
+   [∅, ∅, ∅, ∑(6, 13)],
+   [∅, ∅, ∅, ∑(5, 14)],
+   [∅, ∅, ∅, ∑(4, 15)]],
+
+  [[∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅]]]]
+1: ⊥
+2: ⊥
+success_path [step 30]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(true)(c5); c7 = keep_if(false)(c6); c8 = keep_if(false)(c7); c9 = keep_if(false)(c8); c10 = keep_if[d0 >= +d2](c9); c11 = keep_if(false)(c10); c12 = keep_if[d0 < +d2](c11); c13 = keep_if(false)(c12); c14 = keep_if(false)(c13); c15 = keep_if(true)(c14);:
+0: [[[[∑(0, 8), ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∅],
+   [∅, ∑(3, 9), ∅, ∅],
+   [∅, ∑(2, 10), ∅, ∅],
+   [∅, ∑(1, 11), ∅, ∅]],
+
+  [[∅, ∅, ∅, ∑(4, 12)],
+   [∑(7, 9), ∅, ∅, ∑(3, 13)],
+   [∑(6, 10), ∅, ∅, ∑(2, 14)],
+   [∑(5, 11), ∅, ∅, ∑(1, 15)]],
+
+  [[∅, ∅, ∅, ∑(4, 12)],
+   [∅, ∅, ∑(7, 13), ∑(3, 13)],
+   [∅, ∅, ∑(6, 14), ∑(2, 14)],
+   [∅, ∅, ∑(5, 15), ∑(1, 15)]]],
+
+
+ [[[∑(1, 8), ∅, ∅, ∅],
+   [∑(0, 9), ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∅],
+   [∅, ∑(4, 9), ∑(0, 13), ∅],
+   [∅, ∑(3, 10), ∅, ∅],
+   [∅, ∑(2, 11), ∅, ∅]],
+
+  [[∅, ∅, ∅, ∑(5, 12)],
+   [∅, ∅, ∅, ∑(4, 13)],
+   [∑(7, 10), ∅, ∅, ∑(3, 14)],
+   [∑(6, 11), ∅, ∅, ∑(2, 15)]],
+
+  [[∅, ∅, ∅, ∑(5, 12)],
+   [∅, ∅, ∅, ∑(4, 13)],
+   [∅, ∅, ∑(7, 14), ∑(3, 14)],
+   [∅, ∅, ∑(6, 15), ∑(2, 15)]]],
+
+
+ [[[∑(2, 8), ∅, ∅, ∅],
+   [∑(1, 9), ∅, ∅, ∅],
+   [∑(0, 10), ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∅],
+   [∅, ∑(5, 9), ∑(1, 13), ∅],
+   [∅, ∑(4, 10), ∑(0, 14), ∅],
+   [∅, ∑(3, 11), ∅, ∅]],
+
+  [[∅, ∅, ∅, ∑(6, 12)],
+   [∅, ∅, ∅, ∑(5, 13)],
+   [∅, ∅, ∅, ∑(4, 14)],
+   [∑(7, 11), ∅, ∅, ∑(3, 15)]],
+
+  [[∅, ∅, ∅, ∑(6, 12)],
+   [∅, ∅, ∅, ∑(5, 13)],
+   [∅, ∅, ∅, ∑(4, 14)],
+   [∅, ∅, ∑(7, 15), ∑(3, 15)]]],
+
+
+ [[[∑(3, 8), ∅, ∅, ∅],
+   [∑(2, 9), ∅, ∅, ∅],
+   [∑(1, 10), ∅, ∅, ∅],
+   [∑(0, 11), ∅, ∅, ∅]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∅],
+   [∅, ∑(6, 9), ∑(2, 13), ∅],
+   [∅, ∑(5, 10), ∑(1, 14), ∅],
+   [∅, ∑(4, 11), ∑(0, 15), ∅]],
+
+  [[∅, ∅, ∅, ∑(7, 12)],
+   [∅, ∅, ∅, ∑(6, 13)],
+   [∅, ∅, ∅, ∑(5, 14)],
+   [∅, ∅, ∅, ∑(4, 15)]],
+
+  [[∅, ∅, ∅, ∑(7, 12)],
+   [∅, ∅, ∅, ∑(6, 13)],
+   [∅, ∅, ∅, ∑(5, 14)],
+   [∅, ∅, ∅, ∑(4, 15)]]]]
+1: ⊥
+2: ⊥
+success_path [step 29]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(true)(c5); c7 = keep_if(false)(c6); c8 = keep_if(false)(c7); c9 = keep_if(false)(c8); c10 = keep_if[d0 >= +d2](c9); c11 = keep_if(false)(c10); c12 = keep_if[d0 < +d2](c11); c13 = keep_if(false)(c12); c14 = keep_if(false)(c13);:
+0: [[[[∑(0, 8), ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∅],
+   [∅, ∑(3, 9), ∅, ∅],
+   [∅, ∑(2, 10), ∅, ∅],
+   [∅, ∑(1, 11), ∅, ∅]],
+
+  [[∅, ∅, ∅, ∑(4, 12)],
+   [∑(7, 9), ∅, ∅, ∑(3, 13)],
+   [∑(6, 10), ∅, ∅, ∑(2, 14)],
+   [∑(5, 11), ∅, ∅, ∑(1, 15)]],
+
+  [[∅, ∅, ∅, ∑(4, 12)],
+   [∅, ∅, ∑(7, 13), ∑(3, 13)],
+   [∅, ∅, ∑(6, 14), ∑(2, 14)],
+   [∅, ∅, ∑(5, 15), ∑(1, 15)]]],
+
+
+ [[[∑(1, 8), ∅, ∅, ∅],
+   [∑(0, 9), ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∅],
+   [∅, ∑(4, 9), ∑(0, 13), ∅],
+   [∅, ∑(3, 10), ∅, ∅],
+   [∅, ∑(2, 11), ∅, ∅]],
+
+  [[∅, ∅, ∅, ∑(5, 12)],
+   [∅, ∅, ∅, ∑(4, 13)],
+   [∑(7, 10), ∅, ∅, ∑(3, 14)],
+   [∑(6, 11), ∅, ∅, ∑(2, 15)]],
+
+  [[∅, ∅, ∅, ∑(5, 12)],
+   [∅, ∅, ∅, ∑(4, 13)],
+   [∅, ∅, ∑(7, 14), ∑(3, 14)],
+   [∅, ∅, ∑(6, 15), ∑(2, 15)]]],
+
+
+ [[[∑(2, 8), ∅, ∅, ∅],
+   [∑(1, 9), ∅, ∅, ∅],
+   [∑(0, 10), ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∅],
+   [∅, ∑(5, 9), ∑(1, 13), ∅],
+   [∅, ∑(4, 10), ∑(0, 14), ∅],
+   [∅, ∑(3, 11), ∅, ∅]],
+
+  [[∅, ∅, ∅, ∑(6, 12)],
+   [∅, ∅, ∅, ∑(5, 13)],
+   [∅, ∅, ∅, ∑(4, 14)],
+   [∑(7, 11), ∅, ∅, ∑(3, 15)]],
+
+  [[∅, ∅, ∅, ∑(6, 12)],
+   [∅, ∅, ∅, ∑(5, 13)],
+   [∅, ∅, ∅, ∑(4, 14)],
+   [∅, ∅, ∑(7, 15), ∑(3, 15)]]],
+
+
+ [[[∑(3, 8), ∅, ∅, ∅],
+   [∑(2, 9), ∅, ∅, ∅],
+   [∑(1, 10), ∅, ∅, ∅],
+   [∑(0, 11), ∅, ∅, ∅]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∅],
+   [∅, ∑(6, 9), ∑(2, 13), ∅],
+   [∅, ∑(5, 10), ∑(1, 14), ∅],
+   [∅, ∑(4, 11), ∑(0, 15), ∅]],
+
+  [[∅, ∅, ∅, ∑(7, 12)],
+   [∅, ∅, ∅, ∑(6, 13)],
+   [∅, ∅, ∅, ∑(5, 14)],
+   [∅, ∅, ∅, ∑(4, 15)]],
+
+  [[∅, ∅, ∅, ∑(7, 12)],
+   [∅, ∅, ∅, ∑(6, 13)],
+   [∅, ∅, ∅, ∑(5, 14)],
+   [∅, ∅, ∅, ∑(4, 15)]]]]
+1: ⊥
+2: ⊥
+success_path [step 28]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(true)(c5); c7 = keep_if(false)(c6); c8 = keep_if(false)(c7); c9 = keep_if(false)(c8); c10 = keep_if[d0 >= +d2](c9); c11 = keep_if(false)(c10); c12 = keep_if[d0 < +d2](c11); c13 = keep_if(false)(c12);:
+0: [[[[∑(0, 8), ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∅, ∑(3, 13)],
+   [∅, ∑(2, 10), ∅, ∑(2, 14)],
+   [∅, ∑(1, 11), ∅, ∑(1, 15)]],
+
+  [[∅, ∅, ∅, ∑(4, 12)],
+   [∑(7, 9), ∅, ∅, ∑(3, 13)],
+   [∑(6, 10), ∅, ∅, ∑(2, 14)],
+   [∑(5, 11), ∅, ∅, ∑(1, 15)]],
+
+  [[∅, ∅, ∅, ∑(4, 12)],
+   [∅, ∅, ∑(7, 13), ∑(3, 13)],
+   [∅, ∅, ∑(6, 14), ∑(2, 14)],
+   [∅, ∅, ∑(5, 15), ∑(1, 15)]]],
+
+
+ [[[∑(1, 8), ∅, ∅, ∅],
+   [∑(0, 9), ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∅, ∑(3, 14)],
+   [∅, ∑(2, 11), ∅, ∑(2, 15)]],
+
+  [[∅, ∅, ∅, ∑(5, 12)],
+   [∅, ∅, ∅, ∑(4, 13)],
+   [∑(7, 10), ∅, ∅, ∑(3, 14)],
+   [∑(6, 11), ∅, ∅, ∑(2, 15)]],
+
+  [[∅, ∅, ∅, ∑(5, 12)],
+   [∅, ∅, ∅, ∑(4, 13)],
+   [∅, ∅, ∑(7, 14), ∑(3, 14)],
+   [∅, ∅, ∑(6, 15), ∑(2, 15)]]],
+
+
+ [[[∑(2, 8), ∅, ∅, ∅],
+   [∑(1, 9), ∅, ∅, ∅],
+   [∑(0, 10), ∅, ∅, ∅],
+   [∅, ∅, ∅, ∅]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∅, ∑(3, 15)]],
+
+  [[∅, ∅, ∅, ∑(6, 12)],
+   [∅, ∅, ∅, ∑(5, 13)],
+   [∅, ∅, ∅, ∑(4, 14)],
+   [∑(7, 11), ∅, ∅, ∑(3, 15)]],
+
+  [[∅, ∅, ∅, ∑(6, 12)],
+   [∅, ∅, ∅, ∑(5, 13)],
+   [∅, ∅, ∅, ∑(4, 14)],
+   [∅, ∅, ∑(7, 15), ∑(3, 15)]]],
+
+
+ [[[∑(3, 8), ∅, ∅, ∅],
+   [∑(2, 9), ∅, ∅, ∅],
+   [∑(1, 10), ∅, ∅, ∅],
+   [∑(0, 11), ∅, ∅, ∅]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∅, ∅, ∑(7, 12)],
+   [∅, ∅, ∅, ∑(6, 13)],
+   [∅, ∅, ∅, ∑(5, 14)],
+   [∅, ∅, ∅, ∑(4, 15)]],
+
+  [[∅, ∅, ∅, ∑(7, 12)],
+   [∅, ∅, ∅, ∑(6, 13)],
+   [∅, ∅, ∅, ∑(5, 14)],
+   [∅, ∅, ∅, ∑(4, 15)]]]]
+1: ⊥
+2: ⊥
+success_path [step 27]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(true)(c5); c7 = keep_if(false)(c6); c8 = keep_if(false)(c7); c9 = keep_if(false)(c8); c10 = keep_if[d0 >= +d2](c9); c11 = keep_if(false)(c10); c12 = keep_if[d0 < +d2](c11);:
+0: [[[[∑(0, 8), ∅, ∅, ∑(4, 12)],
+   [∅, ∅, ∅, ∑(3, 13)],
+   [∅, ∅, ∅, ∑(2, 14)],
+   [∅, ∅, ∅, ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∅, ∑(3, 13)],
+   [∅, ∑(2, 10), ∅, ∑(2, 14)],
+   [∅, ∑(1, 11), ∅, ∑(1, 15)]],
+
+  [[∅, ∅, ∅, ∑(4, 12)],
+   [∑(7, 9), ∅, ∅, ∑(3, 13)],
+   [∑(6, 10), ∅, ∅, ∑(2, 14)],
+   [∑(5, 11), ∅, ∅, ∑(1, 15)]],
+
+  [[∅, ∅, ∅, ∑(4, 12)],
+   [∅, ∅, ∑(7, 13), ∑(3, 13)],
+   [∅, ∅, ∑(6, 14), ∑(2, 14)],
+   [∅, ∅, ∑(5, 15), ∑(1, 15)]]],
+
+
+ [[[∑(1, 8), ∅, ∅, ∑(5, 12)],
+   [∑(0, 9), ∅, ∅, ∑(4, 13)],
+   [∅, ∅, ∅, ∑(3, 14)],
+   [∅, ∅, ∅, ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∅, ∑(3, 14)],
+   [∅, ∑(2, 11), ∅, ∑(2, 15)]],
+
+  [[∅, ∅, ∅, ∑(5, 12)],
+   [∅, ∅, ∅, ∑(4, 13)],
+   [∑(7, 10), ∅, ∅, ∑(3, 14)],
+   [∑(6, 11), ∅, ∅, ∑(2, 15)]],
+
+  [[∅, ∅, ∅, ∑(5, 12)],
+   [∅, ∅, ∅, ∑(4, 13)],
+   [∅, ∅, ∑(7, 14), ∑(3, 14)],
+   [∅, ∅, ∑(6, 15), ∑(2, 15)]]],
+
+
+ [[[∑(2, 8), ∅, ∅, ∑(6, 12)],
+   [∑(1, 9), ∅, ∅, ∑(5, 13)],
+   [∑(0, 10), ∅, ∅, ∑(4, 14)],
+   [∅, ∅, ∅, ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∅, ∑(3, 15)]],
+
+  [[∅, ∅, ∅, ∑(6, 12)],
+   [∅, ∅, ∅, ∑(5, 13)],
+   [∅, ∅, ∅, ∑(4, 14)],
+   [∑(7, 11), ∅, ∅, ∑(3, 15)]],
+
+  [[∅, ∅, ∅, ∑(6, 12)],
+   [∅, ∅, ∅, ∑(5, 13)],
+   [∅, ∅, ∅, ∑(4, 14)],
+   [∅, ∅, ∑(7, 15), ∑(3, 15)]]],
+
+
+ [[[∑(3, 8), ∅, ∅, ∑(7, 12)],
+   [∑(2, 9), ∅, ∅, ∑(6, 13)],
+   [∑(1, 10), ∅, ∅, ∑(5, 14)],
+   [∑(0, 11), ∅, ∅, ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∅, ∅, ∑(7, 12)],
+   [∅, ∅, ∅, ∑(6, 13)],
+   [∅, ∅, ∅, ∑(5, 14)],
+   [∅, ∅, ∅, ∑(4, 15)]],
+
+  [[∅, ∅, ∅, ∑(7, 12)],
+   [∅, ∅, ∅, ∑(6, 13)],
+   [∅, ∅, ∅, ∑(5, 14)],
+   [∅, ∅, ∅, ∑(4, 15)]]]]
+1: ⊥
+2: ⊥
+success_path [step 26]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(true)(c5); c7 = keep_if(false)(c6); c8 = keep_if(false)(c7); c9 = keep_if(false)(c8); c10 = keep_if[d0 >= +d2](c9); c11 = keep_if(false)(c10);:
+0: [[[[∑(0, 8), ∅, ∅, ∑(4, 12)],
+   [∅, ∅, ∅, ∑(3, 13)],
+   [∅, ∅, ∅, ∑(2, 14)],
+   [∅, ∅, ∅, ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∅, ∑(3, 13)],
+   [∅, ∑(2, 10), ∅, ∑(2, 14)],
+   [∅, ∑(1, 11), ∅, ∑(1, 15)]],
+
+  [[∅, ∅, ∅, ∑(4, 12)],
+   [∑(7, 9), ∅, ∅, ∑(3, 13)],
+   [∑(6, 10), ∅, ∅, ∑(2, 14)],
+   [∑(5, 11), ∅, ∅, ∑(1, 15)]],
+
+  [[∅, ∅, ∑(0, 12), ∑(4, 12)],
+   [∅, ∅, ∑(7, 13), ∑(3, 13)],
+   [∅, ∅, ∑(6, 14), ∑(2, 14)],
+   [∅, ∅, ∑(5, 15), ∑(1, 15)]]],
+
+
+ [[[∑(1, 8), ∅, ∅, ∑(5, 12)],
+   [∑(0, 9), ∅, ∅, ∑(4, 13)],
+   [∅, ∅, ∅, ∑(3, 14)],
+   [∅, ∅, ∅, ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∅, ∑(3, 14)],
+   [∅, ∑(2, 11), ∅, ∑(2, 15)]],
+
+  [[∅, ∅, ∅, ∑(5, 12)],
+   [∅, ∅, ∅, ∑(4, 13)],
+   [∑(7, 10), ∅, ∅, ∑(3, 14)],
+   [∑(6, 11), ∅, ∅, ∑(2, 15)]],
+
+  [[∅, ∅, ∑(1, 12), ∑(5, 12)],
+   [∅, ∅, ∑(0, 13), ∑(4, 13)],
+   [∅, ∅, ∑(7, 14), ∑(3, 14)],
+   [∅, ∅, ∑(6, 15), ∑(2, 15)]]],
+
+
+ [[[∑(2, 8), ∅, ∅, ∑(6, 12)],
+   [∑(1, 9), ∅, ∅, ∑(5, 13)],
+   [∑(0, 10), ∅, ∅, ∑(4, 14)],
+   [∅, ∅, ∅, ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∅, ∑(3, 15)]],
+
+  [[∅, ∅, ∅, ∑(6, 12)],
+   [∅, ∅, ∅, ∑(5, 13)],
+   [∅, ∅, ∅, ∑(4, 14)],
+   [∑(7, 11), ∅, ∅, ∑(3, 15)]],
+
+  [[∅, ∅, ∑(2, 12), ∑(6, 12)],
+   [∅, ∅, ∑(1, 13), ∑(5, 13)],
+   [∅, ∅, ∑(0, 14), ∑(4, 14)],
+   [∅, ∅, ∑(7, 15), ∑(3, 15)]]],
+
+
+ [[[∑(3, 8), ∅, ∅, ∑(7, 12)],
+   [∑(2, 9), ∅, ∅, ∑(6, 13)],
+   [∑(1, 10), ∅, ∅, ∑(5, 14)],
+   [∑(0, 11), ∅, ∅, ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∅, ∅, ∑(7, 12)],
+   [∅, ∅, ∅, ∑(6, 13)],
+   [∅, ∅, ∅, ∑(5, 14)],
+   [∅, ∅, ∅, ∑(4, 15)]],
+
+  [[∅, ∅, ∑(3, 12), ∑(7, 12)],
+   [∅, ∅, ∑(2, 13), ∑(6, 13)],
+   [∅, ∅, ∑(1, 14), ∑(5, 14)],
+   [∅, ∅, ∑(0, 15), ∑(4, 15)]]]]
+1: ⊥
+2: ⊥
+success_path [step 25]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(true)(c5); c7 = keep_if(false)(c6); c8 = keep_if(false)(c7); c9 = keep_if(false)(c8); c10 = keep_if[d0 >= +d2](c9);:
+0: [[[[∑(0, 8), ∅, ∅, ∑(4, 12)],
+   [∅, ∅, ∅, ∑(3, 13)],
+   [∅, ∅, ∅, ∑(2, 14)],
+   [∅, ∅, ∅, ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∅, ∑(3, 13)],
+   [∅, ∑(2, 10), ∅, ∑(2, 14)],
+   [∅, ∑(1, 11), ∅, ∑(1, 15)]],
+
+  [[∅, ∅, ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∅, ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∅, ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∅, ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∅, ∑(0, 12), ∑(4, 12)],
+   [∅, ∅, ∑(7, 13), ∑(3, 13)],
+   [∅, ∅, ∑(6, 14), ∑(2, 14)],
+   [∅, ∅, ∑(5, 15), ∑(1, 15)]]],
+
+
+ [[[∑(1, 8), ∅, ∅, ∑(5, 12)],
+   [∑(0, 9), ∅, ∅, ∑(4, 13)],
+   [∅, ∅, ∅, ∑(3, 14)],
+   [∅, ∅, ∅, ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∅, ∑(3, 14)],
+   [∅, ∑(2, 11), ∅, ∑(2, 15)]],
+
+  [[∅, ∅, ∑(1, 12), ∑(5, 12)],
+   [∅, ∅, ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∅, ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∅, ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∅, ∑(1, 12), ∑(5, 12)],
+   [∅, ∅, ∑(0, 13), ∑(4, 13)],
+   [∅, ∅, ∑(7, 14), ∑(3, 14)],
+   [∅, ∅, ∑(6, 15), ∑(2, 15)]]],
+
+
+ [[[∑(2, 8), ∅, ∅, ∑(6, 12)],
+   [∑(1, 9), ∅, ∅, ∑(5, 13)],
+   [∑(0, 10), ∅, ∅, ∑(4, 14)],
+   [∅, ∅, ∅, ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∅, ∑(3, 15)]],
+
+  [[∅, ∅, ∑(2, 12), ∑(6, 12)],
+   [∅, ∅, ∑(1, 13), ∑(5, 13)],
+   [∅, ∅, ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∅, ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∅, ∑(2, 12), ∑(6, 12)],
+   [∅, ∅, ∑(1, 13), ∑(5, 13)],
+   [∅, ∅, ∑(0, 14), ∑(4, 14)],
+   [∅, ∅, ∑(7, 15), ∑(3, 15)]]],
+
+
+ [[[∑(3, 8), ∅, ∅, ∑(7, 12)],
+   [∑(2, 9), ∅, ∅, ∑(6, 13)],
+   [∑(1, 10), ∅, ∅, ∑(5, 14)],
+   [∑(0, 11), ∅, ∅, ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∅, ∑(3, 12), ∑(7, 12)],
+   [∅, ∅, ∑(2, 13), ∑(6, 13)],
+   [∅, ∅, ∑(1, 14), ∑(5, 14)],
+   [∅, ∅, ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∅, ∑(3, 12), ∑(7, 12)],
+   [∅, ∅, ∑(2, 13), ∑(6, 13)],
+   [∅, ∅, ∑(1, 14), ∑(5, 14)],
+   [∅, ∅, ∑(0, 15), ∑(4, 15)]]]]
+1: ⊥
+2: ⊥
+success_path [step 24]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(true)(c5); c7 = keep_if(false)(c6); c8 = keep_if(false)(c7); c9 = keep_if(false)(c8);:
+0: [[[[∑(0, 8), ∅, ∅, ∑(4, 12)],
+   [∅, ∅, ∅, ∑(3, 13)],
+   [∅, ∅, ∅, ∑(2, 14)],
+   [∅, ∅, ∅, ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∅, ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∅, ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∅, ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∅, ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∅, ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∅, ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∅, ∑(0, 12), ∑(4, 12)],
+   [∅, ∅, ∑(7, 13), ∑(3, 13)],
+   [∅, ∅, ∑(6, 14), ∑(2, 14)],
+   [∅, ∅, ∑(5, 15), ∑(1, 15)]]],
+
+
+ [[[∑(1, 8), ∅, ∅, ∑(5, 12)],
+   [∑(0, 9), ∅, ∅, ∑(4, 13)],
+   [∅, ∅, ∅, ∑(3, 14)],
+   [∅, ∅, ∅, ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∅, ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∅, ∑(1, 12), ∑(5, 12)],
+   [∅, ∅, ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∅, ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∅, ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∅, ∑(1, 12), ∑(5, 12)],
+   [∅, ∅, ∑(0, 13), ∑(4, 13)],
+   [∅, ∅, ∑(7, 14), ∑(3, 14)],
+   [∅, ∅, ∑(6, 15), ∑(2, 15)]]],
+
+
+ [[[∑(2, 8), ∅, ∅, ∑(6, 12)],
+   [∑(1, 9), ∅, ∅, ∑(5, 13)],
+   [∑(0, 10), ∅, ∅, ∑(4, 14)],
+   [∅, ∅, ∅, ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∅, ∑(2, 12), ∑(6, 12)],
+   [∅, ∅, ∑(1, 13), ∑(5, 13)],
+   [∅, ∅, ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∅, ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∅, ∑(2, 12), ∑(6, 12)],
+   [∅, ∅, ∑(1, 13), ∑(5, 13)],
+   [∅, ∅, ∑(0, 14), ∑(4, 14)],
+   [∅, ∅, ∑(7, 15), ∑(3, 15)]]],
+
+
+ [[[∑(3, 8), ∅, ∅, ∑(7, 12)],
+   [∑(2, 9), ∅, ∅, ∑(6, 13)],
+   [∑(1, 10), ∅, ∅, ∑(5, 14)],
+   [∑(0, 11), ∅, ∅, ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∅, ∑(3, 12), ∑(7, 12)],
+   [∅, ∅, ∑(2, 13), ∑(6, 13)],
+   [∅, ∅, ∑(1, 14), ∑(5, 14)],
+   [∅, ∅, ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∅, ∑(3, 12), ∑(7, 12)],
+   [∅, ∅, ∑(2, 13), ∑(6, 13)],
+   [∅, ∅, ∑(1, 14), ∑(5, 14)],
+   [∅, ∅, ∑(0, 15), ∑(4, 15)]]]]
+1: ⊥
+2: ⊥
+success_path [step 23]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(true)(c5); c7 = keep_if(false)(c6); c8 = keep_if(false)(c7);:
+0: [[[[∑(0, 8), ∅, ∑(0, 12), ∑(4, 12)],
+   [∅, ∅, ∑(7, 13), ∑(3, 13)],
+   [∅, ∅, ∑(6, 14), ∑(2, 14)],
+   [∅, ∅, ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∅, ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∅, ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∅, ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∅, ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∅, ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∅, ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∅, ∑(0, 12), ∑(4, 12)],
+   [∅, ∅, ∑(7, 13), ∑(3, 13)],
+   [∅, ∅, ∑(6, 14), ∑(2, 14)],
+   [∅, ∅, ∑(5, 15), ∑(1, 15)]]],
+
+
+ [[[∑(1, 8), ∅, ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∅, ∑(0, 13), ∑(4, 13)],
+   [∅, ∅, ∑(7, 14), ∑(3, 14)],
+   [∅, ∅, ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∅, ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∅, ∑(1, 12), ∑(5, 12)],
+   [∅, ∅, ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∅, ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∅, ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∅, ∑(1, 12), ∑(5, 12)],
+   [∅, ∅, ∑(0, 13), ∑(4, 13)],
+   [∅, ∅, ∑(7, 14), ∑(3, 14)],
+   [∅, ∅, ∑(6, 15), ∑(2, 15)]]],
+
+
+ [[[∑(2, 8), ∅, ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∅, ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∅, ∑(0, 14), ∑(4, 14)],
+   [∅, ∅, ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∅, ∑(2, 12), ∑(6, 12)],
+   [∅, ∅, ∑(1, 13), ∑(5, 13)],
+   [∅, ∅, ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∅, ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∅, ∑(2, 12), ∑(6, 12)],
+   [∅, ∅, ∑(1, 13), ∑(5, 13)],
+   [∅, ∅, ∑(0, 14), ∑(4, 14)],
+   [∅, ∅, ∑(7, 15), ∑(3, 15)]]],
+
+
+ [[[∑(3, 8), ∅, ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∅, ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∅, ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∅, ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∅, ∑(3, 12), ∑(7, 12)],
+   [∅, ∅, ∑(2, 13), ∑(6, 13)],
+   [∅, ∅, ∑(1, 14), ∑(5, 14)],
+   [∅, ∅, ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∅, ∑(3, 12), ∑(7, 12)],
+   [∅, ∅, ∑(2, 13), ∑(6, 13)],
+   [∅, ∅, ∑(1, 14), ∑(5, 14)],
+   [∅, ∅, ∑(0, 15), ∑(4, 15)]]]]
+1: ⊥
+2: ⊥
+success_path [step 22]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(true)(c5); c7 = keep_if(false)(c6);:
+0: [[[[∑(0, 8), ∅, ∑(0, 12), ∑(4, 12)],
+   [∅, ∅, ∑(7, 13), ∑(3, 13)],
+   [∅, ∅, ∑(6, 14), ∑(2, 14)],
+   [∅, ∅, ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∅, ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∅, ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∅, ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∅, ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∅, ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∅, ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∅, ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∅, ∑(1, 11), ∑(5, 15), ∑(1, 15)]]],
+
+
+ [[[∑(1, 8), ∅, ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∅, ∑(0, 13), ∑(4, 13)],
+   [∅, ∅, ∑(7, 14), ∑(3, 14)],
+   [∅, ∅, ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∅, ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∅, ∑(1, 12), ∑(5, 12)],
+   [∅, ∅, ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∅, ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∅, ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∅, ∑(2, 11), ∑(6, 15), ∑(2, 15)]]],
+
+
+ [[[∑(2, 8), ∅, ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∅, ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∅, ∑(0, 14), ∑(4, 14)],
+   [∅, ∅, ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∅, ∑(2, 12), ∑(6, 12)],
+   [∅, ∅, ∑(1, 13), ∑(5, 13)],
+   [∅, ∅, ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∅, ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∑(7, 15), ∑(3, 15)]]],
+
+
+ [[[∑(3, 8), ∅, ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∅, ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∅, ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∅, ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∅, ∑(3, 12), ∑(7, 12)],
+   [∅, ∅, ∑(2, 13), ∑(6, 13)],
+   [∅, ∅, ∑(1, 14), ∑(5, 14)],
+   [∅, ∅, ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]]]]
+1: ⊥
+2: ⊥
+success_path [step 21]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(true)(c5);:
+0: [[[[∑(0, 8), ∅, ∑(0, 12), ∑(4, 12)],
+   [∅, ∅, ∑(7, 13), ∑(3, 13)],
+   [∅, ∅, ∑(6, 14), ∑(2, 14)],
+   [∅, ∅, ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∅, ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∅, ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∅, ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∅, ∑(1, 11), ∑(5, 15), ∑(1, 15)]]],
+
+
+ [[[∑(1, 8), ∅, ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∅, ∑(0, 13), ∑(4, 13)],
+   [∅, ∅, ∑(7, 14), ∑(3, 14)],
+   [∅, ∅, ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∅, ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∅, ∑(2, 11), ∑(6, 15), ∑(2, 15)]]],
+
+
+ [[[∑(2, 8), ∅, ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∅, ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∅, ∑(0, 14), ∑(4, 14)],
+   [∅, ∅, ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∑(7, 15), ∑(3, 15)]]],
+
+
+ [[[∑(3, 8), ∅, ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∅, ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∅, ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∅, ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]]]]
+1: ⊥
+2: ⊥
+success_path [step 20]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4);:
+0: [[[[∑(0, 8), ∅, ∑(0, 12), ∑(4, 12)],
+   [∅, ∅, ∑(7, 13), ∑(3, 13)],
+   [∅, ∅, ∑(6, 14), ∑(2, 14)],
+   [∅, ∅, ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∅, ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∅, ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∅, ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∅, ∑(1, 11), ∑(5, 15), ∑(1, 15)]]],
+
+
+ [[[∑(1, 8), ∅, ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∅, ∑(0, 13), ∑(4, 13)],
+   [∅, ∅, ∑(7, 14), ∑(3, 14)],
+   [∅, ∅, ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∅, ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∅, ∑(2, 11), ∑(6, 15), ∑(2, 15)]]],
+
+
+ [[[∑(2, 8), ∅, ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∅, ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∅, ∑(0, 14), ∑(4, 14)],
+   [∅, ∅, ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∑(7, 15), ∑(3, 15)]]],
+
+
+ [[[∑(3, 8), ∅, ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∅, ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∅, ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∅, ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]]]]
+1: ⊥
+2: ⊥
+success_path [step 19]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2); c4 = keep_if(false)(c3);:
+0: [[[[∑(0, 8), ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∅, ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∅, ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∅, ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∅, ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∅, ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∅, ∑(1, 11), ∑(5, 15), ∑(1, 15)]]],
+
+
+ [[[∑(1, 8), ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∅, ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∅, ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∅, ∑(2, 11), ∑(6, 15), ∑(2, 15)]]],
+
+
+ [[[∑(2, 8), ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∑(7, 15), ∑(3, 15)]]],
+
+
+ [[[∑(3, 8), ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]]]]
+1: ⊥
+2: ⊥
+success_path [step 18]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1); c3 = keep_if[d0 < +d2](c2);:
+0: [[[[∑(0, 8), ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∅, ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∅, ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∅, ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∅, ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∑(0, 8), ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∑(1, 11), ∑(5, 15), ∑(1, 15)]]],
+
+
+ [[[∑(1, 8), ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∅, ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∅, ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∑(1, 8), ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∑(2, 11), ∑(6, 15), ∑(2, 15)]]],
+
+
+ [[[∑(2, 8), ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∑(2, 8), ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∑(3, 11), ∑(7, 15), ∑(3, 15)]]],
+
+
+ [[[∑(3, 8), ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∑(3, 8), ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∑(4, 11), ∑(0, 15), ∑(4, 15)]]]]
+1: ⊥
+2: ⊥
+success_path [step 17]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0); c2 = keep_if(false)(c1);:
+0: [[[[∑(0, 8), ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∅, ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∅, ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∅, ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∅, ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∅, ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∑(0, 8), ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∑(0, 8), ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∑(1, 11), ∑(5, 15), ∑(1, 15)]]],
+
+
+ [[[∑(1, 8), ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∅, ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∅, ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∅, ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∅, ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∑(1, 8), ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∑(1, 8), ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∑(2, 11), ∑(6, 15), ∑(2, 15)]]],
+
+
+ [[[∑(2, 8), ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∅, ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∅, ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∅, ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∑(2, 8), ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∑(2, 8), ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∑(3, 11), ∑(7, 15), ∑(3, 15)]]],
+
+
+ [[[∑(3, 8), ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∅, ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∅, ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∅, ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∅, ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∑(3, 8), ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∑(3, 8), ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∑(4, 11), ∑(0, 15), ∑(4, 15)]]]]
+1: ⊥
+2: ⊥
+success_path [step 16]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if[d0 >= +d2](c0);:
+0: [[[[∑(0, 8), ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∅, ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∅, ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∅, ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∑(0, 8), ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∑(0, 8), ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∑(0, 8), ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∑(1, 11), ∑(5, 15), ∑(1, 15)]]],
+
+
+ [[[∑(1, 8), ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∅, ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∅, ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∑(1, 8), ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∑(1, 8), ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∑(1, 8), ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∑(2, 11), ∑(6, 15), ∑(2, 15)]]],
+
+
+ [[[∑(2, 8), ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∅, ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∑(2, 8), ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∑(2, 8), ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∑(2, 8), ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∑(3, 11), ∑(7, 15), ∑(3, 15)]]],
+
+
+ [[[∑(3, 8), ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∑(3, 8), ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∑(3, 8), ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∑(3, 8), ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∑(4, 11), ∑(0, 15), ∑(4, 15)]]]]
+1: ⊥
+2: ⊥
+success_path [step 15]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult); c0 = broadcast(mult);:
+0: [[[[∑(0, 8), ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∑(0, 8), ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∑(0, 8), ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+  [[∑(0, 8), ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+   [∑(7, 9), ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+   [∑(6, 10), ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+   [∑(5, 11), ∑(1, 11), ∑(5, 15), ∑(1, 15)]]],
+
+
+ [[[∑(1, 8), ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∑(1, 8), ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∑(1, 8), ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+  [[∑(1, 8), ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+   [∑(0, 9), ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+   [∑(7, 10), ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+   [∑(6, 11), ∑(2, 11), ∑(6, 15), ∑(2, 15)]]],
+
+
+ [[[∑(2, 8), ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∑(2, 8), ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∑(2, 8), ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+  [[∑(2, 8), ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+   [∑(1, 9), ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+   [∑(0, 10), ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+   [∑(7, 11), ∑(3, 11), ∑(7, 15), ∑(3, 15)]]],
+
+
+ [[[∑(3, 8), ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∑(3, 8), ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∑(3, 8), ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∑(4, 11), ∑(0, 15), ∑(4, 15)]],
+
+  [[∑(3, 8), ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+   [∑(2, 9), ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+   [∑(1, 10), ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+   [∑(0, 11), ∑(4, 11), ∑(0, 15), ∑(4, 15)]]]]
+1: ⊥
+2: ⊥
+success_path [step 14]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); mult = stack(a_for_mult, b_for_mult);:
+0: [[[∑(0, 8), ∑(4, 8), ∑(0, 12), ∑(4, 12)],
+  [∑(7, 9), ∑(3, 9), ∑(7, 13), ∑(3, 13)],
+  [∑(6, 10), ∑(2, 10), ∑(6, 14), ∑(2, 14)],
+  [∑(5, 11), ∑(1, 11), ∑(5, 15), ∑(1, 15)]],
+
+ [[∑(1, 8), ∑(5, 8), ∑(1, 12), ∑(5, 12)],
+  [∑(0, 9), ∑(4, 9), ∑(0, 13), ∑(4, 13)],
+  [∑(7, 10), ∑(3, 10), ∑(7, 14), ∑(3, 14)],
+  [∑(6, 11), ∑(2, 11), ∑(6, 15), ∑(2, 15)]],
+
+ [[∑(2, 8), ∑(6, 8), ∑(2, 12), ∑(6, 12)],
+  [∑(1, 9), ∑(5, 9), ∑(1, 13), ∑(5, 13)],
+  [∑(0, 10), ∑(4, 10), ∑(0, 14), ∑(4, 14)],
+  [∑(7, 11), ∑(3, 11), ∑(7, 15), ∑(3, 15)]],
+
+ [[∑(3, 8), ∑(7, 8), ∑(3, 12), ∑(7, 12)],
+  [∑(2, 9), ∑(6, 9), ∑(2, 13), ∑(6, 13)],
+  [∑(1, 10), ∑(5, 10), ∑(1, 14), ∑(5, 14)],
+  [∑(0, 11), ∑(4, 11), ∑(0, 15), ∑(4, 15)]]]
+1: ⊥
+2: ⊥
+success_path [step 13]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b);:
+0: [[[0, 4, 0, 4],
+  [7, 3, 7, 3],
+  [6, 2, 6, 2],
+  [5, 1, 5, 1]],
+
+ [[1, 5, 1, 5],
+  [0, 4, 0, 4],
+  [7, 3, 7, 3],
+  [6, 2, 6, 2]],
+
+ [[2, 6, 2, 6],
+  [1, 5, 1, 5],
+  [0, 4, 0, 4],
+  [7, 3, 7, 3]],
+
+ [[3, 7, 3, 7],
+  [2, 6, 2, 6],
+  [1, 5, 1, 5],
+  [0, 4, 0, 4]]]
+1: [[[8, 8, 12, 12],
+  [9, 9, 13, 13],
+  [10, 10, 14, 14],
+  [11, 11, 15, 15]],
+
+ [[8, 8, 12, 12],
+  [9, 9, 13, 13],
+  [10, 10, 14, 14],
+  [11, 11, 15, 15]],
+
+ [[8, 8, 12, 12],
+  [9, 9, 13, 13],
+  [10, 10, 14, 14],
+  [11, 11, 15, 15]],
+
+ [[8, 8, 12, 12],
+  [9, 9, 13, 13],
+  [10, 10, 14, 14],
+  [11, 11, 15, 15]]]
+2: ⊥
+success_path [step 12]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1); recv_b = stack(recv_b1, recv_b2);:
+0: [[[0, 4, 0, 4],
+  [7, 3, 7, 3],
+  [6, 2, 6, 2],
+  [5, 1, 5, 1]],
+
+ [[1, 5, 1, 5],
+  [0, 4, 0, 4],
+  [7, 3, 7, 3],
+  [6, 2, 6, 2]],
+
+ [[2, 6, 2, 6],
+  [1, 5, 1, 5],
+  [0, 4, 0, 4],
+  [7, 3, 7, 3]],
+
+ [[3, 7, 3, 7],
+  [2, 6, 2, 6],
+  [1, 5, 1, 5],
+  [0, 4, 0, 4]]]
+1: [[[8, 12],
+  [9, 13],
+  [10, 14],
+  [11, 15]],
+
+ [[8, 12],
+  [9, 13],
+  [10, 14],
+  [11, 15]],
+
+ [[8, 12],
+  [9, 13],
+  [10, 14],
+  [11, 15]],
+
+ [[8, 12],
+  [9, 13],
+  [10, 14],
+  [11, 15]]]
+2: ⊥
+success_path [step 11]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b); recv_b2 = rot[shift=4](recv_b2_1);:
+0: [[[0, 4, 0, 4],
+  [7, 3, 7, 3],
+  [6, 2, 6, 2],
+  [5, 1, 5, 1]],
+
+ [[1, 5, 1, 5],
+  [0, 4, 0, 4],
+  [7, 3, 7, 3],
+  [6, 2, 6, 2]],
+
+ [[2, 6, 2, 6],
+  [1, 5, 1, 5],
+  [0, 4, 0, 4],
+  [7, 3, 7, 3]],
+
+ [[3, 7, 3, 7],
+  [2, 6, 2, 6],
+  [1, 5, 1, 5],
+  [0, 4, 0, 4]]]
+1: [[12, 13, 14, 15],
+ [12, 13, 14, 15],
+ [12, 13, 14, 15],
+ [12, 13, 14, 15]]
+2: [[8, 9, 10, 11],
+ [8, 9, 10, 11],
+ [8, 9, 10, 11],
+ [8, 9, 10, 11]]
+success_path [step 10]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1); recv_b2_1 = id(b);:
+0: [[[0, 4, 0, 4],
+  [7, 3, 7, 3],
+  [6, 2, 6, 2],
+  [5, 1, 5, 1]],
+
+ [[1, 5, 1, 5],
+  [0, 4, 0, 4],
+  [7, 3, 7, 3],
+  [6, 2, 6, 2]],
+
+ [[2, 6, 2, 6],
+  [1, 5, 1, 5],
+  [0, 4, 0, 4],
+  [7, 3, 7, 3]],
+
+ [[3, 7, 3, 7],
+  [2, 6, 2, 6],
+  [1, 5, 1, 5],
+  [0, 4, 0, 4]]]
+1: [[8, 9, 10, 11, 12, 13, 14, 15],
+ [8, 9, 10, 11, 12, 13, 14, 15],
+ [8, 9, 10, 11, 12, 13, 14, 15],
+ [8, 9, 10, 11, 12, 13, 14, 15]]
+2: [[8, 9, 10, 11],
+ [8, 9, 10, 11],
+ [8, 9, 10, 11],
+ [8, 9, 10, 11]]
+success_path [step 9]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b); recv_b1 = rot[shift=0](recv_b1_1);:
+0: [[[0, 4, 0, 4],
+  [7, 3, 7, 3],
+  [6, 2, 6, 2],
+  [5, 1, 5, 1]],
+
+ [[1, 5, 1, 5],
+  [0, 4, 0, 4],
+  [7, 3, 7, 3],
+  [6, 2, 6, 2]],
+
+ [[2, 6, 2, 6],
+  [1, 5, 1, 5],
+  [0, 4, 0, 4],
+  [7, 3, 7, 3]],
+
+ [[3, 7, 3, 7],
+  [2, 6, 2, 6],
+  [1, 5, 1, 5],
+  [0, 4, 0, 4]]]
+1: [[8, 9, 10, 11, 12, 13, 14, 15],
+ [8, 9, 10, 11, 12, 13, 14, 15],
+ [8, 9, 10, 11, 12, 13, 14, 15],
+ [8, 9, 10, 11, 12, 13, 14, 15]]
+2: [[8, 9, 10, 11],
+ [8, 9, 10, 11],
+ [8, 9, 10, 11],
+ [8, 9, 10, 11]]
+success_path [step 8]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b); recv_b1_1 = id(b);:
+0: [[[0, 4, 0, 4],
+  [7, 3, 7, 3],
+  [6, 2, 6, 2],
+  [5, 1, 5, 1]],
+
+ [[1, 5, 1, 5],
+  [0, 4, 0, 4],
+  [7, 3, 7, 3],
+  [6, 2, 6, 2]],
+
+ [[2, 6, 2, 6],
+  [1, 5, 1, 5],
+  [0, 4, 0, 4],
+  [7, 3, 7, 3]],
+
+ [[3, 7, 3, 7],
+  [2, 6, 2, 6],
+  [1, 5, 1, 5],
+  [0, 4, 0, 4]]]
+1: [[8, 9, 10, 11, 12, 13, 14, 15],
+ [8, 9, 10, 11, 12, 13, 14, 15],
+ [8, 9, 10, 11, 12, 13, 14, 15],
+ [8, 9, 10, 11, 12, 13, 14, 15]]
+2: [[8, 9, 10, 11, 12, 13, 14, 15],
+ [8, 9, 10, 11, 12, 13, 14, 15],
+ [8, 9, 10, 11, 12, 13, 14, 15],
+ [8, 9, 10, 11, 12, 13, 14, 15]]
+success_path [step 7]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); b = broadcast(b);:
+0: [[[0, 4, 0, 4],
+  [7, 3, 7, 3],
+  [6, 2, 6, 2],
+  [5, 1, 5, 1]],
+
+ [[1, 5, 1, 5],
+  [0, 4, 0, 4],
+  [7, 3, 7, 3],
+  [6, 2, 6, 2]],
+
+ [[2, 6, 2, 6],
+  [1, 5, 1, 5],
+  [0, 4, 0, 4],
+  [7, 3, 7, 3]],
+
+ [[3, 7, 3, 7],
+  [2, 6, 2, 6],
+  [1, 5, 1, 5],
+  [0, 4, 0, 4]]]
+1: [[8, 9, 10, 11, 12, 13, 14, 15],
+ [8, 9, 10, 11, 12, 13, 14, 15],
+ [8, 9, 10, 11, 12, 13, 14, 15],
+ [8, 9, 10, 11, 12, 13, 14, 15]]
+2: ⊥
+success_path [step 6]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a);:
+0: [[[0, 4, 0, 4],
+  [7, 3, 7, 3],
+  [6, 2, 6, 2],
+  [5, 1, 5, 1]],
+
+ [[1, 5, 1, 5],
+  [0, 4, 0, 4],
+  [7, 3, 7, 3],
+  [6, 2, 6, 2]],
+
+ [[2, 6, 2, 6],
+  [1, 5, 1, 5],
+  [0, 4, 0, 4],
+  [7, 3, 7, 3]],
+
+ [[3, 7, 3, 7],
+  [2, 6, 2, 6],
+  [1, 5, 1, 5],
+  [0, 4, 0, 4]]]
+1: [8, 9, 10, 11, 12, 13, 14, 15]
+2: ⊥
+success_path [step 5]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2);:
+0: [[[0, 4],
+  [7, 3],
+  [6, 2],
+  [5, 1]],
+
+ [[1, 5],
+  [0, 4],
+  [7, 3],
+  [6, 2]],
+
+ [[2, 6],
+  [1, 5],
+  [0, 4],
+  [7, 3]],
+
+ [[3, 7],
+  [2, 6],
+  [1, 5],
+  [0, 4]]]
+1: [8, 9, 10, 11, 12, 13, 14, 15]
+2: ⊥
+success_path [step 4]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a); recv_a2 = rot[shift=4](recv_a2_1);:
+0: [[4, 3, 2, 1],
+ [5, 4, 3, 2],
+ [6, 5, 4, 3],
+ [7, 6, 5, 4]]
+1: [8, 9, 10, 11, 12, 13, 14, 15]
+2: [[0, 7, 6, 5],
+ [1, 0, 7, 6],
+ [2, 1, 0, 7],
+ [3, 2, 1, 0]]
+success_path [step 3]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = xform[cf=7,cr=1,dr=4](a);:
+0: [[0, 7, 6, 5, 4, 3, 2, 1],
+ [1, 0, 7, 6, 5, 4, 3, 2],
+ [2, 1, 0, 7, 6, 5, 4, 3],
+ [3, 2, 1, 0, 7, 6, 5, 4]]
+1: [8, 9, 10, 11, 12, 13, 14, 15]
+2: [[0, 7, 6, 5],
+ [1, 0, 7, 6],
+ [2, 1, 0, 7],
+ [3, 2, 1, 0]]
+success_path [step 2]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a); recv_a1 = rot[shift=0](recv_a1_1);:
+0: [[0, 1, 2, 3, 4, 5, 6, 7],
+ [0, 1, 2, 3, 4, 5, 6, 7],
+ [0, 1, 2, 3, 4, 5, 6, 7],
+ [0, 1, 2, 3, 4, 5, 6, 7]]
+1: [8, 9, 10, 11, 12, 13, 14, 15]
+2: [[0, 7, 6, 5],
+ [1, 0, 7, 6],
+ [2, 1, 0, 7],
+ [3, 2, 1, 0]]
+success_path [step 1]
+[init]; a = broadcast(a); recv_a1_1 = xform[cf=7,cr=1,dr=4](a);:
+0: [[0, 1, 2, 3, 4, 5, 6, 7],
+ [0, 1, 2, 3, 4, 5, 6, 7],
+ [0, 1, 2, 3, 4, 5, 6, 7],
+ [0, 1, 2, 3, 4, 5, 6, 7]]
+1: [8, 9, 10, 11, 12, 13, 14, 15]
+2: [[0, 7, 6, 5, 4, 3, 2, 1],
+ [1, 0, 7, 6, 5, 4, 3, 2],
+ [2, 1, 0, 7, 6, 5, 4, 3],
+ [3, 2, 1, 0, 7, 6, 5, 4]]
+success_path [step 0]
+[init]; a = broadcast(a);:
+0: [[0, 1, 2, 3, 4, 5, 6, 7],
+ [0, 1, 2, 3, 4, 5, 6, 7],
+ [0, 1, 2, 3, 4, 5, 6, 7],
+ [0, 1, 2, 3, 4, 5, 6, 7]]
+1: [8, 9, 10, 11, 12, 13, 14, 15]
+2: ⊥
+stats:: n_syms=16;
+stats:0 name=broadcast; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1; value_checks=[];
+stats:: n_syms=16;
+stats:1 name=xforms_no_group{main=1,out=1,second=0}; pruning=false; tested=19; failed=0; pruned=0; copy_count=0; continued=19; in_solution=1; value_checks=[];
+stats:: n_syms=16;
+stats:2 name=rots_no_group{main=1,out=1,second=0}; pruning=false; tested=145; failed=0; pruned=0; copy_count=0; continued=145; in_solution=1; value_checks=[];
+stats:: n_syms=16;
+stats:3 name=xforms_no_group{main=1,out=1,second=0}; pruning=true; tested=16184; failed=0; pruned=15584; copy_count=0; continued=600; in_solution=1; value_checks=[(2, 6279), (4, 3618), (5, 1352), (8, 1819), (9, 647), (10, 369), (11, 185), (16, 20), (33, 531), (34, 192), (37, 139), (38, 75), (39, 52), (40, 9), (45, 29), (59, 198), (62, 9), (63, 9), (65, 4), (70, 4), (81, 4), (101, 26), (102, 2), (103, 4), (109, 4), (116, 4)];
+stats:: n_syms=16;
+stats:4 name=rots_no_group{main=1,out=1,second=0}; pruning=true; tested=4794; failed=0; pruned=4448; copy_count=0; continued=346; in_solution=1; value_checks=[(1, 3272), (2, 827), (4, 186), (5, 27), (8, 136)];
+stats:: n_syms=16;
+stats:5 name=stack; pruning=false; tested=346; failed=0; pruned=0; copy_count=0; continued=346; in_solution=1; value_checks=[];
+stats:: n_syms=16;
+stats:6 name=a_dup_mult64; pruning=false; tested=346; failed=0; pruned=0; copy_count=0; continued=346; in_solution=1; value_checks=[];
+stats:: n_syms=16;
+stats:7 name=broadcast; pruning=false; tested=346; failed=0; pruned=0; copy_count=0; continued=346; in_solution=1; value_checks=[];
+stats:: n_syms=16;
+stats:8 name=xforms_no_group{main=1,out=1,second=0}; pruning=false; tested=38721; failed=0; pruned=0; copy_count=0; continued=38721; in_solution=1; value_checks=[];
+stats:: n_syms=16;
+stats:9 name=rots_no_group{main=1,out=1,second=0}; pruning=false; tested=309762; failed=0; pruned=0; copy_count=0; continued=309762; in_solution=1; value_checks=[];
+stats:: n_syms=16;
+stats:10 name=xforms_no_group{main=1,out=1,second=0}; pruning=true; tested=34693344; failed=0; pruned=33332556; copy_count=0; continued=1360788; in_solution=1; value_checks=[(18, 11910088), (21, 7970921), (22, 3224217), (27, 3753288), (28, 1339280), (29, 671387), (30, 437664), (31, 95436), (48, 1407690), (49, 644649), (54, 321572), (55, 169796), (56, 96139), (57, 33880), (58, 84378), (82, 495833), (87, 102701), (88, 64330), (89, 23169), (90, 7607), (91, 15900), (96, 36322), (97, 6224), (98, 5190), (99, 3460), (100, 10372), (127, 283500), (128, 71231), (129, 6220), (130, 5532), (131, 6566), (132, 19372), (134, 8642)];
+stats:: n_syms=16;
+stats:11 name=rots_no_group{main=1,out=1,second=0}; pruning=true; tested=10886302; failed=0; pruned=10111870; copy_count=0; continued=774432; in_solution=1; value_checks=[(1, 6856995), (3, 1868329), (6, 591607), (7, 164250), (12, 489569), (13, 88541), (14, 31134), (15, 21445)];
+stats:: n_syms=16;
+stats:12 name=stack; pruning=false; tested=774432; failed=0; pruned=0; copy_count=0; continued=774432; in_solution=1; value_checks=[];
+stats:: n_syms=16;
+stats:13 name=b_dup_mult64; pruning=false; tested=774432; failed=0; pruned=0; copy_count=0; continued=774432; in_solution=1; value_checks=[];
+stats:: n_syms=64;
+stats:14 name=stack{fold_len=2}; pruning=true; tested=774432; failed=0; pruned=774169; copy_count=0; continued=263; in_solution=1; value_checks=[(1, 730118), (2, 33252), (3, 136), (4, 7347), (5, 1307), (6, 4), (8, 1310), (9, 16), (10, 8), (16, 52), (17, 27), (18, 8), (32, 584)];
+stats:: n_syms=64;
+stats:15 name=broadcast{group=1}; pruning=false; tested=263; failed=0; pruned=0; copy_count=0; continued=263; in_solution=1; value_checks=[];
+stats:: n_syms=64;
+stats:16 name=cond_keep_no_consts{restrict=[3,0,1,0]}; pruning=true; tested=3675; failed=0; pruned=2096; copy_count=0; continued=1579; in_solution=1; value_checks=[(1, 472), (2, 313), (4, 362), (5, 188), (16, 176), (18, 136), (32, 184), (33, 131), (36, 89), (40, 45)];
+stats:: n_syms=64;
+stats:17 name=cond_keep_no_consts{restrict=[3,0,1,1]}; pruning=true; tested=22097; failed=0; pruned=21755; copy_count=4286; continued=342; in_solution=1; value_checks=[(1, 3325), (3, 2389), (6, 2276), (7, 1186), (8, 1980), (9, 1072), (10, 721), (11, 470), (17, 414), (19, 244), (20, 293), (22, 166), (24, 228), (26, 74), (34, 606), (35, 478), (37, 466), (38, 229), (41, 191), (42, 128), (44, 276), (45, 35), (48, 88), (49, 60), (52, 54), (56, 20)];
+stats:: n_syms=64;
+stats:18 name=cond_keep_no_consts{restrict=[3,0,1,2]}; pruning=true; tested=4779; failed=0; pruned=4710; copy_count=1044; continued=69; in_solution=1; value_checks=[(12, 1134), (13, 576), (14, 531), (15, 313), (21, 272), (23, 108), (25, 74), (27, 43), (28, 170), (30, 35), (39, 106), (43, 48), (46, 59), (47, 23), (50, 15), (51, 29), (53, 67), (57, 18), (60, 45)];
+stats:: n_syms=64;
+stats:19 name=cond_keep_no_consts{restrict=[3,0,1,3]}; pruning=true; tested=960; failed=0; pruned=959; copy_count=219; continued=1; in_solution=1; value_checks=[(29, 280), (31, 178), (55, 124), (59, 48), (62, 65), (63, 45)];
+stats:: n_syms=64;
+stats:20 name=cond_keep_no_consts{restrict=[3,1,1,0]}; pruning=true; tested=13; failed=0; pruned=0; copy_count=0; continued=13; in_solution=1; value_checks=[];
+stats:: n_syms=64;
+stats:21 name=cond_keep_no_consts{restrict=[3,1,1,1]}; pruning=true; tested=178; failed=0; pruned=177; copy_count=12; continued=1; in_solution=1; value_checks=[(1, 91), (3, 49), (20, 25)];
+stats:: n_syms=64;
+stats:22 name=cond_keep_no_consts{restrict=[3,1,1,2]}; pruning=true; tested=9; failed=0; pruned=8; copy_count=8; continued=1; in_solution=1; value_checks=[];
+stats:: n_syms=64;
+stats:23 name=cond_keep_no_consts{restrict=[3,1,1,3]}; pruning=true; tested=10; failed=0; pruned=9; copy_count=9; continued=1; in_solution=1; value_checks=[];
+stats:: n_syms=64;
+stats:24 name=cond_keep_no_consts{restrict=[3,2,1,0]}; pruning=true; tested=9; failed=0; pruned=0; copy_count=0; continued=9; in_solution=1; value_checks=[];
+stats:: n_syms=64;
+stats:25 name=cond_keep_no_consts{restrict=[3,2,1,1]}; pruning=true; tested=121; failed=0; pruned=118; copy_count=15; continued=3; in_solution=1; value_checks=[(8, 60), (9, 35), (17, 8)];
+stats:: n_syms=64;
+stats:26 name=cond_keep_no_consts{restrict=[3,2,1,2]}; pruning=true; tested=40; failed=0; pruned=37; copy_count=37; continued=3; in_solution=1; value_checks=[];
+stats:: n_syms=64;
+stats:27 name=cond_keep_no_consts{restrict=[3,2,1,3]}; pruning=true; tested=34; failed=0; pruned=33; copy_count=13; continued=1; in_solution=1; value_checks=[(29, 18), (31, 2)];
+stats:: n_syms=64;
+stats:28 name=cond_keep_no_consts{restrict=[3,3,1,0]}; pruning=true; tested=14; failed=0; pruned=0; copy_count=0; continued=14; in_solution=1; value_checks=[];
+stats:: n_syms=64;
+stats:29 name=cond_keep_no_consts{restrict=[3,3,1,1]}; pruning=true; tested=183; failed=0; pruned=137; copy_count=137; continued=46; in_solution=1; value_checks=[];
+stats:: n_syms=64;
+stats:30 name=cond_keep_no_consts{restrict=[3,3,1,2]}; pruning=true; tested=644; failed=0; pruned=643; copy_count=45; continued=1; in_solution=1; value_checks=[(12, 322), (13, 184), (21, 92)];
+stats:: n_syms=64;
+stats:31 name=cond_keep_no_consts{restrict=[3,3,1,3]}; pruning=true; tested=10; failed=0; pruned=9; copy_count=9; continued=1; in_solution=1; value_checks=[];
+stats:: n_syms=15;
+stats:32 name=reshape{fold_len=16}; pruning=true; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1; value_checks=[];
+stats:: n_syms=15;
+stats:33 name=transpose; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1; value_checks=[];
+stats:: n_syms=15;
+stats:34 name=reshape; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1; value_checks=[];
+stats:: n_syms=0;
+stats:35 name=(last); pruning=false; tested=1; failed=0; pruned=0; copy_count=0; continued=1; in_solution=1; value_checks=[];
+search:specs/swinv_like/l1/mult-64-with-16-shared.swflow success=true; mode=First; prune_fuel=64; time=6066.522074048;

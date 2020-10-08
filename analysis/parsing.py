@@ -61,7 +61,8 @@ def parse_results(stream):
                 stats = accum.pop()
                 stats.update(parsed)
                 parsed = stats
-            accum.append(parsed)
+            if accum is not None:
+                accum.append(parsed)
     return ret
 
 def parse_file(path):

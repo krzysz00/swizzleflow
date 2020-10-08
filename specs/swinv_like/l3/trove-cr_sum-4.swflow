@@ -1,0 +1,7 @@
+x: [128] = range(0, 128)
+loaded: [32, 4] = load_rep(x)
+s1: [32, 4] = ?row_xforms(loaded)
+s2: [32, 4] = ?row_rots(s1)
+s3: [32, 4] = ?col_xforms(s2)
+s4: [32, 4] = fold ?col_rots(s3)
+goal: [32] trove_sum {n=4}

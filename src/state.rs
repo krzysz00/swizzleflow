@@ -442,7 +442,9 @@ impl<'d, 't> ProgState<'d, 't> {
         for l in op.drop_lanes.iter().copied() {
             new_state[l] = Cow::Owned(None);
         }
-        let name = format!("{} {} = {}{};", name, op.var, gather.name, op.arg_string);
+        let name = format!("{} {} = fold[{}] {}{};", name,
+                           op.var, op.fold_len.unwrap(),
+                           gather.name, op.arg_string);
         ProgState::making_inverse(domain, new_state, name,
                                   Some(&op.lane_out_offsets))
     }
