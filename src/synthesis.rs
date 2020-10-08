@@ -285,7 +285,8 @@ pub fn synthesize<'d, 'l>(start: &ProgState<'d, 'l>, target: &ProgState<'d, 'sta
                          target.domain.terms_in_level(step.op.term_level).len()
                      }));
         }
-        println!("stats:{} name={}; pruning={}; {}", idx,
+        println!("stats:{} var={}; op_name={}; pruning={}; {}", idx,
+                 steps.get(idx).map_or(&"(last)".into(), |step| &step.op.var),
                  steps.get(idx).map_or(&"(last)".into(), |step| &step.op.op_name),
                  steps.get(idx).map_or(false, |l| l.op.prune),
                  stats);
