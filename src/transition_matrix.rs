@@ -17,7 +17,7 @@ use ndarray::{Ix};
 use std::io::{Write,Read,BufReader,BufWriter};
 use std::path::Path;
 
-use crate::state::Operation;
+use crate::state::{OpType, Operation};
 use crate::matrix::{MatrixOps, Matrix};
 use crate::misc::{ShapeVec, OffsetsVec, shapes_to_offsets,
                   open_file, create_file,
@@ -297,18 +297,29 @@ pub fn build_mat<T: MatrixOps>(op: &Operation, out_shape: &[Option<ShapeVec>])
     let out_lane = op.out_lane;
 
     // Preserved lanes need to be passed through
+    // Note, something like v = range(a, b) preserves all the lanes except the one
+    // that's about to contain v
     let preserved_lanes = (0..op.lane_in_shapes.len()).filter(
         |&i| i != op.out_lane && !op.drop_lanes.contains(&i) && op.lane_in_shapes[i].is_some())
         .map(|i| (i, op.lane_in_lens[i]))
         .collect::<SmallVec<[(usize, usize); 3]>>();
+    let fns =
+        match &op.op {
+            OpType::Take(_) => &[],
+            // If we can summarize a basis, use that summary to save time
+            OpType::Apply { fns: _fns, summary: Some(s) } =>
+                ref_slice::ref_slice(s),
+            OpType::Apply { fns , summary: None } =>
+                fns
+        };
     let n_args = op.in_lanes.len();
     let arg_lanes = &op.in_lanes;
 
-    let n_ops = op.fns.len();
+    let n_ops = fns.len();
 
     let mut ret = GenTransitionMatrix::<T>::general_with_row_size_hint(
         &op.lane_in_shapes, &out_shape, n_ops);
-    for fun in &op.fns {
+    for fun in fns {
         for (output1, (a1, e1)) in fun.data.into_iter().copied().enumerate()
             .filter(|&(_, (a, e))| a < n_args && e >= 0
                     && (e as usize) < op.lane_in_lens[arg_lanes[a]])
@@ -384,7 +395,7 @@ pub fn op_matrix_name(op: &Operation, out_shape: &[Option<ShapeVec>]) -> String 
         op.out_lane,
         if op.drop_lanes.is_empty() { "" } else { " -"},
         op.drop_lanes.iter().map(|i| i.to_string()).join("-"),
-        op.op_name,
+        if op.op.is_take() { "" } else { &op.op_name },
         shapes_to_string(out_shape)
     )
 }

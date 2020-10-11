@@ -13,9 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::misc::{time_since, COLLECT_STATS};
-use crate::state::{ProgState,DomRef};
+use crate::state::{ProgState, DomRef, Operation, OpType, ValueSource};
 use crate::transition_matrix::{TransitionMatrix};
-use crate::operators::SearchStep;
 
 use std::collections::{HashMap,BTreeMap};
 
@@ -28,6 +27,8 @@ use std::sync::{Arc, RwLock, Mutex};
 
 use itertools::Itertools;
 use itertools::iproduct;
+
+use ndarray::ArrayD;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Mode {
@@ -192,13 +193,14 @@ fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
 }
 
 fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
-                      steps: &'f [SearchStep], current_step: usize,
+                      ops: &'f [Operation], current_step: usize,
+                      universes: &[Vec<DomRef>], literals: &[ArrayD<DomRef>],
                       stats: &'f [SearchStepStats], mode: Mode,
                       caches: &'f [SearchResultCache<'d>],
                       print: bool, print_pruned: bool, prune_fuel: usize) -> bool {
     let tracker = &stats[current_step];
 
-    if current_step == steps.len() {
+    if current_step == ops.len() {
         tracker.checking();
         if current == target {
             tracker.success();
@@ -214,25 +216,25 @@ fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'stati
         }
     }
 
-    let step = &steps[current_step];
-    let op = &step.op;
-    let gathers = &step.op.fns;
+    let op = &ops[current_step];
     let cache = caches[current_step].clone();
 
     let proceed = |new_state: &ProgState<'d, '_>| {
         tracker.checking();
         if op.prune {
             if !viable(new_state, target,
-                       step.matrix.as_ref().expect("Pruning matrix to be in place"),
-                       step.copy_bounds.as_ref(),
-                       new_state.domain.terms_in_level(op.term_level),
+                       op.abstractions.pairs_matrix.as_ref()
+                       .expect("Pruning matrix to be in place"),
+                       op.abstractions.copy_bounds.as_ref(),
+                       &universes[op.universe_idx],
                        cache.as_ref(), &tracker,
                        current_step, print_pruned, prune_fuel) {
                 return false;
             }
         }
-        let ret = search(new_state, target, steps,
-                         current_step + 1, stats, mode, caches,
+        let ret = search(new_state, target, ops,
+                         current_step + 1, universes, literals,
+                         stats, mode, caches,
                          print, print_pruned, prune_fuel);
         if ret {
             tracker.success();
@@ -243,52 +245,72 @@ fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'stati
         ret
     };
     let ret =
-        match mode {
-            Mode::All => {
-                gathers.iter().map(
-                    |f| {
-                        let res = current.gather_by(f, op);
+        match &op.op {
+            OpType::Apply { fns, summary: _summary } => {
+                match mode {
+                    Mode::All => {
+                        fns.iter().map(
+                            |f| {
+                                let res = current.gather_by(f, op);
+                                proceed(&res)
+                            })
+                        // Yep, this is meant not to be short-circuiting
+                            .fold(false, |acc, new| new || acc)
+                    }
+                    Mode::First => {
+                        fns.iter().any(
+                            |f| {
+                                let res = current.gather_by(f, op);
+                                proceed(&res)
+                            })
+                    }
+                }
+            },
+            OpType::Take(source) => {
+                match source {
+                    ValueSource::Literal(idx) => {
+                        let literal = &literals[*idx];
+                        let res = current.set_value(literal, &op.op_name, op);
                         proceed(&res)
-                    })
-                    // Yep, this is meant not to be short-circuiting
-                    .fold(false, |acc, new| new || acc)
-            }
-            Mode::First => {
-                gathers.iter().any(
-                    |f| {
-                        let res = current.gather_by(f, op);
-                        proceed(&res)
-                    })
-            }
+                    }
+                }
+            },
         };
     ret
 }
 
-pub fn synthesize<'d, 'l>(start: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
-                  steps: &[SearchStep],
+pub fn synthesize<'d, 'l>(target: &ProgState<'d, 'static>,
+                  ops: &[Operation], universes: &[Vec<DomRef>], literals: &[ArrayD<DomRef>],
                   mode: Mode, print: bool, print_pruned: bool, prune_fuel: usize,
                           spec_name: &str) -> bool {
-    let n_steps = steps.len();
-    let stats = (0..n_steps+1).map(|_| SearchStepStats::new()).collect::<Vec<_>>();
+    let start = ProgState::empty(target.domain);
+
+    for (i, op) in ops.iter().enumerate() {
+        if op.prune && op.abstractions.pairs_matrix.is_none() {
+            panic!("Missing matrix for {} ({} <- {})", i, op.var, op.op_name);
+        }
+    }
+    let n_ops = ops.len();
+    let stats = (0..n_ops+1).map(|_| SearchStepStats::new()).collect::<Vec<_>>();
     let caches: Vec<SearchResultCache>
-        = (0..n_steps).map(|_| Arc::new(RwLock::new(HashMap::new()))).collect();
+        = (0..n_ops).map(|_| Arc::new(RwLock::new(HashMap::new()))).collect();
 
     let start_time = Instant::now();
-    let ret = search(start, target, steps, 0, &stats,
+    let ret = search(&start, target, ops, 0, universes, literals, &stats,
                      mode, &caches, print, print_pruned, prune_fuel);
     let dur = time_since(start_time);
 
     for (idx, stats) in (&stats).iter().enumerate() {
         if COLLECT_STATS {
             println!("stats:: n_syms={};",
-                     steps.get(idx).map_or(0, |step| {
-                         target.domain.terms_in_level(step.op.term_level).len()
+                     ops.get(idx).map_or(0, |op| {
+                         universes[op.universe_idx].len()
                      }));
         }
         println!("stats:{} var={}; op_name={}; pruning={}; {}", idx,
-                 steps.get(idx).map_or(&"(last)".into(), |step| &step.op.var),
-                 steps.get(idx).map_or(&"(last)".into(), |step| &step.op.op_name),
-                 steps.get(idx).map_or(false, |l| l.op.prune),
+                 ops.get(idx).map_or(&"(last)".into(), |op| &op.var),
+                 ops.get(idx).map_or(&"(last)".into(), |op| &op.op_name),
+                 ops.get(idx).map_or(false, |op| op.prune),
                  stats);
     }
     println!("search:{} success={}; mode={:?}; prune_fuel={}; time={};",

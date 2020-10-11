@@ -19,8 +19,7 @@ pub mod hvx;
 
 use crate::errors::*;
 
-use crate::state::{Gather, to_opt_ix, Operation};
-use crate::transition_matrix::{TransitionMatrix};
+use crate::state::{Gather, to_opt_ix};
 use crate::misc::{ShapeVec};
 
 use ndarray::Ix;
@@ -143,20 +142,6 @@ pub fn rot_idx_l(in_shapes: &[ShapeVec],
             (0, to_opt_ix(&idxs, in_shape))
         }, format!("rot_idx{{l={}}}", rot));
     Ok(vec![gather])
-}
-
-#[derive(Debug)]
-pub struct SearchStep {
-    pub op: Operation,
-    pub matrix: Option<TransitionMatrix>,
-    // min and max, if computed and distinct
-    pub copy_bounds: Option<(Vec<u32>, Vec<u32>)>,
-}
-
-impl SearchStep {
-    pub fn new(op: Operation) -> Self {
-        Self {op , matrix: None, copy_bounds: None }
-    }
 }
 
 #[cfg(test)]

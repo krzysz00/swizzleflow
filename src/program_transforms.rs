@@ -15,54 +15,41 @@
 use crate::errors::*;
 
 use crate::misc::{extending_set, ShapeVec};
-use crate::state::{Operation, Value, Domain, ProgState};
-use crate::parser::{Statement, OpType};
-use crate::operators::SearchStep;
+use crate::state::{OpType, Operation, Value, DomRef, Domain, ProgState};
+use crate::parser;
+use crate::parser::{Statement};
 
-use std::collections::{HashMap,BinaryHeap};
+use std::collections::{HashMap,BinaryHeap,BTreeSet};
 use std::cmp::Reverse;
+use std::iter::FromIterator;
 
-use ndarray::ArrayD;
+use ndarray::{ArrayD, Ix};
 
 use smallvec::{SmallVec};
 
 use itertools::Itertools;
 
-fn remap_refs(stmt: &mut Statement, map: &[usize]) {
-    for i in stmt.args.iter_mut() {
-        *i = map[*i];
-    }
-    for i in stmt.used_at.iter_mut() {
-        *i = map[*i];
-    }
+#[derive(Clone, Debug)]
+pub enum UniverseDef {
+    // Literal refers to the array of literals,
+    // all others to the array of universe definitions
+    Literal(Ix),
+    Union(SmallVec<[Ix; 3]>),
+    Fold(Ix),
 }
 
-pub fn bring_literals_up(parsed: Vec<Statement>) -> Vec<Statement> {
-    let n_ops = parsed.len();
-    if n_ops == 0 { return parsed; }
+fn union_universes(args: Vec<&[DomRef]>) -> Vec<DomRef> {
+    args.into_iter().flat_map(|s| s.iter()).copied().dedup().collect()
+}
 
-    let (inits, mut ops) = parsed.into_iter().enumerate()
-        .partition::<Vec<_>, _>(|(_, s)| s.op.is_initial());
-
-    if ops.is_empty() { return inits.into_iter().map(|(_, s)| s).collect(); }
-    // Shut off pruning on final operation
-    let last_op = ops.len() - 1;
-    ops[last_op].1.prune = false;
-    let mut map = vec![None; n_ops];
-    for (new, &(old, _)) in inits.iter().enumerate() {
-        map[old] = Some(new);
-    }
-    let offset = inits.len();
-    for (new, &(old, _)) in ops.iter().enumerate() {
-        map[old] = Some(new + offset);
-    }
-
-    let map: Option<Vec<usize>> = map.into_iter().collect();
-    let map = map.expect("no operations to be dropped");
-
-    (inits.into_iter().chain(ops.into_iter()))
-        .map(|(_, mut s)| { remap_refs(&mut s, &map); s})
-        .collect::<Vec<Statement>>()
+fn fold_universe(domain: &Domain, universe: &[DomRef]) -> Vec<DomRef> {
+    let current_set = BTreeSet::from_iter(universe.iter().copied());
+    let superterms: BTreeSet<DomRef> = universe.iter().copied()
+        .flat_map(|idx| domain.imm_superterms(idx).iter().copied())
+        .collect();
+    superterms.into_iter()
+        .filter(|idx| domain.subterms_all_within(*idx, &current_set))
+        .collect()
 }
 
 fn next_free_lane(free: &mut BinaryHeap<Reverse<usize>>, max_lanes: &mut usize) -> usize {
@@ -76,20 +63,21 @@ fn next_free_lane(free: &mut BinaryHeap<Reverse<usize>>, max_lanes: &mut usize) 
     }
 }
 
-pub fn to_program(statements: Vec<Statement>) -> (Vec<Option<ArrayD<Value>>>, Vec<Operation>, usize) {
+pub fn to_program(statements: Vec<Statement>)
+                  -> (Vec<ArrayD<Value>>, Vec<Operation>, Vec<UniverseDef>, usize) {
     // Assigning lanes is equivalent to register allocation
     // Except that we get to conjure up more registers whenever we want
     let n_statements = statements.len();
     let mut lanes = Vec::with_capacity(n_statements);
-    let mut levels = Vec::with_capacity(n_statements);
+    let mut universes = Vec::with_capacity(n_statements);
 
     let mut lane_shapes = Vec::new();
     let mut var_names = Vec::with_capacity(n_statements);
     let mut max_lanes = 0;
 
-    let n_initials = statements.iter().take_while(|s| s.op.is_initial()).count();
-    let mut initials = Vec::with_capacity(n_initials);
-    let mut ops = Vec::with_capacity(n_statements - n_initials);
+    let mut literals = Vec::new();
+    let mut ops = Vec::with_capacity(n_statements);
+    let mut universe_defs = Vec::new();
 
     let mut lane_ends: HashMap<usize, SmallVec<[usize; 2]>> = HashMap::new();
     let mut free_lanes = BinaryHeap::new();
@@ -101,44 +89,59 @@ pub fn to_program(statements: Vec<Statement>) -> (Vec<Option<ArrayD<Value>>>, Ve
                 free_lanes.push(Reverse(lanes[v]))
             }
         }
-        match op {
-            OpType::Initial(literal) => {
-                let lane = next_free_lane(&mut free_lanes, &mut max_lanes);
-                lanes.push(lane);
-                let level = literal.fold(usize::MAX, |x, v| std::cmp::min(x, v.level()));
-                levels.push(level);
-                extending_set(&mut initials, lane, Some(literal));
-                var_names.push(var);
-                assert!(args.is_empty());
-            },
-            OpType::Gathers(fns, fold_len) => {
-                let arg_string = format!("({})", args.iter().copied()
-                                         .map(|a| var_names[a].clone()).join(", "));
-                let level = args.iter().copied().map(|a| levels[a]).min()
-                    .unwrap_or(1) + if fold_len.is_some() { 1 } else { 0 };
-                levels.push(level);
+        let lane = next_free_lane(&mut free_lanes, &mut max_lanes);
+        lanes.push(lane);
+        var_names.push(var.clone());
+        let (op, fold_len, arg_string, universe_idx) =
+            match op {
+                parser::OpType::Initial(literal) => {
+                    let literal_idx = literals.len();
+                    literals.push(literal);
 
-                args.iter_mut().for_each(|i| *i = lanes[*i]);
+                    let universe_idx = universe_defs.len();
+                    universe_defs.push(UniverseDef::Literal(literal_idx));
 
-                let lane = next_free_lane(&mut free_lanes, &mut max_lanes);
-                lanes.push(lane);
-                var_names.push(var.clone());
+                    assert!(args.is_empty());
+                    (OpType::literal_idx(literal_idx), None,
+                     "".to_owned(), universe_idx)
+                },
+                parser::OpType::Gathers(fns, fold_len) => {
+                    let arg_string = format!("({})", args.iter().copied()
+                                             .map(|a| var_names[a].clone()).join(", "));
+                    let universe_idx = if args.len() > 1 {
+                        let idx = universe_defs.len();
+                        universe_defs.push(
+                            UniverseDef::Union(args.iter().copied()
+                                               .map(|a| universes[a]).collect()));
+                        idx
+                    } else { universes[args.get(0).copied()
+                                       .expect("functions to have an argument")] };
+                    let universe_idx =
+                        if fold_len.is_some() {
+                            let idx = universe_defs.len();
+                            universe_defs.push(UniverseDef::Fold(universe_idx));
+                            idx
+                        } else { universe_idx };
+                    // Arguments now refer to lanes, not variables
+                    args.iter_mut().for_each(|i| *i = lanes[*i]);
 
-                let mut drop_lanes = Vec::new();
-                if let Some(vars) = lane_ends.get(&idx) {
-                    drop_lanes.extend(vars.iter().copied()
-                                      .map(|v| lanes[v])
-                                      .filter(|&l| l != lane));
+                    (OpType::fns(fns, args.len()), fold_len, arg_string, universe_idx)
                 }
-                let op = Operation::new(fns, fold_len,
-                                        lane_shapes.clone(), out_shape.clone(),
-                                        var, arg_string, name,
-                                        args, lane, drop_lanes,
-                                        prune, level);
-                ops.push(op);
-            }
-        };
-        let lane = lanes[idx];
+            };
+        universes.push(universe_idx);
+        let mut drop_lanes = Vec::new();
+        if let Some(vars) = lane_ends.get(&idx) {
+            drop_lanes.extend(vars.iter().copied()
+                              .map(|v| lanes[v])
+                              .filter(|&l| l != lane));
+        }
+        let op = Operation::new(op, fold_len,
+                                lane_shapes.clone(), out_shape.clone(),
+                                var, arg_string, name,
+                                args, lane, drop_lanes,
+                                prune, universe_idx);
+        ops.push(op);
+
         extending_set(&mut lane_shapes, lane, Some(out_shape));
         if let Some(last_live) = used_at.iter().copied().max() {
             lane_ends.entry(last_live)
@@ -157,25 +160,26 @@ pub fn to_program(statements: Vec<Statement>) -> (Vec<Option<ArrayD<Value>>>, Ve
             }
         }
     }
-    for _ in initials.len()..max_lanes {
-        initials.push(None);
-    }
     for o in ops.iter_mut() {
         o.extend_shapes(max_lanes);
     }
-    (initials, ops, max_lanes)
+    (literals, ops, universe_defs, max_lanes)
 }
 
 pub fn to_search_problem<'d>(
     domain: &'d Domain,
     // Initials have been padded with Nones
-    initials: &[Option<ArrayD<Value>>], operations: &[Operation],
-    target: ArrayD<Value>)
-    -> Result<(ProgState<'d, 'static>, Vec<SearchStep>,
-               ProgState<'d, 'static>, Vec<Option<ShapeVec>>)>
+    literals: &[ArrayD<Value>],
+    operations: &[Operation],
+    target: ArrayD<Value>, universe_defs: &[UniverseDef])
+    -> Result<(Vec<ArrayD<DomRef>>, // literals
+               ProgState<'d, 'static>, // target
+               Vec<Vec<DomRef>>, // universes
+               Vec<Option<ShapeVec>>)> // output shape
 {
-    let steps = operations.iter().map(|o| SearchStep::new(o.clone())).collect();
-    let init = ProgState::new_from_spec(domain, initials.to_owned(), "[init];", None);
+    let literals: Vec<ArrayD<DomRef>> =
+        literals.iter().map(|a| domain.literal_to_refs(a.view())).collect();
+
     let last_op = &operations[operations.len()-1];
     let target_shape = ShapeVec::from_slice(target.shape());
     let mut target_vec = vec![None; last_op.lane_in_lens.len()];
@@ -189,5 +193,28 @@ pub fn to_search_problem<'d>(
     if last_op_shape != expected_shape {
         return Err(ErrorKind::BadGoalShape(last_op_shape, expected_shape).into());
     }
-    Ok((init, steps, target_state, last_op_shape))
+
+    let mut universes: Vec<Vec<DomRef>> = Vec::with_capacity(universe_defs.len());
+    for def in universe_defs {
+        universes.push(
+            match def {
+                UniverseDef::Literal(idx) => {
+                    literals[*idx]
+                        .iter().copied()
+                        .filter(|&x| x != crate::state::NOT_IN_DOMAIN
+                                && x != crate::state::ZERO)
+                        .collect::<Vec<DomRef>>()
+                    },
+                    UniverseDef::Union(ref args) => {
+                        let args = args.iter().copied()
+                            .map(|x| universes[x].as_ref()).collect();
+                        union_universes(args)
+                    },
+                    UniverseDef::Fold(prev) => {
+                        fold_universe(domain, &universes[*prev])
+                    }
+                });
+        }
+
+    Ok((literals, target_state, universes, last_op_shape))
 }

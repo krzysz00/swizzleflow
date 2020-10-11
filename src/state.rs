@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::misc::{in_bounds, ShapeVec, OffsetsVec, shapes_to_offsets};
+use crate::abstractions::Abstractions;
 
 use ndarray::{ArrayViewD,ArrayD,Ix,Axis};
 use ndarray::{Dimension,Zip,FoldWhile};
@@ -135,11 +136,10 @@ pub const NOT_IN_DOMAIN: DomRef = 1;
 pub struct Domain {
     elements: Vec<Value>,
     element_map: HashMap<Value, DomRef>,
-    level_elements: Vec<Vec<DomRef>>,
     subterms_of: Vec<Vec<DomRef>>,
+    fold_ref_map: HashMap<Vec<DomRef>, DomRef>,
     imm_superterms: Vec<Vec<DomRef>>,
     imm_subterms: Vec<BTreeSet<DomRef>>,
-    fold_ref_map: HashMap<Vec<DomRef>, DomRef>,
     max_lanes: usize,
 }
 
@@ -154,14 +154,8 @@ impl Domain {
         }
 
         let mut elements: Vec<Value> = Vec::new();
-        let mut level_elements: Vec<Vec<usize>> = Vec::with_capacity(store.len());
         for level in store.into_iter() {
             // Returned in sorted order
-            level_elements.push(Self::level_range_to_elems(
-                elements.len(), elements.len() + level.len()));
-            println!("elements: {:?}, start: {}, end: {}",
-                     level_elements[level_elements.len() - 1],
-                     elements.len(), elements.len() + level.len());
             for e in level.into_iter() {
                 elements.push(e)
             }
@@ -208,27 +202,21 @@ impl Domain {
             }).collect::<HashMap<Vec<DomRef>, DomRef>>();
         // Semantics of empty fold
         fold_ref_map.insert(vec![], *element_map.get(&Value::Empty).unwrap());
-        Domain { elements, level_elements, element_map, subterms_of, fold_ref_map,
-                 imm_subterms, imm_superterms, max_lanes }
+        Domain { elements, element_map,
+                 subterms_of, imm_superterms, imm_subterms, fold_ref_map,
+                 max_lanes,}
     }
 
-    // Spiral through the range in the order 0, 1, 1/2, 1/4, 3/4, 1/8, 3/8, ...
-    fn level_range_to_elems(start: DomRef, end: DomRef) -> Vec<DomRef> {
-        if start >= end { panic!("Empty level: indices {} to {}", start, end)};
-
-        let len = end - start;
-        let rounded = len.next_power_of_two();
-        let log2 = rounded.trailing_zeros() as usize;
-        (std::iter::once(start)).chain(
-            (1..=log2).flat_map(
-                move |log| {
-                    let div = 1 << log;
-                    (1..=div).step_by(2).map(move |i| start + ((len * i) / div))
-                }))
-            .unique().collect::<Vec<DomRef>>()
+    pub fn n_elements(&self) -> usize {
+        self.elements.len() - 2 // Don't count ZERO or NOT_IN_DOMAIN
     }
+
     pub fn find_value(&self, value: &Value) -> Option<DomRef> {
         self.element_map.get(value).copied()
+    }
+
+    pub fn literal_to_refs(&self, values: ArrayViewD<Value>) -> ArrayD<DomRef> {
+        values.map(|v| self.find_value(v).unwrap_or(NOT_IN_DOMAIN))
     }
 
     pub fn get_value(&self, dom_ref: DomRef) -> &Value {
@@ -248,24 +236,15 @@ impl Domain {
         self.fold_ref_map.get(elems).copied()
     }
 
-    pub fn subterms_all_within(&self, elem: DomRef, expected: &BTreeSet<DomRef>) -> bool {
-        self.imm_subterms[elem].is_subset(expected)
-    }
-
     pub fn imm_superterms(&self, elem: DomRef) -> &[DomRef] {
         &self.imm_superterms[elem]
     }
 
+    pub fn subterms_all_within(&self, elem: DomRef, expected: &BTreeSet<DomRef>) -> bool {
+        self.imm_subterms[elem].is_subset(expected)
+    }
+
     pub fn max_lanes(&self) -> usize { self.max_lanes }
-
-    pub fn terms_in_level(&self, level: usize) -> &[DomRef] {
-        &self.level_elements[level]
-    }
-
-    pub fn longest_level_len(&self) -> usize {
-        self.level_elements.iter().map(|r| r.len())
-            .max().unwrap_or(self.elements.len())
-    }
 }
 
 // Ok, the general pruning rule is this:
@@ -330,6 +309,11 @@ impl<'d, 't> ProgState<'d, 't> {
         Self { domain, state, name, inv_state: inverse }
     }
 
+    pub fn empty(domain: &'d Domain) -> Self {
+        let state = (0..domain.max_lanes).map(|_| Cow::Owned(None)).collect();
+        Self::making_inverse(domain, state, "".to_owned(), None)
+    }
+
     pub fn new(domain: &'d Domain, state: Vec<Option<ArrayD<DomRef>>>,
                name: impl Into<String>, offsets: Option<&OffsetsVec>) -> Self {
         let state = state.into_iter().map(|x| Cow::Owned(x)).collect();
@@ -354,6 +338,31 @@ impl<'d, 't> ProgState<'d, 't> {
         }
     }
 
+    // Caller must set up teh Option<> for operational reasons
+    pub fn set_value<'u: 't, 'r>(&'u self, literal: &'r ArrayD<DomRef>,
+                                 value_name: &'r str,
+                                 op: &'r Operation) -> ProgState<'d, 't> {
+        if op.has_fold() {
+            panic!("No folding the immediate results of blocks!");
+        }
+        let Self {state, domain, name, inv_state: _inv_state} = self;
+        let mut new_state = Vec::with_capacity(state.len());
+        for s in state.into_iter() {
+            match *s {
+                Cow::Borrowed(r) => new_state.push(Cow::Borrowed(r)),
+                Cow::Owned(ref v) => new_state.push(Cow::Borrowed(v)),
+            }
+        };
+        // Sadly, no good way to wrap an Option<> around pointer
+        new_state[op.out_lane] = Cow::Owned(Some(literal.clone()));
+        for l in op.drop_lanes.iter().copied() {
+            new_state[l] = Cow::Owned(None);
+        }
+        let name = format!("{} {} = {}{};", name, op.var, value_name, op.arg_string);
+        ProgState::making_inverse(domain, new_state, name,
+                                  Some(&op.lane_out_offsets))
+    }
+
     pub fn gather_by<'u: 't, 'r>(&'u self, gather: &'r Gather, op:
                                  &'r Operation) -> ProgState<'d, 't> {
         // Read off the edge to get \bot
@@ -375,7 +384,7 @@ impl<'d, 't> ProgState<'d, 't> {
                                           else { s.get(idx as usize).copied().unwrap_or(NOT_IN_DOMAIN) })
                                      .unwrap_or(ZERO));
         let Self {state, domain, name, inv_state: _inv_state} = self;
-        let mut new_state = vec![];
+        let mut new_state = Vec::with_capacity(state.len());
         for s in state.into_iter() {
             match *s {
                 Cow::Borrowed(r) => new_state.push(Cow::Borrowed(r)),
@@ -430,8 +439,8 @@ impl<'d, 't> ProgState<'d, 't> {
                     let data = data.as_slice().unwrap();
                     self.fold_find(data, &mut elements, slices.as_slice())
                 });
-                let Self {state, domain, name, inv_state: _inv_state} = self;
-        let mut new_state = vec![];
+        let Self {state, domain, name, inv_state: _inv_state} = self;
+        let mut new_state = Vec::with_capacity(state.len());
         for s in state.into_iter() {
             match *s {
                 Cow::Borrowed(r) => new_state.push(Cow::Borrowed(r)),
@@ -600,9 +609,43 @@ impl fmt::Display for Gather {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct Operation {
+pub enum ValueSource {
+    Literal(usize),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct Fns {
     pub fns: Vec<Gather>,
     pub fns_summary: Option<Gather>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum OpType {
+    Apply { fns: Vec<Gather>, summary: Option<Gather> },
+    Take(ValueSource),
+}
+
+impl OpType {
+    pub fn fns(fns: Vec<Gather>, n_args: usize) -> Self {
+        let summary = summarize(&fns, n_args);
+        OpType::Apply { fns, summary }
+    }
+
+    pub fn literal_idx(idx: usize) -> Self {
+        OpType::Take(ValueSource::Literal(idx))
+    }
+
+    pub fn is_take(&self) -> bool {
+        match self {
+            OpType::Take(_) => true,
+            _ => false,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Operation {
+    pub op: OpType,
 
     pub fold_len: Option<NonZeroUsize>,
 
@@ -621,16 +664,16 @@ pub struct Operation {
     pub drop_lanes: Vec<usize>,
 
     pub prune: bool,
-    pub term_level: usize,
+    pub universe_idx: usize,
+    pub abstractions: Abstractions,
 }
 
 impl Operation {
-    pub fn new(fns: Vec<Gather>, fold_len: Option<NonZeroUsize>,
+    pub fn new(op: OpType, fold_len: Option<NonZeroUsize>,
                lane_in_shapes: Vec<Option<ShapeVec>>, out_shape: ShapeVec,
                var: String, arg_string: String, op_name: String,
                in_lanes: Vec<usize>, out_lane: usize, drop_lanes: Vec<usize>,
-               prune: bool, term_level: usize) -> Self {
-        let fns_summary = summarize(&fns, in_lanes.len());
+               prune: bool, universe_idx: usize) -> Self {
         let lane_in_lens = lane_in_shapes.iter().map(
             |ms| ms.as_ref().map_or(0, |s| s.iter().copied().product()))
             .collect();
@@ -645,12 +688,13 @@ impl Operation {
                 } else {
                     s
                 }));
-        Self { fns, fns_summary, fold_len,
+        Self { op, fold_len,
                lane_in_shapes, lane_in_lens,
                out_shape, lane_out_offsets,
                var, arg_string, op_name,
                in_lanes, out_lane, drop_lanes,
-               prune, term_level }
+               prune, universe_idx,
+               abstractions: Abstractions::default() }
     }
 
     pub fn extend_shapes(&mut self, max_lanes: usize) {
@@ -666,11 +710,16 @@ impl Operation {
 
     pub fn prunes_like_identity(&self) -> bool {
         if self.has_fold() { return false; }
-        if let Some(summary) = self.fns_summary.as_ref() {
-            summary.is_identity() && self.drop_lanes.is_empty()
-        }
-        else {
-            false
+        match self.op {
+            OpType::Take(_) => false,
+            OpType::Apply { fns: ref _fns, ref summary} => {
+                if let Some(summary) = summary.as_ref() {
+                    summary.is_identity() && self.drop_lanes.is_empty()
+                }
+                else {
+                    false
+                }
+            }
         }
     }
 }

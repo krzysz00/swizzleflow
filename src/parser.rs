@@ -616,9 +616,9 @@ fn parse_statement(custom_fns: &mut DefsMap, var_map: &mut VarMap,
             if toks[pos+n_folds].t == LSquare || toks[pos+n_folds].t == Range {
                 let (literal, pos) = parse_literal(Some(&out_shape), toks, pos)?;
                 var_map.insert(var.clone(), vars.len());
+                let name = format!{"init_{}", var};
                 let statement = Statement { var, in_shapes: vec![], out_shape,
-                                            used_at: vec![], args: vec![],
-                                            name: "literal_mat_somehow".to_owned(),
+                                            used_at: vec![], args: vec![], name,
                                             prune: prune.unwrap_or(false),
                                             op: OpType::Initial(literal) };
                 vars.push(statement);
@@ -642,11 +642,13 @@ pub fn parse(toks: &[Token]) -> Result<(Vec<Statement>, Vec<ArrayD<Value>>)> {
     let mut pos = 0;
     let mut custom_fns = DefsMap::new();
     let mut var_map = VarMap::new();
-    let mut vars = vec![];
+    let mut vars: Vec<Statement> = vec![];
     let mut goals = vec![];
 
     loop {
         if toks[pos].t == EOF {
+            // Last statement doesn't prune
+            vars.last_mut().map(|s| s.prune = false);
             return Ok((vars, goals));
         }
         let (_, new_pos) = parse_statement(
