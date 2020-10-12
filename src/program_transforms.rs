@@ -64,7 +64,12 @@ fn next_free_lane(free: &mut BinaryHeap<Reverse<usize>>, max_lanes: &mut usize) 
 }
 
 pub fn to_program(statements: Vec<Statement>)
-                  -> (Vec<ArrayD<Value>>, Vec<Operation>, Vec<UniverseDef>, usize) {
+                  -> (Vec<ArrayD<Value>>, // literals,
+                      Vec<Operation>, // operations
+                      Vec<UniverseDef>, // universe definitons
+                      Vec<Option<ShapeVec>>, // output shape
+                      usize) // max lanes
+{
     // Assigning lanes is equivalent to register allocation
     // Except that we get to conjure up more registers whenever we want
     let n_statements = statements.len();
@@ -149,7 +154,12 @@ pub fn to_program(statements: Vec<Statement>)
                 .push(idx);
         }
         else {
-            free_lanes.push(Reverse(lane));
+            if idx != n_statements - 1 {
+                println!("WARNING - unused variable {}", ops[ops.len()-1].var);
+            }
+            lane_ends.entry(idx + 1)
+                .or_insert_with(|| SmallVec::<[usize; 2]>::new())
+                .push(idx);
         }
         if let Some(vars) = lane_ends.remove(&idx) {
             for v in vars {
@@ -163,7 +173,15 @@ pub fn to_program(statements: Vec<Statement>)
     for o in ops.iter_mut() {
         o.extend_shapes(max_lanes);
     }
-    (literals, ops, universe_defs, max_lanes)
+
+    let last_op = &ops[ops.len() - 1];
+    let mut last_op_shape = last_op.lane_in_shapes.clone();
+    last_op_shape[last_op.out_lane] = Some(last_op.out_shape.clone());
+    for l in last_op.drop_lanes.iter().copied() {
+        last_op_shape[l] = None;
+    }
+
+    (literals, ops, universe_defs, last_op_shape, max_lanes)
 }
 
 pub fn to_search_problem<'d>(
@@ -171,27 +189,26 @@ pub fn to_search_problem<'d>(
     // Initials have been padded with Nones
     literals: &[ArrayD<Value>],
     operations: &[Operation],
-    target: ArrayD<Value>, universe_defs: &[UniverseDef])
+    target: ArrayD<Value>,
+    expected_target_state_shape: &[Option<ShapeVec>],
+    universe_defs: &[UniverseDef])
     -> Result<(Vec<ArrayD<DomRef>>, // literals
                ProgState<'d, 'static>, // target
-               Vec<Vec<DomRef>>, // universes
-               Vec<Option<ShapeVec>>)> // output shape
+               Vec<Vec<DomRef>>)> // universes
 {
     let literals: Vec<ArrayD<DomRef>> =
         literals.iter().map(|a| domain.literal_to_refs(a.view())).collect();
 
     let last_op = &operations[operations.len()-1];
-    let target_shape = ShapeVec::from_slice(target.shape());
     let mut target_vec = vec![None; last_op.lane_in_lens.len()];
-    target_vec[operations[operations.len()-1].out_lane] = Some(target);
+    target_vec[last_op.out_lane] = Some(target);
     let target_state = ProgState::new_from_spec(domain, target_vec, "[target]", None);
-    let mut last_op_shape = last_op.lane_in_shapes.clone();
-    last_op_shape[last_op.out_lane] = Some(target_shape);
-    let expected_shape = target_state.state.iter()
+    let target_state_shape = target_state.state.iter()
         .map(|ma| ma.as_ref().as_ref().map(|a| ShapeVec::from_slice(a.shape())))
         .collect();
-    if last_op_shape != expected_shape {
-        return Err(ErrorKind::BadGoalShape(last_op_shape, expected_shape).into());
+    if target_state_shape != expected_target_state_shape {
+        return Err(ErrorKind::BadGoalShape(expected_target_state_shape.to_owned(),
+                                           target_state_shape).into());
     }
 
     let mut universes: Vec<Vec<DomRef>> = Vec::with_capacity(universe_defs.len());
@@ -216,5 +233,5 @@ pub fn to_search_problem<'d>(
                 });
         }
 
-    Ok((literals, target_state, universes, last_op_shape))
+    Ok((literals, target_state, universes))
 }
