@@ -15,9 +15,8 @@
 use crate::errors::*;
 
 use crate::misc::{extending_set, ShapeVec};
-use crate::state::{OpType, Operation, Value, DomRef, Domain, ProgState};
-use crate::parser;
-use crate::parser::{Statement};
+use crate::state::{OpType, Operation, Value, DomRef, Domain, ProgState, Block};
+use crate::parser::{Statement, StmtType, Dependency, VarIdx};
 
 use std::collections::{HashMap,BinaryHeap,BTreeSet};
 use std::cmp::Reverse;
@@ -63,43 +62,84 @@ fn next_free_lane(free: &mut BinaryHeap<Reverse<usize>>, max_lanes: &mut usize) 
     }
 }
 
-pub fn to_program(statements: Vec<Statement>)
-                  -> (Vec<ArrayD<Value>>, // literals,
-                      Vec<Operation>, // operations
-                      Vec<UniverseDef>, // universe definitons
-                      Vec<Option<ShapeVec>>, // output shape
-                      usize) // max lanes
-{
+fn to_var_idx(ix: VarIdx, n_deps: usize) -> usize {
+    match ix {
+        VarIdx::Dep(i) => i,
+        VarIdx::Here(i) => i + n_deps
+    }
+}
+
+fn to_program_rec(statements: Vec<Statement>,
+                  n_blocks: &mut usize, global_counter: &mut usize,
+                  literals: &mut Vec<ArrayD<Value>>,
+                  universe_defs: &mut Vec<UniverseDef>,
+                  dependencies: Vec<Dependency>,
+                  dep_universes: Vec<usize>)
+                  -> Block {
     // Assigning lanes is equivalent to register allocation
     // Except that we get to conjure up more registers whenever we want
-    let n_statements = statements.len();
-    let mut lanes = Vec::with_capacity(n_statements);
-    let mut universes = Vec::with_capacity(n_statements);
+    let block_num = *n_blocks;
+    *n_blocks += 1;
+
+    let n_deps = dependencies.len();
+    let n_stmts = statements.len();
+    let n_vars = n_deps + n_stmts;
+
+    let mut ops = Vec::with_capacity(n_stmts);
+
+    let mut lanes = Vec::with_capacity(n_vars);
+    let mut universes = Vec::with_capacity(n_vars);
 
     let mut lane_shapes = Vec::new();
-    let mut var_names = Vec::with_capacity(n_statements);
+    let mut var_names = Vec::with_capacity(n_vars);
     let mut max_lanes = 0;
-
-    let mut literals = Vec::new();
-    let mut ops = Vec::with_capacity(n_statements);
-    let mut universe_defs = Vec::new();
 
     let mut lane_ends: HashMap<usize, SmallVec<[usize; 2]>> = HashMap::new();
     let mut free_lanes = BinaryHeap::new();
-    for (idx, Statement { op, var, mut args,
-                          in_shapes: _in_shapes, out_shape,
-                          name, used_at, prune}) in statements.into_iter().enumerate() {
-        if let Some(vars) = lane_ends.get(&idx) {
+
+    for (idx, (Dependency { parent_idx: _parent_idx,
+                            used_at, var, shape },
+               universe))
+        in dependencies.into_iter().zip(dep_universes.into_iter()).enumerate()
+    {
+        let lane = next_free_lane(&mut free_lanes, &mut max_lanes);
+        lanes.push(lane);
+        var_names.push(var);
+        universes.push(universe);
+
+        extending_set(&mut lane_shapes, lane, Some(shape));
+        if let Some(last_live) = used_at.iter().copied().max() {
+            lane_ends.entry(last_live)
+                .or_insert_with(|| SmallVec::<[usize; 2]>::new())
+                .push(n_deps + idx);
+        }
+        else {
+            panic!("Unused dependency {}", &var_names[var_names.len() - 1]);
+        }
+    }
+
+    for (stmt_idx, Statement {
+        op, var, args,
+        in_shapes: _in_shapes, out_shape,
+        name, used_at, prune}) in statements.into_iter().enumerate()
+    {
+        let var_idx = stmt_idx + n_deps;
+        if let Some(vars) = lane_ends.get(&var_idx) {
             for v in vars.iter().copied() {
                 free_lanes.push(Reverse(lanes[v]))
             }
         }
+        // Arguments now refer to lanes, not variables
+        let arg_lanes = args.iter().copied()
+            .map(|i| lanes[to_var_idx(i, n_deps)])
+            .collect::<Vec<_>>();
+
         let lane = next_free_lane(&mut free_lanes, &mut max_lanes);
         lanes.push(lane);
         var_names.push(var.clone());
         let (op, fold_len, arg_string, universe_idx) =
             match op {
-                parser::OpType::Initial(literal) => {
+                StmtType::Initial(literal) => {
                     let literal_idx = literals.len();
                     literals.push(literal);
 
@@ -110,58 +150,82 @@ pub fn to_program(statements: Vec<Statement>)
                     (OpType::literal_idx(literal_idx), None,
                      "".to_owned(), universe_idx)
                 },
-                parser::OpType::Gathers(fns, fold_len) => {
-                    let arg_string = format!("({})", args.iter().copied()
-                                             .map(|a| var_names[a].clone()).join(", "));
+                StmtType::Gathers(fns, fold_len) => {
+                    let arg_string = format!(
+                        "({})", args.iter().copied()
+                            .map(|a| var_names[to_var_idx(a, n_deps)].clone())
+                            .join(", "));
                     let universe_idx = if args.len() > 1 {
                         let idx = universe_defs.len();
                         universe_defs.push(
                             UniverseDef::Union(args.iter().copied()
-                                               .map(|a| universes[a]).collect()));
+                                               .map(|a| universes[to_var_idx(a, n_deps)])
+                                               .collect()));
                         idx
-                    } else { universes[args.get(0).copied()
-                                       .expect("functions to have an argument")] };
+                    } else {
+                        universes[to_var_idx(
+                            args.get(0).copied()
+                                .expect("functions to have an argument"), n_deps)]
+                    };
                     let universe_idx =
                         if fold_len.is_some() {
                             let idx = universe_defs.len();
                             universe_defs.push(UniverseDef::Fold(universe_idx));
                             idx
                         } else { universe_idx };
-                    // Arguments now refer to lanes, not variables
-                    args.iter_mut().for_each(|i| *i = lanes[*i]);
 
                     (OpType::fns(fns, args.len()), fold_len, arg_string, universe_idx)
                 }
+                StmtType::Block { body, deps } => {
+                    let arg_string = format!(
+                        "({})", args.iter().copied()
+                            .map(|a| var_names[to_var_idx(a, n_deps)].clone())
+                            .join(", "));
+                    let dep_universes = args.iter().copied()
+                        .map(|i| universes[to_var_idx(i, n_deps)]).collect();
+                    let block = to_program_rec(body, n_blocks,
+                                               global_counter, literals,
+                                               universe_defs, deps, dep_universes);
+                    let universe_idx = block.ops.last()
+                        .expect("Block to have statements in it")
+                        .universe_idx;
+                    (OpType::Subprog(block), None, arg_string, universe_idx)
+                }
             };
         universes.push(universe_idx);
+
         let mut drop_lanes = Vec::new();
-        if let Some(vars) = lane_ends.get(&idx) {
+        if let Some(vars) = lane_ends.get(&var_idx) {
             drop_lanes.extend(vars.iter().copied()
                               .map(|v| lanes[v])
                               .filter(|&l| l != lane));
         }
+        let global_idx = *global_counter;
+        *global_counter += 1;
+
         let op = Operation::new(op, fold_len,
                                 lane_shapes.clone(), out_shape.clone(),
                                 var, arg_string, name,
-                                args, lane, drop_lanes,
-                                prune, universe_idx);
+                                arg_lanes, lane, drop_lanes,
+                                prune, universe_idx, global_idx);
         ops.push(op);
 
         extending_set(&mut lane_shapes, lane, Some(out_shape));
         if let Some(last_live) = used_at.iter().copied().max() {
-            lane_ends.entry(last_live)
+            // used_at is on statements, we need vars
+            lane_ends.entry(last_live + n_deps)
                 .or_insert_with(|| SmallVec::<[usize; 2]>::new())
-                .push(idx);
+                .push(var_idx);
         }
         else {
-            if idx != n_statements - 1 {
+            if var_idx != n_vars - 1 {
                 println!("WARNING - unused variable {}", ops[ops.len()-1].var);
             }
-            lane_ends.entry(idx + 1)
+            lane_ends.entry(var_idx + 1)
                 .or_insert_with(|| SmallVec::<[usize; 2]>::new())
-                .push(idx);
+                .push(var_idx);
         }
-        if let Some(vars) = lane_ends.remove(&idx) {
+        if let Some(vars) = lane_ends.remove(&var_idx) {
             for v in vars {
                 let their_lane = lanes[v];
                 if their_lane != lane {
@@ -174,32 +238,56 @@ pub fn to_program(statements: Vec<Statement>)
         o.extend_shapes(max_lanes);
     }
 
-    let last_op = &ops[ops.len() - 1];
+    let last_op = ops.last().expect("at least one operation");
+    let out_lane = last_op.out_lane;
     let mut last_op_shape = last_op.lane_in_shapes.clone();
-    last_op_shape[last_op.out_lane] = Some(last_op.out_shape.clone());
+    last_op_shape[out_lane] = Some(last_op.out_shape.clone());
     for l in last_op.drop_lanes.iter().copied() {
         last_op_shape[l] = None;
     }
 
-    (literals, ops, universe_defs, last_op_shape, max_lanes)
+    Block::new(ops, block_num, max_lanes, out_lane, last_op_shape)
+}
+
+pub fn to_program(statements: Vec<Statement>)
+                  -> (Vec<ArrayD<Value>>, // literals,
+                      Block, // whole program
+                      Vec<UniverseDef>, // universe definitons
+                      usize, // number of blocks
+                      usize) // number of operitons
+{
+    let mut n_blocks = 0;
+    let mut global_count = 0;
+
+    let mut literals = Vec::new();
+    let mut universe_defs = Vec::new();
+
+    let block = to_program_rec(statements,
+                               &mut n_blocks, &mut global_count,
+                               &mut literals, &mut universe_defs,
+                               vec![], vec![]); // No dependencies
+    (literals, block, universe_defs, n_blocks, global_count)
 }
 
 pub fn to_search_problem<'d>(
     domain: &'d Domain,
     // Initials have been padded with Nones
     literals: &[ArrayD<Value>],
-    operations: &[Operation],
+    Block { ref ops,
+            out_shape: ref expected_target_state_shape,
+            max_lanes: _max_lanes, out_lane: _out_lane,
+            block_num: _block_num }: &Block,
     target: ArrayD<Value>,
-    expected_target_state_shape: &[Option<ShapeVec>],
     universe_defs: &[UniverseDef])
     -> Result<(Vec<ArrayD<DomRef>>, // literals
                ProgState<'d, 'static>, // target
                Vec<Vec<DomRef>>)> // universes
 {
+    let expected_target_state_shape = expected_target_state_shape.as_slice();
     let literals: Vec<ArrayD<DomRef>> =
         literals.iter().map(|a| domain.literal_to_refs(a.view())).collect();
 
-    let last_op = &operations[operations.len()-1];
+    let last_op = &ops[ops.len()-1];
     let mut target_vec = vec![None; last_op.lane_in_lens.len()];
     target_vec[last_op.out_lane] = Some(target);
     let target_state = ProgState::new_from_spec(domain, target_vec, "[target]", None);
@@ -234,4 +322,20 @@ pub fn to_search_problem<'d>(
         }
 
     Ok((literals, target_state, universes))
+}
+
+fn linearize_program_rec<'u>(ops: &[Operation], ret: &mut Vec<Operation>) {
+    for op in ops.into_iter() {
+        assert_eq!(op.global_idx, ret.len());
+        ret.push(op.clone());
+        if let Some(b) = op.op.block() {
+            linearize_program_rec(&b.ops, ret);
+        }
+    }
+}
+
+pub fn linearize_program(block: &Block) -> Vec<Operation> {
+    let mut ret = Vec::new();
+    linearize_program_rec(&block.ops, &mut ret);
+    ret
 }

@@ -20,10 +20,10 @@ use std::path::Path;
 use std::io::{BufReader,Read};
 use std::time::Instant;
 
-use swizzleflow::state::{Value, Operation, Domain};
+use swizzleflow::state::{Value, Block, Domain};
 use swizzleflow::{lexer, parser, abstractions, program_transforms};
 use swizzleflow::synthesis::{Mode, synthesize};
-use swizzleflow::misc::{parse_opt_arg, time_since, ShapeVec};
+use swizzleflow::misc::{parse_opt_arg, time_since};
 use swizzleflow::program_transforms::UniverseDef;
 
 use swizzleflow::errors::*;
@@ -35,18 +35,18 @@ const PRUNE_FUEL_ARG_REQS: &'static str = "a positive integer";
 const PRUNE_FUEL_FRAC_ARG_REQS: &'static str = "a floating point number in (0, 1]";
 
 fn process_program(program: String, name: String)
-                   -> Result<((Vec<ArrayD<Value>>, Vec<Operation>,
+                   -> Result<((Vec<ArrayD<Value>>, Block,
                                Vec<ArrayD<Value>>, Vec<UniverseDef>,
-                               Vec<Option<ShapeVec>>, usize), String)>
+                               usize, usize), String)>
 {
     println!("Processing {}", name);
     let lexed = lexer::lex(&program)
         .chain_err(|| ErrorKind::FileParseError(name.clone()))?;
     let (statements, goals) = parser::parse(&lexed)
         .chain_err(|| ErrorKind::FileParseError(name.clone()))?;
-    let (literals, ops, universe_defs, target_shape, max_lanes) =
+    let (literals, block, universe_defs, n_blocks, n_stmts) =
         program_transforms::to_program(statements);
-    Ok(((literals, ops, goals, universe_defs, target_shape, max_lanes), name))
+    Ok(((literals, block, goals, universe_defs, n_blocks, n_stmts), name))
 }
 
 fn run() -> Result<()> {
@@ -58,7 +58,7 @@ fn run() -> Result<()> {
                   (@arg matrix_dir: -m --("matrix-dir") +takes_value value_name("MATRIX_DIR")
                    default_value_os(DEFAULT_MATRIX_DIR.as_ref())
                    "Directory to store matrices in")
-                  (@arg all: -a --all "Find all solutions")
+                  (@arg first: -f --first "Find first solution")
                   (@arg print: -p --print "Print trace of valid solutions")
                   (@arg print_pruned: -P --("print-pruned") "Print pruned solutions")
                   (@arg prune_fuel: -f --("prune-fuel") [FUEL] "Number of terms to pair with every term during pruning")
@@ -66,7 +66,7 @@ fn run() -> Result<()> {
                   (@arg specs: ... value_name("SPEC") "Specification files (stdin if none specified)")
         ).setting(clap::AppSettings::TrailingVarArg).get_matches();
 
-    let synthesis_mode = if args.is_present("all") { Mode::All } else { Mode::First };
+    let synthesis_mode = if args.is_present("first") { Mode::First } else { Mode::All };
     let print = args.is_present("print");
     let print_pruned = args.is_present("print_pruned");
 
@@ -111,18 +111,17 @@ fn run() -> Result<()> {
     let parse_dur = time_since(parse_start);
     println!("construction:all time={};", parse_dur);
 
-    for ((literals, mut ops, goals, universe_defs,
-          target_shape, max_lanes), name) in specs
+    for ((literals, mut block, goals, universe_defs,
+          n_blocks, n_stmts), name) in specs
     {
         println!("spec:{}", name);
-        abstractions::add_matrices(matrix_dir, &mut ops, &target_shape)?;
-        abstractions::add_copy_bounds(&mut ops, &target_shape)?;
+        abstractions::add_matrices(matrix_dir, &mut block)?;
+        abstractions::add_copy_bounds(&mut block)?;
         for goal in goals {
-            let domain = Domain::new(goal.view(), max_lanes);
+            let domain = Domain::new(goal.view());
             let (literals, goal, universes) =
                 program_transforms::to_search_problem(&domain, &literals,
-                                                      &ops, goal,
-                                                      &target_shape,
+                                                      &block, goal,
                                                       &universe_defs)?;
             let max_syms = universes.iter().map(|u| u.len())
                 .max().unwrap_or(domain.n_elements());
@@ -135,9 +134,9 @@ fn run() -> Result<()> {
             };
             let fuel = cmp::min(fuel_arg, max_syms);
             println!("Begin search");
-            synthesize(&goal, &ops, &universes, &literals, synthesis_mode,
-                       print, print_pruned, fuel, &name);
-            abstractions::remove_matrices(&mut ops);
+            synthesize(&goal, &block, &universes, &literals, n_blocks, n_stmts,
+                       synthesis_mode, print, print_pruned, fuel, &name);
+            abstractions::remove_matrices(&mut block);
         }
     }
     Ok(())

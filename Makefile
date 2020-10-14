@@ -16,7 +16,6 @@ specs/swinv_like_big/l1/trove-crc-7.swflow\
 specs/swinv_like/l1/2d-stencil-5.swflow\
 specs/swinv_like_big/l2/2d-stencil-7.swflow
 
-SWIZZLEFLOW_FLAGS ?= -a
 build:
 	cargo build --release
 build-stats:

@@ -299,18 +299,20 @@ pub fn build_mat<T: MatrixOps>(op: &Operation, out_shape: &[Option<ShapeVec>])
     // Preserved lanes need to be passed through
     // Note, something like v = range(a, b) preserves all the lanes except the one
     // that's about to contain v
-    let preserved_lanes = (0..op.lane_in_shapes.len()).filter(
-        |&i| i != op.out_lane && !op.drop_lanes.contains(&i) && op.lane_in_shapes[i].is_some())
+    let preserved_lanes = op.preserved_lanes.iter().copied()
         .map(|i| (i, op.lane_in_lens[i]))
-        .collect::<SmallVec<[(usize, usize); 3]>>();
+        .collect::<SmallVec<[(usize, usize); 4]>>();
     let fns =
         match &op.op {
-            OpType::Take(_) => &[],
+            OpType::Literal(_) => &[],
             // If we can summarize a basis, use that summary to save time
             OpType::Apply { fns: _fns, summary: Some(s) } =>
                 ref_slice::ref_slice(s),
             OpType::Apply { fns , summary: None } =>
-                fns
+                fns,
+            OpType::Subprog(_) => {
+                &[]
+            }
         };
     let n_args = op.in_lanes.len();
     let arg_lanes = &op.in_lanes;
@@ -385,6 +387,42 @@ fn shapes_to_string(shapes: &[Option<ShapeVec>]) -> String {
         .map(|ms|
              ms.as_ref().map_or_else(|| String::new(), |s| s.iter().map(|i| i.to_string()).join("x")))
         .join(",")
+}
+
+// The matrix that moves input_lanes to output_lanes, clearing all others
+pub fn block_translate_matrix<T: MatrixOps>(
+    input_lanes: &[usize], input_shape: &[Option<ShapeVec>],
+    output_lanes: &[usize], output_shape: &[Option<ShapeVec>]) -> TransitionMatrix
+{
+    assert_eq!(input_lanes.len(), output_lanes.len());
+
+    let mut ret = GenTransitionMatrix::<T>::general_with_row_size_hint(
+        input_shape, output_shape, input_lanes.len());
+    let in_lane_lens = input_lanes.iter().copied()
+        .map(|il| input_shape[il].as_ref().
+             map_or(0usize, |a| a.iter().copied().product()))
+        .collect::<SmallVec<[usize; 4]>>();
+    let out_lane_lens = output_lanes.iter().copied()
+        .map(|il| output_shape[il].as_ref().
+             map_or(0usize, |a| a.iter().copied().product()))
+        .collect::<SmallVec<[usize; 4]>>();
+    assert_eq!(in_lane_lens, out_lane_lens);
+    for (lane1, (il1, ol1)) in input_lanes.iter().copied()
+        .zip(output_lanes.iter().copied()).enumerate()
+    {
+        let len1 = in_lane_lens[lane1];
+        for (lane2, (il2, ol2)) in input_lanes.iter().copied()
+            .zip(output_lanes.iter().copied()).enumerate()
+        {
+            let len2 = in_lane_lens[lane2];
+            for i in 0..len1 {
+                for j in 0..len2 {
+                    ret.set_idxs((il1, i), (il2, j), (ol1, i), (ol2, j), true);
+                }
+            }
+        }
+    }
+    ret
 }
 
 pub fn op_matrix_name(op: &Operation, out_shape: &[Option<ShapeVec>]) -> String {

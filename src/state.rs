@@ -140,11 +140,10 @@ pub struct Domain {
     fold_ref_map: HashMap<Vec<DomRef>, DomRef>,
     imm_superterms: Vec<Vec<DomRef>>,
     imm_subterms: Vec<BTreeSet<DomRef>>,
-    max_lanes: usize,
 }
 
 impl Domain {
-    pub fn new(spec: ArrayViewD<Value>, max_lanes: usize) -> Self {
+    pub fn new(spec: ArrayViewD<Value>) -> Self {
         let mut store: Vec<BTreeSet<Value>> = Vec::new();
         Value::Empty.collect_subterms(&mut store);
         Value::NotInDomain.collect_subterms(&mut store);
@@ -203,8 +202,7 @@ impl Domain {
         // Semantics of empty fold
         fold_ref_map.insert(vec![], *element_map.get(&Value::Empty).unwrap());
         Domain { elements, element_map,
-                 subterms_of, imm_superterms, imm_subterms, fold_ref_map,
-                 max_lanes,}
+                 subterms_of, imm_superterms, imm_subterms, fold_ref_map, }
     }
 
     pub fn n_elements(&self) -> usize {
@@ -243,8 +241,6 @@ impl Domain {
     pub fn subterms_all_within(&self, elem: DomRef, expected: &BTreeSet<DomRef>) -> bool {
         self.imm_subterms[elem].is_subset(expected)
     }
-
-    pub fn max_lanes(&self) -> usize { self.max_lanes }
 }
 
 // Ok, the general pruning rule is this:
@@ -309,8 +305,8 @@ impl<'d, 't> ProgState<'d, 't> {
         Self { domain, state, name, inv_state: inverse }
     }
 
-    pub fn empty(domain: &'d Domain) -> Self {
-        let state = (0..domain.max_lanes).map(|_| Cow::Owned(None)).collect();
+    pub fn empty(domain: &'d Domain, max_lanes: usize) -> Self {
+        let state = (0..max_lanes).map(|_| Cow::Owned(None)).collect();
         Self::making_inverse(domain, state, "".to_owned(), None)
     }
 
@@ -330,6 +326,15 @@ impl<'d, 't> ProgState<'d, 't> {
         Self::making_inverse(domain, ref_state, name.into(), offsets)
     }
 
+    pub fn new_from_block_args<'u: 't, 'r>(&'u self, args: &'r [usize],
+                                           max_lanes: usize) -> Self {
+        let state = args.iter().copied().map(
+            |i| Cow::Borrowed(self.state[i].as_ref()))
+            .chain((0..(max_lanes - args.len())).map(|_| Cow::Owned(None)))
+            .collect();
+        Self::making_inverse(self.domain, state, "{ ".to_string(), None)
+    }
+
     pub fn deep_clone(&self) -> ProgState<'d, 'static> {
         ProgState { name: self.name.clone(),
                     state: self.state.iter().map(|s| Cow::Owned(s.as_ref().as_ref().cloned())).collect(),
@@ -338,7 +343,7 @@ impl<'d, 't> ProgState<'d, 't> {
         }
     }
 
-    // Caller must set up teh Option<> for operational reasons
+    // Caller must set up the Option<> for operational reasons
     pub fn set_value<'u: 't, 'r>(&'u self, literal: &'r ArrayD<DomRef>,
                                  value_name: &'r str,
                                  op: &'r Operation) -> ProgState<'d, 't> {
@@ -361,6 +366,29 @@ impl<'d, 't> ProgState<'d, 't> {
         let name = format!("{} {} = {}{};", name, op.var, value_name, op.arg_string);
         ProgState::making_inverse(domain, new_state, name,
                                   Some(&op.lane_out_offsets))
+    }
+
+    pub fn get_block_result<'u: 't, 'r>(&'u self, them: ProgState<'d, 'static>,
+                                        their_lane: usize, op: &'r Operation) -> Self {
+        let Self {state, domain, name, inv_state: _inv_state} = self;
+        let Self { state: their_state, name: their_name,
+                   inv_state: _their_inv, domain: _domain} = them;
+        let mut new_state = Vec::with_capacity(state.len());
+        for s in state.into_iter() {
+            match *s {
+                Cow::Borrowed(r) => new_state.push(Cow::Borrowed(r)),
+                Cow::Owned(ref v) => new_state.push(Cow::Borrowed(v)),
+            }
+        };
+        // Sadly, no good way to wrap an Option<> around pointer
+        new_state[op.out_lane] = their_state[their_lane].to_owned();
+        for l in op.drop_lanes.iter().copied() {
+            new_state[l] = Cow::Owned(None);
+        }
+        let name = format!("{} {} = {}{} }};", name, op.var, op.arg_string, their_name);
+        ProgState::making_inverse(domain, new_state, name,
+                                  Some(&op.lane_out_offsets))
+
     }
 
     pub fn gather_by<'u: 't, 'r>(&'u self, gather: &'r Gather, op:
@@ -559,10 +587,6 @@ impl Gather {
         let fold_factor = op.fold_len;
         let input_bounds: SmallVec<[usize; 4]> = op.in_lanes.iter().copied()
             .map(|l| op.lane_in_lens[l]).collect();
-        // Preserved lanes keep their accumulated copies
-        let preserved_lanes = (0..op.lane_in_shapes.len()).filter(
-            |&i| i != op.out_lane && !op.drop_lanes.contains(&i) && op.lane_in_shapes[i].is_some())
-            .collect::<SmallVec<[usize; 4]>>();
         let mut mins_ret: Vec<Vec<u32>> = op.lane_in_lens.iter().copied().map(|b| vec![0; b]).collect();
         let mut maxs_ret: Vec<Vec<u32>> = op.lane_in_lens.iter().copied().map(|b| vec![0; b]).collect();
 
@@ -575,7 +599,8 @@ impl Gather {
             mins_ret[a][e] += mins_out[op.out_lane][i];
             maxs_ret[a][e] += maxs_out[op.out_lane][i];
         }
-        for l in preserved_lanes {
+        // Preserved lanes keep their accumulated copies
+        for l in op.preserved_lanes.iter().copied() {
             for i in 0..op.lane_in_lens[l] {
                 mins_ret[l][i] += mins_out[l][i];
                 maxs_ret[l][i] += maxs_out[l][i];
@@ -608,21 +633,28 @@ impl fmt::Display for Gather {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum ValueSource {
-    Literal(usize),
+#[derive(Clone, Debug)]
+pub struct Block {
+    pub ops: Vec<Operation>,
+    pub block_num: usize,
+    pub max_lanes: usize,
+    pub out_shape: Vec<Option<ShapeVec>>,
+    pub out_lane: usize,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct Fns {
-    pub fns: Vec<Gather>,
-    pub fns_summary: Option<Gather>,
+impl Block {
+    pub fn new(ops: Vec<Operation>, block_num: usize,
+               max_lanes: usize, out_lane: usize,
+               out_shape: Vec<Option<ShapeVec>>) -> Self {
+        Self { ops, block_num, max_lanes, out_lane, out_shape }
+    }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug)]
 pub enum OpType {
     Apply { fns: Vec<Gather>, summary: Option<Gather> },
-    Take(ValueSource),
+    Literal(usize),
+    Subprog(Block)
 }
 
 impl OpType {
@@ -632,13 +664,28 @@ impl OpType {
     }
 
     pub fn literal_idx(idx: usize) -> Self {
-        OpType::Take(ValueSource::Literal(idx))
+        OpType::Literal(idx)
     }
 
     pub fn is_take(&self) -> bool {
         match self {
-            OpType::Take(_) => true,
+            OpType::Literal(_) => true,
+            OpType::Subprog(_) => true,
             _ => false,
+        }
+    }
+
+    pub fn block(&self) -> Option<&Block> {
+        match self {
+            OpType::Subprog(ref b) => Some(b),
+            _ => None,
+        }
+    }
+
+    pub fn block_mut(&mut self) -> Option<&mut Block> {
+        match self {
+            OpType::Subprog(ref mut b) => Some(b),
+            _ => None,
         }
     }
 }
@@ -662,9 +709,11 @@ pub struct Operation {
     pub in_lanes: Vec<usize>,
     pub out_lane: usize,
     pub drop_lanes: Vec<usize>,
+    pub preserved_lanes: Vec<usize>,
 
     pub prune: bool,
     pub universe_idx: usize,
+    pub global_idx: usize,
     pub abstractions: Abstractions,
 }
 
@@ -673,7 +722,7 @@ impl Operation {
                lane_in_shapes: Vec<Option<ShapeVec>>, out_shape: ShapeVec,
                var: String, arg_string: String, op_name: String,
                in_lanes: Vec<usize>, out_lane: usize, drop_lanes: Vec<usize>,
-               prune: bool, universe_idx: usize) -> Self {
+               prune: bool, universe_idx: usize, global_idx: usize) -> Self {
         let lane_in_lens = lane_in_shapes.iter().map(
             |ms| ms.as_ref().map_or(0, |s| s.iter().copied().product()))
             .collect();
@@ -688,12 +737,18 @@ impl Operation {
                 } else {
                     s
                 }));
+
+        let preserved_lanes = (0..lane_in_shapes.len()).filter(
+                    |&i| i != out_lane && !drop_lanes.contains(&i) && lane_in_shapes[i].is_some())
+                    .collect::<Vec<usize>>();
+
         Self { op, fold_len,
                lane_in_shapes, lane_in_lens,
                out_shape, lane_out_offsets,
                var, arg_string, op_name,
-               in_lanes, out_lane, drop_lanes,
+               in_lanes, out_lane, drop_lanes, preserved_lanes,
                prune, universe_idx,
+               global_idx,
                abstractions: Abstractions::default() }
     }
 
@@ -711,7 +766,6 @@ impl Operation {
     pub fn prunes_like_identity(&self) -> bool {
         if self.has_fold() { return false; }
         match self.op {
-            OpType::Take(_) => false,
             OpType::Apply { fns: ref _fns, ref summary} => {
                 if let Some(summary) = summary.as_ref() {
                     summary.is_identity() && self.drop_lanes.is_empty()
@@ -720,6 +774,7 @@ impl Operation {
                     false
                 }
             }
+            _ => false,
         }
     }
 }

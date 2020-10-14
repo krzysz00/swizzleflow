@@ -80,7 +80,8 @@ pub fn bool_mul(a: &Matrix, b: &Matrix)
             let c = sparse_sparse_mul(a, b);
             c.into()
         },
-        _ => panic!("Unsupported combination of types in multiply"),
+        (Matrix::Dense(_), Matrix::Dense(_)) => panic!("Dense/dense multiply"),
+        (Matrix::Dense(_), Matrix::RowSparse(_)) => panic!("Dense/row-sparse multiply"),
     }
 }
 
@@ -88,4 +89,38 @@ pub fn transition_mul(a: &TransitionMatrix, b: &TransitionMatrix)
                       -> TransitionMatrix {
     let ret = bool_mul(&a.mat, &b.mat);
     TransitionMatrix::new_no_option(a.get_current_shapes(), b.get_target_shapes(), ret)
+}
+
+fn dense_dense_add(a: &mut DenseMatrix, b: &DenseMatrix) {
+    let (m, n1) = a.dims();
+    let (m2, n2) = b.dims();
+    if m != m2 || n1 != n2 {
+        panic!("Can't add {}x{} to {}x{} matrix", m, n1, m2, n2);
+    }
+    for i in 0..m {
+        a.update_row(i, b, i);
+    }
+}
+
+pub fn bool_add(a: &mut Matrix, b: &Matrix) {
+    if COLLECT_STATS {
+        let ones_a = a.n_ones();
+        let ones_b = b.n_ones();
+        let density_a = (ones_a as f64) / (a.n_elements() as f64);
+        let density_b = (ones_b as f64) / (b.n_elements() as f64);
+        println!("mul_stats:: ones_a={}; ones_b={}; density_a={}; density_b={};",
+                 ones_a, ones_b, density_a, density_b);
+    }
+    match (a, b) {
+        (Matrix::Dense(a), Matrix::Dense(b)) => {
+            let c = dense_dense_add(a, b);
+            c.into()
+        },
+        _ => panic!("Unsupported combination of types in add"),
+    }
+}
+
+
+pub fn transition_add(a: &mut TransitionMatrix, b: &TransitionMatrix) {
+    bool_add(&mut a.mat, &b.mat);
 }

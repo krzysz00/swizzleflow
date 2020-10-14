@@ -104,10 +104,10 @@ fn parse_num(toks: &[Token], pos: usize) -> Result<(i64, usize)> {
     }
 }
 
-fn parse_seq<T, Fstart, Fitem, Fend>(start: Fstart, item: Fitem, end: Fend,
+fn parse_seq<T, Fstart, Fitem, Fend>(start: Fstart, mut item: Fitem, end: Fend,
                                      toks: &[Token], pos: usize) -> Result<(Vec<T>, usize)>
 where Fstart: Fn(&[Token], usize) -> Result<((), usize)>,
-      Fitem: Fn(&[Token], usize) -> Result<(T, usize)>,
+      Fitem: FnMut(&[Token], usize) -> Result<(T, usize)>,
       Fend: Fn(&[Token], usize) -> Result<((), usize)> {
     let (_, mut pos) = start(toks, pos)?;
     let mut ret = Vec::<T>::new();
@@ -438,16 +438,31 @@ fn parse_goal(toks: &[Token], pos: usize) -> Result<(ArrayD<Value>, usize)> {
     }
 }
 
-#[derive(Clone, Debug)]
-pub enum OpType {
-    Initial(ArrayD<Value>),
-    Gathers(Vec<Gather>, Option<NonZeroUsize>)
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum VarIdx {
+    Here(usize),
+    Dep(usize),
 }
 
-impl OpType {
+#[derive(Clone, Debug)]
+pub struct Dependency {
+    pub parent_idx: VarIdx,
+    pub used_at: Vec<usize>,
+    pub var: String,
+    pub shape: ShapeVec,
+}
+
+#[derive(Clone, Debug)]
+pub enum StmtType {
+    Initial(ArrayD<Value>),
+    Gathers(Vec<Gather>, Option<NonZeroUsize>),
+    Block { body: Vec<Statement>, deps: Vec<Dependency> }
+}
+
+impl StmtType {
     pub fn is_initial(&self) -> bool {
         match self {
-            OpType::Initial(_) => true,
+            StmtType::Initial(_) => true,
             _ => false,
         }
     }
@@ -456,9 +471,9 @@ impl OpType {
 
 #[derive(Clone, Debug)]
 pub struct Statement {
-    pub op: OpType,
+    pub op: StmtType,
     pub var: String,
-    pub args: Vec<usize>,
+    pub args: Vec<VarIdx>,
     pub in_shapes: Vec<ShapeVec>,
     pub out_shape: ShapeVec,
     pub name: String,
@@ -467,12 +482,103 @@ pub struct Statement {
 }
 
 type DefsMap = HashMap<(String, Vec<ShapeVec>, ShapeVec), Vec<Gather>>;
-type VarMap = HashMap<String, usize>;
 
-fn parse_call<'t>(custom_fns: &DefsMap, var_map: &VarMap, vars: &mut [Statement],
+#[derive(Clone, Debug, Default)]
+struct Scopes {
+    maps: Vec<HashMap<String, VarIdx>>,
+    deps: Vec<Vec<Dependency>>,
+    stmts: Vec<Vec<Statement>>,
+}
+
+impl Scopes {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    fn get_rec(&mut self, key: &str, idx: usize) -> Option<VarIdx> {
+        self.maps[idx].get(key).copied()
+            .or_else(|| {
+                if idx == 0 {
+                    None
+                }
+                else { self.get_rec(key, idx - 1).map(|res| {
+                    let deps_idx = self.deps[idx].len();
+                    let shape = self._get_shape(idx - 1, res);
+                    let var = self._get_var(idx - 1, res);
+                    self.deps[idx].push(Dependency { parent_idx: res,
+                                                     used_at: vec![],
+                                                     shape, var });
+                    VarIdx::Dep(deps_idx)
+                })
+                }
+            })
+    }
+
+    pub fn get(&mut self, key: &str) -> Option<VarIdx> {
+        self.get_rec(key, self.maps.len() - 1)
+    }
+
+    fn _get_shape(&self, scope_idx: usize, var: VarIdx) -> ShapeVec {
+        match var {
+            VarIdx::Dep(i) => self.deps[scope_idx][i].shape.clone(),
+            VarIdx::Here(i) => self.stmts[scope_idx][i].out_shape.clone(),
+        }
+    }
+
+    fn _get_var(&self, scope_idx: usize, var: VarIdx) -> String {
+        match var {
+            VarIdx::Dep(i) => self.deps[scope_idx][i].var.clone(),
+            VarIdx::Here(i) => self.stmts[scope_idx][i].var.clone(),
+        }
+    }
+
+    pub fn get_shape(&self, var: VarIdx) -> ShapeVec {
+        self._get_shape(self.stmts.len() - 1, var)
+    }
+
+    pub fn contains_key(&mut self, key: &str) -> bool {
+        self.get(key).is_some()
+    }
+
+    pub fn current_deps(&mut self) -> &mut [Dependency] {
+        self.deps.last_mut().expect("to be in a scope").as_mut_slice()
+    }
+
+    pub fn push_scope(&mut self) {
+        self.maps.push(HashMap::new());
+        self.deps.push(Vec::new());
+        self.stmts.push(Vec::new());
+    }
+
+    pub fn pop_scope(&mut self) -> (Vec<Statement>, Vec<Dependency>) {
+        let _ = self.maps.pop();
+        let stmts = self.stmts.pop().expect("At least one scope");
+        let deps = self.deps.pop().expect("At least one scope");
+        (stmts, deps)
+    }
+
+    pub fn push_statement(&mut self, stmt: Statement) -> usize {
+        let scope_idx = self.stmts.len() - 1;
+        let stmt_pos = self.stmts[scope_idx].len();
+        self.maps[scope_idx].insert(stmt.var.clone(), VarIdx::Here(stmt_pos));
+        self.stmts[scope_idx].push(stmt);
+        stmt_pos
+    }
+
+    pub fn update_used_at(&mut self, idx: usize, args: &[VarIdx]) {
+        let scope_idx = self.stmts.len() - 1;
+        for arg in args.iter().copied() {
+            match arg {
+                VarIdx::Here(i) => self.stmts[scope_idx][i].used_at.push(idx),
+                VarIdx::Dep(i) => self.deps[scope_idx][i].used_at.push(idx),
+            }
+        }
+    }
+}
+
+fn parse_call<'t>(custom_fns: &DefsMap, scopes: &mut Scopes,
                   var: &str, out_shape: &mut ShapeVec, prune: Option<bool>,
-                  toks: &'t [Token], pos: usize) -> Result<(Statement, usize)> {
-    let index = vars.len();
+                  toks: &'t [Token], pos: usize) -> Result<((), usize)> {
     let (is_fold, fold_paren, pos) =
         if toks[pos].t == Fold {
             if toks[pos+1].t == LParen { (true, true, pos+2) }
@@ -481,27 +587,29 @@ fn parse_call<'t>(custom_fns: &DefsMap, var_map: &VarMap, vars: &mut [Statement]
 
     let pos = if toks[pos].t == Question { pos + 1 } else { pos };
 
+    let ident_pos = pos;
+
     let (name, pos) = parse_ident(toks, pos)
         .map_err(|_| error_enum(&toks[pos], "identifier or ["))?;
     let (mut options, pos) = parse_options(toks, pos)?;
     let fold_len = if is_fold {
         crate::builtins::int_option(options.as_ref(), "fold_len")
             .and_then(|x| NonZeroUsize::new(x as usize))
-            // Already returns an option
             .or_else(|| {
                 let len = out_shape.pop().unwrap();
                 options.get_or_insert_with(|| BTreeMap::new())
                     .insert("fold_len".to_owned(), Opt::Int(len as isize));
+                // Already returns an option
                 NonZeroUsize::new(len)
             })
     } else { None };
 
-    let (args, pos) = if let Some(i) = var_map.get(&name).copied() {
+    let (args, pos) = if let Some(i) = scopes.get(&name) {
         (vec![i], pos)
     } else {
         parse_seq(recognize(LParen, "( or {"),
                                 |t, p| parse_ident(t, p)
-                                .and_then(|(s, p2)| var_map.get(&s).copied()
+                                .and_then(|(s, p2)| scopes.get(&s)
                                           .ok_or_else(|| Error::from(
                                               ErrorKind::ParseError(t[p].clone(),
                                               "previously-defined variable")))
@@ -513,13 +621,13 @@ fn parse_call<'t>(custom_fns: &DefsMap, var_map: &VarMap, vars: &mut [Statement]
         recognize(RParen, ") to close fold")(toks, pos)?.1
     } else { pos };
 
-    let in_shapes = args.iter().copied().map(|i| vars[i].out_shape.clone()).collect::<Vec<_>>();
+    let in_shapes = args.iter().copied().map(|i| scopes.get_shape(i)).collect::<Vec<_>>();
     let mut gather_out_shape = out_shape.clone();
     if let Some(l) = fold_len { gather_out_shape.push(l.get()) }
 
     let mut lookup = (name, in_shapes, gather_out_shape);
     let gathers =
-        if var_map.contains_key(&lookup.0) {
+        if scopes.contains_key(&lookup.0) {
             // Variable copy
             lookup.0 = "identity".to_owned();
             crate::operators::identity(&[lookup.2.clone()],
@@ -530,7 +638,7 @@ fn parse_call<'t>(custom_fns: &DefsMap, var_map: &VarMap, vars: &mut [Statement]
         } else {
             let (ref name, ref in_shapes, ref out_shape) = lookup;
             crate::builtins::gather(name, in_shapes, out_shape, options.as_ref())
-                .chain_err(|| ErrorKind::ParseError(toks[pos].clone(), "valid arguments to call before here"))?
+                .chain_err(|| ErrorKind::ParseError(toks[ident_pos].clone(), "valid arguments to call after"))?
         };
     let (mut name, in_shapes, _) = lookup;
     if let Some(m) = options {
@@ -553,17 +661,14 @@ fn parse_call<'t>(custom_fns: &DefsMap, var_map: &VarMap, vars: &mut [Statement]
 
     let prune = prune.unwrap_or_else(|| gathers.len() > 1 || fold_len.is_some());
 
-    // Update use-def mapping
-    for arg in args.iter().copied() {
-        vars[arg].used_at.push(index);
-    }
-
-    let ret = Statement { var: var.to_owned(),
-                          in_shapes, out_shape: out_shape.clone(),
-                          args, name, prune,
-                          used_at: vec![],
-                          op: OpType::Gathers(gathers, fold_len) };
-    Ok((ret, pos))
+    let stmt_idx = scopes.push_statement(
+        Statement { var: var.to_owned(),
+                    in_shapes, out_shape: out_shape.clone(),
+                    args: args.clone(), name, prune,
+                    used_at: vec![],
+                    op: StmtType::Gathers(gathers, fold_len) });
+    scopes.update_used_at(stmt_idx, &args);
+    Ok(((), pos))
 }
 
 fn parse_annots(toks: &[Token], mut pos: usize) -> Result<(HashSet<String>, usize)> {
@@ -584,8 +689,8 @@ fn parse_annots(toks: &[Token], mut pos: usize) -> Result<(HashSet<String>, usiz
     }
 }
 
-fn parse_statement(custom_fns: &mut DefsMap, var_map: &mut VarMap,
-                   vars: &mut Vec<Statement>, goals: &mut Vec<ArrayD<Value>>,
+fn parse_statement(custom_fns: &mut DefsMap, scopes: &mut Scopes,
+                   goals: &mut Vec<ArrayD<Value>>,
                    toks: &[Token], pos: usize) -> Result<((), usize)> {
     let (annots, pos) = parse_annots(toks, pos)?;
     match toks[pos].t {
@@ -612,26 +717,60 @@ fn parse_statement(custom_fns: &mut DefsMap, var_map: &mut VarMap,
             } else {
                 None
             };
-            let n_folds = &toks[pos..].iter().take_while(|t| t.t == Fold).count();
+            let n_folds = toks[pos..].iter().take_while(|t| t.t == Fold).count();
             if toks[pos+n_folds].t == LSquare || toks[pos+n_folds].t == Range {
-                let (literal, pos) = parse_literal(Some(&out_shape), toks, pos)?;
-                var_map.insert(var.clone(), vars.len());
+                let (literal, pos) = parse_literal(Some(&out_shape), toks, pos)
+                    .chain_err(|| ErrorKind::ParseError(toks[pos].clone(), "valid literal"))?;
                 let name = format!{"init_{}", var};
-                let statement = Statement { var, in_shapes: vec![], out_shape,
-                                            used_at: vec![], args: vec![], name,
-                                            prune: prune.unwrap_or(false),
-                                            op: OpType::Initial(literal) };
-                vars.push(statement);
+                scopes.push_statement(Statement {
+                    var, in_shapes: vec![], out_shape,
+                    used_at: vec![], args: vec![], name,
+                    prune: prune.unwrap_or(false),
+                    op: StmtType::Initial(literal) });
                 Ok(((), pos))
             }
+            else if toks[pos+n_folds].t == LCurly {
+                if n_folds > 0 {
+                    error(&toks[pos], "thene not to be folds on a block")
+                }
+                else {
+                    scopes.push_scope();
+                    let (_, new_pos) =
+                        parse_seq(recognize(LCurly, "{"),
+                                  |t, p| parse_statement(custom_fns, scopes, goals, t, p),
+                                  recognize(RCurly, "}, define, goal, or identifier")
+                                  , toks, pos)?;
+                    let (stmts, deps) = scopes.pop_scope();
+                    if stmts.is_empty() {
+                        error(&toks[pos].clone(), "non-empty block of statements")
+                    }
+                    else {
+                        if stmts[stmts.len() - 1].out_shape != out_shape {
+                            Err(Error::from(
+                                ErrorKind::ShapeMismatch(stmts[stmts.len() - 1].out_shape.to_vec(),
+                                                         out_shape.to_vec()))
+                                .chain_err(|| ErrorKind::ParseError(toks[pos].clone(),
+                                                                    "output to match variable type")))
+                        }
+                        else {
+                            let args: Vec<_> = deps.iter().map(|d| d.parent_idx).collect();
+                            let in_shapes = deps.iter().map(|d| d.shape.clone()).collect();
+                            let name = format!("block_outputs_{}", var);
+                            let block_idx = scopes.push_statement(
+                                Statement {op: StmtType::Block { body: stmts, deps: deps, },
+                                           var, args: args.clone(), in_shapes, out_shape,
+                                           name, used_at: vec![],
+                                           prune: prune.unwrap_or(true) });
+                            scopes.update_used_at(block_idx, args.as_slice());
+                            Ok(((), new_pos))
+                        }
+                    }
+                }
+            }
             else {
-                let (statement, pos) = parse_call(custom_fns, var_map,
-                                                  vars, &var,
-                                                  &mut out_shape, prune,
-                                                  toks, pos)?;
-                var_map.insert(var, vars.len());
-                vars.push(statement);
-                Ok(((), pos))
+                parse_call(custom_fns, scopes, &var,
+                           &mut out_shape, prune,
+                           toks, pos)
             }
         },
         _ => error(&toks[pos], STATEMENT_START_ERR),
@@ -641,18 +780,21 @@ fn parse_statement(custom_fns: &mut DefsMap, var_map: &mut VarMap,
 pub fn parse(toks: &[Token]) -> Result<(Vec<Statement>, Vec<ArrayD<Value>>)> {
     let mut pos = 0;
     let mut custom_fns = DefsMap::new();
-    let mut var_map = VarMap::new();
-    let mut vars: Vec<Statement> = vec![];
+    let mut scopes = Scopes::new();
+    scopes.push_scope();
     let mut goals = vec![];
 
     loop {
         if toks[pos].t == EOF {
             // Last statement doesn't prune
-            vars.last_mut().map(|s| s.prune = false);
-            return Ok((vars, goals));
+            let (stmts, deps) = scopes.pop_scope();
+            if !deps.is_empty() {
+                panic!("Top-level program depends on something, somehow: {:?}", deps);
+            }
+            return Ok((stmts, goals));
         }
         let (_, new_pos) = parse_statement(
-            &mut custom_fns, &mut var_map, &mut vars, &mut goals,
+            &mut custom_fns, &mut scopes, &mut goals,
             toks, pos)?;
         pos = new_pos;
     }

@@ -13,7 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::misc::{time_since, COLLECT_STATS};
-use crate::state::{ProgState, DomRef, Operation, OpType, ValueSource};
+use crate::program_transforms::linearize_program;
+use crate::state::{ProgState, DomRef, Operation, OpType, Block};
 use crate::transition_matrix::{TransitionMatrix};
 
 use std::collections::{HashMap,BTreeMap};
@@ -22,9 +23,11 @@ use std::time::Instant;
 
 use std::fmt;
 use std::fmt::{Display,Formatter};
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, RwLock, Mutex};
-
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::{Arc};
+use parking_lot::{RwLock, Mutex, MappedRwLockWriteGuard, MappedRwLockReadGuard,
+                  RwLockUpgradableReadGuard, RwLockReadGuard, RwLockWriteGuard};
+use crossbeam_channel::{Sender, Receiver};
 use itertools::Itertools;
 use itertools::iproduct;
 
@@ -34,6 +37,76 @@ use ndarray::ArrayD;
 pub enum Mode {
     All,
     First,
+}
+
+#[derive(Debug, Default)]
+struct BlockResults<'d> {
+    results: Arc<RwLock<(AtomicBool, Vec<ProgState<'d, 'static>>)>>,
+}
+
+impl<'d> BlockResults<'d> {
+    pub fn iter<'a>(&'a self,
+                    current: &'a ProgState<'d, 'a>,
+                    target: &'a ProgState<'d, 'static>,
+                    ops: &'a [Operation],
+                    universes: &'a [Vec<DomRef>], literals: &'a [ArrayD<DomRef>],
+                    stats: &'a [SearchStepStats], blocks: &'a [BlockResults<'d>],
+                    caches: &'a [SearchResultCache<'d>],
+                    is_root: bool, mode: Mode, print: bool,
+                    print_pruned: bool, prune_fuel: usize) ->
+        BlockResultsIter<'a, 'd>
+        where 'd: 'a
+    {
+        let lock = self.results.upgradable_read();
+        if !lock.0.fetch_or(true, Ordering::SeqCst) {
+            let lock = RwLockUpgradableReadGuard::upgrade(lock);
+            let lock = RwLockWriteGuard::map(lock, |(_, ref mut vec)| vec);
+            let (send, recv) = crossbeam_channel::unbounded::<ProgState<'d, 'static>>();
+            let ret = BlockResultsIter::Initial { lock, channel: recv };
+            crossbeam_utils::thread::scope(
+                |scope| {
+                scope.spawn(move |_| {
+                    search(current, target,
+                           &send,  ops, 0,
+                           universes, literals, stats, blocks, caches,
+                           is_root, mode, print, print_pruned, prune_fuel);
+                }); })
+                .expect("threads to work");
+            ret
+        }
+        else {
+            let lock = RwLockUpgradableReadGuard::downgrade(lock);
+            let lock = RwLockReadGuard::map(lock, |(_, ref vec)| vec);
+            BlockResultsIter::Later { lock, pos: 0 }
+        }
+    }
+}
+
+#[derive(Debug)]
+enum BlockResultsIter<'a, 'd: 'a> {
+    Initial { lock: MappedRwLockWriteGuard<'a, Vec<ProgState<'d, 'static>>>,
+              channel: Receiver<ProgState<'d, 'static>> },
+    Later { lock: MappedRwLockReadGuard<'a, Vec<ProgState<'d, 'static>>>, pos: usize },
+}
+impl<'a, 'd> std::iter::Iterator for BlockResultsIter<'a, 'd>
+where 'd: 'a
+{
+    type Item = ProgState<'d, 'static>;
+    fn next(&mut self) -> Option<ProgState<'d, 'static>> {
+        match self {
+            BlockResultsIter::Initial { lock, channel } => {
+                channel.recv().ok().map(|v| {
+                    lock.push(v.clone());
+                    v
+                })
+            },
+            BlockResultsIter::Later { lock, pos } => {
+                let ret = lock.get(*pos).cloned();
+                *pos += 1;
+                ret
+            }
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -118,7 +191,7 @@ impl Display for SearchStepStats {
 
         if COLLECT_STATS {
             if let Some(ref lock) = self.value_checks {
-                let map = lock.lock().unwrap();
+                let map = lock.lock();
                 write!(f, " value_checks=[{:?}];",
                        map.iter().format(", "))?;
             }
@@ -193,31 +266,42 @@ fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
 }
 
 fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
-                      ops: &'f [Operation], current_step: usize,
-                      universes: &[Vec<DomRef>], literals: &[ArrayD<DomRef>],
-                      stats: &'f [SearchStepStats], mode: Mode,
-                      caches: &'f [SearchResultCache<'d>],
-                      print: bool, print_pruned: bool, prune_fuel: usize) -> bool {
-    let tracker = &stats[current_step];
+                      channel: &Sender<ProgState<'d, 'static>>,
+                      ops: &[Operation], current_step: usize,
+                      universes: &'f [Vec<DomRef>], literals: &'f [ArrayD<DomRef>],
+                      stats: &'f [SearchStepStats], blocks: &'f [BlockResults<'d>],
+                      caches: &'f [SearchResultCache<'d>], is_root: bool,
+                      mode: Mode, print: bool, print_pruned: bool, prune_fuel: usize) -> bool {
 
     if current_step == ops.len() {
-        tracker.checking();
-        if current == target {
-            tracker.success();
-            println!("solution:{}", &current.name);
-            if print {
-                println!("success_path [step {}]\n{}", current_step, current);
+        if is_root {
+            let tracker = stats.last().unwrap();
+            tracker.checking();
+            if current == target {
+                tracker.success();
+                channel.send(current.deep_clone()).expect("relying results to succeed");
+                println!("solution:{}", &current.name);
+                if print {
+                    println!("success_path [step {}]\n{}", current_step, current);
+                }
+                return true;
             }
-            return true;
+            else {
+                tracker.failed();
+                return false;
+            }
         }
         else {
-            tracker.failed();
-            return false;
+            // All viable block results continue
+            channel.send(current.deep_clone()).expect("relaying results to succeed");
+            return true;
         }
     }
 
     let op = &ops[current_step];
-    let cache = caches[current_step].clone();
+    let global_step = op.global_idx;
+    let tracker = &stats[global_step];
+    let cache = caches[global_step].clone();
 
     let proceed = |new_state: &ProgState<'d, '_>| {
         tracker.checking();
@@ -232,10 +316,10 @@ fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'stati
                 return false;
             }
         }
-        let ret = search(new_state, target, ops,
-                         current_step + 1, universes, literals,
-                         stats, mode, caches,
-                         print, print_pruned, prune_fuel);
+        let ret = search(new_state, target, channel, ops,
+                         current_step + 1,
+                         universes, literals, stats, blocks, caches,
+                         is_root, mode, print, print_pruned, prune_fuel);
         if ret {
             tracker.success();
             if print {
@@ -266,40 +350,59 @@ fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'stati
                     }
                 }
             },
-            OpType::Take(source) => {
-                match source {
-                    ValueSource::Literal(idx) => {
-                        let literal = &literals[*idx];
-                        let res = current.set_value(literal, &op.op_name, op);
-                        proceed(&res)
+            OpType::Literal(idx) => {
+                let literal = &literals[*idx];
+                let res = current.set_value(literal, &op.op_name, op);
+                proceed(&res)
+            },
+            OpType::Subprog(block) => {
+                let args = current.new_from_block_args(&op.in_lanes, block.max_lanes);
+                let mut iter = blocks[block.block_num]
+                    .iter(&args, target, &block.ops,
+                          universes, literals, stats, blocks, caches,
+                          // Force All to ensure sensible semantics
+                          false, Mode::All, print, print_pruned, prune_fuel);
+                match mode {
+                    Mode::All => {
+                        iter.map(|s| {
+                            let res = current.get_block_result(s, block.out_lane, op);
+                            proceed(&res)
+                        }).fold(false, |acc, new| new || acc)
+                    },
+                    Mode::First => {
+                        iter.any(|s| {
+                            let res = current.get_block_result(s, block.out_lane, op);
+                            proceed(&res)
+                        })
                     }
                 }
-            },
+            }
         };
     ret
 }
 
-pub fn synthesize<'d, 'l>(target: &ProgState<'d, 'static>,
-                  ops: &[Operation], universes: &[Vec<DomRef>], literals: &[ArrayD<DomRef>],
-                  mode: Mode, print: bool, print_pruned: bool, prune_fuel: usize,
-                          spec_name: &str) -> bool {
-    let start = ProgState::empty(target.domain);
+pub fn synthesize<'d, 'l>(
+    target: &ProgState<'d, 'static>,
+    block: &Block, universes: &[Vec<DomRef>], literals: &[ArrayD<DomRef>],
+    n_blocks: usize, n_stmts: usize,
+    mode: Mode, print: bool, print_pruned: bool, prune_fuel: usize,
+    spec_name: &str) -> Vec<ProgState<'d, 'static>>
+{
+    let start = ProgState::empty(target.domain, block.max_lanes);
 
-    for (i, op) in ops.iter().enumerate() {
-        if op.prune && op.abstractions.pairs_matrix.is_none() {
-            panic!("Missing matrix for {} ({} <- {})", i, op.var, op.op_name);
-        }
-    }
-    let n_ops = ops.len();
-    let stats = (0..n_ops+1).map(|_| SearchStepStats::new()).collect::<Vec<_>>();
+    let stats = (0..n_stmts+1).map(|_| SearchStepStats::new()).collect::<Vec<_>>();
     let caches: Vec<SearchResultCache>
-        = (0..n_ops).map(|_| Arc::new(RwLock::new(HashMap::new()))).collect();
-
+        = (0..n_stmts).map(|_| Arc::new(RwLock::new(HashMap::new()))).collect();
+    let blocks: Vec<_> = (0..n_blocks).map(|_| BlockResults::default()).collect();
     let start_time = Instant::now();
-    let ret = search(&start, target, ops, 0, universes, literals, &stats,
-                     mode, &caches, print, print_pruned, prune_fuel);
+    let ret = blocks[0].iter(&start, target, &block.ops,
+                             universes, literals, &stats, &blocks, &caches,
+                             true, mode, print, print_pruned, prune_fuel)
+        .collect::<Vec<_>>();
     let dur = time_since(start_time);
 
+    let ops = linearize_program(block);
+    assert_eq!(ops.len(), n_stmts);
     for (idx, stats) in (&stats).iter().enumerate() {
         if COLLECT_STATS {
             println!("stats:: n_syms={};",
@@ -314,6 +417,6 @@ pub fn synthesize<'d, 'l>(target: &ProgState<'d, 'static>,
                  stats);
     }
     println!("search:{} success={}; mode={:?}; prune_fuel={}; time={};",
-             spec_name, ret, mode, prune_fuel, dur);
+             spec_name, !ret.is_empty(), mode, prune_fuel, dur);
     ret
 }
