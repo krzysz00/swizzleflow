@@ -326,11 +326,11 @@ pub fn to_search_problem<'d>(
 
 fn linearize_program_rec<'u>(ops: &[Operation], ret: &mut Vec<Operation>) {
     for op in ops.into_iter() {
-        assert_eq!(op.global_idx, ret.len());
-        ret.push(op.clone());
         if let Some(b) = op.op.block() {
             linearize_program_rec(&b.ops, ret);
         }
+        assert_eq!(op.global_idx, ret.len());
+        ret.push(op.clone());
     }
 }
 

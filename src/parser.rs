@@ -689,6 +689,27 @@ fn parse_annots(toks: &[Token], mut pos: usize) -> Result<(HashSet<String>, usiz
     }
 }
 
+fn parse_block(custom_fns: &mut DefsMap, scopes: &mut Scopes,
+               goals: &mut Vec<ArrayD<Value>>,
+               toks: &[Token], mut pos: usize) -> Result<((), usize)> {
+    if toks[pos].t != LCurly {
+        return error(&toks[pos], "{ (can't happen)");
+    }
+    pos += 1;
+    loop {
+        if toks[pos].t == EOF {
+            return error(&toks[pos], "closing } for block");
+        }
+        else if toks[pos].t == RCurly {
+            return Ok(((), pos + 1))
+        }
+        else {
+            let (_, new_pos) = parse_statement(custom_fns, scopes, goals, toks, pos)?;
+            pos = new_pos;
+        }
+    }
+}
+
 fn parse_statement(custom_fns: &mut DefsMap, scopes: &mut Scopes,
                    goals: &mut Vec<ArrayD<Value>>,
                    toks: &[Token], pos: usize) -> Result<((), usize)> {
@@ -735,11 +756,9 @@ fn parse_statement(custom_fns: &mut DefsMap, scopes: &mut Scopes,
                 }
                 else {
                     scopes.push_scope();
+
                     let (_, new_pos) =
-                        parse_seq(recognize(LCurly, "{"),
-                                  |t, p| parse_statement(custom_fns, scopes, goals, t, p),
-                                  recognize(RCurly, "}, define, goal, or identifier")
-                                  , toks, pos)?;
+                        parse_block(custom_fns, scopes, goals, toks, pos)?;
                     let (stmts, deps) = scopes.pop_scope();
                     if stmts.is_empty() {
                         error(&toks[pos].clone(), "non-empty block of statements")

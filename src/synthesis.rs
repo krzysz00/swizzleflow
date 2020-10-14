@@ -28,6 +28,7 @@ use std::sync::{Arc};
 use parking_lot::{RwLock, Mutex, MappedRwLockWriteGuard, MappedRwLockReadGuard,
                   RwLockUpgradableReadGuard, RwLockReadGuard, RwLockWriteGuard};
 use crossbeam_channel::{Sender, Receiver};
+use crossbeam_utils::thread::{Scope, ScopedJoinHandle};
 use itertools::Itertools;
 use itertools::iproduct;
 
@@ -45,39 +46,22 @@ struct BlockResults<'d> {
 }
 
 impl<'d> BlockResults<'d> {
-    pub fn iter<'a>(&'a self,
-                    current: &'a ProgState<'d, 'a>,
-                    target: &'a ProgState<'d, 'static>,
-                    ops: &'a [Operation],
-                    universes: &'a [Vec<DomRef>], literals: &'a [ArrayD<DomRef>],
-                    stats: &'a [SearchStepStats], blocks: &'a [BlockResults<'d>],
-                    caches: &'a [SearchResultCache<'d>],
-                    is_root: bool, mode: Mode, print: bool,
-                    print_pruned: bool, prune_fuel: usize) ->
-        BlockResultsIter<'a, 'd>
-        where 'd: 'a
+    pub fn iter<'a>(&'a self) ->
+        (Option<Sender<Option<ProgState<'d, 'static>>>>, BlockResultsIter<'a, 'd>)
+        where 'd: 'a,
     {
         let lock = self.results.upgradable_read();
         if !lock.0.fetch_or(true, Ordering::SeqCst) {
             let lock = RwLockUpgradableReadGuard::upgrade(lock);
             let lock = RwLockWriteGuard::map(lock, |(_, ref mut vec)| vec);
-            let (send, recv) = crossbeam_channel::unbounded::<ProgState<'d, 'static>>();
+            let (send, recv) = crossbeam_channel::unbounded();
             let ret = BlockResultsIter::Initial { lock, channel: recv };
-            crossbeam_utils::thread::scope(
-                |scope| {
-                scope.spawn(move |_| {
-                    search(current, target,
-                           &send,  ops, 0,
-                           universes, literals, stats, blocks, caches,
-                           is_root, mode, print, print_pruned, prune_fuel);
-                }); })
-                .expect("threads to work");
-            ret
+            (Some(send), ret)
         }
         else {
             let lock = RwLockUpgradableReadGuard::downgrade(lock);
             let lock = RwLockReadGuard::map(lock, |(_, ref vec)| vec);
-            BlockResultsIter::Later { lock, pos: 0 }
+            (None, BlockResultsIter::Later { lock, pos: 0 })
         }
     }
 }
@@ -85,7 +69,7 @@ impl<'d> BlockResults<'d> {
 #[derive(Debug)]
 enum BlockResultsIter<'a, 'd: 'a> {
     Initial { lock: MappedRwLockWriteGuard<'a, Vec<ProgState<'d, 'static>>>,
-              channel: Receiver<ProgState<'d, 'static>> },
+              channel: Receiver<Option<ProgState<'d, 'static>>> },
     Later { lock: MappedRwLockReadGuard<'a, Vec<ProgState<'d, 'static>>>, pos: usize },
 }
 impl<'a, 'd> std::iter::Iterator for BlockResultsIter<'a, 'd>
@@ -95,8 +79,8 @@ where 'd: 'a
     fn next(&mut self) -> Option<ProgState<'d, 'static>> {
         match self {
             BlockResultsIter::Initial { lock, channel } => {
-                channel.recv().ok().map(|v| {
-                    lock.push(v.clone());
+                channel.recv().ok().and_then(|v| {
+                    v.as_ref().map(|a| lock.push(a.clone()));
                     v
                 })
             },
@@ -115,6 +99,8 @@ struct SearchStepStats {
     pruned: AtomicUsize,
     pruned_copy_count: AtomicUsize,
     failed: AtomicUsize,
+    cache_writes: AtomicUsize,
+    cache_hits: AtomicUsize,
     in_solution: AtomicUsize,
     value_checks: Option<Arc<Mutex<BTreeMap<usize, usize>>>>,
 }
@@ -151,6 +137,14 @@ impl SearchStepStats {
         self.failed.fetch_add(1, Ordering::Relaxed);
     }
 
+    pub fn cache_write(&self) {
+        self.cache_writes.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn cache_hit(&self) {
+        self.cache_hits.fetch_add(1, Ordering::Relaxed);
+    }
+
     #[cfg(not(feature = "stats"))]
     pub fn record_value_checks(&self, _count: usize) {}
 
@@ -170,6 +164,8 @@ impl Clone for SearchStepStats {
                pruned_copy_count: AtomicUsize::new(self.pruned_copy_count.load(Ordering::SeqCst)),
                in_solution: AtomicUsize::new(self.in_solution.load(Ordering::SeqCst)),
                failed: AtomicUsize::new(self.failed.load(Ordering::SeqCst)),
+               cache_writes: AtomicUsize::new(self.cache_writes.load(Ordering::SeqCst)),
+               cache_hits: AtomicUsize::new(self.cache_hits.load(Ordering::SeqCst)),
                value_checks: self.value_checks.clone(),
         }
     }
@@ -183,11 +179,13 @@ impl Display for SearchStepStats {
         let pruned_copy_count = self.pruned_copy_count.load(Ordering::Relaxed);
         let failed = self.failed.load(Ordering::Relaxed);
         let in_solution = self.in_solution.load(Ordering::Relaxed);
+        let cache_writes = self.cache_writes.load(Ordering::Relaxed);
+        let cache_hits = self.cache_hits.load(Ordering::Relaxed);
 
         let continued = tested - pruned - failed;
 
-        write!(f, "tested={}; failed={}; pruned={}; copy_count={}; continued={}; in_solution={};",
-               tested, failed, pruned, pruned_copy_count, continued, in_solution)?;
+        write!(f, "tested={}; failed={}; pruned={}; copy_count={}; cache_writes={}; cache_hits={}; continued={}; in_solution={};",
+               tested, failed, pruned, pruned_copy_count, cache_writes, cache_hits, continued, in_solution)?;
 
         if COLLECT_STATS {
             if let Some(ref lock) = self.value_checks {
@@ -208,7 +206,7 @@ fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
                   matrix: &TransitionMatrix,
                   copy_bounds: Option<&(Vec<u32>, Vec<u32>)>,
                   terms: &[DomRef],
-                  _cache: &ResultMap<'d>, tracker: &SearchStepStats,
+                  cache: &ResultMap<'d>, tracker: &SearchStepStats,
                   step: usize, print_pruned: bool, prune_fuel: usize) -> bool {
     let mut value_checks = 0;
     for (i, a) in terms.iter().copied().enumerate() {
@@ -266,7 +264,7 @@ fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
 }
 
 fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
-                      channel: &Sender<ProgState<'d, 'static>>,
+                      channel: &Sender<Option<ProgState<'d, 'static>>>,
                       ops: &[Operation], current_step: usize,
                       universes: &'f [Vec<DomRef>], literals: &'f [ArrayD<DomRef>],
                       stats: &'f [SearchStepStats], blocks: &'f [BlockResults<'d>],
@@ -279,7 +277,7 @@ fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'stati
             tracker.checking();
             if current == target {
                 tracker.success();
-                channel.send(current.deep_clone()).expect("relying results to succeed");
+                channel.send(Some(current.deep_clone())).expect("relying results to succeed");
                 println!("solution:{}", &current.name);
                 if print {
                     println!("success_path [step {}]\n{}", current_step, current);
@@ -293,7 +291,7 @@ fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'stati
         }
         else {
             // All viable block results continue
-            channel.send(current.deep_clone()).expect("relaying results to succeed");
+            channel.send(Some(current.deep_clone())).expect("relaying results to succeed");
             return true;
         }
     }
@@ -357,26 +355,35 @@ fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'stati
             },
             OpType::Subprog(block) => {
                 let args = current.new_from_block_args(&op.in_lanes, block.max_lanes);
-                let mut iter = blocks[block.block_num]
-                    .iter(&args, target, &block.ops,
-                          universes, literals, stats, blocks, caches,
-                          // Force All to ensure sensible semantics
-                          false, Mode::All, print, print_pruned, prune_fuel);
-                match mode {
-                    Mode::All => {
-                        iter.map(|s| {
-                            let res = current.get_block_result(s, block.out_lane, op);
-                            proceed(&res)
-                        }).fold(false, |acc, new| new || acc)
-                    },
-                    Mode::First => {
-                        iter.any(|s| {
-                            let res = current.get_block_result(s, block.out_lane, op);
-                            proceed(&res)
-                        })
+                crossbeam_utils::thread::scope(|scope| {
+                    let (maybe_sender, mut iter) = blocks[block.block_num].iter();
+                    let _handle = maybe_sender.map(|sender| {
+                        scope.spawn(move |_| {
+                            search(&args, target,
+                                   &sender,  &block.ops, 0,
+                                   universes, literals, stats, blocks, caches,
+                                   // Force All to ensure sensible semantics
+                                   false, Mode::All, print, print_pruned, prune_fuel);
+                            sender.send(None).expect("Sending to work");
+                        });
+                    });
+
+                    match mode {
+                        Mode::All => {
+                            iter.map(|s| {
+                                let res = current.get_block_result(s, block.out_lane, op);
+                                proceed(&res)
+                            }).fold(false, |acc, new| new || acc)
+                        },
+                        Mode::First => {
+                            iter.any(|s| {
+                                let res = current.get_block_result(s, block.out_lane, op);
+                                proceed(&res)
+                            })
+                        }
                     }
-                }
-            }
+                }).expect("threads not to have panicked")
+            },
         };
     ret
 }
@@ -394,12 +401,22 @@ pub fn synthesize<'d, 'l>(
     let caches: Vec<SearchResultCache>
         = (0..n_stmts).map(|_| Arc::new(RwLock::new(HashMap::new()))).collect();
     let blocks: Vec<_> = (0..n_blocks).map(|_| BlockResults::default()).collect();
-    let start_time = Instant::now();
-    let ret = blocks[0].iter(&start, target, &block.ops,
-                             universes, literals, &stats, &blocks, &caches,
-                             true, mode, print, print_pruned, prune_fuel)
-        .collect::<Vec<_>>();
-    let dur = time_since(start_time);
+    let (sender, iter) = blocks[0].iter();
+    let sender = sender.expect("search to not have happened");
+    let (ret, dur) =
+        crossbeam_utils::thread::scope(|scope| {
+            let start_time = Instant::now();
+            let _handle = scope.spawn(
+                |_| {
+                    search(&start, target, &sender, &block.ops, 0,
+                           universes, literals, &stats, &blocks, &caches,
+                           true, mode, print, print_pruned, prune_fuel);
+                    sender.send(None).expect("sending to work");
+                });
+            let ret = iter.collect::<Vec<_>>();
+            let dur = time_since(start_time);
+            (ret, dur)
+        }).expect("search to succeed");
 
     let ops = linearize_program(block);
     assert_eq!(ops.len(), n_stmts);

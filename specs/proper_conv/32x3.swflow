@@ -1,12 +1,16 @@
 goal: [32] weight_conv {k=3}
-x: [34] = range(0, 34)
-x: [32, 2] = load_trunc(x)
-w: [3] = range(34, 37)
-w: [32, 3] = broadcast(w)
-to_send: [32, 3] = ?reg_select_no_consts(x)
-received_x_1: [32, 3] = ?col_xforms_no_group(to_send)
-received_w_1: [32, 3] = ?row_xforms_no_group(w)
-received_x: [32, 3] = ?col_rots_no_group(received_x_1)
-received_w: [32, 3] = ?row_rots_no_group(received_w_1)
-paired: [32, 3, 2] = fold stack(received_x, received_w)
+x: [32, 3] = {
+  x: [34] = range(0, 34)
+  x: [32, 2] = load_trunc(x)
+  to_send: [32, 3] = ?reg_select_no_consts(x)
+  received_x_1: [32, 3] = ?col_xforms_no_group(to_send)
+  received_x: [32, 3] = ?col_rots_no_group(received_x_1)
+}
+w: [32, 3] = {
+  w: [3] = range(34, 37)
+  w: [32, 3] = broadcast(w)
+  received_w_1: [32, 3] = ?row_xforms_no_group(w)
+  received_w: [32, 3] = ?row_rots_no_group(received_w_1)
+}
+paired: [32, 3, 2] = fold stack(x, w)
 cond_accumed: [32] = fold ?cond_keep_no_consts{fold_len=3}(paired)

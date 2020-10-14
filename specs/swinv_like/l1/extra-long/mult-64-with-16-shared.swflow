@@ -41,29 +41,31 @@ define b_dup_mult64([4, 4, 2]) -> [4, 4, 4] =
   [30, 30, 31, 31]]]
 
 goal: [16] poly_mult {w=8}
-a: [8] = range(0, 8)
-b: [8] = range(8, 16)
+a_for_mult: [4, 4, 4] = {
+  a: [8] = range(0, 8)
+  a: [4, 8] = broadcast(a)
+  #noprune
+  recv_a1_1: [4, 8] = ?xforms_no_group{main=1,second=0,out=1}(a)
+  @noprune
+  recv_a1: [4, 4] = ?rots_no_group{main=1,second=0,out=1}(recv_a1_1)
+  recv_a2_1: [4, 8] = ?xforms_no_group{main=1,second=0,out=1}(a)
+  recv_a2: [4, 4] = rots_no_group{main=1,second=0,out=1}(recv_a2_1)
+  recv_a: [4, 4, 2] = stack(recv_a1, recv_a2)
+  a_for_mult: [4, 4, 4] = a_dup_mult64(recv_a)
+}
 
-a: [4, 8] = broadcast(a)
-
-# @noprune
-recv_a1_1: [4, 8] = ?xforms_no_group{main=1,second=0,out=1}(a)
-# @noprune
-recv_a1: [4, 4] = ?rots_no_group{main=1,second=0,out=1}(recv_a1_1)
-recv_a2_1: [4, 8] = ?xforms_no_group{main=1,second=0,out=1}(a)
-recv_a2: [4, 4] = rots_no_group{main=1,second=0,out=1}(recv_a2_1)
-recv_a: [4, 4, 2] = stack(recv_a1, recv_a2)
-a_for_mult: [4, 4, 4] = a_dup_mult64(recv_a)
-
-b: [4, 8] = broadcast(b)
-@noprune
-recv_b1_1: [4, 8] = xforms_no_group{main=1,second=0,out=1}(b)
-@noprune
-recv_b1: [4, 4] = rots_no_group{main=1,second=0,out=1}(recv_b1_1)
-recv_b2_1: [4, 8] = xforms_no_group{main=1,second=0,out=1}(b)
-recv_b2: [4, 4] = rots_no_group{main=1,second=0,out=1}(recv_b2_1)
-recv_b: [4, 4, 2] = stack(recv_b1, recv_b2)
-b_for_mult: [4, 4, 4] = b_dup_mult64(recv_b)
+b_for_mult: [4, 4, 4] = {
+  b: [8] = range(8, 16)
+  b: [4, 8] = broadcast(b)
+  @noprune
+  recv_b1_1: [4, 8] = xforms_no_group{main=1,second=0,out=1}(b)
+  @noprune
+  recv_b1: [4, 4] = rots_no_group{main=1,second=0,out=1}(recv_b1_1)
+  recv_b2_1: [4, 8] = xforms_no_group{main=1,second=0,out=1}(b)
+  recv_b2: [4, 4] = rots_no_group{main=1,second=0,out=1}(recv_b2_1)
+  recv_b: [4, 4, 2] = stack(recv_b1, recv_b2)
+  b_for_mult: [4, 4, 4] = b_dup_mult64(recv_b)
+}
 
 mult: [4, 4, 4] = fold stack{fold_len=2}(a_for_mult, b_for_mult)
 
