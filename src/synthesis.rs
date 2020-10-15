@@ -205,6 +205,10 @@ fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
                   cache: &ResultMap<'d>, tracker: &SearchStepStats,
                   step: usize, print_pruned: bool, prune_fuel: usize) -> bool {
     let mut value_checks = 0;
+    if let Some(res) = cache.read().get(current).copied() {
+        tracker.cache_hit();
+        return res;
+    }
 
     for (i, a) in terms.iter().copied().enumerate() {
         for b in (terms[i+1..]).iter().copied()
@@ -220,10 +224,9 @@ fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
                         v
                     });
                 if !result {
-                    if i > 0 {
-                        // tracker.cache_write();
-                        // cache.write().insert(current.deep_clone(), false);
-                    }
+                    // Disable cache writes for non-viable
+                    // tracker.cache_write();
+                    // cache.write().insert(current.deep_clone(), false);
                     tracker.pruned();
                     tracker.record_value_checks(value_checks);
                     if print_pruned {
@@ -252,6 +255,7 @@ fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
                             println!("v = {}, actual = {}, min = {}, max = {}",
                                  target.domain.get_value(v), actual, min_copies, max_copies);
                         }
+                        // Re-proving is probably faster and takes up less memory
                         // tracker.cache_write();
                         // cache.write().insert(current.deep_clone(), false);
                         return false;
@@ -260,8 +264,8 @@ fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
             }
         }
     }
-    // tracker.cache_write();
-    // cache.write().insert(current.deep_clone(), true);
+    tracker.cache_write();
+    cache.write().insert(current.deep_clone(), true);
     true
 }
 
@@ -305,10 +309,6 @@ fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'stati
 
     let proceed = |new_state: &ProgState<'d, '_>| {
         tracker.checking();
-        if let Some(res) = cache.read().get(current).copied() {
-            tracker.cache_hit();
-            return res;
-        }
         if op.prune {
             if !viable(new_state, target,
                        op.abstractions.pairs_matrix.as_ref()
@@ -325,6 +325,7 @@ fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'stati
                          universes, literals, stats, blocks, caches,
                          is_root, mode, print, print_pruned, prune_fuel);
         if ret {
+            // already cached
             tracker.success();
             if print {
                 println!("success_path [step {}]\n{}", current_step, new_state);
@@ -332,8 +333,10 @@ fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'stati
         }
         else {
             // Don't repeat this segment
-            // tracker.cache_write();
-            // cache.write().insert(new_state.deep_clone(), false);
+            // if op.prune {
+            //     tracker.cache_write();
+            //     cache.write().insert(new_state.deep_clone(), false);
+            // }
         }
         ret
     };
