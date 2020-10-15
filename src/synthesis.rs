@@ -93,6 +93,7 @@ impl<'d> std::iter::Iterator for BlockOutputsIter<'d> {
 struct SearchStepStats {
     tested: AtomicUsize,
     pruned: AtomicUsize,
+    pruned_cache: AtomicUsize,
     pruned_copy_count: AtomicUsize,
     failed: AtomicUsize,
     cache_writes: AtomicUsize,
@@ -123,6 +124,10 @@ impl SearchStepStats {
 
     pub fn pruned(&self) {
         self.pruned.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn pruned_cache(&self) {
+        self.pruned_cache.fetch_add(1, Ordering::Relaxed);
     }
 
     pub fn pruned_copy_count(&self) {
@@ -157,6 +162,7 @@ impl Clone for SearchStepStats {
     fn clone(&self) -> Self {
         Self { tested: AtomicUsize::new(self.tested.load(Ordering::SeqCst)),
                pruned: AtomicUsize::new(self.pruned.load(Ordering::SeqCst)),
+               pruned_cache: AtomicUsize::new(self.pruned_cache.load(Ordering::SeqCst)),
                pruned_copy_count: AtomicUsize::new(self.pruned_copy_count.load(Ordering::SeqCst)),
                in_solution: AtomicUsize::new(self.in_solution.load(Ordering::SeqCst)),
                failed: AtomicUsize::new(self.failed.load(Ordering::SeqCst)),
@@ -172,6 +178,7 @@ impl Display for SearchStepStats {
         // Let's force a memory fence here to be safe
         let tested = self.tested.load(Ordering::SeqCst);
         let pruned = self.pruned.load(Ordering::Relaxed);
+        let pruned_cache = self.pruned_cache.load(Ordering::Relaxed);
         let pruned_copy_count = self.pruned_copy_count.load(Ordering::Relaxed);
         let failed = self.failed.load(Ordering::Relaxed);
         let in_solution = self.in_solution.load(Ordering::Relaxed);
@@ -180,8 +187,8 @@ impl Display for SearchStepStats {
 
         let continued = tested - pruned - failed;
 
-        write!(f, "tested={}; failed={}; pruned={}; copy_count={}; cache_writes={}; cache_hits={}; continued={}; in_solution={};",
-               tested, failed, pruned, pruned_copy_count, cache_writes, cache_hits, continued, in_solution)?;
+        write!(f, "tested={}; failed={}; pruned={}; pruned_cache={}; copy_count={}; cache_writes={}; cache_hits={}; continued={}; in_solution={};",
+               tested, failed, pruned, pruned_cache, pruned_copy_count, cache_writes, cache_hits, continued, in_solution)?;
 
         if COLLECT_STATS {
             if let Some(ref lock) = self.value_checks {
@@ -207,6 +214,10 @@ fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
     let mut value_checks = 0;
     if let Some(res) = cache.read().get(current).copied() {
         tracker.cache_hit();
+        if !res {
+            tracker.pruned();
+            tracker.pruned_cache();
+        }
         return res;
     }
 

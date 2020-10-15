@@ -1,0 +1,48 @@
+Processing specs/hvx_conv/6-regs-hvx-conv-arith.swflow
+construction:all time=0.004648141;
+spec:specs/hvx_conv/6-regs-hvx-conv-arith.swflow
+file_map:e21a68eb08 raw=8x2x3,-[0>0]identity{fold_len=3}-8x2,.
+load:matrices/e21a68eb08 density=0.00390625; time=0.000307332;
+file_map:df6504eb4d raw=8x2x3,8x2x3-[0,1>0 -1]stack{fold_len=2}-8x2x3,.8x2x3,-[0>0]identity{fold_len=3}-8x2,.
+load:matrices/df6504eb4d density=0.00390625; time=0.001244447;
+file_map:3ccc30791b raw=8x2x3,3-[1>1]broadcast-8x2x3,8x2x3.8x2x3,8x2x3-[0,1>0 -1]stack{fold_len=2}-8x2x3,.8x2x3,-[0>0]identity{fold_len=3}-8x2,.
+load:matrices/3ccc30791b density=0.01384083044982699; time=0.000335098;
+file_map:2ec2a5b5c0 raw=8x2x3,-[>1]-8x2x3,3.8x2x3,3-[1>1]broadcast-8x2x3,8x2x3.8x2x3,8x2x3-[0,1>0 -1]stack{fold_len=2}-8x2x3,.8x2x3,-[0>0]identity{fold_len=3}-8x2,.
+load:matrices/2ec2a5b5c0 density=0.00390625; time=0.000286622;
+file_map:36346ad9fa raw=2x3x8,-[0>0]rot_idx{r=1}-8x2x3,.8x2x3,-[>1]-8x2x3,3.8x2x3,3-[1>1]broadcast-8x2x3,8x2x3.8x2x3,8x2x3-[0,1>0 -1]stack{fold_len=2}-8x2x3,.8x2x3,-[0>0]identity{fold_len=3}-8x2,.
+load:matrices/36346ad9fa density=0.00390625; time=0.000238482;
+file_map:9465df41e0 raw=10x8,-[0>0]setup_add6-2x3x8,.2x3x8,-[0>0]rot_idx{r=1}-8x2x3,.8x2x3,-[>1]-8x2x3,3.8x2x3,3-[1>1]broadcast-8x2x3,8x2x3.8x2x3,8x2x3-[0,1>0 -1]stack{fold_len=2}-8x2x3,.8x2x3,-[0>0]identity{fold_len=3}-8x2,.
+load:matrices/9465df41e0 density=0.00140625; time=0.000697581;
+file_map:f1eec06487 raw=9x8,-[0>0]hvx_2x1{fresh,in_lim=4}-10x8,.10x8,-[0>0]setup_add6-2x3x8,.2x3x8,-[0>0]rot_idx{r=1}-8x2x3,.8x2x3,-[>1]-8x2x3,3.8x2x3,3-[1>1]broadcast-8x2x3,8x2x3.8x2x3,8x2x3-[0,1>0 -1]stack{fold_len=2}-8x2x3,.8x2x3,-[0>0]identity{fold_len=3}-8x2,.
+load:matrices/f1eec06487 density=0.020471643518518517; time=0.000669001;
+file_map:386f77b21e raw=8x8,-[0>0]hvx_2x1{fresh,in_lim=4}-9x8,.9x8,-[0>0]hvx_2x1{fresh,in_lim=4}-10x8,.10x8,-[0>0]setup_add6-2x3x8,.2x3x8,-[0>0]rot_idx{r=1}-8x2x3,.8x2x3,-[>1]-8x2x3,3.8x2x3,3-[1>1]broadcast-8x2x3,8x2x3.8x2x3,8x2x3-[0,1>0 -1]stack{fold_len=2}-8x2x3,.8x2x3,-[0>0]identity{fold_len=3}-8x2,.
+load:matrices/386f77b21e density=0.0791015625; time=0.000464327;
+file_map:a7309f1e15 raw=7x8,-[0>0]hvx_2x1{fresh,in_lim=4}-8x8,.8x8,-[0>0]hvx_2x1{fresh,in_lim=4}-9x8,.9x8,-[0>0]hvx_2x1{fresh,in_lim=4}-10x8,.10x8,-[0>0]setup_add6-2x3x8,.2x3x8,-[0>0]rot_idx{r=1}-8x2x3,.8x2x3,-[>1]-8x2x3,3.8x2x3,3-[1>1]broadcast-8x2x3,8x2x3.8x2x3,8x2x3-[0,1>0 -1]stack{fold_len=2}-8x2x3,.8x2x3,-[0>0]identity{fold_len=3}-8x2,.
+load:matrices/a7309f1e15 density=0.09765625; time=0.000371773;
+file_map:0bb2f679ec raw=6x8,-[0>0]hvx_2x1{fresh,in_lim=4}-7x8,.7x8,-[0>0]hvx_2x1{fresh,in_lim=4}-8x8,.8x8,-[0>0]hvx_2x1{fresh,in_lim=4}-9x8,.9x8,-[0>0]hvx_2x1{fresh,in_lim=4}-10x8,.10x8,-[0>0]setup_add6-2x3x8,.2x3x8,-[0>0]rot_idx{r=1}-8x2x3,.8x2x3,-[>1]-8x2x3,3.8x2x3,3-[1>1]broadcast-8x2x3,8x2x3.8x2x3,8x2x3-[0,1>0 -1]stack{fold_len=2}-8x2x3,.8x2x3,-[0>0]identity{fold_len=3}-8x2,.
+load:matrices/0bb2f679ec density=0.3701714409722222; time=0.000257781;
+file_map:59de7224c1 raw=5x8,-[0>0]hvx_2x1{fresh,in_lim=4}-6x8,.6x8,-[0>0]hvx_2x1{fresh,in_lim=4}-7x8,.7x8,-[0>0]hvx_2x1{fresh,in_lim=4}-8x8,.8x8,-[0>0]hvx_2x1{fresh,in_lim=4}-9x8,.9x8,-[0>0]hvx_2x1{fresh,in_lim=4}-10x8,.10x8,-[0>0]setup_add6-2x3x8,.2x3x8,-[0>0]rot_idx{r=1}-8x2x3,.8x2x3,-[>1]-8x2x3,3.8x2x3,3-[1>1]broadcast-8x2x3,8x2x3.8x2x3,8x2x3-[0,1>0 -1]stack{fold_len=2}-8x2x3,.8x2x3,-[0>0]identity{fold_len=3}-8x2,.
+load:matrices/59de7224c1 density=0.66015625; time=0.000180781;
+copy_counts:this time=0.000626095;
+Begin search
+solution: init = init_init; o1 = vlalign(4:=1,2, 1)(init); o2 = mov(5:=0)(o1); o3 = mov(6:=1)(o2); o4 = valign(7:=3,0, 1)(o3); o5 = mov(8:=1)(o4); o6 = mov(9:=0)(o5); to_add = setup_add6(o6); grouped_for_arith = rot_idx{r=1}(to_add); consts = init_consts; consts = broadcast(consts); multiplied = fold[2] stack(grouped_for_arith, consts); sums = fold[3] id(multiplied); out = id(sums);
+solution: init = init_init; o1 = vlalign(4:=1,2, 1)(init); o2 = mov(5:=0)(o1); o3 = mov(6:=1)(o2); o4 = mov(7:=0)(o3); o5 = mov(8:=1)(o4); o6 = valign(9:=3,0, 1)(o5); to_add = setup_add6(o6); grouped_for_arith = rot_idx{r=1}(to_add); consts = init_consts; consts = broadcast(consts); multiplied = fold[2] stack(grouped_for_arith, consts); sums = fold[3] id(multiplied); out = id(sums);
+solution: init = init_init; o1 = mov(4:=1)(init); o2 = mov(5:=0)(o1); o3 = vlalign(6:=1,2, 1)(o2); o4 = valign(7:=3,0, 1)(o3); o5 = mov(8:=1)(o4); o6 = mov(9:=0)(o5); to_add = setup_add6(o6); grouped_for_arith = rot_idx{r=1}(to_add); consts = init_consts; consts = broadcast(consts); multiplied = fold[2] stack(grouped_for_arith, consts); sums = fold[3] id(multiplied); out = id(sums);
+solution: init = init_init; o1 = mov(4:=1)(init); o2 = mov(5:=0)(o1); o3 = vlalign(6:=1,2, 1)(o2); o4 = mov(7:=0)(o3); o5 = mov(8:=1)(o4); o6 = valign(9:=3,0, 1)(o5); to_add = setup_add6(o6); grouped_for_arith = rot_idx{r=1}(to_add); consts = init_consts; consts = broadcast(consts); multiplied = fold[2] stack(grouped_for_arith, consts); sums = fold[3] id(multiplied); out = id(sums);
+Done searching block 0
+stats:0 var=init; op_name=init_init; pruning=false; tested=1; failed=0; pruned=0; pruned_cache=0; copy_count=0; cache_writes=0; cache_hits=0; continued=1; in_solution=1;
+stats:1 var=o1; op_name=hvx_2x1{fresh,in_lim=4}; pruning=true; tested=149; failed=0; pruned=2; pruned_cache=0; copy_count=2; cache_writes=135; cache_hits=12; continued=147; in_solution=2;
+stats:2 var=o2; op_name=hvx_2x1{fresh,in_lim=4}; pruning=true; tested=21903; failed=0; pruned=21897; pruned_cache=0; copy_count=150; cache_writes=6; cache_hits=0; continued=6; in_solution=2;
+stats:3 var=o3; op_name=hvx_2x1{fresh,in_lim=4}; pruning=true; tested=894; failed=0; pruned=888; pruned_cache=0; copy_count=0; cache_writes=6; cache_hits=0; continued=6; in_solution=2;
+stats:4 var=o4; op_name=hvx_2x1{fresh,in_lim=4}; pruning=true; tested=894; failed=0; pruned=240; pruned_cache=0; copy_count=240; cache_writes=594; cache_hits=60; continued=654; in_solution=4;
+stats:5 var=o5; op_name=hvx_2x1{fresh,in_lim=4}; pruning=true; tested=97446; failed=0; pruned=97410; pruned_cache=0; copy_count=3618; cache_writes=36; cache_hits=0; continued=36; in_solution=4;
+stats:6 var=o6; op_name=hvx_2x1{fresh,in_lim=4}; pruning=true; tested=5364; failed=0; pruned=5328; pruned_cache=0; copy_count=0; cache_writes=36; cache_hits=0; continued=36; in_solution=4;
+stats:7 var=to_add; op_name=setup_add6; pruning=false; tested=36; failed=0; pruned=0; pruned_cache=0; copy_count=0; cache_writes=0; cache_hits=0; continued=36; in_solution=4;
+stats:8 var=grouped_for_arith; op_name=rot_idx{r=1}; pruning=false; tested=36; failed=0; pruned=0; pruned_cache=0; copy_count=0; cache_writes=0; cache_hits=0; continued=36; in_solution=4;
+stats:9 var=consts; op_name=init_consts; pruning=false; tested=36; failed=0; pruned=0; pruned_cache=0; copy_count=0; cache_writes=0; cache_hits=0; continued=36; in_solution=4;
+stats:10 var=consts; op_name=broadcast; pruning=false; tested=36; failed=0; pruned=0; pruned_cache=0; copy_count=0; cache_writes=0; cache_hits=0; continued=36; in_solution=4;
+stats:11 var=multiplied; op_name=stack{fold_len=2}; pruning=true; tested=36; failed=0; pruned=32; pruned_cache=0; copy_count=0; cache_writes=4; cache_hits=0; continued=4; in_solution=4;
+stats:12 var=sums; op_name=identity{fold_len=3}; pruning=true; tested=4; failed=0; pruned=0; pruned_cache=0; copy_count=0; cache_writes=1; cache_hits=3; continued=4; in_solution=4;
+stats:13 var=out; op_name=reshape; pruning=false; tested=4; failed=0; pruned=0; pruned_cache=0; copy_count=0; cache_writes=0; cache_hits=0; continued=4; in_solution=4;
+stats:14 var=(last); op_name=(last); pruning=false; tested=4; failed=0; pruned=0; pruned_cache=0; copy_count=0; cache_writes=0; cache_hits=0; continued=4; in_solution=4;
+search:specs/hvx_conv/6-regs-hvx-conv-arith.swflow success=true; mode=All; prune_fuel=34; time=0.593082797;
