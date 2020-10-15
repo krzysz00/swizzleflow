@@ -1,0 +1,39 @@
+Processing specs/swinv_like/l1/extra-long/mult-64-with-16-shared.swflow
+construction:all time=0.008833526;
+spec:specs/swinv_like/l1/extra-long/mult-64-with-16-shared.swflow
+file_map:11e3a344bd raw=4x4,-[0>0]transpose-4x4,.
+load:matrices/11e3a344bd density=0.00390625; time=0.00005197;
+file_map:73479059f4 raw=4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/73479059f4 density=0.00390625; time=0.007689279;
+file_map:c6c9550153 raw=4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/c6c9550153 density=0.0625; time=0.00043451;
+file_map:98697fd663 raw=4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/98697fd663 density=0.0625; time=0.001673632;
+file_map:e45fbe7853 raw=.[0<1]exit_block_outputs_b_for_mult.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/e45fbe7853 density=0.0625; time=0.000433673;
+file_map:9040a81837 raw=4x4x2,-[0>0]b_dup_mult64-4x4x4,..[0<1]exit_block_outputs_b_for_mult.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/9040a81837 density=0.0625; time=0.000124094;
+file_map:2a9b136d76 raw=4x4,4x4-[1,0>0 -1]stack-4x4x2,.4x4x2,-[0>0]b_dup_mult64-4x4x4,..[0<1]exit_block_outputs_b_for_mult.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/2a9b136d76 density=0.0625; time=0.000114044;
+file_map:5789b3b445 raw=4x8,4x4-[0>0]rots_no_group{main=1,out=1,second=0}-4x4,4x4.4x4,4x4-[1,0>0 -1]stack-4x4x2,.4x4x2,-[0>0]b_dup_mult64-4x4x4,..[0<1]exit_block_outputs_b_for_mult.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/5789b3b445 density=0.059027777777777776; time=0.000248415;
+file_map:aed0ad0c64 raw=4x4x4,-[>1]-4x4x4,4x4x4.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/aed0ad0c64 density=0.0625; time=0.000402422;
+file_map:957f6b0124 raw=.[0<0]exit_block_outputs_a_for_mult.4x4x4,-[>1]-4x4x4,4x4x4.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/957f6b0124 density=0.0625; time=0.000447205;
+file_map:f47dfed001 raw=4x4x2,-[0>0]a_dup_mult64-4x4x4,..[0<0]exit_block_outputs_a_for_mult.4x4x4,-[>1]-4x4x4,4x4x4.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/f47dfed001 density=0.0625; time=0.000110372;
+file_map:2fe03ffc3e raw=4x4,4x4-[1,0>0 -1]stack-4x4x2,.4x4x2,-[0>0]a_dup_mult64-4x4x4,..[0<0]exit_block_outputs_a_for_mult.4x4x4,-[>1]-4x4x4,4x4x4.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/2fe03ffc3e density=0.0625; time=0.000126213;
+file_map:c00a089747 raw=4x8,4x4-[0>0]rots_no_group{main=1,out=1,second=0}-4x4,4x4.4x4,4x4-[1,0>0 -1]stack-4x4x2,.4x4x2,-[0>0]a_dup_mult64-4x4x4,..[0<0]exit_block_outputs_a_for_mult.4x4x4,-[>1]-4x4x4,4x4x4.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/c00a089747 density=0.059027777777777776; time=0.000240278;
+file_map:fcbbdcb8fa raw=4x8,4x4-[0>0]xforms_no_group{main=1,out=1,second=0}-4x8,4x4.4x8,4x4-[0>0]rots_no_group{main=1,out=1,second=0}-4x4,4x4.4x4,4x4-[1,0>0 -1]stack-4x4x2,.4x4x2,-[0>0]a_dup_mult64-4x4x4,..[0<0]exit_block_outputs_a_for_mult.4x4x4,-[>1]-4x4x4,4x4x4.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/fcbbdcb8fa density=0.0625; time=0.000237235;
+file_map:5d86138436 raw=4x8,4x8-[1>1]rots_no_group{main=1,out=1,second=0}-4x8,4x4.4x8,4x4-[0>0]xforms_no_group{main=1,out=1,second=0}-4x8,4x4.4x8,4x4-[0>0]rots_no_group{main=1,out=1,second=0}-4x4,4x4.4x4,4x4-[1,0>0 -1]stack-4x4x2,.4x4x2,-[0>0]a_dup_mult64-4x4x4,..[0<0]exit_block_outputs_a_for_mult.4x4x4,-[>1]-4x4x4,4x4x4.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/5d86138436 density=0.060546875; time=0.00044164;
+copy_counts:this time=0.000066769;
+copy_counts:this time=0.000164064;
+copy_counts:this time=0.000735866;
+Begin search
+Done searching block 2
+Done searching block 1

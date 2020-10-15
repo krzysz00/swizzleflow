@@ -1,0 +1,84 @@
+Processing specs/swinv_like/l1/extra-long/mult-64-with-16-shared.swflow
+construction:all time=0.009552954;
+spec:specs/swinv_like/l1/extra-long/mult-64-with-16-shared.swflow
+file_map:11e3a344bd raw=4x4,-[0>0]transpose-4x4,.
+load:matrices/11e3a344bd density=0.00390625; time=0.000036525;
+file_map:73479059f4 raw=4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/73479059f4 density=0.00390625; time=0.008393082;
+file_map:c6c9550153 raw=4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/c6c9550153 density=0.0625; time=0.000430529;
+file_map:98697fd663 raw=4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/98697fd663 density=0.0625; time=0.001619716;
+file_map:e45fbe7853 raw=.[0<1]exit_block_outputs_b_for_mult.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/e45fbe7853 density=0.0625; time=0.000417073;
+file_map:9040a81837 raw=4x4x2,-[0>0]b_dup_mult64-4x4x4,..[0<1]exit_block_outputs_b_for_mult.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/9040a81837 density=0.0625; time=0.000134461;
+file_map:2a9b136d76 raw=4x4,4x4-[1,0>0 -1]stack-4x4x2,.4x4x2,-[0>0]b_dup_mult64-4x4x4,..[0<1]exit_block_outputs_b_for_mult.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/2a9b136d76 density=0.0625; time=0.000160215;
+file_map:5789b3b445 raw=4x8,4x4-[0>0]rots_no_group{main=1,out=1,second=0}-4x4,4x4.4x4,4x4-[1,0>0 -1]stack-4x4x2,.4x4x2,-[0>0]b_dup_mult64-4x4x4,..[0<1]exit_block_outputs_b_for_mult.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/5789b3b445 density=0.059027777777777776; time=0.000341539;
+file_map:aed0ad0c64 raw=4x4x4,-[>1]-4x4x4,4x4x4.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/aed0ad0c64 density=0.0625; time=0.000513086;
+file_map:957f6b0124 raw=.[0<0]exit_block_outputs_a_for_mult.4x4x4,-[>1]-4x4x4,4x4x4.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/957f6b0124 density=0.0625; time=0.000549552;
+file_map:f47dfed001 raw=4x4x2,-[0>0]a_dup_mult64-4x4x4,..[0<0]exit_block_outputs_a_for_mult.4x4x4,-[>1]-4x4x4,4x4x4.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/f47dfed001 density=0.0625; time=0.000109341;
+file_map:2fe03ffc3e raw=4x4,4x4-[1,0>0 -1]stack-4x4x2,.4x4x2,-[0>0]a_dup_mult64-4x4x4,..[0<0]exit_block_outputs_a_for_mult.4x4x4,-[>1]-4x4x4,4x4x4.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/2fe03ffc3e density=0.0625; time=0.000108559;
+file_map:c00a089747 raw=4x8,4x4-[0>0]rots_no_group{main=1,out=1,second=0}-4x4,4x4.4x4,4x4-[1,0>0 -1]stack-4x4x2,.4x4x2,-[0>0]a_dup_mult64-4x4x4,..[0<0]exit_block_outputs_a_for_mult.4x4x4,-[>1]-4x4x4,4x4x4.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/c00a089747 density=0.059027777777777776; time=0.000259668;
+file_map:fcbbdcb8fa raw=4x8,4x4-[0>0]xforms_no_group{main=1,out=1,second=0}-4x8,4x4.4x8,4x4-[0>0]rots_no_group{main=1,out=1,second=0}-4x4,4x4.4x4,4x4-[1,0>0 -1]stack-4x4x2,.4x4x2,-[0>0]a_dup_mult64-4x4x4,..[0<0]exit_block_outputs_a_for_mult.4x4x4,-[>1]-4x4x4,4x4x4.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/fcbbdcb8fa density=0.0625; time=0.000239689;
+file_map:5d86138436 raw=4x8,4x8-[1>1]rots_no_group{main=1,out=1,second=0}-4x8,4x4.4x8,4x4-[0>0]xforms_no_group{main=1,out=1,second=0}-4x8,4x4.4x8,4x4-[0>0]rots_no_group{main=1,out=1,second=0}-4x4,4x4.4x4,4x4-[1,0>0 -1]stack-4x4x2,.4x4x2,-[0>0]a_dup_mult64-4x4x4,..[0<0]exit_block_outputs_a_for_mult.4x4x4,-[>1]-4x4x4,4x4x4.4x4x4,4x4x4-[0,1>0 -1]stack{fold_len=2}-4x4x4,.4x4x4,-[0>0]broadcast{group=1}-4x4x4x4,.4x4x4x4,-[0>0]reshape{fold_len=16}-4x4,.4x4,-[0>0]transpose-4x4,.
+load:matrices/5d86138436 density=0.060546875; time=0.000447923;
+copy_counts:this time=0.000067265;
+copy_counts:this time=0.000155284;
+copy_counts:this time=0.000684496;
+Begin search
+Done searching block 2
+Search over: 2240 results
+Done searching block 1
+solution: a_for_mult = (){  a = init_a; a = broadcast(a); recv_a1_1 = id(a); recv_a1 = rot[shift=0](recv_a1_1); recv_a2_1 = id(a); recv_a2 = rot[shift=4](recv_a2_1); recv_a = stack(recv_a1, recv_a2); a_for_mult = a_dup_mult64(recv_a); }; b_for_mult = (){  b = init_b; b = broadcast(b); recv_b1_1 = xform[cf=7,cr=1,dr=4](b); recv_b1 = rot[shift=4](recv_b1_1); recv_b2_1 = xform[cf=7,cr=1,dr=4](b); recv_b2 = rot[shift=0](recv_b2_1); recv_b = stack(recv_b1, recv_b2); b_for_mult = b_dup_mult64(recv_b); }; mult = fold[2] stack(a_for_mult, b_for_mult); c0 = broadcast(mult); c1 = keep_if(false)(c0); c2 = keep_if(true)(c1); c3 = keep_if(false)(c2); c4 = keep_if(false)(c3); c5 = keep_if(false)(c4); c6 = keep_if(false)(c5); c7 = keep_if(true)(c6); c8 = keep_if(false)(c7); c9 = keep_if[d0 >= +d2](c8); c10 = keep_if(false)(c9); c11 = keep_if[d0 < +d2](c10); c12 = keep_if(false)(c11); c13 = keep_if(false)(c12); c14 = keep_if[d0 >= +d2](c13); c15 = keep_if(false)(c14); c16 = keep_if[d0 < +d2](c15); thread_by_accum = fold[16] id(c16); accum_by_thread = tr(thread_by_accum); out = id(accum_by_thread);
+Done searching block 0
+Search over: 1 results
+stats:0 var=a; op_name=init_a; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=1; in_solution=1;
+stats:1 var=a; op_name=broadcast; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=1; in_solution=1;
+stats:2 var=recv_a1_1; op_name=xforms_no_group{main=1,out=1,second=0}; pruning=true; tested=112; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=112; in_solution=112;
+stats:3 var=recv_a1; op_name=rots_no_group{main=1,out=1,second=0}; pruning=false; tested=896; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=896; in_solution=896;
+stats:4 var=recv_a2_1; op_name=xforms_no_group{main=1,out=1,second=0}; pruning=true; tested=100352; failed=0; pruned=96416; copy_count=0; cache_writes=0; cache_hits=0; continued=3936; in_solution=2240;
+stats:5 var=recv_a2; op_name=rots_no_group{main=1,out=1,second=0}; pruning=true; tested=31488; failed=0; pruned=29248; copy_count=0; cache_writes=0; cache_hits=0; continued=2240; in_solution=2240;
+stats:6 var=recv_a; op_name=stack; pruning=false; tested=2240; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=2240; in_solution=2240;
+stats:7 var=a_for_mult; op_name=a_dup_mult64; pruning=true; tested=2240; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=2240; in_solution=2240;
+stats:8 var=a_for_mult; op_name=block_outputs_a_for_mult; pruning=true; tested=195; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=195; in_solution=1;
+stats:9 var=b; op_name=init_b; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=1; in_solution=1;
+stats:10 var=b; op_name=broadcast; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=1; in_solution=1;
+stats:11 var=recv_b1_1; op_name=xforms_no_group{main=1,out=1,second=0}; pruning=false; tested=112; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=112; in_solution=112;
+stats:12 var=recv_b1; op_name=rots_no_group{main=1,out=1,second=0}; pruning=false; tested=896; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=896; in_solution=896;
+stats:13 var=recv_b2_1; op_name=xforms_no_group{main=1,out=1,second=0}; pruning=true; tested=100352; failed=0; pruned=96416; copy_count=0; cache_writes=0; cache_hits=0; continued=3936; in_solution=2240;
+stats:14 var=recv_b2; op_name=rots_no_group{main=1,out=1,second=0}; pruning=true; tested=31488; failed=0; pruned=29248; copy_count=0; cache_writes=0; cache_hits=0; continued=2240; in_solution=2240;
+stats:15 var=recv_b; op_name=stack; pruning=false; tested=2240; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=2240; in_solution=2240;
+stats:16 var=b_for_mult; op_name=b_dup_mult64; pruning=false; tested=2240; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=2240; in_solution=2240;
+stats:17 var=b_for_mult; op_name=block_outputs_b_for_mult; pruning=true; tested=435785; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=435785; in_solution=1;
+stats:18 var=mult; op_name=stack{fold_len=2}; pruning=true; tested=435785; failed=0; pruned=435630; copy_count=0; cache_writes=0; cache_hits=0; continued=155; in_solution=1;
+stats:19 var=c0; op_name=broadcast{group=1}; pruning=false; tested=155; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=155; in_solution=1;
+stats:20 var=c1; op_name=cond_keep_no_consts{restrict=[3,0,1,0]}; pruning=true; tested=2162; failed=0; pruned=1242; copy_count=0; cache_writes=0; cache_hits=0; continued=920; in_solution=1;
+stats:21 var=c2; op_name=cond_keep_no_consts{restrict=[3,0,1,1]}; pruning=true; tested=12875; failed=0; pruned=12692; copy_count=2369; cache_writes=0; cache_hits=0; continued=183; in_solution=1;
+stats:22 var=c3; op_name=cond_keep_no_consts{restrict=[3,0,1,2]}; pruning=true; tested=2562; failed=0; pruned=2520; copy_count=616; cache_writes=0; cache_hits=0; continued=42; in_solution=1;
+stats:23 var=c4; op_name=cond_keep_no_consts{restrict=[3,0,1,3]}; pruning=true; tested=583; failed=0; pruned=580; copy_count=143; cache_writes=0; cache_hits=0; continued=3; in_solution=1;
+stats:24 var=c5; op_name=cond_keep_no_consts{restrict=[3,1,1,0]}; pruning=true; tested=31; failed=0; pruned=10; copy_count=0; cache_writes=0; cache_hits=0; continued=21; in_solution=1;
+stats:25 var=c6; op_name=cond_keep_no_consts{restrict=[3,1,1,1]}; pruning=true; tested=285; failed=0; pruned=259; copy_count=91; cache_writes=0; cache_hits=0; continued=26; in_solution=1;
+stats:26 var=c7; op_name=cond_keep_no_consts{restrict=[3,1,1,2]}; pruning=true; tested=353; failed=0; pruned=348; copy_count=60; cache_writes=0; cache_hits=0; continued=5; in_solution=1;
+stats:27 var=c8; op_name=cond_keep_no_consts{restrict=[3,1,1,3]}; pruning=true; tested=62; failed=0; pruned=61; copy_count=13; cache_writes=0; cache_hits=0; continued=1; in_solution=1;
+stats:28 var=c9; op_name=cond_keep_no_consts{restrict=[3,2,1,0]}; pruning=true; tested=10; failed=0; pruned=8; copy_count=0; cache_writes=0; cache_hits=0; continued=2; in_solution=1;
+stats:29 var=c10; op_name=cond_keep_no_consts{restrict=[3,2,1,1]}; pruning=true; tested=23; failed=0; pruned=20; copy_count=20; cache_writes=0; cache_hits=0; continued=3; in_solution=1;
+stats:30 var=c11; op_name=cond_keep_no_consts{restrict=[3,2,1,2]}; pruning=true; tested=38; failed=0; pruned=37; copy_count=14; cache_writes=0; cache_hits=0; continued=1; in_solution=1;
+stats:31 var=c12; op_name=cond_keep_no_consts{restrict=[3,2,1,3]}; pruning=true; tested=7; failed=0; pruned=6; copy_count=6; cache_writes=0; cache_hits=0; continued=1; in_solution=1;
+stats:32 var=c13; op_name=cond_keep_no_consts{restrict=[3,3,1,0]}; pruning=true; tested=13; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=13; in_solution=1;
+stats:33 var=c14; op_name=cond_keep_no_consts{restrict=[3,3,1,1]}; pruning=true; tested=175; failed=0; pruned=172; copy_count=23; cache_writes=0; cache_hits=0; continued=3; in_solution=1;
+stats:34 var=c15; op_name=cond_keep_no_consts{restrict=[3,3,1,2]}; pruning=true; tested=36; failed=0; pruned=33; copy_count=33; cache_writes=0; cache_hits=0; continued=3; in_solution=1;
+stats:35 var=c16; op_name=cond_keep_no_consts{restrict=[3,3,1,3]}; pruning=true; tested=41; failed=0; pruned=40; copy_count=17; cache_writes=0; cache_hits=0; continued=1; in_solution=1;
+stats:36 var=thread_by_accum; op_name=reshape{fold_len=16}; pruning=true; tested=1; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=1; in_solution=1;
+stats:37 var=accum_by_thread; op_name=transpose; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=1; in_solution=1;
+stats:38 var=out; op_name=reshape; pruning=false; tested=1; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=1; in_solution=1;
+stats:39 var=(last); op_name=(last); pruning=false; tested=1; failed=0; pruned=0; copy_count=0; cache_writes=0; cache_hits=0; continued=1; in_solution=1;
+search:specs/swinv_like/l1/extra-long/mult-64-with-16-shared.swflow success=true; mode=First; prune_fuel=64; time=370.051287601;

@@ -51,6 +51,7 @@ a_for_mult: [4, 4, 4] = {
   recv_a2_1: [4, 8] = ?xforms_no_group{main=1,second=0,out=1}(a)
   recv_a2: [4, 4] = rots_no_group{main=1,second=0,out=1}(recv_a2_1)
   recv_a: [4, 4, 2] = stack(recv_a1, recv_a2)
+  @prune
   a_for_mult: [4, 4, 4] = a_dup_mult64(recv_a)
 }
 
@@ -64,6 +65,7 @@ b_for_mult: [4, 4, 4] = {
   recv_b2_1: [4, 8] = xforms_no_group{main=1,second=0,out=1}(b)
   recv_b2: [4, 4] = rots_no_group{main=1,second=0,out=1}(recv_b2_1)
   recv_b: [4, 4, 2] = stack(recv_b1, recv_b2)
+  #prune
   b_for_mult: [4, 4, 4] = b_dup_mult64(recv_b)
 }
 

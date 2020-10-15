@@ -540,10 +540,6 @@ impl Scopes {
         self.get(key).is_some()
     }
 
-    pub fn current_deps(&mut self) -> &mut [Dependency] {
-        self.deps.last_mut().expect("to be in a scope").as_mut_slice()
-    }
-
     pub fn push_scope(&mut self) {
         self.maps.push(HashMap::new());
         self.deps.push(Vec::new());

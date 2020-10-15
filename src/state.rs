@@ -368,7 +368,7 @@ impl<'d, 't> ProgState<'d, 't> {
                                   Some(&op.lane_out_offsets))
     }
 
-    pub fn get_block_result<'u: 't, 'r>(&'u self, them: ProgState<'d, 'static>,
+    pub fn get_block_result<'u: 't, 'r>(&'u self, them: &'u ProgState<'d, 'u>,
                                         their_lane: usize, op: &'r Operation) -> Self {
         let Self {state, domain, name, inv_state: _inv_state} = self;
         let Self { state: their_state, name: their_name,
@@ -380,8 +380,7 @@ impl<'d, 't> ProgState<'d, 't> {
                 Cow::Owned(ref v) => new_state.push(Cow::Borrowed(v)),
             }
         };
-        // Sadly, no good way to wrap an Option<> around pointer
-        new_state[op.out_lane] = their_state[their_lane].to_owned();
+        new_state[op.out_lane] = Cow::Borrowed(their_state[their_lane].as_ref());
         for l in op.drop_lanes.iter().copied() {
             new_state[l] = Cow::Owned(None);
         }

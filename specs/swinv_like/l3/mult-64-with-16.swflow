@@ -41,29 +41,39 @@ define b_dup_mult64([4, 4, 2]) -> [4, 4, 4] =
   [30, 30, 31, 31]]]
 
 goal: [16] poly_mult {w=8}
-a1: [4] = range(0, 4)
-a2: [4] = range(4, 8)
-b1: [4] = range(8, 12)
-b2: [4] = range(12, 16)
+a_for_mult: [4, 4, 4] = {
+  recv_a1: [4, 4] = {
+    a1: [4] = range(0, 4)
+    a1: [4, 4] = broadcast(a1)
+    recv_a1_1: [4, 4] = ?xforms{main=0,second=1,out=1}(a1)
+    recv_a1: [4, 4] = ?rots{main=0,second=1,out=1}(recv_a1_1)
+  }
+  recv_a2: [4, 4] = {
+    a2: [4] = range(4, 8)
+    a2: [4, 4] = broadcast(a2)
+    recv_a2_1: [4, 4] = ?xforms{main=0,second=1,out=1}(a2)
+    recv_a2: [4, 4] = ?rots{main=0,second=1,out=1}(recv_a2_1)
+  }
+  recv_a: [4, 4, 2] = stack(recv_a1, recv_a2)
+  a_for_mult: [4, 4, 4] = a_dup_mult64(recv_a)
+}
 
-a1: [4, 4] = broadcast(a1)
-a2: [4, 4] = broadcast(a2)
-b1: [4, 4] = broadcast(b1)
-b2: [4, 4] = broadcast(b2)
-
-recv_a1_1: [4, 4] = ?xforms{main=0,second=1,out=1}(a1)
-recv_a1: [4, 4] = ?rots{main=0,second=1,out=1}(recv_a1_1)
-recv_a2_1: [4, 4] = ?xforms{main=0,second=1,out=1}(a2)
-recv_a2: [4, 4] = rots{main=0,second=1,out=1}(recv_a2_1)
-recv_a: [4, 4, 2] = stack(recv_a1, recv_a2)
-a_for_mult: [4, 4, 4] = a_dup_mult64(recv_a)
-
-recv_b1_1: [4, 4] = xforms{main=0,second=1,out=1}(b1)
-recv_b1: [4, 4] = rots{main=0,second=1,out=1}(recv_b1_1)
-recv_b2_1: [4, 4] = xforms{main=0,second=1,out=1}(b2)
-recv_b2: [4, 4] = rots{main=0,second=1,out=1}(recv_b2_1)
-recv_b: [4, 4, 2] = stack(recv_b1, recv_b2)
-b_for_mult: [4, 4, 4] = b_dup_mult64(recv_b)
+b_for_mult: [4, 4, 4] = {
+  recv_b1: [4, 4] = {
+    b1: [4] = range(8, 12)
+    b1: [4, 4] = broadcast(b1)
+    recv_b1_1: [4, 4] = ?xforms{main=0,second=1,out=1}(b1)
+    recv_b1: [4, 4] = ?rots{main=0,second=1,out=1}(recv_b1_1)
+  }
+  recv_b2: [4, 4] = {
+    b2: [4] = range(12, 16)
+    b2: [4, 4] = broadcast(b2)
+    recv_b2_1: [4, 4] = ?xforms{main=0,second=1,out=1}(b2)
+    recv_b2: [4, 4] = ?rots{main=0,second=1,out=1}(recv_b2_1)
+  }
+  recv_b: [4, 4, 2] = stack(recv_b1, recv_b2)
+  b_for_mult: [4, 4, 4] = b_dup_mult64(recv_b)
+}
 
 mult: [4, 4, 4] = fold stack{fold_len=2}(a_for_mult, b_for_mult)
 

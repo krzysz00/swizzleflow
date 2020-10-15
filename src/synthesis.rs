@@ -23,12 +23,11 @@ use std::time::Instant;
 
 use std::fmt;
 use std::fmt::{Display,Formatter};
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc};
-use parking_lot::{RwLock, Mutex, MappedRwLockWriteGuard, MappedRwLockReadGuard,
+use parking_lot::{RwLock, Mutex,
                   RwLockUpgradableReadGuard, RwLockReadGuard, RwLockWriteGuard};
 use crossbeam_channel::{Sender, Receiver};
-use crossbeam_utils::thread::{Scope, ScopedJoinHandle};
 use itertools::Itertools;
 use itertools::iproduct;
 
@@ -42,54 +41,51 @@ pub enum Mode {
 
 #[derive(Debug, Default)]
 struct BlockResults<'d> {
-    results: Arc<RwLock<(AtomicBool, Vec<ProgState<'d, 'static>>)>>,
+    results: Arc<RwLock<HashMap<ProgState<'d, 'static>, Vec<ProgState<'d, 'static>>>>>,
 }
 
 impl<'d> BlockResults<'d> {
-    pub fn iter<'a>(&'a self) ->
-        (Option<Sender<Option<ProgState<'d, 'static>>>>, BlockResultsIter<'a, 'd>)
-        where 'd: 'a,
+    pub fn iter<'a>(&'a self, args: &'a ProgState<'d, 'a>) -> BlockResultsSource<'a, 'd>
+    where 'd: 'a,
     {
         let lock = self.results.upgradable_read();
-        if !lock.0.fetch_or(true, Ordering::SeqCst) {
+        if !lock.contains_key(args) {
             let lock = RwLockUpgradableReadGuard::upgrade(lock);
-            let lock = RwLockWriteGuard::map(lock, |(_, ref mut vec)| vec);
-            let (send, recv) = crossbeam_channel::unbounded();
-            let ret = BlockResultsIter::Initial { lock, channel: recv };
-            (Some(send), ret)
+            let (sender, recv) = crossbeam_channel::unbounded();
+            let iter = BlockOutputsIter::new(recv);
+            BlockResultsSource::Initial { lock, sender, iter }
         }
         else {
             let lock = RwLockUpgradableReadGuard::downgrade(lock);
-            let lock = RwLockReadGuard::map(lock, |(_, ref vec)| vec);
-            (None, BlockResultsIter::Later { lock, pos: 0 })
+            BlockResultsSource::Repeat { lock }
         }
     }
+    // Invariant: Whosoever finishes consuming the results from a block puts them in a hashmap
 }
 
 #[derive(Debug)]
-enum BlockResultsIter<'a, 'd: 'a> {
-    Initial { lock: MappedRwLockWriteGuard<'a, Vec<ProgState<'d, 'static>>>,
-              channel: Receiver<Option<ProgState<'d, 'static>>> },
-    Later { lock: MappedRwLockReadGuard<'a, Vec<ProgState<'d, 'static>>>, pos: usize },
+enum BlockResultsSource<'a, 'd: 'a> {
+    Initial { lock: RwLockWriteGuard<'a, HashMap<ProgState<'d, 'static>, Vec<ProgState<'d, 'static>>>>,
+        sender: Sender<Option<ProgState<'d, 'static>>>,
+        iter: BlockOutputsIter<'d> },
+    Repeat { lock: RwLockReadGuard<'a, HashMap<ProgState<'d, 'static>, Vec<ProgState<'d, 'static>>>> },
 }
-impl<'a, 'd> std::iter::Iterator for BlockResultsIter<'a, 'd>
-where 'd: 'a
-{
+
+#[derive(Debug)]
+struct BlockOutputsIter<'d> {
+    channel: Receiver<Option<ProgState<'d, 'static>>>
+}
+
+impl<'d> BlockOutputsIter<'d> {
+    pub fn new(channel: Receiver<Option<ProgState<'d, 'static>>>) -> Self {
+        Self { channel }
+    }
+}
+
+impl<'d> std::iter::Iterator for BlockOutputsIter<'d> {
     type Item = ProgState<'d, 'static>;
     fn next(&mut self) -> Option<ProgState<'d, 'static>> {
-        match self {
-            BlockResultsIter::Initial { lock, channel } => {
-                channel.recv().ok().and_then(|v| {
-                    v.as_ref().map(|a| lock.push(a.clone()));
-                    v
-                })
-            },
-            BlockResultsIter::Later { lock, pos } => {
-                let ret = lock.get(*pos).cloned();
-                *pos += 1;
-                ret
-            }
-        }
+        self.channel.recv().ok().flatten()
     }
 }
 
@@ -209,6 +205,7 @@ fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
                   cache: &ResultMap<'d>, tracker: &SearchStepStats,
                   step: usize, print_pruned: bool, prune_fuel: usize) -> bool {
     let mut value_checks = 0;
+
     for (i, a) in terms.iter().copied().enumerate() {
         for b in (terms[i+1..]).iter().copied()
             .chain(std::iter::once(a)).take(prune_fuel)
@@ -223,9 +220,10 @@ fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
                         v
                     });
                 if !result {
-                    // if did_lookup {
-                    //     cache.write().unwrap().insert(current.clone(), false);
-                    // }
+                    if i > 0 {
+                        // tracker.cache_write();
+                        // cache.write().insert(current.deep_clone(), false);
+                    }
                     tracker.pruned();
                     tracker.record_value_checks(value_checks);
                     if print_pruned {
@@ -254,12 +252,16 @@ fn viable<'d, 'l>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'static>,
                             println!("v = {}, actual = {}, min = {}, max = {}",
                                  target.domain.get_value(v), actual, min_copies, max_copies);
                         }
+                        // tracker.cache_write();
+                        // cache.write().insert(current.deep_clone(), false);
                         return false;
                     }
                 }
             }
         }
     }
+    // tracker.cache_write();
+    // cache.write().insert(current.deep_clone(), true);
     true
 }
 
@@ -303,6 +305,10 @@ fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'stati
 
     let proceed = |new_state: &ProgState<'d, '_>| {
         tracker.checking();
+        if let Some(res) = cache.read().get(current).copied() {
+            tracker.cache_hit();
+            return res;
+        }
         if op.prune {
             if !viable(new_state, target,
                        op.abstractions.pairs_matrix.as_ref()
@@ -323,6 +329,11 @@ fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'stati
             if print {
                 println!("success_path [step {}]\n{}", current_step, new_state);
             }
+        }
+        else {
+            // Don't repeat this segment
+            // tracker.cache_write();
+            // cache.write().insert(new_state.deep_clone(), false);
         }
         ret
     };
@@ -355,34 +366,61 @@ fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'stati
             },
             OpType::Subprog(block) => {
                 let args = current.new_from_block_args(&op.in_lanes, block.max_lanes);
-                crossbeam_utils::thread::scope(|scope| {
-                    let (maybe_sender, mut iter) = blocks[block.block_num].iter();
-                    let _handle = maybe_sender.map(|sender| {
-                        scope.spawn(move |_| {
-                            search(&args, target,
-                                   &sender,  &block.ops, 0,
-                                   universes, literals, stats, blocks, caches,
-                                   // Force All to ensure sensible semantics
-                                   false, Mode::All, print, print_pruned, prune_fuel);
-                            sender.send(None).expect("Sending to work");
-                        });
-                    });
-
-                    match mode {
-                        Mode::All => {
-                            iter.map(|s| {
-                                let res = current.get_block_result(s, block.out_lane, op);
-                                proceed(&res)
-                            }).fold(false, |acc, new| new || acc)
-                        },
-                        Mode::First => {
-                            iter.any(|s| {
-                                let res = current.get_block_result(s, block.out_lane, op);
-                                proceed(&res)
-                            })
+                let block_source = blocks[block.block_num].iter(&args);
+                match block_source {
+                    BlockResultsSource::Initial { mut lock, sender, mut iter } => {
+                        crossbeam_utils::thread::scope(|scope| {
+                            let _handle = scope.spawn(|_| {
+                                search(&args, target,
+                                       &sender,  &block.ops, 0,
+                                       universes, literals, stats, blocks, caches,
+                                       // Force All to ensure sensible semantics
+                                       false, Mode::All, print, print_pruned, prune_fuel);
+                                sender.send(None).expect("Sending to work");
+                                println!("Done searching block {}", block.block_num);
+                            });
+                            let mut results = Vec::new();
+                            let ret =
+                                match mode {
+                                    Mode::All => {
+                                        iter.map(|s| {
+                                            results.push(s);
+                                            let s = &results[results.len() - 1];
+                                            let res = current.get_block_result(s, block.out_lane, op);
+                                            proceed(&res)
+                                        }).fold(false, |acc, new| new || acc)
+                                    },
+                                    Mode::First => {
+                                        iter.any(|s| {
+                                            results.push(s);
+                                            let s = &results[results.len() - 1];
+                                            let res = current.get_block_result(s, block.out_lane, op);
+                                            proceed(&res)
+                                        })
+                                    }
+                                };
+                            lock.insert(args.deep_clone(), results);
+                            ret
+                        }).expect("threads not to have panicked")
+                    },
+                    BlockResultsSource::Repeat { lock } => {
+                        let results = lock.get(&args).unwrap();
+                        match mode {
+                            Mode::All => {
+                                results.iter().map(|s| {
+                                    let res = current.get_block_result(s, block.out_lane, op);
+                                    proceed(&res)
+                                }).fold(false, |acc, new| new || acc)
+                            },
+                            Mode::First => {
+                                results.iter().any(|s| {
+                                    let res = current.get_block_result(s, block.out_lane, op);
+                                    proceed(&res)
+                                })
+                            }
                         }
                     }
-                }).expect("threads not to have panicked")
+                }
             },
         };
     ret
@@ -401,22 +439,27 @@ pub fn synthesize<'d, 'l>(
     let caches: Vec<SearchResultCache>
         = (0..n_stmts).map(|_| Arc::new(RwLock::new(HashMap::new()))).collect();
     let blocks: Vec<_> = (0..n_blocks).map(|_| BlockResults::default()).collect();
-    let (sender, iter) = blocks[0].iter();
-    let sender = sender.expect("search to not have happened");
+    let block_source = blocks[0].iter(&start);
     let (ret, dur) =
-        crossbeam_utils::thread::scope(|scope| {
-            let start_time = Instant::now();
-            let _handle = scope.spawn(
-                |_| {
-                    search(&start, target, &sender, &block.ops, 0,
-                           universes, literals, &stats, &blocks, &caches,
-                           true, mode, print, print_pruned, prune_fuel);
-                    sender.send(None).expect("sending to work");
-                });
-            let ret = iter.collect::<Vec<_>>();
-            let dur = time_since(start_time);
-            (ret, dur)
-        }).expect("search to succeed");
+        match block_source {
+            BlockResultsSource::Initial { lock: _lock, sender, iter } => {
+                crossbeam_utils::thread::scope(|scope| {
+                    let start_time = Instant::now();
+                    let _handle = scope.spawn(
+                        |_| {
+                            search(&start, target, &sender, &block.ops, 0,
+                                   universes, literals, &stats, &blocks, &caches,
+                                   true, mode, print, print_pruned, prune_fuel);
+                            println!("Done searching block 0");
+                            sender.send(None).expect("sending to work");
+                        });
+                    let ret = iter.collect::<Vec<_>>();
+                    let dur = time_since(start_time);
+                    (ret, dur)
+                }).expect("threads to work")
+            },
+            BlockResultsSource::Repeat { lock: _lock } => panic!("Root search was stored")
+        };
 
     let ops = linearize_program(block);
     assert_eq!(ops.len(), n_stmts);

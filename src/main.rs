@@ -58,7 +58,7 @@ fn run() -> Result<()> {
                   (@arg matrix_dir: -m --("matrix-dir") +takes_value value_name("MATRIX_DIR")
                    default_value_os(DEFAULT_MATRIX_DIR.as_ref())
                    "Directory to store matrices in")
-                  (@arg first: -f --first "Find first solution")
+                  (@arg first: --first "Find first solution")
                   (@arg print: -p --print "Print trace of valid solutions")
                   (@arg print_pruned: -P --("print-pruned") "Print pruned solutions")
                   (@arg prune_fuel: -f --("prune-fuel") [FUEL] "Number of terms to pair with every term during pruning")
