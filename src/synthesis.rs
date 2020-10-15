@@ -344,10 +344,10 @@ fn search<'d, 'l, 'f>(current: &ProgState<'d, 'l>, target: &ProgState<'d, 'stati
         }
         else {
             // Don't repeat this segment
-            // if op.prune {
-            //     tracker.cache_write();
-            //     cache.write().insert(new_state.deep_clone(), false);
-            // }
+            if op.prune {
+                tracker.cache_write();
+                cache.write().insert(new_state.deep_clone(), false);
+            }
         }
         ret
     };
