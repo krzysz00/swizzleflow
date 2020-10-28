@@ -15,16 +15,17 @@
 use crate::errors::*;
 
 use crate::misc::{extending_set, ShapeVec};
-use crate::state::{OpType, Operation, Value, DomRef, Domain, ProgState, Block};
+use crate::state::{OpType, Operation, Value, DomRef, Domain, ProgState, Block, BlockCopyMaps};
 use crate::parser::{Statement, StmtType, Dependency, VarIdx};
 
-use std::collections::{HashMap,BinaryHeap,BTreeSet};
+use std::collections::{BinaryHeap,BTreeSet,BTreeMap};
 use std::cmp::Reverse;
 use std::iter::FromIterator;
 
 use ndarray::{ArrayD, Ix};
 
 use smallvec::{SmallVec};
+use rustc_hash::FxHashMap;
 
 use itertools::Itertools;
 
@@ -94,8 +95,16 @@ fn to_program_rec(statements: Vec<Statement>,
     let mut var_names = Vec::with_capacity(n_vars);
     let mut max_lanes = 0;
 
-    let mut lane_ends: HashMap<usize, SmallVec<[usize; 2]>> = HashMap::new();
+    let mut lane_ends: FxHashMap<usize, SmallVec<[usize; 2]>> = FxHashMap::default();
     let mut free_lanes = BinaryHeap::new();
+
+    let stmt_is_block: Vec<bool> = statements.iter().map(|s| s.op.is_block()).collect();
+
+    let block_args_maps = statements.iter().enumerate()
+        .map(|(i, v)| (i, v.args.iter().copied().enumerate()
+                       .map(|(idx, a)| (a, idx)).collect::<FxHashMap<_, _>>()))
+        .collect::<FxHashMap<_, _>>();
+    let mut blocks_to_update = FxHashMap::default();
 
     for (idx, (Dependency { parent_idx: _parent_idx,
                             used_at, var, shape },
@@ -108,13 +117,22 @@ fn to_program_rec(statements: Vec<Statement>,
         universes.push(universe);
 
         extending_set(&mut lane_shapes, lane, Some(shape));
-        if let Some(last_live) = used_at.iter().copied().max() {
-            lane_ends.entry(last_live)
-                .or_insert_with(|| SmallVec::<[usize; 2]>::new())
-                .push(n_deps + idx);
-        }
-        else {
-            panic!("Unused dependency {}", &var_names[var_names.len() - 1]);
+        // Args must be preserved to the end of the computation
+        // so that abstractions are correctly computed
+        lane_ends.entry(n_vars)
+            .or_insert_with(|| SmallVec::<[usize; 2]>::new())
+            .push(idx);
+
+        for stmt in used_at.iter().copied() {
+            for block in used_at.iter().copied().filter(|&i| stmt_is_block[i] && i > stmt) {
+                blocks_to_update.entry(stmt)
+                    .or_insert_with(BTreeMap::default)
+                    .entry(block).or_insert_with(FxHashMap::default)
+                    .insert(*block_args_maps.get(&block).unwrap()
+                            .get(&VarIdx::Dep(idx)).unwrap()
+                            , lane);
+
+            }
         }
     }
 
@@ -137,6 +155,28 @@ fn to_program_rec(statements: Vec<Statement>,
         let lane = next_free_lane(&mut free_lanes, &mut max_lanes);
         lanes.push(lane);
         var_names.push(var.clone());
+
+        for stmt in used_at.iter().copied() {
+            for block in used_at.iter().copied().filter(|&i| stmt_is_block[i] && i > stmt) {
+                blocks_to_update.entry(stmt)
+                    .or_insert_with(BTreeMap::default)
+                    .entry(block).or_insert_with(FxHashMap::default)
+                    .insert(*block_args_maps.get(&block).unwrap()
+                            .get(&VarIdx::Here(stmt_idx)).unwrap(),
+                            lane);
+            }
+        }
+
+        let block_copy_maps: Option<crate::state::BlockCopyDat> =
+            blocks_to_update.remove(&stmt_idx)
+            .map(|block_map| {
+                block_map.into_iter().map(|(block, push_map)| {
+                    let pull_map = push_map.iter().map(|(&theirs, &ours)| (ours, theirs)).collect();
+                    (block, BlockCopyMaps { push_map, pull_map })
+                }).collect()});
+        if let Some(block_updates) = block_copy_maps.as_ref() {
+            println!("Update {} ({}) with {:?}", stmt_idx, var, block_updates);
+        }
         let (op, fold_len, arg_string, universe_idx) =
             match op {
                 StmtType::Initial(literal) => {
@@ -207,7 +247,8 @@ fn to_program_rec(statements: Vec<Statement>,
                                 lane_shapes.clone(), out_shape.clone(),
                                 var, arg_string, name,
                                 arg_lanes, lane, drop_lanes,
-                                prune, universe_idx, global_idx);
+                                prune, universe_idx, global_idx,
+                                block_copy_maps);
         ops.push(op);
 
         extending_set(&mut lane_shapes, lane, Some(out_shape));
@@ -246,6 +287,7 @@ fn to_program_rec(statements: Vec<Statement>,
         last_op_shape[l] = None;
     }
 
+    println!("Block number {}: last shape {:?}", block_num, last_op_shape);
     Block::new(ops, block_num, max_lanes, out_lane, last_op_shape)
 }
 

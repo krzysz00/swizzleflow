@@ -30,7 +30,7 @@ def select_categories(results, categories=None):
         raise ValueError("Unexpected results format")
 
 def matrix_stats(results):
-    return select_categories(results, ["build", "load", "mul", "union"])
+    return select_categories(results, ["build", "load", "mul", "add", "union"])
 
 def search_stats(results):
     ret = select_categories(results, ["stats"])

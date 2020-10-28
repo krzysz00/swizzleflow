@@ -36,8 +36,8 @@ def process_data(swizzleflow_raw, loads_raw, swinv_times):
     split_times = times.groupby(["spec", "category"]).sum()['time'].unstack(fill_value=0.0)
 
     split_times =\
-        split_times.rename({'build': 'Mat. creation', 'mul': 'Mat. multiply',
-                            'load': 'Mat. reuse', 'search': 'Search'}, axis=1)
+        split_times.rename({'build': 'Mat. creation', 'mul': 'Mat. multiply', 'add': 'Mat. add',
+                            'load': 'Mat. reuse', 'search': 'Search'}, axis=1).drop(columns=['copy_counts'])
 
     total = split_times.sum(axis=1)
     total.name = "Swizzleflow"

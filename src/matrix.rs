@@ -68,10 +68,12 @@ impl MatrixOps for DenseMatrix {
         Self { data, m, n }
     }
 
+    #[inline(always)]
     fn get(&self, i: Ix, j: Ix) -> bool {
         self.data[i][j]
     }
 
+    #[inline(always)]
     fn set(&mut self, i: Ix, j: Ix, value: bool) {
         self.data[i].set(j, value)
     }
@@ -152,10 +154,12 @@ impl MatrixOps for RowSparseMatrix {
         Self { data, m, n }
     }
 
+    #[inline(always)]
     fn get(&self, i: Ix, j: Ix) -> bool {
         self.data[i].contains(&j)
     }
 
+    #[inline]
     fn set(&mut self, i: Ix, j: Ix, value: bool) {
         if value {
             self.data[i].insert(j);
@@ -218,6 +222,7 @@ impl MatrixOps for Matrix {
         Matrix::Dense(DenseMatrix::empty(i, j))
     }
 
+    #[inline(always)]
     fn get(&self, i: Ix, j: Ix) -> bool {
         match self {
             Matrix::Dense(d) => d.get(i, j),
@@ -225,6 +230,7 @@ impl MatrixOps for Matrix {
         }
     }
 
+    #[inline(always)]
     fn set(&mut self, i: Ix, j: Ix, value: bool) {
         match self {
             Matrix::Dense(d) => d.set(i, j, value),

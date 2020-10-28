@@ -1,0 +1,9 @@
+Processing specs/hvx_conv/6-regs-hvx-conv-arith-blocks.swflow
+Block number 1: last shape [Some([4, 8]), Some([8]), None]
+Block number 2: last shape [Some([4, 8]), Some([8]), None]
+Block number 0: last shape [Some([16]), None]
+construction:all time=0.007880292;
+spec:specs/hvx_conv/6-regs-hvx-conv-arith-blocks.swflow
+file_map:33e9ff0df9 raw=8,8-[1,0>0 -1]stack-8x2,.
+load:matrices/33e9ff0df9 density=0.00390625; time=0.00004029;
+file_map:02afab8e78 raw=.exit_block_outputs_odd_side[0,1<0,0].8,8-[1,0>0 -1]stack-8x2,.

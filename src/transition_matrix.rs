@@ -174,6 +174,7 @@ impl<T: MatrixOps> GenTransitionMatrix<T> {
         self.mat.get(i, j)
     }
 
+    #[inline]
     pub fn get_raw_idxs(&self, current1: Ix, current2: Ix,
                         target1: Ix, target2: Ix) -> bool {
         let i = current2 + self.current_len * current1;
@@ -209,6 +210,7 @@ impl<T: MatrixOps> GenTransitionMatrix<T> {
         self.mat.set(i, j, value)
     }
 
+    #[inline]
     pub fn set_idxs(&mut self, (current_lane1, current1): (Ix, Ix),
                     (current_lane2, current2): (Ix, Ix),
                     (target_lane1, target1): (Ix, Ix),
@@ -220,6 +222,7 @@ impl<T: MatrixOps> GenTransitionMatrix<T> {
         self.mat.set(i, j, value)
     }
 
+    #[inline]
     pub fn set_raw_idxs(&mut self, current1: Ix, current2: Ix,
                         target1: Ix, target2: Ix, value: bool) {
         let i = current2 + self.current_len * current1;

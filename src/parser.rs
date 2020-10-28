@@ -19,7 +19,7 @@ use crate::lexer::{Token,TokenType};
 use crate::builtins::{Opt,OptMap};
 use crate::state::{Value, Symbolic,Gather};
 
-use std::collections::{HashSet,HashMap,BTreeMap};
+use std::collections::{HashSet, HashMap, BTreeMap, BTreeSet};
 use std::convert::TryInto;
 use std::fmt::Write;
 use std::num::NonZeroUsize;
@@ -438,16 +438,16 @@ fn parse_goal(toks: &[Token], pos: usize) -> Result<(ArrayD<Value>, usize)> {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum VarIdx {
-    Here(usize),
     Dep(usize),
+    Here(usize),
 }
 
 #[derive(Clone, Debug)]
 pub struct Dependency {
     pub parent_idx: VarIdx,
-    pub used_at: Vec<usize>,
+    pub used_at: BTreeSet<usize>,
     pub var: String,
     pub shape: ShapeVec,
 }
@@ -466,6 +466,13 @@ impl StmtType {
             _ => false,
         }
     }
+
+    pub fn is_block(&self) -> bool {
+        match self {
+            StmtType::Block {body: _body, deps: _deps} => true,
+            _ => false,
+        }
+    }
 }
 
 
@@ -477,7 +484,7 @@ pub struct Statement {
     pub in_shapes: Vec<ShapeVec>,
     pub out_shape: ShapeVec,
     pub name: String,
-    pub used_at: Vec<usize>,
+    pub used_at: BTreeSet<usize>,
     pub prune: bool,
 }
 
@@ -506,7 +513,7 @@ impl Scopes {
                     let shape = self._get_shape(idx - 1, res);
                     let var = self._get_var(idx - 1, res);
                     self.deps[idx].push(Dependency { parent_idx: res,
-                                                     used_at: vec![],
+                                                     used_at: BTreeSet::new(),
                                                      shape, var });
                     VarIdx::Dep(deps_idx)
                 })
@@ -565,9 +572,9 @@ impl Scopes {
         let scope_idx = self.stmts.len() - 1;
         for arg in args.iter().copied() {
             match arg {
-                VarIdx::Here(i) => self.stmts[scope_idx][i].used_at.push(idx),
-                VarIdx::Dep(i) => self.deps[scope_idx][i].used_at.push(idx),
-            }
+                VarIdx::Here(i) => self.stmts[scope_idx][i].used_at.insert(idx),
+                VarIdx::Dep(i) => self.deps[scope_idx][i].used_at.insert(idx),
+            };
         }
     }
 }
@@ -661,7 +668,7 @@ fn parse_call<'t>(custom_fns: &DefsMap, scopes: &mut Scopes,
         Statement { var: var.to_owned(),
                     in_shapes, out_shape: out_shape.clone(),
                     args: args.clone(), name, prune,
-                    used_at: vec![],
+                    used_at: BTreeSet::new(),
                     op: StmtType::Gathers(gathers, fold_len) });
     scopes.update_used_at(stmt_idx, &args);
     Ok(((), pos))
@@ -741,7 +748,7 @@ fn parse_statement(custom_fns: &mut DefsMap, scopes: &mut Scopes,
                 let name = format!{"init_{}", var};
                 scopes.push_statement(Statement {
                     var, in_shapes: vec![], out_shape,
-                    used_at: vec![], args: vec![], name,
+                    used_at: BTreeSet::new(), args: vec![], name,
                     prune: prune.unwrap_or(false),
                     op: StmtType::Initial(literal) });
                 Ok(((), pos))
@@ -774,7 +781,7 @@ fn parse_statement(custom_fns: &mut DefsMap, scopes: &mut Scopes,
                             let block_idx = scopes.push_statement(
                                 Statement {op: StmtType::Block { body: stmts, deps: deps, },
                                            var, args: args.clone(), in_shapes, out_shape,
-                                           name, used_at: vec![],
+                                           name, used_at: BTreeSet::new(),
                                            prune: prune.unwrap_or(true) });
                             scopes.update_used_at(block_idx, args.as_slice());
                             Ok(((), new_pos))

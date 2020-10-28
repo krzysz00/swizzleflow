@@ -17,7 +17,8 @@ use crate::program_transforms::linearize_program;
 use crate::state::{ProgState, DomRef, Operation, OpType, Block};
 use crate::transition_matrix::{TransitionMatrix};
 
-use std::collections::{HashMap,BTreeMap};
+use std::collections::{BTreeMap};
+use rustc_hash::FxHashMap;
 
 use std::time::Instant;
 
@@ -28,6 +29,7 @@ use std::sync::{Arc};
 use parking_lot::{RwLock, Mutex,
                   RwLockUpgradableReadGuard, RwLockReadGuard, RwLockWriteGuard};
 use crossbeam_channel::{Sender, Receiver};
+
 use itertools::Itertools;
 use itertools::iproduct;
 
@@ -41,7 +43,7 @@ pub enum Mode {
 
 #[derive(Debug, Default)]
 struct BlockResults<'d> {
-    results: Arc<RwLock<HashMap<ProgState<'d, 'static>, Vec<ProgState<'d, 'static>>>>>,
+    results: Arc<RwLock<FxHashMap<ProgState<'d, 'static>, Vec<ProgState<'d, 'static>>>>>,
 }
 
 impl<'d> BlockResults<'d> {
@@ -65,10 +67,10 @@ impl<'d> BlockResults<'d> {
 
 #[derive(Debug)]
 enum BlockResultsSource<'a, 'd: 'a> {
-    Initial { lock: RwLockWriteGuard<'a, HashMap<ProgState<'d, 'static>, Vec<ProgState<'d, 'static>>>>,
+    Initial { lock: RwLockWriteGuard<'a, FxHashMap<ProgState<'d, 'static>, Vec<ProgState<'d, 'static>>>>,
         sender: Sender<Option<ProgState<'d, 'static>>>,
         iter: BlockOutputsIter<'d> },
-    Repeat { lock: RwLockReadGuard<'a, HashMap<ProgState<'d, 'static>, Vec<ProgState<'d, 'static>>>> },
+    Repeat { lock: RwLockReadGuard<'a, FxHashMap<ProgState<'d, 'static>, Vec<ProgState<'d, 'static>>>> },
 }
 
 #[derive(Debug)]
@@ -201,7 +203,7 @@ impl Display for SearchStepStats {
     }
 }
 
-type ResultMap<'d> = RwLock<HashMap<ProgState<'d, 'static>, bool>>;
+type ResultMap<'d> = RwLock<FxHashMap<ProgState<'d, 'static>, bool>>;
 type SearchResultCache<'d> = Arc<ResultMap<'d>>;
 
 // Invariant: any level with pruning enabled has a corresponding pruning matrix available
@@ -451,7 +453,7 @@ pub fn synthesize<'d, 'l>(
 
     let stats = (0..n_stmts+1).map(|_| SearchStepStats::new()).collect::<Vec<_>>();
     let caches: Vec<SearchResultCache>
-        = (0..n_stmts).map(|_| Arc::new(RwLock::new(HashMap::new()))).collect();
+        = (0..n_stmts).map(|_| Arc::new(RwLock::new(FxHashMap::default()))).collect();
     let blocks: Vec<_> = (0..n_blocks).map(|_| BlockResults::default()).collect();
     let block_source = blocks[0].iter(&start);
     let (ret, dur) =

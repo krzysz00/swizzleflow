@@ -131,6 +131,8 @@ fn add_cap(basis_name: &str, total_name: &str, path: &mut PathBuf,
     }
 }
 
+// This computes the abstract paths within each block per Reps's algorithm
+// It produces correct abstractions to each individual
 fn add_matrices_rec(path: &mut PathBuf,
                     bases: &mut HashMap<String, TransitionMatrix>,
                     ops: &mut [Operation],
@@ -153,14 +155,12 @@ fn add_matrices_rec(path: &mut PathBuf,
         let (block_mat, block_name) = if let Some(block) = op.op.block_mut() {
             let need_all = op.in_lanes.len() > 0;
 
-            let exit_mat_name = format!(".[{}<{}]exit_{}", block.out_lane,
-                                        op.out_lane, op.op_name);
+            let exit_mat_name = format!(".exit_{}[{}<{}]", op.op_name,
+                                        block.out_lane, op.out_lane);
             let recur_mat_name = format!("{}.{}", exit_mat_name, name);
-            (&[block.out_lane], &block.out_shape,
-             &[op.out_lane], latest_shape.as_slice());
             let recur_mat = add_cap(&exit_mat_name, &recur_mat_name, path, &matrix,
-                                    &[block.out_lane], block.out_shape.as_slice(),
-                                    &[op.out_lane], latest_shape.borrow())?;
+                                    &[block.out_lane], &block.out_shape,
+                                    &[op.out_lane], latest_shape.as_slice())?;
 
             if let Some((res_mat, res_name)) =
                 add_matrices_rec(path, bases,
@@ -168,8 +168,9 @@ fn add_matrices_rec(path: &mut PathBuf,
                                  need_all, recur_mat, recur_mat_name)?
             {
                 let post_mat_name = format!(
-                    "post_{}{{{}}}", op.op_name,
-                    op.in_lanes.iter().map(|i| i.to_string()).join(","));
+                    "post_{}[{}<{}]", op.op_name,
+                    op.in_lanes.iter().join(","),
+                    (0..op.in_lanes.len()).join(","));
                 let capped_mat_name = format!("+{}.{}", post_mat_name, res_name);
                 let range_vec: Vec<usize> = (0..op.in_lanes.len()).collect();
                 let capped_mat = add_cap(&post_mat_name, &capped_mat_name, path, &res_mat,
@@ -281,7 +282,6 @@ pub fn add_copy_bounds_rec(ops: &mut [Operation],
     // aka, the counts for the output of the current step
     if ops.is_empty() { return Ok((vec![], vec![])); }
 
-    let start = Instant::now();
     let first_prune = if need_all { 0 }
         else { ops.iter().take_while(|l| !l.prune).count() };
     if first_prune >= ops.len() - 1 { return Ok((vec![], vec![])); }
@@ -356,14 +356,16 @@ pub fn add_copy_bounds_rec(ops: &mut [Operation],
         next_mins = mins;
         next_maxs = maxs;
     }
-    let dur = time_since(start);
-    println!("copy_counts:this time={};", dur);
     Ok((next_mins, next_maxs))
 }
 
 pub fn add_copy_bounds(block: &mut Block) -> Result<()> {
+    let start = Instant::now();
     let (init_mins, init_maxs) =
         init_copy_bounds(block.out_lane, &block.out_shape, None);
-    add_copy_bounds_rec(&mut block.ops, false, init_mins, init_maxs)
-        .map(|(_, _)| ())
+    let ret = add_copy_bounds_rec(&mut block.ops, false, init_mins, init_maxs)
+        .map(|(_, _)| ());
+    let dur = time_since(start);
+    println!("copy_counts:this time={};", dur);
+    ret
 }

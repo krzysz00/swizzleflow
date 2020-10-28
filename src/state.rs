@@ -20,13 +20,14 @@ use ndarray::{Dimension,Zip,FoldWhile};
 
 use std::borrow::Cow;
 use std::cmp::{PartialEq,Eq};
-use std::collections::{HashMap,BTreeSet};
+use std::collections::{BTreeSet, BTreeMap};
 use std::fmt;
 use std::fmt::{Display,Formatter};
 use std::hash::{Hash,Hasher};
 use std::num::{NonZeroUsize};
 
 use smallvec::SmallVec;
+use rustc_hash::FxHashMap;
 
 use itertools::Itertools;
 
@@ -135,9 +136,9 @@ pub const NOT_IN_DOMAIN: DomRef = 1;
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Domain {
     elements: Vec<Value>,
-    element_map: HashMap<Value, DomRef>,
+    element_map: FxHashMap<Value, DomRef>,
     subterms_of: Vec<Vec<DomRef>>,
-    fold_ref_map: HashMap<Vec<DomRef>, DomRef>,
+    fold_ref_map: FxHashMap<Vec<DomRef>, DomRef>,
     imm_superterms: Vec<Vec<DomRef>>,
     imm_subterms: Vec<BTreeSet<DomRef>>,
 }
@@ -160,7 +161,7 @@ impl Domain {
             }
         }
 
-        let element_map: HashMap<Value, DomRef> =
+        let element_map: FxHashMap<Value, DomRef> =
             elements.iter().cloned().enumerate().map(|(i, e)| (e, i)).collect();
 
         let mut subterm_sets: Vec<_> = (0..elements.len()).map(|i| {
@@ -198,7 +199,7 @@ impl Domain {
                     Some((v.iter().map(|s| *element_map.get(s).unwrap())
                           .collect::<Vec<_>>(), i))
                 } else { None }
-            }).collect::<HashMap<Vec<DomRef>, DomRef>>();
+            }).collect::<FxHashMap<Vec<DomRef>, DomRef>>();
         // Semantics of empty fold
         fold_ref_map.insert(vec![], *element_map.get(&Value::Empty).unwrap());
         Domain { elements, element_map,
@@ -690,6 +691,14 @@ impl OpType {
 }
 
 #[derive(Clone, Debug)]
+pub struct BlockCopyMaps {
+    pub push_map: FxHashMap<usize, usize>,
+    pub pull_map: FxHashMap<usize, usize>,
+}
+
+pub type BlockCopyDat = BTreeMap<usize, BlockCopyMaps>;
+
+#[derive(Clone, Debug)]
 pub struct Operation {
     pub op: OpType,
 
@@ -714,6 +723,8 @@ pub struct Operation {
     pub universe_idx: usize,
     pub global_idx: usize,
     pub abstractions: Abstractions,
+
+    pub block_copy_maps: Option<BlockCopyDat>,
 }
 
 impl Operation {
@@ -721,7 +732,8 @@ impl Operation {
                lane_in_shapes: Vec<Option<ShapeVec>>, out_shape: ShapeVec,
                var: String, arg_string: String, op_name: String,
                in_lanes: Vec<usize>, out_lane: usize, drop_lanes: Vec<usize>,
-               prune: bool, universe_idx: usize, global_idx: usize) -> Self {
+               prune: bool, universe_idx: usize, global_idx: usize,
+               block_copy_maps: Option<BlockCopyDat>) -> Self {
         let lane_in_lens = lane_in_shapes.iter().map(
             |ms| ms.as_ref().map_or(0, |s| s.iter().copied().product()))
             .collect();
@@ -748,7 +760,8 @@ impl Operation {
                in_lanes, out_lane, drop_lanes, preserved_lanes,
                prune, universe_idx,
                global_idx,
-               abstractions: Abstractions::default() }
+               abstractions: Abstractions::default(),
+               block_copy_maps }
     }
 
     pub fn extend_shapes(&mut self, max_lanes: usize) {

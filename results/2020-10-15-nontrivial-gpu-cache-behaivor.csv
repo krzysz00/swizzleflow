@@ -1,0 +1,15 @@
+,spec,var,op_name,cache_writes,cache_hits,tested,pruned,pruned_cache,continued,in_solution
+6,l3/trove-rcr-2,s5,col_xforms,17,255,389400,389128,0,272,272
+7,l3/trove-rcr-2,s6,col_rots,1,271,15776,15504,0,272,272
+3,l3/trove-rcr-5,s2,col_rots,71,2,1566,1529,2,37,3
+7,l3/trove-rcr-5,s6,col_rots,1,2,174,171,0,3,3
+3,l3/trove-rcr-3,s2,col_rots,73,2,1566,1528,2,38,3
+7,l3/trove-rcr-3,s6,col_rots,1,2,174,171,0,3,3
+3,l3/trove-rcr-4,s2,col_rots,188,2,2784,2626,2,158,128
+5,l3/trove-rcr-4,s4,row_rots,188,2,800,642,2,158,128
+6,l3/trove-rcr-4,s5,col_xforms,8,120,429128,429000,0,128,128
+7,l3/trove-rcr-4,s6,col_rots,1,127,7424,7296,0,128,128
+6,l1/trove-rcr-2,s5,col_xforms_no_group,2,30,31744,31712,0,32,32
+7,l1/trove-rcr-2,s6,col_rots_no_group,1,31,1024,992,0,32,32
+6,l1/trove-rcr-4,s5,col_xforms_no_group,1,15,31744,31728,0,16,16
+7,l1/trove-rcr-4,s6,col_rots_no_group,1,15,512,496,0,16,16
