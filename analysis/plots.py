@@ -119,3 +119,4 @@ if __name__ == '__main__':
     plot(details, True, "Synthesis time breakdown (log)", f"{prefix}-details-log.pdf")
     plot(comparison, False, "Synthesis time comparison", f"{prefix}-comparison.pdf")
     plot(comparison, True, "Synthesis time comparison (log)", f"{prefix}-comparison-log.pdf")
+    plot(comparison, True, "Synthesis time comparison (log)", f"{prefix}-comparison-log.svg")
