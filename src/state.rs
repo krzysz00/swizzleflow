@@ -789,4 +789,12 @@ impl Operation {
             _ => false,
         }
     }
+
+    pub fn n_options(&self) -> usize {
+        match &self.op {
+            OpType::Apply { fns, summary: _summary} => fns.len(),
+            OpType::Literal(_) => 1,
+            OpType::Subprog(_) => 1,
+        }
+    }
 }

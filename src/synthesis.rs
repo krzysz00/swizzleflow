@@ -486,10 +486,11 @@ pub fn synthesize<'d, 'l>(
                          universes[op.universe_idx].len()
                      }));
         }
-        println!("stats:{} var={}; op_name={}; pruning={}; {}", idx,
+        println!("stats:{} var={}; op_name={}; pruning={}; n_options={}; {}", idx,
                  ops.get(idx).map_or(&"(last)".into(), |op| &op.var),
                  ops.get(idx).map_or(&"(last)".into(), |op| &op.op_name),
                  ops.get(idx).map_or(false, |op| op.prune),
+                 ops.get(idx).map_or(1, |op| op.n_options()),
                  stats);
     }
     println!("search:{} success={}; mode={:?}; prune_fuel={}; time={};",
