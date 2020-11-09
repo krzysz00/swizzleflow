@@ -1,0 +1,14 @@
+goal: [32] weight_conv {k=13}
+
+x: [44] = range(0, 44)
+
+loaded: [32, 2] = load_trunc(x)
+to_send: [32, 13] = ?reg_select(loaded)
+received_1: [32, 13] = ?col_xforms(to_send)
+received: [32, 13] = ?col_rots(received_1)
+
+w: [13] = range(44, 57)
+w: [32, 13] = broadcast(w)
+mult: [32, 13] = fold stack{fold_len=2}(received, w)
+
+out: [32] = fold ?cond_keep{fold_len=13}(mult)
