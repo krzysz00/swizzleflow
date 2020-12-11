@@ -38,17 +38,27 @@ pub enum UniverseDef {
     Fold(Ix),
 }
 
-fn union_universes(args: Vec<&[DomRef]>) -> Vec<DomRef> {
-    args.into_iter().flat_map(|s| s.iter()).copied().dedup().collect()
+impl UniverseDef {
+    pub fn is_union(&self) -> bool {
+        match self {
+            UniverseDef::Union(_) => true,
+            _ => false,
+        }
+    }
 }
 
-fn fold_universe(domain: &Domain, universe: &[DomRef]) -> Vec<DomRef> {
-    let current_set = BTreeSet::from_iter(universe.iter().copied());
+fn union_universes(args: Vec<&BTreeSet<DomRef>>) -> BTreeSet<DomRef> {
+    let mut ret = BTreeSet::new();
+    args.into_iter().fold(&mut ret, |acc, s| { acc.extend(s); acc });
+    ret
+}
+
+fn fold_universe(domain: &Domain, universe: &BTreeSet<DomRef>) -> BTreeSet<DomRef> {
     let superterms: BTreeSet<DomRef> = universe.iter().copied()
         .flat_map(|idx| domain.imm_superterms(idx).iter().copied())
         .collect();
     superterms.into_iter()
-        .filter(|idx| domain.subterms_all_within(*idx, &current_set))
+        .filter(|idx| domain.subterms_all_within(*idx, universe))
         .collect()
 }
 
@@ -341,28 +351,42 @@ pub fn to_search_problem<'d>(
                                            target_state_shape).into());
     }
 
-    let mut universes: Vec<Vec<DomRef>> = Vec::with_capacity(universe_defs.len());
+    let mut universes: Vec<BTreeSet<DomRef>> = Vec::with_capacity(universe_defs.len());
     for def in universe_defs {
-        universes.push(
+        let new_universe =
             match def {
                 UniverseDef::Literal(idx) => {
                     literals[*idx]
                         .iter().copied()
                         .filter(|&x| x != crate::state::NOT_IN_DOMAIN
                                 && x != crate::state::ZERO)
-                        .collect::<Vec<DomRef>>()
+                        .collect::<BTreeSet<DomRef>>()
                     },
                     UniverseDef::Union(ref args) => {
                         let args = args.iter().copied()
-                            .map(|x| universes[x].as_ref()).collect();
+                            .map(|x| &universes[x]).collect();
                         union_universes(args)
                     },
                     UniverseDef::Fold(prev) => {
                         fold_universe(domain, &universes[*prev])
                     }
-                });
-        }
+            };
+        universes.push(new_universe);
+    }
 
+    // Deduplicate to avoid false negatives
+    for i in 0..universes.len() {
+        if !universe_defs[i].is_union() {
+            let (prev_universes, us) = universes.split_at_mut(i);
+            for e in &us[0] {
+                for u_prev in prev_universes.iter_mut() {
+                    u_prev.remove(e);
+                }
+            }
+        }
+    }
+
+    let universes: Vec<Vec<DomRef>> = universes.into_iter().map(|x| Vec::from_iter(x)).collect();
     Ok((literals, target_state, universes))
 }
 
