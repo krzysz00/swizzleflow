@@ -17,7 +17,7 @@ USAGE:
     swizzleflow [FLAGS] [OPTIONS] [SPEC]...
 
 FLAGS:
-    -a, --all             Find all solutions
+        --first           Find first solution
     -h, --help            Prints help information
     -p, --print           Print trace of valid solutions
     -P, --print-pruned    Print pruned solutions
