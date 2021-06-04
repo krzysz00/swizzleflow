@@ -483,6 +483,11 @@ pub fn poly_mult(n: Ix) -> ArrayD<Value> {
 pub fn goal(name: &str, shape: &[Ix],
             options: Option<&OptMap>) -> Result<ArrayD<Value>> {
     match name {
+        "id" => {
+            let size = shape.iter().copied().product::<Ix>() as Symbolic;
+            (0..size).map(Value::Symbol).collect::<ndarray::Array1<Value>>()
+                .into_shape(shape).map_err(|e| e.into())
+        }
         "trove" => {
             match shape {
                 &[m, n] => Ok(trove(m, n)),
