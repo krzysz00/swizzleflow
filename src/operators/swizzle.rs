@@ -64,7 +64,7 @@ pub fn rotate(in_shape: &[Ix],out_shape: &[Ix],
     let len_of_stable = in_shape[main_axis];
     let group = group.unwrap_or(len_of_stable);
     let name = if group != len_of_stable {
-        format!("rot[group={},shift={}]", shift, group)
+        format!("rot[group={},shift={}]", group, shift)
     } else {
         format!("rot[shift={}]", shift)
     };
