@@ -17,6 +17,7 @@ pub mod select;
 pub mod load;
 pub mod permutations;
 pub mod hvx;
+pub mod amd_swizzles;
 
 use crate::errors::*;
 

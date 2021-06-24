@@ -399,7 +399,7 @@ pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
             ret.extend(v2_1.into_iter());
             Ok(ret.into_iter().collect::<Vec<_>>().into())
         },
-        "grouped_perms" => {
+        "grouped_perms" | "amd_swizzles_perm"=> {
             if in_shapes.len() != 1 {
                 return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
             }
@@ -408,7 +408,13 @@ pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
             let restrict = array_option(options, "restrict").map(|a| {
                 (a[0] as Ix, a[1] as Ix)
             });
-            crate::operators::permutations::permutations_in_group(&in_shapes[0], out_shape, axis, group, restrict)
+            match name {
+                "grouped_perms" =>
+                    crate::operators::permutations::permutations_in_group(&in_shapes[0], out_shape, axis, group, restrict),
+                "amd_swizzles_perm" =>
+                    crate::operators::amd_swizzles::amd_swizzles_perm(&in_shapes[0], out_shape, axis, group, restrict),
+                _ => unreachable!()
+            }
         }
         other => {
             return Err(ErrorKind::UnknownBasisType(other.to_owned()).into())
