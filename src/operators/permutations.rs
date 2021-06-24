@@ -33,13 +33,13 @@ fn permute_in_group(in_shape: &[Ix], out_shape: &[Ix],
     let name = format!("permute_pull[axis={},group={},perm={}]", axis, group,
         permutation.iter().copied().join(":"));
     Gather::new(out_shape,
-                move |out_idxs: &[Ix]| {
+                move |out_idx: &[Ix]| {
                     if let Some((ax, val)) = restrict {
-                        if out_idxs[ax] != val {
-                            return (0, to_opt_ix(out_idxs, in_shape))
+                        if out_idx[ax] != val {
+                            return (0, to_opt_ix(out_idx, in_shape))
                         }
                     }
-                    let mut out = ShapeVec::from_slice(out_idxs);
+                    let mut out = ShapeVec::from_slice(out_idx);
                     let out_coord: usize = out[axis];
                     let coord_group = out_coord.div_floor(&group) * group;
                     let lane = out_coord.mod_floor(&group);
