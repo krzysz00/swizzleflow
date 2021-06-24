@@ -310,7 +310,7 @@ pub fn build_mat<T: MatrixOps>(op: &Operation, out_shape: &[Option<ShapeVec>])
             OpType::Literal(_) => &[],
             // If we can summarize a basis, use that summary to save time
             OpType::Apply { fns: _fns, summary: Some(s) } =>
-                ref_slice::ref_slice(s),
+                std::slice::from_ref(s),
             OpType::Apply { fns , summary: None } =>
                 fns,
             OpType::Subprog(_) => {

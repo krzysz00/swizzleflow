@@ -58,7 +58,7 @@ pub fn xform(in_shape: &[Ix], out_shape: &[Ix],
                 }, name)
 }
 
-pub fn rotate(in_shape: &[Ix],out_shape: &[Ix],
+pub fn rotate(in_shape: &[Ix], out_shape: &[Ix],
               main_axis: Ix, _second_axis: Ix, swizzle_axis: Ix,
               shift: Ixs, group: Option<Ix>) -> Gather {
     let len_of_stable = in_shape[main_axis];

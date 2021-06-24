@@ -15,6 +15,7 @@
 pub mod swizzle;
 pub mod select;
 pub mod load;
+pub mod permutations;
 pub mod hvx;
 
 use crate::errors::*;

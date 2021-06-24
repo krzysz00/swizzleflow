@@ -399,6 +399,17 @@ pub fn gather(name: &str, in_shapes: &[ShapeVec], out_shape: &[usize],
             ret.extend(v2_1.into_iter());
             Ok(ret.into_iter().collect::<Vec<_>>().into())
         },
+        "grouped_perms" => {
+            if in_shapes.len() != 1 {
+                return Err(ErrorKind::WrongArity(in_shapes.len(), 1).into());
+            }
+            let axis = required_size_option(options, "axis")?;
+            let group = required_size_option(options, "group")?;
+            let restrict = array_option(options, "restrict").map(|a| {
+                (a[0] as Ix, a[1] as Ix)
+            });
+            crate::operators::permutations::permutations_in_group(&in_shapes[0], out_shape, axis, group, restrict)
+        }
         other => {
             return Err(ErrorKind::UnknownBasisType(other.to_owned()).into())
         }
