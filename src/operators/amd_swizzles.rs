@@ -39,7 +39,7 @@ fn swizzle_b32_far(in_shape: &[Ix], out_shape: &[Ix],
         let out_coord: usize = out[axis];
         let out_group = out_coord.div_floor(&32) * 32;
         let out_in_group = out_coord.mod_floor(&32);
-        out[axis] = out_group + ((out_in_group & and) | or) ^ xor;
+        out[axis] = (out_group + ((out_in_group & and) | or) ^ xor).mod_floor(&in_shape[axis]);
         (0, to_opt_ix(&out, in_shape))
     }, name)
 }
